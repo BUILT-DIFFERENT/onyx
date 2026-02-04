@@ -4285,7 +4285,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 5.4 Implement realtime recognition
+- [x] 5.4 Implement realtime recognition
 
   **What to do**:
   - Listen for recognition via `IOffscreenEditorListener.contentChanged()`

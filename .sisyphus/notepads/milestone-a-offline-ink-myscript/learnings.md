@@ -401,3 +401,22 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - ./gradlew :app:compileDebugKotlin → BUILD SUCCESSFUL
 - ./gradlew :app:assembleDebug → BUILD SUCCESSFUL
 
+
+### Task 5.4: Realtime Recognition Integration ✅
+
+**ViewModel Integration:**
+- Added MyScriptPageManager as nullable property (graceful degradation if MyScript init fails)
+- Wire recognition callback in init{}: calls repository.updateRecognition()
+- Call myScriptPageManager.addStroke() on pen-up (when persist=true)
+- Call onPageEnter() in loadNote() when page changes
+- Call closeCurrentPage() in onCleared() for cleanup
+- Re-feed existing strokes to MyScript on page load for recognition continuity
+
+**Lifecycle:**
+- NoteEditorScreen creates MyScriptPageManager via remember{} if engine initialized
+- Pass to ViewModel via factory
+- Recognition happens automatically after each stroke via IOffscreenEditorListener
+
+**Files Modified:**
+- apps/android/app/src/main/java/com/onyx/android/ui/NoteEditorScreen.kt
+

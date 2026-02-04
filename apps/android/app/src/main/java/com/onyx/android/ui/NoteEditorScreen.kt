@@ -61,6 +61,7 @@ import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
+import com.onyx.android.recognition.MyScriptPageManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -73,12 +74,18 @@ private class NoteEditorViewModel(
     private val repository: NoteRepository,
     private val noteDao: NoteDao,
     private val pageDao: PageDao,
+    private val myScriptPageManager: MyScriptPageManager?,
 ) : ViewModel() {
     private val _strokes = MutableStateFlow<List<Stroke>>(emptyList())
     val strokes: StateFlow<List<Stroke>> = _strokes.asStateFlow()
     private var currentPageId: String? = null
 
     init {
+        myScriptPageManager?.onRecognitionUpdated = { pageId, text ->
+            viewModelScope.launch {
+                repository.updateRecognition(pageId, text, "myscript-4.3")
+            }
+        }
         loadNote()
     }
 
@@ -87,11 +94,20 @@ private class NoteEditorViewModel(
             noteDao.getById(noteId)
             val pages = pageDao.getPagesForNote(noteId).first()
             val firstPage = pages.firstOrNull()
+            if (currentPageId != firstPage?.pageId && currentPageId != null) {
+                myScriptPageManager?.closeCurrentPage()
+            }
             currentPageId = firstPage?.pageId
-            _strokes.value =
-                currentPageId?.let { pageId ->
-                    repository.getStrokesForPage(pageId)
-                } ?: emptyList()
+            currentPageId?.let { pageId ->
+                myScriptPageManager?.onPageEnter(pageId)
+                val loadedStrokes = repository.getStrokesForPage(pageId)
+                _strokes.value = loadedStrokes
+                loadedStrokes.forEach { stroke ->
+                    myScriptPageManager?.addStroke(stroke)
+                }
+            } ?: run {
+                _strokes.value = emptyList()
+            }
         }
     }
 
@@ -105,11 +121,17 @@ private class NoteEditorViewModel(
             viewModelScope.launch {
                 repository.saveStroke(pageId, stroke)
             }
+            myScriptPageManager?.addStroke(stroke)
         }
     }
 
     fun removeStroke(stroke: Stroke) {
         _strokes.value = _strokes.value - stroke
+    }
+
+    override fun onCleared() {
+        myScriptPageManager?.closeCurrentPage()
+        super.onCleared()
     }
 }
 
@@ -118,11 +140,12 @@ private class NoteEditorViewModelFactory(
     private val repository: NoteRepository,
     private val noteDao: NoteDao,
     private val pageDao: PageDao,
+    private val myScriptPageManager: MyScriptPageManager?,
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         require(modelClass.isAssignableFrom(NoteEditorViewModel::class.java))
-        return NoteEditorViewModel(noteId, repository, noteDao, pageDao) as T
+        return NoteEditorViewModel(noteId, repository, noteDao, pageDao, myScriptPageManager) as T
     }
 }
 
@@ -136,10 +159,23 @@ fun NoteEditorScreen(
     val repository = app.noteRepository
     val noteDao = app.database.noteDao()
     val pageDao = app.database.pageDao()
+
+    val myScriptPageManager =
+        remember {
+            if (app.myScriptEngine.isInitialized()) {
+                MyScriptPageManager(
+                    engine = app.myScriptEngine.getEngine(),
+                    context = app,
+                )
+            } else {
+                null
+            }
+        }
+
     val viewModel: NoteEditorViewModel =
         viewModel(
             key = "NoteEditorViewModel_$noteId",
-            factory = NoteEditorViewModelFactory(noteId, repository, noteDao, pageDao),
+            factory = NoteEditorViewModelFactory(noteId, repository, noteDao, pageDao, myScriptPageManager),
         )
     var brush by remember { mutableStateOf(Brush()) }
     var lastNonEraserTool by remember { mutableStateOf(brush.tool) }
