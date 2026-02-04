@@ -150,3 +150,82 @@ apps/android/app/src/test/java/com/onyx/android/
 - Added `NoteKind`, `Brush`, and `ViewTransform` models per plan
 - Added `InkSurface` interface for stroke manipulation hooks
 - `./gradlew :app:assembleDebug` succeeded
+
+### Phase 2 Ink Models - COMPLETED ✅
+
+#### Tasks Completed (2.1-2.6)
+
+- Task 2.1: StrokePoint data class ✅
+- Task 2.2: Stroke, StrokeStyle, StrokeBounds, Tool enum ✅
+- Task 2.3: NoteKind enum (ink, pdf, mixed, infinite) ✅
+- Task 2.4: Brush configuration with toStrokeStyle() ✅
+- Task 2.5: InkSurface interface ✅
+- Task 2.6: ViewTransform with coordinate conversion ✅
+
+#### Files Created
+
+```
+apps/android/app/src/main/java/com/onyx/android/ink/
+├── model/
+│   ├── StrokePoint.kt ✅ (x, y, t, p?, tx?, ty?, r?)
+│   ├── Stroke.kt ✅ (Stroke, StrokeStyle, StrokeBounds, Tool)
+│   ├── NoteKind.kt ✅ (enum: INK, PDF, MIXED, INFINITE)
+│   ├── Brush.kt ✅ (UI state + toStrokeStyle() conversion)
+│   └── ViewTransform.kt ✅ (coordinate conversion methods)
+└── InkSurface.kt ✅ (interface for stroke manipulation)
+```
+
+#### Key Design Decisions
+
+- **Stroke NOT @Serializable**: Points serialized separately via StrokeSerializer (task 4.8)
+- **StrokeStyle/StrokeBounds/Tool ARE @Serializable**: For JSON storage
+- **Tool enum SerialNames**: "pen", "highlighter" (lowercase for v0 API)
+- **ViewTransform is SSOT**: All coordinate conversions use its methods (no separate CoordinateConverter class)
+- **Brush to StrokeStyle**: UI state converts to storage format via toStrokeStyle()
+
+#### V0 API Alignment Verified
+
+- Field names match v0 API specification exactly
+- NoteKind values: ink/pdf/mixed/infinite (matches V0-api.md:47)
+- StrokePoint fields align with Point type (V0-api.md:136-144)
+- StrokeStyle matches v0 structure (V0-api.md:127-134)
+
+#### Build Status
+
+- All 6 files compile cleanly
+- `./gradlew :app:assembleDebug` → BUILD SUCCESSFUL
+- No type errors or warnings
+
+### Summary: 15/89 Tasks Complete
+
+- Phase 1 (UI Foundation): 9 tasks ✅
+- Phase 2 (Ink Models): 6 tasks ✅
+- **Next: Phase 3 (Ink Engine)** - Jetpack Ink API integration
+
+## Session ses_43a2c5d6bafQ2L7u8X1mYp9rT0 - 2026-02-04T23:10:00.000Z
+
+### InkCanvas (Task 3.2)
+
+- Added `InkCanvas` composable with two-layer rendering (Compose Canvas for finished strokes, InProgressStrokesView front buffer)
+- Implemented touch handling with `requestUnbufferedDispatch`, `startStroke`, `addToStroke` via StrokeInput batches, and `finishStroke`
+- Persisted strokes built from MotionEvent data using `StrokePoint` + `ViewTransform.screenToPage`
+
+### Build Issue
+
+- `./gradlew :app:assembleDebug` failed with `java.lang.IllegalArgumentException: 25.0.2`
+- `java -version` reports 25.0.2 even when setting `JAVA_HOME` to `/usr/lib/jvm/java-17-openjdk-amd64`
+
+## Session ses_7f2b5c3a0a2eInkCanvas - 2026-02-04
+
+### StockBrushes API
+
+- `ink-brush:1.0.0-alpha02` expects StockBrushes families as properties (e.g., `pressurePenLatest`, `highlighterLatest`) rather than callable methods
+
+## Session ses_98b1f4b7-inkcanvas-fixes - 2026-02-04
+
+### Jetpack Ink API Corrections
+
+- `InProgressStrokesView.addToStroke(event, pointerId, strokeId)` is the public alternative when `MutableStrokeInputBatch.add(...)` is restricted
+- `finishStroke` overloads available include `(input, strokeId)` and `(event, pointerId, strokeId)`; use the `StrokeInput` overload when already constructing inputs
+- `cancelUnfinishedStrokes()` is restricted API; cancel each active stroke via `cancelStroke(strokeId, event)` instead
+- Build/lint verified via `./gradlew :app:compileDebugKotlin :app:lint :app:assembleDebug`
