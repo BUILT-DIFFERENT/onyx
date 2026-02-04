@@ -7,9 +7,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -45,6 +48,7 @@ fun InkCanvas(
     val currentBrush by rememberUpdatedState(brush)
     val currentTransform by rememberUpdatedState(viewTransform)
     val currentOnStrokeFinished by rememberUpdatedState(onStrokeFinished)
+    val hoverPreviewState = remember { HoverPreviewState() }
 
     val activeStrokeIds = remember { mutableMapOf<Int, InProgressStrokeId>() }
     val activeStrokePoints = remember { mutableMapOf<Int, MutableList<StrokePoint>>() }
@@ -69,6 +73,7 @@ fun InkCanvas(
                             activeStrokeIds = activeStrokeIds,
                             activeStrokePoints = activeStrokePoints,
                             activeStrokeStartTimes = activeStrokeStartTimes,
+                            hoverPreviewState = hoverPreviewState,
                             onStrokeFinished = currentOnStrokeFinished,
                         )
                     }
@@ -76,6 +81,10 @@ fun InkCanvas(
             },
             modifier = Modifier.fillMaxSize(),
         )
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            drawHoverPreview(hoverPreviewState, currentBrush, currentTransform)
+        }
     }
 }
 
@@ -87,20 +96,29 @@ private fun handleTouchEvent(
     activeStrokeIds: MutableMap<Int, InProgressStrokeId>,
     activeStrokePoints: MutableMap<Int, MutableList<StrokePoint>>,
     activeStrokeStartTimes: MutableMap<Int, Long>,
+    hoverPreviewState: HoverPreviewState,
     onStrokeFinished: (Stroke) -> Unit,
 ): Boolean {
     val actionIndex = event.actionIndex
     val pointerId = event.getPointerId(actionIndex)
+    val actionToolType = event.getToolType(actionIndex)
 
     when (event.actionMasked) {
         MotionEvent.ACTION_DOWN,
         MotionEvent.ACTION_POINTER_DOWN,
         -> {
-            view.requestUnbufferedDispatch(event)
+            if (!isSupportedToolType(actionToolType)) {
+                return false
+            }
+            if (isStylusToolType(actionToolType)) {
+                view.requestUnbufferedDispatch(event)
+            }
+            hoverPreviewState.hide()
             val startTime = event.eventTime
             activeStrokeStartTimes[pointerId] = startTime
             val strokeInput = createStrokeInput(event, actionIndex, startTime)
-            val strokeId = view.startStroke(strokeInput, brush.toInkBrush(viewTransform))
+            val effectiveBrush = brush.withToolType(actionToolType)
+            val strokeId = view.startStroke(strokeInput, effectiveBrush.toInkBrush(viewTransform))
             activeStrokeIds[pointerId] = strokeId
             val points = mutableListOf<StrokePoint>()
             points.add(createStrokePoint(event, actionIndex, viewTransform))
@@ -111,6 +129,9 @@ private fun handleTouchEvent(
         MotionEvent.ACTION_MOVE -> {
             val pointerCount = event.pointerCount
             for (index in 0 until pointerCount) {
+                if (!isSupportedToolType(event.getToolType(index))) {
+                    continue
+                }
                 val movePointerId = event.getPointerId(index)
                 val strokeId = activeStrokeIds[movePointerId] ?: continue
                 view.addToStroke(event, movePointerId, strokeId)
@@ -127,14 +148,41 @@ private fun handleTouchEvent(
             val strokeId = activeStrokeIds[pointerId] ?: return false
             val startTime = activeStrokeStartTimes[pointerId] ?: event.eventTime
             val strokeInput = createStrokeInput(event, actionIndex, startTime)
+            val effectiveBrush = brush.withToolType(actionToolType)
             view.finishStroke(strokeInput, strokeId)
             val points = activeStrokePoints[pointerId].orEmpty().toMutableList()
             points.add(createStrokePoint(event, actionIndex, viewTransform))
-            val finishedStroke = buildStroke(points, brush)
+            val finishedStroke = buildStroke(points, effectiveBrush)
             onStrokeFinished(finishedStroke)
             activeStrokeIds.remove(pointerId)
             activeStrokePoints.remove(pointerId)
             activeStrokeStartTimes.remove(pointerId)
+            hoverPreviewState.hide()
+            return true
+        }
+
+        MotionEvent.ACTION_HOVER_ENTER,
+        MotionEvent.ACTION_HOVER_MOVE,
+        -> {
+            if (!isStylusToolType(actionToolType)) {
+                hoverPreviewState.hide()
+                return false
+            }
+            val distance = event.getAxisValue(MotionEvent.AXIS_DISTANCE, actionIndex)
+            if (distance > 0f) {
+                hoverPreviewState.show(
+                    x = event.getX(actionIndex),
+                    y = event.getY(actionIndex),
+                    tool = toolTypeToTool(actionToolType, brush),
+                )
+            } else {
+                hoverPreviewState.hide()
+            }
+            return true
+        }
+
+        MotionEvent.ACTION_HOVER_EXIT -> {
+            hoverPreviewState.hide()
             return true
         }
 
@@ -145,6 +193,7 @@ private fun handleTouchEvent(
             activeStrokeIds.clear()
             activeStrokePoints.clear()
             activeStrokeStartTimes.clear()
+            hoverPreviewState.hide()
             return true
         }
     }
@@ -240,6 +289,7 @@ private fun Brush.toInkBrush(viewTransform: ViewTransform): InkBrush {
         when (tool) {
             Tool.PEN -> StockBrushes.pressurePenLatest
             Tool.HIGHLIGHTER -> StockBrushes.highlighterLatest
+            Tool.ERASER -> StockBrushes.markerLatest
         }
     val size = viewTransform.pageWidthToScreen(baseWidth).coerceAtLeast(0.1f)
     val epsilon = (size * 0.15f).coerceAtLeast(0.1f)
@@ -254,10 +304,83 @@ private fun Brush.toInkBrush(viewTransform: ViewTransform): InkBrush {
 private fun Int.toInputToolType(): InputToolType =
     when (this) {
         MotionEvent.TOOL_TYPE_STYLUS -> InputToolType.STYLUS
+        MotionEvent.TOOL_TYPE_ERASER -> InputToolType.STYLUS
         MotionEvent.TOOL_TYPE_FINGER -> InputToolType.TOUCH
         MotionEvent.TOOL_TYPE_MOUSE -> InputToolType.MOUSE
         else -> InputToolType.UNKNOWN
     }
+
+private fun isSupportedToolType(toolType: Int): Boolean =
+    toolType == MotionEvent.TOOL_TYPE_STYLUS ||
+        toolType == MotionEvent.TOOL_TYPE_ERASER ||
+        toolType == MotionEvent.TOOL_TYPE_FINGER
+
+private fun isStylusToolType(toolType: Int): Boolean =
+    toolType == MotionEvent.TOOL_TYPE_STYLUS ||
+        toolType == MotionEvent.TOOL_TYPE_ERASER
+
+private fun toolTypeToTool(
+    toolType: Int,
+    brush: Brush,
+): Tool =
+    if (toolType == MotionEvent.TOOL_TYPE_ERASER) {
+        Tool.ERASER
+    } else {
+        brush.tool
+    }
+
+private fun Brush.withToolType(toolType: Int): Brush =
+    if (toolType == MotionEvent.TOOL_TYPE_ERASER) {
+        copy(tool = Tool.ERASER)
+    } else {
+        this
+    }
+
+private class HoverPreviewState {
+    var isVisible by mutableStateOf(false)
+    var x by mutableStateOf(0f)
+    var y by mutableStateOf(0f)
+    var tool by mutableStateOf(Tool.PEN)
+
+    fun show(
+        x: Float,
+        y: Float,
+        tool: Tool,
+    ) {
+        this.x = x
+        this.y = y
+        this.tool = tool
+        isVisible = true
+    }
+
+    fun hide() {
+        isVisible = false
+    }
+}
+
+private fun DrawScope.drawHoverPreview(
+    hoverPreviewState: HoverPreviewState,
+    brush: Brush,
+    viewTransform: ViewTransform,
+) {
+    if (!hoverPreviewState.isVisible) return
+    val size = viewTransform.pageWidthToScreen(brush.baseWidth).coerceAtLeast(0.1f)
+    val radius = size / 2f
+    val color =
+        if (hoverPreviewState.tool == Tool.ERASER) {
+            Color(0xFF6B6B6B)
+        } else {
+            Color(parseColor(brush.color))
+        }
+    val alpha = if (hoverPreviewState.tool == Tool.ERASER) 0.6f else 0.35f
+    val strokeWidth = (size * 0.12f).coerceAtLeast(1f)
+    drawCircle(
+        color = color.copy(alpha = alpha),
+        radius = radius,
+        center = Offset(hoverPreviewState.x, hoverPreviewState.y),
+        style = ComposeStroke(width = strokeWidth),
+    )
+}
 
 fun DrawScope.drawStroke(
     stroke: Stroke,

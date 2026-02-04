@@ -2216,7 +2216,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 3.2b Stylus event pipeline best practices
+- [x] 3.2b Stylus event pipeline best practices
 
   **What to do**:
   - Use `pointerInteropFilter` for any Compose drawing surfaces that consume `MotionEvent`.

@@ -39,4 +39,7 @@ enum class Tool(
 
     @SerialName("highlighter")
     HIGHLIGHTER("highlighter"),
+
+    @SerialName("eraser")
+    ERASER("eraser"),
 }

@@ -229,3 +229,11 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - `finishStroke` overloads available include `(input, strokeId)` and `(event, pointerId, strokeId)`; use the `StrokeInput` overload when already constructing inputs
 - `cancelUnfinishedStrokes()` is restricted API; cancel each active stroke via `cancelStroke(strokeId, event)` instead
 - Build/lint verified via `./gradlew :app:compileDebugKotlin :app:lint :app:assembleDebug`
+
+## Session ses_9c3d4a1f-inkcanvas-hover-eraser - 2026-02-04
+
+### Stylus Best Practices Additions
+
+- Added `Tool.ERASER` enum value for persisted stroke tool metadata
+- Hover preview implemented via Compose Canvas overlay with AXIS_DISTANCE gate
+- Tool type filtering now accepts stylus, eraser, and finger input; eraser maps to stylus input tool type
