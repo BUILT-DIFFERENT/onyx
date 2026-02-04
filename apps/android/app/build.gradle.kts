@@ -112,8 +112,8 @@ dependencies {
     // JSON
     implementation("com.google.code.gson:gson:2.10.1")
 
-    // MuPDF
-    implementation("com.artifex.mupdf:fitz:1.15.+")
+    // MuPDF - PDF rendering (AGPL-3.0 license)
+    implementation("com.artifex.mupdf:fitz:1.24.10")
 
     // Testing
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")

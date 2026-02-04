@@ -4430,7 +4430,7 @@ dependencyResolutionManagement {
 
 ### Phase 6: PDF
 
-- [ ] 6.1 Add MuPDF dependency
+- [x] 6.1 Add MuPDF dependency
 
   **What to do**:
   - Add to `apps/android/app/build.gradle.kts`:
@@ -4480,7 +4480,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 6.1a Create PdfAssetStorage helper
+- [x] 6.1a Create PdfAssetStorage helper
 
   **What to do**:
   - Create `pdf/PdfAssetStorage.kt` for managing PDF file storage:

@@ -437,3 +437,34 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 
 **No code changes needed** - Full integration already complete from tasks 4.6, 4.9, 5.3, 5.4.
 
+
+## Phase 6: PDF Support
+
+### Task 6.1: MuPDF Dependency ✅
+
+**Upgraded MuPDF:**
+- From: 1.15.+ (pre-existing)
+- To: 1.24.10 (latest stable, per plan)
+- License: AGPL-3.0 (acceptable for Plan A prototype)
+
+**Verification:**
+- ./gradlew :app:dependencies shows com.artifex.mupdf:fitz:1.24.10
+- Build succeeds with new version
+
+### Task 6.1a: PdfAssetStorage ✅
+
+**Implementation:**
+- Storage location: {filesDir}/pdf_assets/{assetId}.pdf
+- Asset ID: UUID string referenced by PageEntity.pdfAssetId
+- Multi-page PDFs: All pages share same pdfAssetId
+
+**Methods:**
+- importPdf(uri): Copy from SAF URI to internal storage, return UUID
+- getFileForAsset(assetId): Get File for MuPDF
+- deleteAsset(assetId): Remove file
+- assetExists(assetId): Check existence
+
+**Files:**
+- apps/android/app/build.gradle.kts (MuPDF version)
+- apps/android/app/src/main/java/com/onyx/android/pdf/PdfAssetStorage.kt (new)
+
