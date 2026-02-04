@@ -1294,7 +1294,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
 
 ### Phase 2: Ink Interface & Models
 
-- [ ] 2.1 Define StrokePoint data class
+- [x] 2.1 Define StrokePoint data class
 
   **What to do**:
   - Create `ink/model/StrokePoint.kt`:
@@ -1323,7 +1323,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
 
 ---
 
-- [ ] 2.2 Define Stroke data class
+- [x] 2.2 Define Stroke data class
 
   **What to do**:
   - Create `ink/model/Stroke.kt`:
@@ -1398,7 +1398,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
 
 ---
 
-- [ ] 2.3 Define NoteKind enum
+- [x] 2.3 Define NoteKind enum
 
   **What to do**:
   - Create `ink/model/NoteKind.kt`:
@@ -1425,7 +1425,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
 
 ---
 
-- [ ] 2.4 Define Brush configuration (UI state)
+- [x] 2.4 Define Brush configuration (UI state)
 
   **What to do**:
   - Create `ink/model/Brush.kt`:
@@ -1465,7 +1465,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
 
 ---
 
-- [ ] 2.5 Define InkSurface interface
+- [x] 2.5 Define InkSurface interface
 
   **What to do**:
   - Create `ink/InkSurface.kt`:
@@ -1491,7 +1491,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
 
 ---
 
-- [ ] 2.6 Define ViewTransform and CoordinateConverter
+- [x] 2.6 Define ViewTransform and CoordinateConverter
 
   **What to do**:
   - Create `ink/model/ViewTransform.kt`:

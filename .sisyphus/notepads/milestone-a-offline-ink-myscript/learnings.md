@@ -75,6 +75,7 @@
 ### Phase 1 UI Foundation - COMPLETED ✅
 
 #### Tasks Completed
+
 - Task 1.6 (UI Foundation): Basic Compose scaffold with toolbar placeholder ✅
 - Task 1.6 (JUnit Test): ExampleTest.kt created and passing ✅
 - Task 1.7 (Material 3 Theme): Color.kt + Theme.kt with exact colors from plan ✅
@@ -83,6 +84,7 @@
 - Task 1.10 (Editor Screen): NoteEditorScreen with app bar and canvas placeholder ✅
 
 #### Files Created
+
 ```
 apps/android/app/src/main/java/com/onyx/android/
 ├── MainActivity.kt (updated - uses OnyxTheme + OnyxNavHost)
@@ -100,23 +102,51 @@ apps/android/app/src/test/java/com/onyx/android/
 ```
 
 #### Build Verification
+
 - `./gradlew :app:test` → BUILD SUCCESSFUL, ExampleTest passed ✅
 - `./gradlew :app:assembleDebug` → BUILD SUCCESSFUL, APK created ✅
-- JUnit 5 confirmed working (ExampleTest uses org.junit.jupiter.api.*)
+- JUnit 5 confirmed working (ExampleTest uses org.junit.jupiter.api.\*)
 
 #### Technical Notes
+
 - **TopAppBar Fix**: Required `@OptIn(ExperimentalMaterial3Api::class)` annotation in NoteEditorScreen
 - **MainActivity Update**: Changed from basic MaterialTheme to OnyxTheme + OnyxNavHost
 - **HomeScreen Stub**: Uses temporary HomeScreenViewModel with UUID generation (TODO: wire to NoteRepository in Phase 4)
 - **Navigation Flow**: HOME → FAB click → generates noteId → navigates to EDITOR/{noteId}
 
 #### Color Scheme (from plan)
+
 - OnyxPrimary = 0xFF1A1A2E (deep navy)
 - OnyxSecondary = 0xFF16213E (dark blue)
 - OnyxTertiary = 0xFF0F3460 (medium blue)
 - Light/dark color schemes configured
 
 #### Next Steps
+
 - Phase 2: Define ink models (StrokePoint, Stroke, NoteKind, Brush, ViewTransform) - tasks 2.1-2.6
 - Phase 3: Ink engine implementation (Jetpack Ink API, stroke capture)
 - Phase 4: Room database persistence
+
+## Session ses_5b3907f5f7fLXkG2c0Q1tN1gNm - 2026-02-04T20:17:22.186Z
+
+### StrokePoint Model
+
+- Added `StrokePoint` data class at `apps/android/app/src/main/java/com/onyx/android/ink/model/StrokePoint.kt`
+- Fields match v0 API (x, y, t, p, tx, ty, r) with Float coords and Long timestamp
+- `./gradlew :app:assembleDebug` succeeded
+
+## Session ses_59c6b0c7de2j2d0D7FXaqqrrsP - 2026-02-04T21:06:00.000Z
+
+### Stroke Model Extensions
+
+- Added `Stroke`, `StrokeStyle`, `StrokeBounds`, and `Tool` to `apps/android/app/src/main/java/com/onyx/android/ink/model/Stroke.kt`
+- `Tool` uses `@SerialName` for lowercase API values; `Stroke` intentionally not serializable
+- `./gradlew :app:assembleDebug` succeeded
+
+## Session ses_1d4a0a02f0bPzP1yY1cE7mQ8aN - 2026-02-04T22:00:00.000Z
+
+### Phase 2 Ink Model Additions
+
+- Added `NoteKind`, `Brush`, and `ViewTransform` models per plan
+- Added `InkSurface` interface for stroke manipulation hooks
+- `./gradlew :app:assembleDebug` succeeded
