@@ -374,3 +374,30 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - Engine config sets `configuration-manager.search-path` and `lang = en_CA`
 - `OnyxApplication` initializes engine and logs init success/failure
 - `./gradlew :app:assembleDebug` succeeded after changes
+
+## Session current - 2026-02-04
+
+### Task 5.3: MyScriptPageManager Complete ✅
+
+**MyScript v4.3.0 API Corrections (Critical):**
+- PointerEvent uses POSITIONAL parameters (not named) - Java interop limitation
+- OffscreenEditor.addListener() (NOT setListener)
+- OffscreenEditor has NO setViewSize() method in v4.x
+- HistoryManager.possibleUndoCount and possibleRedoCount (NOT canUndo/canRedo)
+
+**Implementation:**
+- Created MyScriptPageManager with per-page OffscreenEditor lifecycle
+- Coordinate conversion: pt → mm using fixed ratio (25.4/72)
+- ContentPackage storage: {filesDir}/myscript/page_{pageId}.iink
+- Stroke ID mapping via ItemIdHelper
+- Recognition callback via IOffscreenEditorListener.contentChanged()
+- Undo/redo with native history manager fallback to clear+re-feed
+
+**Files:**
+- apps/android/app/src/main/java/com/onyx/android/recognition/MyScriptPageManager.kt (241 lines)
+
+**Verification:**
+- lsp_diagnostics clean
+- ./gradlew :app:compileDebugKotlin → BUILD SUCCESSFUL
+- ./gradlew :app:assembleDebug → BUILD SUCCESSFUL
+

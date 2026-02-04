@@ -4163,7 +4163,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 5.3 Feed strokes to recognizer
+- [x] 5.3 Feed strokes to recognizer
 
   **What to do**:
   - On pen-up, convert Stroke to MyScript PointerEvents
