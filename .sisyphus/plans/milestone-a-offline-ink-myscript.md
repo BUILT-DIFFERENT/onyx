@@ -3116,7 +3116,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 4.8 Implement stroke serialization (JSON format)
+- [x] 4.8 Implement stroke serialization (JSON format)
 
   **What to do**:
   - Create `data/serialization/StrokeSerializer.kt`
@@ -3191,7 +3191,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 4.9 Create Repository pattern
+- [x] 4.9 Create Repository pattern
 
   **What to do**:
   - Create `data/repository/NoteRepository.kt`

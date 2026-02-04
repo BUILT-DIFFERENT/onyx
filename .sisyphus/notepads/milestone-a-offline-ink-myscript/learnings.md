@@ -329,3 +329,21 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - Room builder uses fallbackToDestructiveMigration() for v1 development
 - TypeConverters include Base64 encoding for ByteArray conversions
 - exportSchema = true to generate schemas/1.json for version control
+
+## Session ses_task-4-8-stroke-serialization - 2026-02-04
+
+### Stroke Serialization (JSON)
+
+- JSON chosen for v0 persistence for readability and tooling; Protocol Buffers deferred
+- `explicitNulls = false` omits null fields to reduce payload size
+- Persist raw stroke points (not smoothed) to allow future algorithm changes without migration
+- Field names align with v0 API (points: x/y/t/p/tx/ty/r; style: tool/color/baseWidth/minWidthFactor/maxWidthFactor; bounds: x/y/w/h)
+
+## Session ses_task-4-9-note-repository - 2026-02-04
+
+### NoteRepository
+
+- Repository wraps DAOs with business logic for notes, pages, strokes, and recognition
+- Timestamp cascade: stroke/page changes update page.updatedAt and note.updatedAt
+- createNote automatically creates a first page and initializes recognition index
+- Lamport clocks remain 0 in Plan A; reserved for future Plan C sync
