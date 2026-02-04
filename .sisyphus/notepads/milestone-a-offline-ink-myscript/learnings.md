@@ -310,3 +310,12 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - DeviceIdentity generates a UUID used as `ownerUserId` until Plan C authentication.
 - SharedPreferences (`onyx_device_identity` / `device_id`) used instead of EncryptedSharedPreferences.
 - UUID format validated against `^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`.
+
+## Session ses_entities-room-2026-02-04
+
+### Room Entity Notes
+
+- IDs for Note/Page/Stroke/Recognition entities are UUID strings (not Long/Int)
+- All timestamps are Unix milliseconds stored as Long
+- StrokeEntity overrides equals/hashCode to use ByteArray content comparison
+- RecognitionFtsEntity uses @Fts4(contentEntity) to keep FTS in sync with RecognitionIndexEntity

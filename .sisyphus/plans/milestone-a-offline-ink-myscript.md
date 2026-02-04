@@ -2751,7 +2751,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 4.2 Define NoteEntity (sync-compatible)
+- [x] 4.2 Define NoteEntity (sync-compatible)
 
   **What to do**:
   - Create `data/entity/NoteEntity.kt`:
@@ -2785,7 +2785,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 4.3 Define PageEntity (sync-compatible)
+- [x] 4.3 Define PageEntity (sync-compatible)
 
   **What to do**:
   - Create `data/entity/PageEntity.kt`:
@@ -2827,7 +2827,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 4.4 Define StrokeEntity with blob serialization
+- [x] 4.4 Define StrokeEntity with blob serialization
 
   **What to do**:
   - Create `data/entity/StrokeEntity.kt`:
@@ -2859,7 +2859,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 4.5 Define RecognitionIndexEntity
+- [x] 4.5 Define RecognitionIndexEntity
 
   **What to do**:
   - Create `data/entity/RecognitionIndexEntity.kt`:
@@ -2882,7 +2882,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 4.5a Define RecognitionFtsEntity (FTS table)
+- [x] 4.5a Define RecognitionFtsEntity (FTS table)
 
   **What to do**:
   - Create `data/entity/RecognitionFtsEntity.kt`:
