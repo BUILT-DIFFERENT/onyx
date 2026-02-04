@@ -110,6 +110,10 @@ private fun handleTouchEvent(
             if (!isSupportedToolType(actionToolType)) {
                 return false
             }
+            val contactSize = event.getSize(actionIndex)
+            if (contactSize > PALM_CONTACT_SIZE_THRESHOLD) {
+                return false
+            }
             if (isStylusToolType(actionToolType)) {
                 view.requestUnbufferedDispatch(event)
             }
@@ -127,6 +131,11 @@ private fun handleTouchEvent(
         }
 
         MotionEvent.ACTION_MOVE -> {
+            if (event.isCanceledEvent()) {
+                cancelActiveStrokes(view, event, activeStrokeIds, activeStrokePoints, activeStrokeStartTimes)
+                hoverPreviewState.hide()
+                return true
+            }
             val pointerCount = event.pointerCount
             for (index in 0 until pointerCount) {
                 if (!isSupportedToolType(event.getToolType(index))) {
@@ -145,6 +154,18 @@ private fun handleTouchEvent(
         MotionEvent.ACTION_UP,
         MotionEvent.ACTION_POINTER_UP,
         -> {
+            if (event.isCanceledEvent()) {
+                cancelActiveStroke(
+                    view = view,
+                    event = event,
+                    pointerId = pointerId,
+                    activeStrokeIds = activeStrokeIds,
+                    activeStrokePoints = activeStrokePoints,
+                    activeStrokeStartTimes = activeStrokeStartTimes,
+                )
+                hoverPreviewState.hide()
+                return true
+            }
             val strokeId = activeStrokeIds[pointerId] ?: return false
             val startTime = activeStrokeStartTimes[pointerId] ?: event.eventTime
             val strokeInput = createStrokeInput(event, actionIndex, startTime)
@@ -199,6 +220,43 @@ private fun handleTouchEvent(
     }
 
     return false
+}
+
+// MotionEvent.getSize returns a normalized touch size [0..1] where larger values
+// indicate a broader contact. Values above 0.5f are typically larger than a
+// finger pad and align with palm contacts, so we reject them early.
+private const val PALM_CONTACT_SIZE_THRESHOLD = 0.5f
+
+private fun MotionEvent.isCanceledEvent(): Boolean = (flags and MotionEvent.FLAG_CANCELED) != 0
+
+private fun cancelActiveStroke(
+    view: InProgressStrokesView,
+    event: MotionEvent,
+    pointerId: Int,
+    activeStrokeIds: MutableMap<Int, InProgressStrokeId>,
+    activeStrokePoints: MutableMap<Int, MutableList<StrokePoint>>,
+    activeStrokeStartTimes: MutableMap<Int, Long>,
+) {
+    val strokeId = activeStrokeIds[pointerId] ?: return
+    view.cancelStroke(strokeId, event)
+    activeStrokeIds.remove(pointerId)
+    activeStrokePoints.remove(pointerId)
+    activeStrokeStartTimes.remove(pointerId)
+}
+
+private fun cancelActiveStrokes(
+    view: InProgressStrokesView,
+    event: MotionEvent,
+    activeStrokeIds: MutableMap<Int, InProgressStrokeId>,
+    activeStrokePoints: MutableMap<Int, MutableList<StrokePoint>>,
+    activeStrokeStartTimes: MutableMap<Int, Long>,
+) {
+    activeStrokeIds.values.forEach { strokeId ->
+        view.cancelStroke(strokeId, event)
+    }
+    activeStrokeIds.clear()
+    activeStrokePoints.clear()
+    activeStrokeStartTimes.clear()
 }
 
 private fun createStrokeInput(

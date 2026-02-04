@@ -2238,7 +2238,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 3.2c Cancel + palm rejection handling
+- [x] 3.2c Cancel + palm rejection handling
 
   **What to do**:
   - Track motion sets per pointer; keep a minimal history of points for cancellation.

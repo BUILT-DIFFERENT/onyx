@@ -237,3 +237,11 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - Added `Tool.ERASER` enum value for persisted stroke tool metadata
 - Hover preview implemented via Compose Canvas overlay with AXIS_DISTANCE gate
 - Tool type filtering now accepts stylus, eraser, and finger input; eraser maps to stylus input tool type
+
+## Session ses_5c8b3e7a-palm-rejection - 2026-02-04
+
+### Palm Rejection + Cancel Flags
+
+- Added palm rejection using `MotionEvent.getSize()` with a 0.5f threshold to ignore large contact areas before stroke start
+- Added `FLAG_CANCELED` handling during move/up to cancel in-progress strokes immediately
+- `bun run android:lint` failed without Android SDK path (`ANDROID_HOME` or `apps/android/local.properties`)
