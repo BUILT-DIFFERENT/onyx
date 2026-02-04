@@ -260,3 +260,11 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 
 - `enableEdgeToEdge()` plus `WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE` enables edge-to-edge with transient system bars.
 - Compose inset helpers (`navigationBarsPadding()`, `systemGesturesPadding()`) are reliable for gesture/nav safety without direct `WindowInsets.systemBars` properties.
+
+## Session ses_zero-flicker-pen-up - 2026-02-04
+
+### Zero-Flicker Pen-Up Rendering
+
+- Use state hoisting in `NoteEditorScreen` to own the finished strokes list and update it immutably on ACTION_UP callbacks.
+- `InkCanvas` calls `onStrokeFinished` after `finishStroke`; by updating `strokes = strokes + newStroke`, Compose recomposes immediately so the finished layer draws before the front buffer clears visually.
+- Avoid persistence or async work inside `onStrokeFinished` to keep the finished stroke visible in the same frame or next vsync.

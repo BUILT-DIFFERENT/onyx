@@ -24,9 +24,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.onyx.android.ink.model.Brush
+import com.onyx.android.ink.model.Stroke
+import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.ink.ui.InkCanvas
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,6 +83,10 @@ fun NoteEditorScreen(
             }
         },
     ) { paddingValues ->
+        var strokes by remember { mutableStateOf<List<Stroke>>(emptyList()) }
+        val viewTransform = remember { ViewTransform.DEFAULT }
+        val brush = remember { Brush() }
+
         Column(
             modifier =
                 Modifier
@@ -90,9 +102,16 @@ fun NoteEditorScreen(
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
                 ) {
-                    Text(text = "Canvas placeholder")
+                    InkCanvas(
+                        strokes = strokes,
+                        viewTransform = viewTransform,
+                        brush = brush,
+                        onStrokeFinished = { newStroke ->
+                            strokes = strokes + newStroke
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 }
             }
         }

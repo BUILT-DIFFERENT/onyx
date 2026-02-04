@@ -2284,7 +2284,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 3.2f Zero‑flicker pen‑up commit
+- [x] 3.2f Zero‑flicker pen‑up commit
 
   **Goal**: When the user lifts the stylus, the stroke stays on screen with no flicker, gaps, or frame of disappearance.
 
