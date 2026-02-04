@@ -2561,7 +2561,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 3.7 Implement undo/redo
+- [x] 3.7 Implement undo/redo
 
   **What to do**:
   - Maintain undo stack (list of actions)

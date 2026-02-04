@@ -286,3 +286,11 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - Use a hit radius of 10 screen pixels scaled by zoom (`10f / viewTransform.zoom`).
 - Early reject strokes by expanding bounds by hit radius and skipping if the point is outside.
 - For remaining strokes, compute point-to-segment distance across stroke points and erase on first distance <= hit radius.
+
+## Session ses_task-3-7-undo-redo - 2026-02-04
+
+### Undo/Redo Semantics
+
+- Track ink mutations with an in-memory `InkAction` stack (AddStroke, RemoveStroke) and immutable stroke list updates.
+- New draw/erase actions push to undo stack, clear redo stack, and evict oldest actions beyond 50 via FIFO removal.
+- Undo reverses the last action and pushes it to redo; redo replays the action and pushes it back to undo.

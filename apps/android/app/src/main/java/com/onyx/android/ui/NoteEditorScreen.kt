@@ -20,6 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Redo
+import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,6 +35,7 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.onyx.android.ink.model.Brush
+import com.onyx.android.ink.model.InkAction
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
@@ -55,6 +59,42 @@ fun NoteEditorScreen(
 ) {
     var brush by remember { mutableStateOf(Brush()) }
     var lastNonEraserTool by remember { mutableStateOf(brush.tool) }
+    var strokes by remember { mutableStateOf<List<Stroke>>(emptyList()) }
+    val undoStack = remember { mutableStateListOf<InkAction>() }
+    val redoStack = remember { mutableStateListOf<InkAction>() }
+    val maxUndoActions = 50
+    val viewTransform = remember { ViewTransform.DEFAULT }
+
+    fun undo() {
+        val action = undoStack.removeLastOrNull() ?: return
+        when (action) {
+            is InkAction.AddStroke -> {
+                strokes = strokes - action.stroke
+            }
+
+            is InkAction.RemoveStroke -> {
+                strokes = strokes + action.stroke
+            }
+        }
+        redoStack.add(action)
+    }
+
+    fun redo() {
+        val action = redoStack.removeLastOrNull() ?: return
+        when (action) {
+            is InkAction.AddStroke -> {
+                strokes = strokes + action.stroke
+            }
+
+            is InkAction.RemoveStroke -> {
+                strokes = strokes - action.stroke
+            }
+        }
+        undoStack.add(action)
+        if (undoStack.size > maxUndoActions) {
+            undoStack.removeFirst()
+        }
+    }
     LaunchedEffect(brush.tool) {
         if (brush.tool != Tool.ERASER) {
             lastNonEraserTool = brush.tool
@@ -75,6 +115,18 @@ fun NoteEditorScreen(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = "More options",
                         )
+                    }
+                    IconButton(
+                        onClick = { undo() },
+                        enabled = undoStack.isNotEmpty(),
+                    ) {
+                        Icon(imageVector = Icons.Default.Undo, contentDescription = "Undo")
+                    }
+                    IconButton(
+                        onClick = { redo() },
+                        enabled = redoStack.isNotEmpty(),
+                    ) {
+                        Icon(imageVector = Icons.Default.Redo, contentDescription = "Redo")
                     }
                 },
             )
@@ -221,9 +273,6 @@ fun NoteEditorScreen(
             }
         },
     ) { paddingValues ->
-        var strokes by remember { mutableStateOf<List<Stroke>>(emptyList()) }
-        val viewTransform = remember { ViewTransform.DEFAULT }
-
         Column(
             modifier =
                 Modifier
@@ -246,9 +295,19 @@ fun NoteEditorScreen(
                         brush = brush,
                         onStrokeFinished = { newStroke ->
                             strokes = strokes + newStroke
+                            undoStack.add(InkAction.AddStroke(newStroke))
+                            if (undoStack.size > maxUndoActions) {
+                                undoStack.removeFirst()
+                            }
+                            redoStack.clear()
                         },
                         onStrokeErased = { erasedStroke ->
                             strokes = strokes - erasedStroke
+                            undoStack.add(InkAction.RemoveStroke(erasedStroke))
+                            if (undoStack.size > maxUndoActions) {
+                                undoStack.removeFirst()
+                            }
+                            redoStack.clear()
                         },
                         modifier = Modifier.fillMaxSize(),
                     )
