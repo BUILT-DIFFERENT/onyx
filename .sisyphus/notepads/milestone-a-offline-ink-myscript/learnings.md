@@ -294,3 +294,11 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - Track ink mutations with an in-memory `InkAction` stack (AddStroke, RemoveStroke) and immutable stroke list updates.
 - New draw/erase actions push to undo stack, clear redo stack, and evict oldest actions beyond 50 via FIFO removal.
 - Undo reverses the last action and pushes it to redo; redo replays the action and pushes it back to undo.
+
+## Session ses_task-3-8-zoom-pan - 2026-02-04
+
+### Zoom + Pan Gestures
+
+- Implemented pinch zoom and two-finger pan with Compose `Modifier.transformable` and `rememberTransformableState`.
+- Gesture updates mutate `ViewTransform` (zoom clamped to MIN_ZOOM/MAX_ZOOM; pan offsets accumulate in screen pixels).
+- Two-finger transformable gestures coexist with single-finger InkCanvas drawing (InkCanvas still uses `screenToPage`).

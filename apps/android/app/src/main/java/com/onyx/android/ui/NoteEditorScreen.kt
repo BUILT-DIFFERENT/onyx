@@ -1,6 +1,8 @@
 package com.onyx.android.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -63,7 +65,18 @@ fun NoteEditorScreen(
     val undoStack = remember { mutableStateListOf<InkAction>() }
     val redoStack = remember { mutableStateListOf<InkAction>() }
     val maxUndoActions = 50
-    val viewTransform = remember { ViewTransform.DEFAULT }
+    var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
+    val transformState =
+        rememberTransformableState { zoomChange, panChange, _ ->
+            viewTransform =
+                viewTransform.copy(
+                    zoom =
+                        (viewTransform.zoom * zoomChange)
+                            .coerceIn(ViewTransform.MIN_ZOOM, ViewTransform.MAX_ZOOM),
+                    panX = viewTransform.panX + panChange.x,
+                    panY = viewTransform.panY + panChange.y,
+                )
+        }
 
     fun undo() {
         val action = undoStack.removeLastOrNull() ?: return
@@ -92,7 +105,7 @@ fun NoteEditorScreen(
         }
         undoStack.add(action)
         if (undoStack.size > maxUndoActions) {
-            undoStack.removeFirst()
+            undoStack.removeAt(0)
         }
     }
     LaunchedEffect(brush.tool) {
@@ -287,7 +300,10 @@ fun NoteEditorScreen(
                         .systemGesturesPadding(),
             ) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .transformable(state = transformState),
                 ) {
                     InkCanvas(
                         strokes = strokes,
@@ -297,7 +313,7 @@ fun NoteEditorScreen(
                             strokes = strokes + newStroke
                             undoStack.add(InkAction.AddStroke(newStroke))
                             if (undoStack.size > maxUndoActions) {
-                                undoStack.removeFirst()
+                                undoStack.removeAt(0)
                             }
                             redoStack.clear()
                         },
@@ -305,7 +321,7 @@ fun NoteEditorScreen(
                             strokes = strokes - erasedStroke
                             undoStack.add(InkAction.RemoveStroke(erasedStroke))
                             if (undoStack.size > maxUndoActions) {
-                                undoStack.removeFirst()
+                                undoStack.removeAt(0)
                             }
                             redoStack.clear()
                         },

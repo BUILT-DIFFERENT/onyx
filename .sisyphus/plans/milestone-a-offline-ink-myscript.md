@@ -2681,7 +2681,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 3.8 Implement zoom and pan
+- [x] 3.8 Implement zoom and pan
 
   **What to do**:
   - Add pinch-to-zoom gesture handling
