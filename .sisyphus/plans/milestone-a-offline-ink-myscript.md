@@ -2269,7 +2269,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 3.2e Edge-to-edge + gesture nav safety
+- [x] 3.2e Edge-to-edge + gesture nav safety
 
   **What to do**:
   - Enable edge-to-edge content and respect insets around the canvas.

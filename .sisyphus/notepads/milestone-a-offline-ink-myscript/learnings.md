@@ -253,3 +253,10 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - `MotionEventPredictor.record(event)` should be called for real down/move/up events before requesting predictions.
 - Predicted points are safest rendered as separate in-progress strokes that are canceled on the next real move, keeping finished strokes real-only.
 - Using reduced alpha for predicted strokes keeps them visually distinct without affecting persisted stroke data.
+
+## Session ses_edge-to-edge-insets - 2026-02-04
+
+### Edge-to-Edge + Gesture Insets
+
+- `enableEdgeToEdge()` plus `WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE` enables edge-to-edge with transient system bars.
+- Compose inset helpers (`navigationBarsPadding()`, `systemGesturesPadding()`) are reliable for gesture/nav safety without direct `WindowInsets.systemBars` properties.
