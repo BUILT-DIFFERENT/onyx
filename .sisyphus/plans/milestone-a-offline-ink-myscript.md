@@ -782,16 +782,16 @@ Build a functional Android tablet app that captures stylus ink with low latency,
 7. **Device Identity** - UUID generation and persistence
 
 ### Definition of Done
-- [x] App builds: `./gradlew :app:assembleDebug` (from `apps/android/` directory) - **FIXED with JDK 17**
+- [ ] App builds: `./gradlew :app:assembleDebug` (from `apps/android/` directory) - **FIXED with JDK 17**
 - [ ] App launches on physical tablet ⚠️ **BLOCKED**: Requires physical device (see device-blocker.md)
-- [x] Can create multi-page notes
+- [ ] Can create multi-page notes
 - [ ] Can draw strokes with stylus (low latency) ⚠️ **BLOCKED**: Requires physical stylus with pressure/tilt (see device-blocker.md)
-- [x] Can undo/redo strokes
-- [x] Can zoom/pan canvas
-- [x] Strokes persist across app restarts
+- [ ] Can undo/redo strokes
+- [ ] Can zoom/pan canvas
+- [ ] Strokes persist across app restarts
 - [ ] MyScript produces recognized text ⚠️ **BLOCKED**: Recognition requires real pen strokes (see device-blocker.md)
-- [x] Search finds notes by recognized text
-- [x] PDF pages render with ink overlay
+- [ ] Search finds notes by recognized text
+- [ ] PDF pages render with ink overlay
 
 ### Must Have
 - Multi-page notes (add/navigate pages)
@@ -981,7 +981,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
 
 ---
 
-- [ ] 1.6 UI foundation (baseline)
+- [x] 1.6 UI foundation (baseline)
 
   **What to do**:
   - Add a basic Compose scaffold with a single, always-visible top toolbar.
@@ -1294,7 +1294,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
 
 ### Phase 2: Ink Interface & Models
 
-- [x] 2.1 Define StrokePoint data class
+- [ ] 2.1 Define StrokePoint data class
 
   **What to do**:
   - Create `ink/model/StrokePoint.kt`:
@@ -1323,7 +1323,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
 
 ---
 
-- [x] 2.2 Define Stroke data class
+- [ ] 2.2 Define Stroke data class
 
   **What to do**:
   - Create `ink/model/Stroke.kt`:
@@ -1398,7 +1398,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
 
 ---
 
-- [x] 2.3 Define NoteKind enum
+- [ ] 2.3 Define NoteKind enum
 
   **What to do**:
   - Create `ink/model/NoteKind.kt`:
@@ -1425,7 +1425,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
 
 ---
 
-- [x] 2.4 Define Brush configuration (UI state)
+- [ ] 2.4 Define Brush configuration (UI state)
 
   **What to do**:
   - Create `ink/model/Brush.kt`:
@@ -1465,7 +1465,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
 
 ---
 
-- [x] 2.5 Define InkSurface interface
+- [ ] 2.5 Define InkSurface interface
 
   **What to do**:
   - Create `ink/InkSurface.kt`:
@@ -1491,7 +1491,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
 
 ---
 
-- [x] 2.6 Define ViewTransform and CoordinateConverter
+- [ ] 2.6 Define ViewTransform and CoordinateConverter
 
   **What to do**:
   - Create `ink/model/ViewTransform.kt`:
@@ -1647,12 +1647,12 @@ dependencyResolutionManagement {
 ```
 
 **Compatibility Checks (Before Starting Phase 3):**
-- [x] Verify minSdk ≥ 21 in `apps/android/app/build.gradle.kts` (minSdk = 28 ✅)
-- [x] Verify compileSdk = 35 (✅)
-- [x] Verify Kotlin version ≥ 1.9.0 (for sealed class support) (1.9.22 ✅)
-- [x] Verify Compose BOM includes compatible versions (2024.02.00 ✅)
+- [ ] Verify minSdk ≥ 21 in `apps/android/app/build.gradle.kts` (minSdk = 28 ✅)
+- [ ] Verify compileSdk = 35 (✅)
+- [ ] Verify Kotlin version ≥ 1.9.0 (for sealed class support) (1.9.22 ✅)
+- [ ] Verify Compose BOM includes compatible versions (2024.02.00 ✅)
 
-- [x] 3.1 Add Jetpack Ink API dependencies
+- [ ] 3.1 Add Jetpack Ink API dependencies
 
   **What to do**:
   - Add to `apps/android/app/build.gradle.kts`:
@@ -1689,7 +1689,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 3.2 Create basic InkCanvas composable
+- [ ] 3.2 Create basic InkCanvas composable
 
   **What to do**:
   - Create `ink/ui/InkCanvas.kt` composable
@@ -2044,7 +2044,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 3.2a Ink API Fallback Decision (REQUIRED)
+- [ ] 3.2a Ink API Fallback Decision (REQUIRED)
 
   **What to do**:
   > This task validates InProgressStrokesView compatibility and decides whether to implement fallback.
@@ -2251,7 +2251,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 3.3 Implement stroke capture with pressure/tilt
+- [ ] 3.3 Implement stroke capture with pressure/tilt
 
   **What to do**:
   - Capture MotionEvent properties:
@@ -2358,7 +2358,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 3.4 Implement pen tool with variable width
+- [ ] 3.4 Implement pen tool with variable width
 
   **What to do**:
   - Use `StockBrushes.pressurePen()` as the BrushFamily (automatically varies width with pressure)
@@ -2410,7 +2410,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 3.5 Implement brush color and size picker
+- [ ] 3.5 Implement brush color and size picker
 
   **What to do**:
   - Add toolbar with color palette (5-10 colors)
@@ -2427,7 +2427,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 3.6 Implement stroke eraser tool
+- [ ] 3.6 Implement stroke eraser tool
 
   **What to do**:
   - Add eraser button to toolbar
@@ -2498,7 +2498,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 3.7 Implement undo/redo
+- [ ] 3.7 Implement undo/redo
 
   **What to do**:
   - Maintain undo stack (list of actions)
@@ -2617,7 +2617,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 3.8 Implement zoom and pan
+- [ ] 3.8 Implement zoom and pan
 
   **What to do**:
   - Add pinch-to-zoom gesture handling
@@ -2654,7 +2654,7 @@ dependencyResolutionManagement {
 
 **Recommended order**: 4.1 → 4.11 → 4.2-4.5a → 4.6 → 4.7 → 4.8 → 4.9 → **4.12** → 4.10
 
-- [x] 4.1 Add Room database dependencies
+- [ ] 4.1 Add Room database dependencies
 
   **What to do**:
   - Add to `apps/android/app/build.gradle.kts`:
@@ -2685,7 +2685,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 4.2 Define NoteEntity (sync-compatible)
+- [ ] 4.2 Define NoteEntity (sync-compatible)
 
   **What to do**:
   - Create `data/entity/NoteEntity.kt`:
@@ -2719,7 +2719,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 4.3 Define PageEntity (sync-compatible)
+- [ ] 4.3 Define PageEntity (sync-compatible)
 
   **What to do**:
   - Create `data/entity/PageEntity.kt`:
@@ -2761,7 +2761,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 4.4 Define StrokeEntity with blob serialization
+- [ ] 4.4 Define StrokeEntity with blob serialization
 
   **What to do**:
   - Create `data/entity/StrokeEntity.kt`:
@@ -2793,7 +2793,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 4.5 Define RecognitionIndexEntity
+- [ ] 4.5 Define RecognitionIndexEntity
 
   **What to do**:
   - Create `data/entity/RecognitionIndexEntity.kt`:
@@ -2816,7 +2816,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 4.5a Define RecognitionFtsEntity (FTS table)
+- [ ] 4.5a Define RecognitionFtsEntity (FTS table)
 
   **What to do**:
   - Create `data/entity/RecognitionFtsEntity.kt`:
@@ -2849,7 +2849,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 4.6 Create DAOs with Flow queries
+- [ ] 4.6 Create DAOs with Flow queries
 
   **What to do**:
   - Create `NoteDao`, `PageDao`, `StrokeDao`, `RecognitionDao`
@@ -2992,7 +2992,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 4.7 Create Room Database class
+- [ ] 4.7 Create Room Database class
 
   **What to do**:
   - Create `data/OnyxDatabase.kt`:
@@ -3049,7 +3049,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 4.8 Implement stroke serialization (JSON format)
+- [ ] 4.8 Implement stroke serialization (JSON format)
 
   **What to do**:
   - Create `data/serialization/StrokeSerializer.kt`
@@ -3122,7 +3122,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 4.9 Create Repository pattern
+- [ ] 4.9 Create Repository pattern
 
   **What to do**:
   - Create `data/repository/NoteRepository.kt`
@@ -3368,7 +3368,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 4.10 Integrate persistence with Editor
+- [ ] 4.10 Integrate persistence with Editor
 
   **What to do**:
   - Save strokes to database when drawing (on pen-up, call `repository.saveStroke()`)
@@ -3393,7 +3393,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 4.11 Implement Device ID generation
+- [ ] 4.11 Implement Device ID generation
 
   **What to do**:
   - Create `device/DeviceIdentity.kt`
@@ -3457,7 +3457,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 4.12 Create OnyxApplication and register in AndroidManifest
+- [ ] 4.12 Create OnyxApplication and register in AndroidManifest
 
   **What to do**:
   - Create `apps/android/app/src/main/java/com/onyx/android/OnyxApplication.kt`
@@ -3564,7 +3564,7 @@ dependencyResolutionManagement {
 - **OffscreenEditor**: Processes strokes without MyScript rendering, returns recognition results
 - **Reference**: `myscript-examples/samples/offscreen-interactivity/` (cloned to project)
 
-- [x] 5.1 Add MyScript SDK dependency
+- [ ] 5.1 Add MyScript SDK dependency
 
   **What to do**:
   - Verify `mavenCentral()` is in `settings.gradle.kts` (should already be there from task 1.5):
@@ -3603,13 +3603,19 @@ dependencyResolutionManagement {
   - Place at: `apps/android/app/src/main/java/com/myscript/certificate/MyCertificate.java`
   
   **Recognition Assets (v4.3) - AUTHORITATIVE PATH:**
-  
+
   **DECISION: Bundle in APK for Plan A (see `.sisyphus/plans/initial-setup.md` for full details)**
+
+  **Directory layout in this repo:**
+  - `assets/myscript-assets/recognition-assets/conf/en_CA.conf`
+  - `assets/myscript-assets/recognition-assets/conf/en_US/en_US.conf`
+  - `assets/myscript-assets/recognition-assets/resources/en_CA/*.res`
+  - `assets/myscript-assets/recognition-assets/resources/en_US/*.res`
   
   | Step | Location |
   |------|----------|
-  | Download | https://download.myscript.com/iink/recognitionAssets_iink_4.3 (`myscript-iink-recognition-text-en_US.zip`) |
-  | Bundle in APK | `apps/android/app/src/main/assets/myscript-assets/` |
+  | Download | https://download.myscript.com/iink/recognitionAssets_iink_4.3 (use the package that includes `en_CA` + `en_US`) |
+  | Bundle in APK | `apps/android/app/src/main/assets/myscript-assets/recognition-assets/` |
   | Runtime copy | `{filesDir}/myscript-recognition-assets/` (done by `MyScriptEngine.initialize()`) |
   | Engine config | `configuration-manager.search-path` → `{filesDir}/myscript-recognition-assets/` |
   
@@ -3633,14 +3639,15 @@ dependencyResolutionManagement {
   - [ ] Dependencies sync successfully: `./gradlew sync` completes without error
   - [ ] `./gradlew :app:dependencies | grep iink` shows `com.myscript:iink:4.3.0`
   - [ ] Certificate class exists: `ls apps/android/app/src/main/java/com/myscript/certificate/MyCertificate.java`
-  - [ ] Recognition assets bundled: `ls apps/android/app/src/main/assets/myscript-assets/conf/en_US.conf`
+  - [ ] Recognition assets bundled (US): `ls apps/android/app/src/main/assets/myscript-assets/recognition-assets/conf/en_US/en_US.conf`
+  - [ ] Recognition assets bundled (CA): `ls apps/android/app/src/main/assets/myscript-assets/recognition-assets/conf/en_CA.conf`
   - [ ] Build compiles: `./gradlew :app:assembleDebug`
 
   **Commit**: Group with 5.2
 
 ---
 
-- [x] 5.2 Initialize MyScript Engine
+- [ ] 5.2 Initialize MyScript Engine
 
   **What to do**:
   - Create `recognition/MyScriptEngine.kt` using OffscreenEditor pattern (v4.3):
@@ -3693,19 +3700,20 @@ dependencyResolutionManagement {
           engine = Engine.create(MyCertificate.getBytes())
           
           // Configure recognition assets path
-          // Assets are bundled in APK at: assets/myscript-assets/
+          // Assets are bundled in APK at: assets/myscript-assets/recognition-assets/
           // Copied at first launch to: {filesDir}/myscript-recognition-assets/
           val conf = engine!!.configuration
           val assetsPath = File(context.filesDir, "myscript-recognition-assets")
           
           // Copy bundled assets to filesDir if not already done
           if (!assetsPath.exists()) {
-            copyAssetsToFilesDir(context, "myscript-assets", assetsPath)
+            copyAssetsToFilesDir(context, "myscript-assets/recognition-assets", assetsPath)
           }
           
           conf.setStringArray("configuration-manager.search-path", 
             arrayOf(assetsPath.absolutePath))
-          conf.setString("lang", "en_US")
+          // Use Canadian assets by default; allow US as fallback.
+          conf.setString("lang", "en_CA")
           
           // NOTE: OffscreenEditor and ContentPackage are NOT created here.
           // They are per-page, managed by MyScriptPageManager.
@@ -4078,7 +4086,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 5.3 Feed strokes to recognizer
+- [ ] 5.3 Feed strokes to recognizer
 
   **What to do**:
   - On pen-up, convert Stroke to MyScript PointerEvents
@@ -4197,7 +4205,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 5.4 Implement realtime recognition
+- [ ] 5.4 Implement realtime recognition
 
   **What to do**:
   - Listen for recognition via `IOffscreenEditorListener.contentChanged()`
@@ -4290,7 +4298,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 5.5 Store recognized text in database
+- [ ] 5.5 Store recognized text in database
 
   **What to do**:
   - On recognition complete, update RecognitionIndexEntity
@@ -4335,7 +4343,7 @@ dependencyResolutionManagement {
 
 ### Phase 6: PDF
 
-- [x] 6.1 Add MuPDF dependency
+- [ ] 6.1 Add MuPDF dependency
 
   **What to do**:
   - Add to `apps/android/app/build.gradle.kts`:
@@ -4385,7 +4393,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 6.1a Create PdfAssetStorage helper
+- [ ] 6.1a Create PdfAssetStorage helper
 
   **What to do**:
   - Create `pdf/PdfAssetStorage.kt` for managing PDF file storage:
@@ -4459,7 +4467,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 6.2 Implement PDF loading from file picker
+- [ ] 6.2 Implement PDF loading from file picker
 
   **What to do**:
   - Add "Import PDF" button to Home screen (alongside FAB for new ink note)
@@ -4557,7 +4565,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 6.3 Render PDF page to canvas
+- [ ] 6.3 Render PDF page to canvas
 
   **What to do**:
   - Create `pdf/PdfRenderer.kt`
@@ -4616,7 +4624,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 6.4 Implement PDF zoom and pan
+- [ ] 6.4 Implement PDF zoom and pan
 
   **What to do**:
   - Apply same zoom/pan gestures as ink canvas
@@ -4637,7 +4645,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 6.5 Implement PDF text selection
+- [ ] 6.5 Implement PDF text selection
 
   **What to do**:
   - Use MuPDF text extraction APIs
@@ -4726,7 +4734,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 6.6 Overlay ink on PDF
+- [ ] 6.6 Overlay ink on PDF
 
   **What to do**:
   - Create composite view with PDF layer + ink layer
@@ -4802,7 +4810,7 @@ dependencyResolutionManagement {
 
 ### Phase 7: Search
 
-- [x] 7.1 Add FTS table for search
+- [ ] 7.1 Add FTS table for search
 
   **What to do**:
   - Create FTS4 virtual table in Room:
@@ -4838,7 +4846,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 7.2 Implement search query
+- [ ] 7.2 Implement search query
 
   **What to do**:
   - Add search method to DAO:
@@ -4871,7 +4879,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 7.3 Create search UI in Home screen
+- [ ] 7.3 Create search UI in Home screen
 
   **What to do**:
   - Add search bar at top of Home screen
@@ -4990,7 +4998,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 7.4 Navigate from search result
+- [ ] 7.4 Navigate from search result
 
   **What to do**:
   - On search result tap, navigate to note/page
@@ -5006,7 +5014,7 @@ dependencyResolutionManagement {
 
 ### Phase 8: Integration & Sync Verification
 
-- [x] 8.1 Multi-page note support
+- [ ] 8.1 Multi-page note support
 
   **What to do**:
   - Add page navigation (prev/next buttons or swipe)
@@ -5060,7 +5068,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [x] 8.4 Verify sync-compatible schema
+- [ ] 8.4 Verify sync-compatible schema
 
   **What to do**:
   - Review all entity schemas against v0 API contract (`V0-api.md`)
@@ -5151,16 +5159,16 @@ cd apps/android
 ```
 
 ### Final Checklist
-- [x] All "Must Have" features present
-- [x] All "Must NOT Have" items absent
-- [x] App builds and runs on tablet (BUILD VERIFIED - APK exists; RUNTIME requires physical device)
-- [x] Multi-page notes work
+- [ ] All "Must Have" features present
+- [ ] All "Must NOT Have" items absent
+- [ ] App builds and runs on tablet (BUILD VERIFIED - APK exists; RUNTIME requires physical device)
+- [ ] Multi-page notes work
 - [ ] Ink capture with pressure/tilt ⚠️ **BLOCKED**: Requires physical stylus hardware (see device-blocker.md)
-- [x] Stroke eraser works
-- [x] Undo/redo works
-- [x] Zoom/pan works
+- [ ] Stroke eraser works
+- [ ] Undo/redo works
+- [ ] Zoom/pan works
 - [ ] Recognition produces searchable text ⚠️ **BLOCKED**: Requires runtime verification with MyScript on real strokes (see device-blocker.md)
-- [x] PDF viewing with text selection and ink overlay
-- [x] Local search finds notes by content
-- [x] Device ID persists correctly
-- [x] Schema matches v0 API contract (verified via docs/schema-audit.md)
+- [ ] PDF viewing with text selection and ink overlay
+- [ ] Local search finds notes by content
+- [ ] Device ID persists correctly
+- [ ] Schema matches v0 API contract (verified via docs/schema-audit.md)
