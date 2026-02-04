@@ -3721,7 +3721,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 5.2 Initialize MyScript Engine
+- [x] 5.2 Initialize MyScript Engine
 
   **What to do**:
   - Create `recognition/MyScriptEngine.kt` using OffscreenEditor pattern (v4.3):
