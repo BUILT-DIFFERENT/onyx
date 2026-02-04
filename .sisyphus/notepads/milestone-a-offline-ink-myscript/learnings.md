@@ -380,31 +380,35 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 ### Task 5.3: MyScriptPageManager Complete ✅
 
 **MyScript v4.3.0 API Corrections (Critical):**
+
 - PointerEvent uses POSITIONAL parameters (not named) - Java interop limitation
 - OffscreenEditor.addListener() (NOT setListener)
 - OffscreenEditor has NO setViewSize() method in v4.x
 - HistoryManager.possibleUndoCount and possibleRedoCount (NOT canUndo/canRedo)
 
 **Implementation:**
+
 - Created MyScriptPageManager with per-page OffscreenEditor lifecycle
 - Coordinate conversion: pt → mm using fixed ratio (25.4/72)
-- ContentPackage storage: {filesDir}/myscript/page_{pageId}.iink
+- ContentPackage storage: {filesDir}/myscript/page\_{pageId}.iink
 - Stroke ID mapping via ItemIdHelper
 - Recognition callback via IOffscreenEditorListener.contentChanged()
 - Undo/redo with native history manager fallback to clear+re-feed
 
 **Files:**
+
 - apps/android/app/src/main/java/com/onyx/android/recognition/MyScriptPageManager.kt (241 lines)
 
 **Verification:**
+
 - lsp_diagnostics clean
 - ./gradlew :app:compileDebugKotlin → BUILD SUCCESSFUL
 - ./gradlew :app:assembleDebug → BUILD SUCCESSFUL
 
-
 ### Task 5.4: Realtime Recognition Integration ✅
 
 **ViewModel Integration:**
+
 - Added MyScriptPageManager as nullable property (graceful degradation if MyScript init fails)
 - Wire recognition callback in init{}: calls repository.updateRecognition()
 - Call myScriptPageManager.addStroke() on pen-up (when persist=true)
@@ -413,23 +417,26 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - Re-feed existing strokes to MyScript on page load for recognition continuity
 
 **Lifecycle:**
+
 - NoteEditorScreen creates MyScriptPageManager via remember{} if engine initialized
 - Pass to ViewModel via factory
 - Recognition happens automatically after each stroke via IOffscreenEditorListener
 
 **Files Modified:**
-- apps/android/app/src/main/java/com/onyx/android/ui/NoteEditorScreen.kt
 
+- apps/android/app/src/main/java/com/onyx/android/ui/NoteEditorScreen.kt
 
 ### Task 5.5: Store Recognition in Database ✅
 
 **Already Implemented:**
+
 - RecognitionIndexEntity created automatically when page is created (createPageForNote)
 - RecognitionDao.updateRecognition() uses UPDATE query (row already exists)
 - NoteRepository.updateRecognition() wraps DAO call and updates page timestamp
 - ViewModel recognition callback invokes repository.updateRecognition(pageId, text, "myscript-4.3")
 
 **Data Flow:**
+
 1. MyScript recognition fires → IOffscreenEditorListener.contentChanged()
 2. MyScriptPageManager exports text and invokes onRecognitionUpdated callback
 3. ViewModel receives callback → viewModelScope.launch { repository.updateRecognition() }
@@ -437,52 +444,65 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 
 **No code changes needed** - Full integration already complete from tasks 4.6, 4.9, 5.3, 5.4.
 
-
 ## Phase 6: PDF Support
 
 ### Task 6.1: MuPDF Dependency ✅
 
 **Upgraded MuPDF:**
+
 - From: 1.15.+ (pre-existing)
 - To: 1.24.10 (latest stable, per plan)
 - License: AGPL-3.0 (acceptable for Plan A prototype)
 
 **Verification:**
+
 - ./gradlew :app:dependencies shows com.artifex.mupdf:fitz:1.24.10
 - Build succeeds with new version
 
 ### Task 6.1a: PdfAssetStorage ✅
 
 **Implementation:**
+
 - Storage location: {filesDir}/pdf_assets/{assetId}.pdf
 - Asset ID: UUID string referenced by PageEntity.pdfAssetId
 - Multi-page PDFs: All pages share same pdfAssetId
 
 **Methods:**
+
 - importPdf(uri): Copy from SAF URI to internal storage, return UUID
 - getFileForAsset(assetId): Get File for MuPDF
 - deleteAsset(assetId): Remove file
 - assetExists(assetId): Check existence
 
 **Files:**
+
 - apps/android/app/build.gradle.kts (MuPDF version)
 - apps/android/app/src/main/java/com/onyx/android/pdf/PdfAssetStorage.kt (new)
-
 
 ## Phase 7: Search
 
 ### Tasks 7.1-7.2: FTS Search ✅
 
 **Already Implemented:**
+
 - RecognitionFtsEntity created with @Fts4(contentEntity = RecognitionIndexEntity::class)
 - Room auto-generates triggers for FTS sync
 - RecognitionDao.search(query) uses INNER JOIN with docid/rowid mapping
 - Returns Flow<List<RecognitionIndexEntity>> with pageId, noteId
 
 **Implementation Details:**
+
 - FTS table: recognition_fts (single column: recognizedText)
-- Query: SELECT ri.* FROM recognition_index ri INNER JOIN recognition_fts fts ON ri.rowid = fts.docid WHERE fts.recognizedText MATCH :query
+- Query: SELECT ri.\* FROM recognition_index ri INNER JOIN recognition_fts fts ON ri.rowid = fts.docid WHERE fts.recognizedText MATCH :query
 - Room manages rowid sync automatically
 
 **No code changes needed** - Implemented in tasks 4.6 and 4.7.
 
+## Session current - 2026-02-04
+
+### Task 6.2: PDF Import from Home ✅
+
+- Added HomeScreen TopAppBar action to launch SAF OpenDocument filtered to application/pdf
+- HomeScreenViewModel imports PDFs via PdfAssetStorage.importPdf, opens with MuPDF Document.openDocument, reads page bounds, and creates pdf pages after deleting the initial blank page
+- Large PDF warning shown for files >50MB or >100 pages; import continues and navigates to editor
+- MuPDF cleanup: page.destroy() per page, document.destroy() in finally

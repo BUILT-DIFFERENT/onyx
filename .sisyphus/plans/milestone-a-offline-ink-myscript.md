@@ -4556,7 +4556,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 6.2 Implement PDF loading from file picker
+- [x] 6.2 Implement PDF loading from file picker
 
   **What to do**:
   - Add "Import PDF" button to Home screen (alongside FAB for new ink note)
