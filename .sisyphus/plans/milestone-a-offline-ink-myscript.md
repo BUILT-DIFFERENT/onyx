@@ -4903,7 +4903,7 @@ dependencyResolutionManagement {
 
 ### Phase 7: Search
 
-- [ ] 7.1 Add FTS table for search
+- [x] 7.1 Add FTS table for search
 
   **What to do**:
   - Create FTS4 virtual table in Room:
@@ -4939,7 +4939,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 7.2 Implement search query
+- [x] 7.2 Implement search query
 
   **What to do**:
   - Add search method to DAO:

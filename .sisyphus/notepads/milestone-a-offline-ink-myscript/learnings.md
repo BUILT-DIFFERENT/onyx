@@ -468,3 +468,21 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - apps/android/app/build.gradle.kts (MuPDF version)
 - apps/android/app/src/main/java/com/onyx/android/pdf/PdfAssetStorage.kt (new)
 
+
+## Phase 7: Search
+
+### Tasks 7.1-7.2: FTS Search ✅
+
+**Already Implemented:**
+- RecognitionFtsEntity created with @Fts4(contentEntity = RecognitionIndexEntity::class)
+- Room auto-generates triggers for FTS sync
+- RecognitionDao.search(query) uses INNER JOIN with docid/rowid mapping
+- Returns Flow<List<RecognitionIndexEntity>> with pageId, noteId
+
+**Implementation Details:**
+- FTS table: recognition_fts (single column: recognizedText)
+- Query: SELECT ri.* FROM recognition_index ri INNER JOIN recognition_fts fts ON ri.rowid = fts.docid WHERE fts.recognizedText MATCH :query
+- Room manages rowid sync automatically
+
+**No code changes needed** - Implemented in tasks 4.6 and 4.7.
+
