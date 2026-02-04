@@ -4385,7 +4385,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 5.5 Store recognized text in database
+- [x] 5.5 Store recognized text in database
 
   **What to do**:
   - On recognition complete, update RecognitionIndexEntity

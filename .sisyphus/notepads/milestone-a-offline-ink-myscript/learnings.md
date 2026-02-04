@@ -420,3 +420,20 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 **Files Modified:**
 - apps/android/app/src/main/java/com/onyx/android/ui/NoteEditorScreen.kt
 
+
+### Task 5.5: Store Recognition in Database ✅
+
+**Already Implemented:**
+- RecognitionIndexEntity created automatically when page is created (createPageForNote)
+- RecognitionDao.updateRecognition() uses UPDATE query (row already exists)
+- NoteRepository.updateRecognition() wraps DAO call and updates page timestamp
+- ViewModel recognition callback invokes repository.updateRecognition(pageId, text, "myscript-4.3")
+
+**Data Flow:**
+1. MyScript recognition fires → IOffscreenEditorListener.contentChanged()
+2. MyScriptPageManager exports text and invokes onRecognitionUpdated callback
+3. ViewModel receives callback → viewModelScope.launch { repository.updateRecognition() }
+4. Repository updates RecognitionIndexEntity.recognizedText and timestamps
+
+**No code changes needed** - Full integration already complete from tasks 4.6, 4.9, 5.3, 5.4.
+
