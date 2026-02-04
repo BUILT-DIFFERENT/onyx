@@ -2310,7 +2310,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 3.3 Implement stroke capture with pressure/tilt
+- [x] 3.3 Implement stroke capture with pressure/tilt
 
   **What to do**:
   - Capture MotionEvent properties:
@@ -2419,7 +2419,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 3.4 Implement pen tool with variable width
+- [x] 3.4 Implement pen tool with variable width
 
   **What to do**:
   - Use `StockBrushes.pressurePen()` as the BrushFamily (automatically varies width with pressure)
@@ -2472,7 +2472,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 3.5 Implement brush color and size picker
+- [x] 3.5 Implement brush color and size picker
 
   **What to do**:
   - Add toolbar with color palette (5-10 colors)

@@ -268,3 +268,12 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - Use state hoisting in `NoteEditorScreen` to own the finished strokes list and update it immutably on ACTION_UP callbacks.
 - `InkCanvas` calls `onStrokeFinished` after `finishStroke`; by updating `strokes = strokes + newStroke`, Compose recomposes immediately so the finished layer draws before the front buffer clears visually.
 - Avoid persistence or async work inside `onStrokeFinished` to keep the finished stroke visible in the same frame or next vsync.
+
+## Session ses_task-3-5-brush-toolbar - 2026-02-04
+
+### Brush Picker UI (Material 3)
+
+- Bottom toolbar replaced with a scrollable circular color palette and a size slider section.
+- Palette uses 7 swatches (black, blue, red, green, yellow, orange, purple) with a primary-colored selection ring and subtle neutral border for contrast on light colors.
+- Size picker uses a Material 3 Slider (1f..8f, step = 1) with a live preview dot and numeric label to make the selected size obvious.
+- All accents and text styles are derived from `MaterialTheme.colorScheme` to stay aligned with OnyxPrimary/Secondary theme colors.
