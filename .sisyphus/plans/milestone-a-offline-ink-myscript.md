@@ -2718,7 +2718,7 @@ dependencyResolutionManagement {
 
 **Recommended order**: 4.1 → 4.11 → 4.2-4.5a → 4.6 → 4.7 → 4.8 → 4.9 → **4.12** → 4.10
 
-- [ ] 4.1 Add Room database dependencies
+- [x] 4.1 Add Room database dependencies
 
   **What to do**:
   - Add to `apps/android/app/build.gradle.kts`:
@@ -3463,7 +3463,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 4.11 Implement Device ID generation
+- [x] 4.11 Implement Device ID generation
 
   **What to do**:
   - Create `device/DeviceIdentity.kt`

@@ -302,3 +302,11 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - Implemented pinch zoom and two-finger pan with Compose `Modifier.transformable` and `rememberTransformableState`.
 - Gesture updates mutate `ViewTransform` (zoom clamped to MIN_ZOOM/MAX_ZOOM; pan offsets accumulate in screen pixels).
 - Two-finger transformable gestures coexist with single-finger InkCanvas drawing (InkCanvas still uses `screenToPage`).
+
+## Session ses_task-4-11-device-identity - 2026-02-04
+
+### Device Identity
+
+- DeviceIdentity generates a UUID used as `ownerUserId` until Plan C authentication.
+- SharedPreferences (`onyx_device_identity` / `device_id`) used instead of EncryptedSharedPreferences.
+- UUID format validated against `^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`.
