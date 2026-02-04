@@ -4972,7 +4972,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 7.3 Create search UI in Home screen
+- [x] 7.3 Create search UI in Home screen
 
   **What to do**:
   - Add search bar at top of Home screen

@@ -4,29 +4,38 @@ import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -35,8 +44,20 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artifex.mupdf.fitz.Document
 import com.onyx.android.OnyxApplication
 import com.onyx.android.data.repository.NoteRepository
+import com.onyx.android.data.repository.SearchResultItem
 import com.onyx.android.pdf.PdfAssetStorage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -51,6 +72,8 @@ fun HomeScreen(onNavigateToEditor: (String) -> Unit) {
             key = "HomeScreenViewModel",
             factory = HomeScreenViewModelFactory(repository, pdfAssetStorage),
         )
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchResults by viewModel.searchResults.collectAsState()
     var warningMessage by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val openPdfLauncher =
@@ -116,23 +139,105 @@ fun HomeScreen(onNavigateToEditor: (String) -> Unit) {
                 },
             )
         }
-        LazyColumn(
+        Column(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-            contentPadding = PaddingValues(bottom = 80.dp),
+                    .padding(paddingValues),
         ) {
-            // Placeholder for notes list (empty until repository wiring in Phase 4).
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = viewModel::onSearchQueryChange,
+                placeholder = { Text(text = "Search notes...") },
+                leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+
+            if (searchResults.isNotEmpty()) {
+                LazyColumn(
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 80.dp),
+                ) {
+                    items(searchResults) { result ->
+                        SearchResultRow(result = result)
+                    }
+                }
+            } else {
+                val emptyStateText =
+                    if (searchQuery.length >= 2) {
+                        "No results found"
+                    } else {
+                        "Type to search notes..."
+                    }
+                Text(
+                    text = emptyStateText,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
 
+@Composable
+private fun SearchResultRow(result: SearchResultItem) {
+    Surface(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+        tonalElevation = 1.dp,
+        shape = MaterialTheme.shapes.medium,
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = result.noteTitle,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = result.snippetText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 private class HomeScreenViewModel(
     private val repository: NoteRepository,
     private val pdfAssetStorage: PdfAssetStorage,
 ) : ViewModel() {
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    val searchResults: StateFlow<List<SearchResultItem>> =
+        _searchQuery
+            .debounce(300)
+            .flatMapLatest { query ->
+                if (query.length < 2) {
+                    Log.d("HomeScreen", "Search query='$query' results=0")
+                    flowOf(emptyList())
+                } else {
+                    repository.searchNotes(query).onEach { results ->
+                        Log.d("HomeScreen", "Search query='$query' results=${results.size}")
+                    }
+                }
+            }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
+    }
+
     fun createNote(
         onNavigateToEditor: (String) -> Unit,
         onError: (String) -> Unit,

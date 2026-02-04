@@ -11,7 +11,18 @@ import com.onyx.android.data.entity.StrokeEntity
 import com.onyx.android.data.serialization.StrokeSerializer
 import com.onyx.android.device.DeviceIdentity
 import com.onyx.android.ink.model.Stroke
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.util.UUID
+
+data class SearchResultItem(
+    val noteId: String,
+    val noteTitle: String,
+    val pageId: String,
+    val pageNumber: Int,
+    val snippetText: String,
+    val matchScore: Double,
+)
 
 @Suppress("TooManyFunctions")
 class NoteRepository(
@@ -188,6 +199,28 @@ class NoteRepository(
     suspend fun deleteNote(noteId: String) {
         val now = System.currentTimeMillis()
         noteDao.softDelete(noteId, now)
+    }
+
+    fun searchNotes(query: String): Flow<List<SearchResultItem>> {
+        return recognitionDao.search(query).map { recognitionHits ->
+            recognitionHits
+                .mapNotNull { recognition ->
+                    val page = pageDao.getById(recognition.pageId) ?: return@mapNotNull null
+                    val note = noteDao.getById(page.noteId) ?: return@mapNotNull null
+
+                    val snippet = recognition.recognizedText.orEmpty().take(100)
+
+                    SearchResultItem(
+                        noteId = note.noteId,
+                        noteTitle = note.title.ifEmpty { "Untitled Note" },
+                        pageId = recognition.pageId,
+                        pageNumber = page.indexInNote + 1,
+                        snippetText = snippet,
+                        matchScore = 1.0,
+                    )
+                }.distinctBy { it.noteId }
+                .sortedByDescending { it.matchScore }
+        }
     }
 
     private suspend fun updatePageTimestamp(pageId: String) {

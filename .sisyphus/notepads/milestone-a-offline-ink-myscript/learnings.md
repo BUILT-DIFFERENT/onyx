@@ -534,3 +534,11 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - Mixed pages reuse the PDF renderer path; InkCanvas now active for both `pdf` and `mixed` kinds
 - Page kind upgrades from `pdf` to `mixed` after first stroke; logs added for kind change and stroke points (pt units)
 - Alignment relies on `screenToPage` for capture and `pageToScreen` for render, keeping strokes locked to the PDF under zoom/pan
+
+## Session current - 2026-02-04
+
+### Task 7.3: Home Search UI
+
+- Flow search pipeline uses `_searchQuery.debounce(300).flatMapLatest { ... }.stateIn(...)` to cancel stale queries
+- `NoteRepository.searchNotes()` joins FTS hits with page/note metadata, generates 100-char snippets, and dedupes by `noteId`
+- Search UI on Home screen uses `OutlinedTextField` + `LazyColumn` results with title/snippet display
