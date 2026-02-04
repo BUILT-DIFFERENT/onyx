@@ -2254,7 +2254,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 3.2d Motion prediction (optional, recommended)
+- [x] 3.2d Motion prediction (optional, recommended)
 
   **What to do**:
   - Use `MotionEventPredictor` to generate predicted points during `ACTION_MOVE`.

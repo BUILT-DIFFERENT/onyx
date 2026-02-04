@@ -1,5 +1,6 @@
 package com.onyx.android.ink.ui
 
+import android.content.Context
 import android.graphics.Color.parseColor
 import android.view.MotionEvent
 import androidx.compose.foundation.Canvas
@@ -30,6 +31,7 @@ import com.onyx.android.ink.model.StrokeBounds
 import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
+import java.lang.reflect.Method
 import java.util.UUID
 import kotlin.math.cos
 import kotlin.math.min
@@ -53,6 +55,7 @@ fun InkCanvas(
     val activeStrokeIds = remember { mutableMapOf<Int, InProgressStrokeId>() }
     val activeStrokePoints = remember { mutableMapOf<Int, MutableList<StrokePoint>>() }
     val activeStrokeStartTimes = remember { mutableMapOf<Int, Long>() }
+    val predictedStrokeIds = remember { mutableMapOf<Int, InProgressStrokeId>() }
 
     Box(modifier = modifier) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -63,6 +66,7 @@ fun InkCanvas(
 
         AndroidView(
             factory = { context ->
+                val motionPredictionAdapter = MotionPredictionAdapter.create(context)
                 InProgressStrokesView(context).apply {
                     setOnTouchListener { _, event ->
                         handleTouchEvent(
@@ -73,6 +77,8 @@ fun InkCanvas(
                             activeStrokeIds = activeStrokeIds,
                             activeStrokePoints = activeStrokePoints,
                             activeStrokeStartTimes = activeStrokeStartTimes,
+                            predictedStrokeIds = predictedStrokeIds,
+                            motionPredictionAdapter = motionPredictionAdapter,
                             hoverPreviewState = hoverPreviewState,
                             onStrokeFinished = currentOnStrokeFinished,
                         )
@@ -96,6 +102,8 @@ private fun handleTouchEvent(
     activeStrokeIds: MutableMap<Int, InProgressStrokeId>,
     activeStrokePoints: MutableMap<Int, MutableList<StrokePoint>>,
     activeStrokeStartTimes: MutableMap<Int, Long>,
+    predictedStrokeIds: MutableMap<Int, InProgressStrokeId>,
+    motionPredictionAdapter: MotionPredictionAdapter?,
     hoverPreviewState: HoverPreviewState,
     onStrokeFinished: (Stroke) -> Unit,
 ): Boolean {
@@ -118,6 +126,8 @@ private fun handleTouchEvent(
                 view.requestUnbufferedDispatch(event)
             }
             hoverPreviewState.hide()
+            cancelPredictedStrokes(view, event, predictedStrokeIds)
+            motionPredictionAdapter?.record(event)
             val startTime = event.eventTime
             activeStrokeStartTimes[pointerId] = startTime
             val strokeInput = createStrokeInput(event, actionIndex, startTime)
@@ -133,9 +143,12 @@ private fun handleTouchEvent(
         MotionEvent.ACTION_MOVE -> {
             if (event.isCanceledEvent()) {
                 cancelActiveStrokes(view, event, activeStrokeIds, activeStrokePoints, activeStrokeStartTimes)
+                cancelPredictedStrokes(view, event, predictedStrokeIds)
                 hoverPreviewState.hide()
                 return true
             }
+            motionPredictionAdapter?.record(event)
+            cancelPredictedStrokes(view, event, predictedStrokeIds)
             val pointerCount = event.pointerCount
             for (index in 0 until pointerCount) {
                 if (!isSupportedToolType(event.getToolType(index))) {
@@ -147,6 +160,39 @@ private fun handleTouchEvent(
                 activeStrokePoints[movePointerId]?.add(
                     createStrokePoint(event, index, viewTransform),
                 )
+            }
+            val predictedEvent = motionPredictionAdapter?.predict()
+            if (predictedEvent != null) {
+                try {
+                    val predictedPointerCount = predictedEvent.pointerCount
+                    for (index in 0 until predictedPointerCount) {
+                        if (!isSupportedToolType(predictedEvent.getToolType(index))) {
+                            continue
+                        }
+                        val predictedPointerId = predictedEvent.getPointerId(index)
+                        if (!activeStrokeIds.containsKey(predictedPointerId)) {
+                            continue
+                        }
+                        val startTime = activeStrokeStartTimes[predictedPointerId] ?: predictedEvent.eventTime
+                        val startIndex = event.findPointerIndex(predictedPointerId)
+                        val startInput =
+                            if (startIndex >= 0) {
+                                createStrokeInput(event, startIndex, startTime)
+                            } else {
+                                createStrokeInput(predictedEvent, index, startTime)
+                            }
+                        val effectiveBrush = brush.withToolType(predictedEvent.getToolType(index))
+                        val predictedStrokeId =
+                            view.startStroke(
+                                startInput,
+                                effectiveBrush.toInkBrush(viewTransform, PREDICTED_STROKE_ALPHA),
+                            )
+                        view.addToStroke(predictedEvent, predictedPointerId, predictedStrokeId)
+                        predictedStrokeIds[predictedPointerId] = predictedStrokeId
+                    }
+                } finally {
+                    predictedEvent.recycle()
+                }
             }
             return true
         }
@@ -163,6 +209,7 @@ private fun handleTouchEvent(
                     activeStrokePoints = activeStrokePoints,
                     activeStrokeStartTimes = activeStrokeStartTimes,
                 )
+                cancelPredictedStroke(view, event, pointerId, predictedStrokeIds)
                 hoverPreviewState.hide()
                 return true
             }
@@ -170,6 +217,8 @@ private fun handleTouchEvent(
             val startTime = activeStrokeStartTimes[pointerId] ?: event.eventTime
             val strokeInput = createStrokeInput(event, actionIndex, startTime)
             val effectiveBrush = brush.withToolType(actionToolType)
+            cancelPredictedStroke(view, event, pointerId, predictedStrokeIds)
+            motionPredictionAdapter?.record(event)
             view.finishStroke(strokeInput, strokeId)
             val points = activeStrokePoints[pointerId].orEmpty().toMutableList()
             points.add(createStrokePoint(event, actionIndex, viewTransform))
@@ -208,6 +257,7 @@ private fun handleTouchEvent(
         }
 
         MotionEvent.ACTION_CANCEL -> {
+            cancelPredictedStrokes(view, event, predictedStrokeIds)
             activeStrokeIds.values.forEach { strokeId ->
                 view.cancelStroke(strokeId, event)
             }
@@ -226,6 +276,7 @@ private fun handleTouchEvent(
 // indicate a broader contact. Values above 0.5f are typically larger than a
 // finger pad and align with palm contacts, so we reject them early.
 private const val PALM_CONTACT_SIZE_THRESHOLD = 0.5f
+private const val PREDICTED_STROKE_ALPHA = 0.35f
 
 private fun MotionEvent.isCanceledEvent(): Boolean = (flags and MotionEvent.FLAG_CANCELED) != 0
 
@@ -257,6 +308,28 @@ private fun cancelActiveStrokes(
     activeStrokeIds.clear()
     activeStrokePoints.clear()
     activeStrokeStartTimes.clear()
+}
+
+private fun cancelPredictedStroke(
+    view: InProgressStrokesView,
+    event: MotionEvent,
+    pointerId: Int,
+    predictedStrokeIds: MutableMap<Int, InProgressStrokeId>,
+) {
+    val predictedStrokeId = predictedStrokeIds[pointerId] ?: return
+    view.cancelStroke(predictedStrokeId, event)
+    predictedStrokeIds.remove(pointerId)
+}
+
+private fun cancelPredictedStrokes(
+    view: InProgressStrokesView,
+    event: MotionEvent,
+    predictedStrokeIds: MutableMap<Int, InProgressStrokeId>,
+) {
+    predictedStrokeIds.values.forEach { strokeId ->
+        view.cancelStroke(strokeId, event)
+    }
+    predictedStrokeIds.clear()
 }
 
 private fun createStrokeInput(
@@ -342,7 +415,10 @@ private fun calculateBounds(points: List<StrokePoint>): StrokeBounds {
     )
 }
 
-private fun Brush.toInkBrush(viewTransform: ViewTransform): InkBrush {
+private fun Brush.toInkBrush(
+    viewTransform: ViewTransform,
+    alphaMultiplier: Float = 1f,
+): InkBrush {
     val family =
         when (tool) {
             Tool.PEN -> StockBrushes.pressurePenLatest
@@ -351,12 +427,59 @@ private fun Brush.toInkBrush(viewTransform: ViewTransform): InkBrush {
         }
     val size = viewTransform.pageWidthToScreen(baseWidth).coerceAtLeast(0.1f)
     val epsilon = (size * 0.15f).coerceAtLeast(0.1f)
+    val baseColor = parseColor(color)
+    val adjustedColor = applyAlpha(baseColor, alphaMultiplier)
     return InkBrush.createWithColorIntArgb(
         family,
-        parseColor(color),
+        adjustedColor,
         size,
         epsilon,
     )
+}
+
+private fun applyAlpha(
+    colorInt: Int,
+    alphaMultiplier: Float,
+): Int {
+    val clampedMultiplier = alphaMultiplier.coerceIn(0f, 1f)
+    val baseAlpha = (colorInt ushr 24) and 0xFF
+    val adjustedAlpha = (baseAlpha * clampedMultiplier).toInt().coerceIn(0, 255)
+    return (adjustedAlpha shl 24) or (colorInt and 0x00FFFFFF)
+}
+
+private class MotionPredictionAdapter private constructor(
+    private val predictor: Any,
+    private val recordMethod: Method,
+    private val predictMethod: Method,
+) {
+    fun record(event: MotionEvent) {
+        recordMethod.invoke(predictor, event)
+    }
+
+    fun predict(): MotionEvent? = predictMethod.invoke(predictor) as? MotionEvent
+
+    companion object {
+        fun create(context: Context): MotionPredictionAdapter? {
+            val classNames =
+                listOf(
+                    "android.view.MotionEventPredictor",
+                    "androidx.input.motionprediction.MotionEventPredictor",
+                )
+            for (className in classNames) {
+                try {
+                    val clazz = Class.forName(className)
+                    val createMethod = clazz.getMethod("create", Context::class.java)
+                    val predictor = createMethod.invoke(null, context) ?: continue
+                    val recordMethod = clazz.getMethod("record", MotionEvent::class.java)
+                    val predictMethod = clazz.getMethod("predict")
+                    return MotionPredictionAdapter(predictor, recordMethod, predictMethod)
+                } catch (_: Exception) {
+                    continue
+                }
+            }
+            return null
+        }
+    }
 }
 
 private fun Int.toInputToolType(): InputToolType =

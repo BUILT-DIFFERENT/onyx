@@ -245,3 +245,11 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - Added palm rejection using `MotionEvent.getSize()` with a 0.5f threshold to ignore large contact areas before stroke start
 - Added `FLAG_CANCELED` handling during move/up to cancel in-progress strokes immediately
 - `bun run android:lint` failed without Android SDK path (`ANDROID_HOME` or `apps/android/local.properties`)
+
+## Session ses_motion-prediction - 2026-02-04
+
+### MotionEventPredictor Integration Notes
+
+- `MotionEventPredictor.record(event)` should be called for real down/move/up events before requesting predictions.
+- Predicted points are safest rendered as separate in-progress strokes that are canceled on the next real move, keeping finished strokes real-only.
+- Using reduced alpha for predicted strokes keeps them visually distinct without affecting persisted stroke data.
