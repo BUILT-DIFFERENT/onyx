@@ -364,3 +364,13 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - First page selected from `PageDao.getPagesForNote(noteId)` and strokes loaded with `NoteRepository.getStrokesForPage(pageId)`
 - Pen-up events persist strokes with `NoteRepository.saveStroke(pageId, stroke)` while keeping in-memory updates immediate for zero-flicker rendering
 - Build/lint verified via `./gradlew :app:compileDebugKotlin :app:lint :app:assembleDebug`
+
+## Session ses_task-5-2-myscript-engine - 2026-02-04
+
+### MyScript Engine Singleton
+
+- Added `MyScriptEngine` wrapper to initialize MyScript v4.3 with `MyCertificate.getBytes()`
+- Assets copied from APK `assets/myscript-assets/recognition-assets/` to `{filesDir}/myscript-recognition-assets/`
+- Engine config sets `configuration-manager.search-path` and `lang = en_CA`
+- `OnyxApplication` initializes engine and logs init success/failure
+- `./gradlew :app:assembleDebug` succeeded after changes

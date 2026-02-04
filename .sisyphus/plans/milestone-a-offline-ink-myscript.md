@@ -3638,7 +3638,7 @@ dependencyResolutionManagement {
 - **OffscreenEditor**: Processes strokes without MyScript rendering, returns recognition results
 - **Reference**: `myscript-examples/samples/offscreen-interactivity/` (cloned to project)
 
-- [ ] 5.1 Add MyScript SDK dependency
+- [x] 5.1 Add MyScript SDK dependency
 
   **What to do**:
   - Verify `mavenCentral()` is in `settings.gradle.kts` (should already be there from task 1.5):

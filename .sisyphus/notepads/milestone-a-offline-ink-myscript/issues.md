@@ -15,3 +15,7 @@
 ## Session ses_task-4-10-note-editor-persistence - 2026-02-04
 
 - Manual persistence verification (restart app, confirm strokes load) not run here; requires emulator/device
+
+## Session ses_task-5-2-myscript-engine - 2026-02-04
+
+- `./gradlew :app:lint :app:ktlintCheck :app:detekt` failed due to pre-existing detekt findings in `NoteEditorScreen.kt`, `InkCanvas.kt`, `OnyxNavHost.kt`, `Color.kt`, and `ExampleTest.kt`
