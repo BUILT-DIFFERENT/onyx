@@ -552,3 +552,47 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - HomeScreen passes `onClick = { onNavigateToEditor(result.noteId) }` to navigate from search results
 - Tapping search result opens the corresponding note in editor with all strokes/content
 - Build verified: compileDebugKotlin + assembleDebug successful
+
+## Session current - 2026-02-04
+
+### Task 8.1: Multi-page Note Support ✅
+
+**ViewModel State Management:**
+- Added `_pages: StateFlow<List<PageEntity>>` to track all pages in note
+- Added `_currentPageIndex: StateFlow<Int>` for current page position (0-based)
+- `navigateToNextPage()` and `navigateToPreviousPage()` update index and load page
+- `createNewPage()` uses `getMaxIndexForNote()` to determine next index, creates page via repository
+- `refreshPages(selectIndex)` re-fetches pages from DB and updates index
+- `setCurrentPage(page)` closes MyScript editor for old page, loads strokes for new page
+
+**UI Implementation:**
+- TopAppBar title shows "Page X of Y" format (1-based display)
+- TopAppBar actions: Previous (ArrowBack), Next (ArrowForward), New Page (Add)
+- Previous button disabled when `currentPageIndex == 0`
+- Next button disabled when `currentPageIndex == pages.size - 1`
+- All buttons use Material Icons from `androidx.compose.material.icons.filled`
+
+**Page Lifecycle:**
+- MyScript OffscreenEditor closed on page switch via `myScriptPageManager?.closeCurrentPage()`
+- New editor initialized for new page in `onPageEnter(pageId)`
+- Strokes loaded per-page via `repository.getStrokesForPage(pageId)`
+- PDF pages (kind="pdf") skip stroke loading, render bitmap only
+
+**Repository Extension:**
+- `getPagesForNote(noteId): Flow<List<PageEntity>>` for reactive page list
+- `createPage(page)` inserts page + recognition index + updates note timestamp
+- Used by `createPageForNote()` which generates UUID and page metadata
+
+**Build Status:**
+- compileDebugKotlin: SUCCESS (warnings for deprecated icon usage - pre-existing)
+- assembleDebug: SUCCESS
+- APK created successfully
+
+**Verification Checklist:**
+- ✅ "New Page" button in TopAppBar
+- ✅ Previous/Next navigation buttons with enabled state logic
+- ✅ Page indicator "Page X of Y" in title
+- ✅ Page creation uses maxIndex + 1 pattern
+- ✅ Page switching loads correct strokes via ViewModel state
+- ✅ MyScript editor lifecycle managed per-page
+- ✅ Build passes without errors

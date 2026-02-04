@@ -22,7 +22,9 @@ import androidx.compose.foundation.layout.systemGesturesPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Redo
@@ -96,6 +98,10 @@ private class NoteEditorViewModel(
 ) : ViewModel() {
     private val _strokes = MutableStateFlow<List<Stroke>>(emptyList())
     val strokes: StateFlow<List<Stroke>> = _strokes.asStateFlow()
+    private val _pages = MutableStateFlow<List<PageEntity>>(emptyList())
+    val pages: StateFlow<List<PageEntity>> = _pages.asStateFlow()
+    private val _currentPageIndex = MutableStateFlow(0)
+    val currentPageIndex: StateFlow<Int> = _currentPageIndex.asStateFlow()
     private val _currentPage = MutableStateFlow<PageEntity?>(null)
     val currentPage: StateFlow<PageEntity?> = _currentPage.asStateFlow()
     private var currentPageId: String? = null
@@ -112,27 +118,36 @@ private class NoteEditorViewModel(
     fun loadNote() {
         viewModelScope.launch {
             noteDao.getById(noteId)
-            val pages = pageDao.getPagesForNote(noteId).first()
-            val firstPage = pages.firstOrNull()
-            if (currentPageId != firstPage?.pageId && currentPageId != null) {
-                myScriptPageManager?.closeCurrentPage()
+            refreshPages(selectIndex = 0)
+        }
+    }
+
+    fun navigateToNextPage() {
+        val nextIndex = _currentPageIndex.value + 1
+        if (nextIndex <= _pages.value.lastIndex) {
+            _currentPageIndex.value = nextIndex
+            viewModelScope.launch {
+                setCurrentPage(_pages.value.getOrNull(nextIndex))
             }
-            currentPageId = firstPage?.pageId
-            _currentPage.value = firstPage
-            if (firstPage?.kind == "pdf") {
-                _strokes.value = emptyList()
-                return@launch
+        }
+    }
+
+    fun navigateToPreviousPage() {
+        val previousIndex = _currentPageIndex.value - 1
+        if (previousIndex >= 0) {
+            _currentPageIndex.value = previousIndex
+            viewModelScope.launch {
+                setCurrentPage(_pages.value.getOrNull(previousIndex))
             }
-            currentPageId?.let { pageId ->
-                myScriptPageManager?.onPageEnter(pageId)
-                val loadedStrokes = repository.getStrokesForPage(pageId)
-                _strokes.value = loadedStrokes
-                loadedStrokes.forEach { stroke ->
-                    myScriptPageManager?.addStroke(stroke)
-                }
-            } ?: run {
-                _strokes.value = emptyList()
-            }
+        }
+    }
+
+    fun createNewPage() {
+        viewModelScope.launch {
+            val maxIndex = pageDao.getMaxIndexForNote(noteId) ?: -1
+            val newIndex = maxIndex + 1
+            repository.createPageForNote(noteId, indexInNote = newIndex)
+            refreshPages(selectIndex = newIndex)
         }
     }
 
@@ -157,8 +172,56 @@ private class NoteEditorViewModel(
     fun upgradePageToMixed(pageId: String) {
         viewModelScope.launch {
             repository.upgradePageToMixed(pageId)
-            _currentPage.value = pageDao.getById(pageId)
+            val updatedPage = pageDao.getById(pageId)
+            if (updatedPage != null) {
+                val currentPages = _pages.value.toMutableList()
+                val pageIndex = currentPages.indexOfFirst { it.pageId == pageId }
+                if (pageIndex >= 0) {
+                    currentPages[pageIndex] = updatedPage
+                    _pages.value = currentPages
+                    if (_currentPageIndex.value == pageIndex) {
+                        setCurrentPage(updatedPage)
+                    }
+                }
+            }
             android.util.Log.d("PageKind", "Updated page kind to mixed for pageId=$pageId")
+        }
+    }
+
+    private suspend fun refreshPages(selectIndex: Int? = null) {
+        val pages = pageDao.getPagesForNote(noteId).first()
+        _pages.value = pages
+        if (pages.isEmpty()) {
+            _currentPageIndex.value = 0
+            setCurrentPage(null)
+            return
+        }
+        val resolvedIndex =
+            selectIndex?.coerceIn(0, pages.lastIndex)
+                ?: _currentPageIndex.value.coerceIn(0, pages.lastIndex)
+        _currentPageIndex.value = resolvedIndex
+        setCurrentPage(pages.getOrNull(resolvedIndex))
+    }
+
+    private suspend fun setCurrentPage(page: PageEntity?) {
+        if (currentPageId != page?.pageId && currentPageId != null) {
+            myScriptPageManager?.closeCurrentPage()
+        }
+        currentPageId = page?.pageId
+        _currentPage.value = page
+        if (page?.kind == "pdf") {
+            _strokes.value = emptyList()
+            return
+        }
+        currentPageId?.let { pageId ->
+            myScriptPageManager?.onPageEnter(pageId)
+            val loadedStrokes = repository.getStrokesForPage(pageId)
+            _strokes.value = loadedStrokes
+            loadedStrokes.forEach { stroke ->
+                myScriptPageManager?.addStroke(stroke)
+            }
+        } ?: run {
+            _strokes.value = emptyList()
         }
     }
 
@@ -221,6 +284,8 @@ fun NoteEditorScreen(
     var brush by remember { mutableStateOf(Brush()) }
     var lastNonEraserTool by remember { mutableStateOf(brush.tool) }
     val strokes by viewModel.strokes.collectAsState()
+    val pages by viewModel.pages.collectAsState()
+    val currentPageIndex by viewModel.currentPageIndex.collectAsState()
     val currentPage by viewModel.currentPage.collectAsState()
     val undoStack = remember { mutableStateListOf<InkAction>() }
     val redoStack = remember { mutableStateListOf<InkAction>() }
@@ -344,13 +409,41 @@ fun NoteEditorScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "Note") },
+                title = {
+                    val totalPages = pages.size
+                    val pageNumber = if (totalPages == 0) 0 else currentPageIndex + 1
+                    Text(text = "Page $pageNumber of $totalPages")
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = { viewModel.navigateToPreviousPage() },
+                        enabled = currentPageIndex > 0,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Previous page",
+                        )
+                    }
+                    IconButton(
+                        onClick = { viewModel.navigateToNextPage() },
+                        enabled = currentPageIndex < pages.size - 1,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = "Next page",
+                        )
+                    }
+                    IconButton(onClick = { viewModel.createNewPage() }) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "New page",
+                        )
+                    }
                     IconButton(onClick = {}) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,

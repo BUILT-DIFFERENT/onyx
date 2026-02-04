@@ -55,6 +55,28 @@ class NoteRepository(
         val firstPageId: String,
     )
 
+    fun getPagesForNote(noteId: String): Flow<List<PageEntity>> = pageDao.getPagesForNote(noteId)
+
+    suspend fun createPage(page: PageEntity): PageEntity {
+        val now = System.currentTimeMillis()
+        val storedPage = page.copy(updatedAt = now)
+        pageDao.insert(storedPage)
+
+        recognitionDao.insert(
+            RecognitionIndexEntity(
+                pageId = storedPage.pageId,
+                noteId = storedPage.noteId,
+                recognizedText = null,
+                recognizedAtLamport = null,
+                recognizerVersion = null,
+                updatedAt = now,
+            ),
+        )
+
+        noteDao.updateTimestamp(storedPage.noteId, now)
+        return storedPage
+    }
+
     suspend fun createPageForNote(
         noteId: String,
         indexInNote: Int,
