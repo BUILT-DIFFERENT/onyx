@@ -3438,7 +3438,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 4.10 Integrate persistence with Editor
+- [x] 4.10 Integrate persistence with Editor
 
   **What to do**:
   - Save strokes to database when drawing (on pen-up, call `repository.saveStroke()`)

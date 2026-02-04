@@ -355,3 +355,12 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - Added `OnyxApplication` to initialize Room database, DeviceIdentity, and NoteRepository
 - Room builder includes `fallbackToDestructiveMigration()` during v0 development
 - Registered `android:name=".OnyxApplication"` in `AndroidManifest.xml`
+
+## Session ses_task-4-10-note-editor-persistence - 2026-02-04
+
+### NoteEditorScreen Persistence Wiring
+
+- Added `NoteEditorViewModel` in `apps/android/app/src/main/java/com/onyx/android/ui/NoteEditorScreen.kt` to load note pages via DAOs and strokes via `NoteRepository`
+- First page selected from `PageDao.getPagesForNote(noteId)` and strokes loaded with `NoteRepository.getStrokesForPage(pageId)`
+- Pen-up events persist strokes with `NoteRepository.saveStroke(pageId, stroke)` while keeping in-memory updates immediate for zero-flicker rendering
+- Build/lint verified via `./gradlew :app:compileDebugKotlin :app:lint :app:assembleDebug`

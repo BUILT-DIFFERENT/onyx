@@ -36,6 +36,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,14 +45,86 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.onyx.android.OnyxApplication
+import com.onyx.android.data.dao.NoteDao
+import com.onyx.android.data.dao.PageDao
+import com.onyx.android.data.repository.NoteRepository
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.InkAction
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+
+private class NoteEditorViewModel(
+    private val noteId: String,
+    private val repository: NoteRepository,
+    private val noteDao: NoteDao,
+    private val pageDao: PageDao,
+) : ViewModel() {
+    private val _strokes = MutableStateFlow<List<Stroke>>(emptyList())
+    val strokes: StateFlow<List<Stroke>> = _strokes.asStateFlow()
+    private var currentPageId: String? = null
+
+    init {
+        loadNote()
+    }
+
+    fun loadNote() {
+        viewModelScope.launch {
+            noteDao.getById(noteId)
+            val pages = pageDao.getPagesForNote(noteId).first()
+            val firstPage = pages.firstOrNull()
+            currentPageId = firstPage?.pageId
+            _strokes.value =
+                currentPageId?.let { pageId ->
+                    repository.getStrokesForPage(pageId)
+                } ?: emptyList()
+        }
+    }
+
+    fun addStroke(
+        stroke: Stroke,
+        persist: Boolean,
+    ) {
+        _strokes.value = _strokes.value + stroke
+        if (persist) {
+            val pageId = currentPageId ?: return
+            viewModelScope.launch {
+                repository.saveStroke(pageId, stroke)
+            }
+        }
+    }
+
+    fun removeStroke(stroke: Stroke) {
+        _strokes.value = _strokes.value - stroke
+    }
+}
+
+private class NoteEditorViewModelFactory(
+    private val noteId: String,
+    private val repository: NoteRepository,
+    private val noteDao: NoteDao,
+    private val pageDao: PageDao,
+) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        require(modelClass.isAssignableFrom(NoteEditorViewModel::class.java))
+        return NoteEditorViewModel(noteId, repository, noteDao, pageDao) as T
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,9 +132,18 @@ fun NoteEditorScreen(
     noteId: String,
     onNavigateBack: () -> Unit,
 ) {
+    val app = LocalContext.current.applicationContext as OnyxApplication
+    val repository = app.noteRepository
+    val noteDao = app.database.noteDao()
+    val pageDao = app.database.pageDao()
+    val viewModel: NoteEditorViewModel =
+        viewModel(
+            key = "NoteEditorViewModel_$noteId",
+            factory = NoteEditorViewModelFactory(noteId, repository, noteDao, pageDao),
+        )
     var brush by remember { mutableStateOf(Brush()) }
     var lastNonEraserTool by remember { mutableStateOf(brush.tool) }
-    var strokes by remember { mutableStateOf<List<Stroke>>(emptyList()) }
+    val strokes by viewModel.strokes.collectAsState()
     val undoStack = remember { mutableStateListOf<InkAction>() }
     val redoStack = remember { mutableStateListOf<InkAction>() }
     val maxUndoActions = 50
@@ -82,11 +164,11 @@ fun NoteEditorScreen(
         val action = undoStack.removeLastOrNull() ?: return
         when (action) {
             is InkAction.AddStroke -> {
-                strokes = strokes - action.stroke
+                viewModel.removeStroke(action.stroke)
             }
 
             is InkAction.RemoveStroke -> {
-                strokes = strokes + action.stroke
+                viewModel.addStroke(action.stroke, persist = false)
             }
         }
         redoStack.add(action)
@@ -96,17 +178,20 @@ fun NoteEditorScreen(
         val action = redoStack.removeLastOrNull() ?: return
         when (action) {
             is InkAction.AddStroke -> {
-                strokes = strokes + action.stroke
+                viewModel.addStroke(action.stroke, persist = false)
             }
 
             is InkAction.RemoveStroke -> {
-                strokes = strokes - action.stroke
+                viewModel.removeStroke(action.stroke)
             }
         }
         undoStack.add(action)
         if (undoStack.size > maxUndoActions) {
             undoStack.removeAt(0)
         }
+    }
+    LaunchedEffect(noteId) {
+        viewModel.loadNote()
     }
     LaunchedEffect(brush.tool) {
         if (brush.tool != Tool.ERASER) {
@@ -310,7 +395,7 @@ fun NoteEditorScreen(
                         viewTransform = viewTransform,
                         brush = brush,
                         onStrokeFinished = { newStroke ->
-                            strokes = strokes + newStroke
+                            viewModel.addStroke(newStroke, persist = true)
                             undoStack.add(InkAction.AddStroke(newStroke))
                             if (undoStack.size > maxUndoActions) {
                                 undoStack.removeAt(0)
@@ -318,7 +403,7 @@ fun NoteEditorScreen(
                             redoStack.clear()
                         },
                         onStrokeErased = { erasedStroke ->
-                            strokes = strokes - erasedStroke
+                            viewModel.removeStroke(erasedStroke)
                             undoStack.add(InkAction.RemoveStroke(erasedStroke))
                             if (undoStack.size > maxUndoActions) {
                                 undoStack.removeAt(0)

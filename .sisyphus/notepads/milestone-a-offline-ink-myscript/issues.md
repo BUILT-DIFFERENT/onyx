@@ -11,3 +11,7 @@
 ## Session ses_ink_api_compat_test - 2026-02-04
 
 - Task 3.2a BLOCKED - requires physical device to run connectedDebugAndroidTest
+
+## Session ses_task-4-10-note-editor-persistence - 2026-02-04
+
+- Manual persistence verification (restart app, confirm strokes load) not run here; requires emulator/device
