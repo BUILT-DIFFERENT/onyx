@@ -319,3 +319,13 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - All timestamps are Unix milliseconds stored as Long
 - StrokeEntity overrides equals/hashCode to use ByteArray content comparison
 - RecognitionFtsEntity uses @Fts4(contentEntity) to keep FTS in sync with RecognitionIndexEntity
+
+## Session ses_room-daos-db-2026-02-04
+
+### Room DAO + Database Notes
+
+- DAOs use Flow for reactive queries and suspend for one-shot operations
+- Database version 1 includes RecognitionFtsEntity from the start
+- Room builder uses fallbackToDestructiveMigration() for v1 development
+- TypeConverters include Base64 encoding for ByteArray conversions
+- exportSchema = true to generate schemas/1.json for version control

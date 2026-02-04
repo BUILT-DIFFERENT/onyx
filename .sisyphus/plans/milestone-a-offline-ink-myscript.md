@@ -2915,7 +2915,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 4.6 Create DAOs with Flow queries
+- [x] 4.6 Create DAOs with Flow queries
 
   **What to do**:
   - Create `NoteDao`, `PageDao`, `StrokeDao`, `RecognitionDao`
@@ -3058,7 +3058,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 4.7 Create Room Database class
+- [x] 4.7 Create Room Database class
 
   **What to do**:
   - Create `data/OnyxDatabase.kt`:
