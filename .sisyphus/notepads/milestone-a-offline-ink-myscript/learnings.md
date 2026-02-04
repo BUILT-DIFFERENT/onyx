@@ -506,3 +506,13 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - HomeScreenViewModel imports PDFs via PdfAssetStorage.importPdf, opens with MuPDF Document.openDocument, reads page bounds, and creates pdf pages after deleting the initial blank page
 - Large PDF warning shown for files >50MB or >100 pages; import continues and navigates to editor
 - MuPDF cleanup: page.destroy() per page, document.destroy() in finally
+
+## Session current - 2026-02-04
+
+### Tasks 6.3-6.4: PDF Render + Zoom/Pan ✅
+
+- Added `PdfRenderer` using MuPDF `Document.openDocument`, `loadPage`, `page.run` with `Matrix(zoom)` and `AndroidDrawDevice` into ARGB_8888 bitmap
+- Logged page bounds (pt) and rendered bitmaps at zoom for DPI scaling
+- NoteEditorScreen now detects `PageEntity.kind == "pdf"` and displays rendered bitmap instead of InkCanvas
+- Zoom/pan shares `ViewTransform` with ink, `transformable` gestures clamp 0.5x..4x and use `graphicsLayer` translation/scale
+- PDF bitmap re-renders on zoom change via coroutine (Dispatchers.Default)

@@ -1,6 +1,7 @@
 package com.onyx.android.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.horizontalScroll
@@ -35,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,7 +47,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -54,6 +59,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.onyx.android.OnyxApplication
 import com.onyx.android.data.dao.NoteDao
 import com.onyx.android.data.dao.PageDao
+import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.data.repository.NoteRepository
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.InkAction
@@ -61,12 +67,16 @@ import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
+import com.onyx.android.pdf.PdfAssetStorage
+import com.onyx.android.pdf.PdfRenderer
 import com.onyx.android.recognition.MyScriptPageManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 private class NoteEditorViewModel(
@@ -78,6 +88,8 @@ private class NoteEditorViewModel(
 ) : ViewModel() {
     private val _strokes = MutableStateFlow<List<Stroke>>(emptyList())
     val strokes: StateFlow<List<Stroke>> = _strokes.asStateFlow()
+    private val _currentPage = MutableStateFlow<PageEntity?>(null)
+    val currentPage: StateFlow<PageEntity?> = _currentPage.asStateFlow()
     private var currentPageId: String? = null
 
     init {
@@ -98,6 +110,11 @@ private class NoteEditorViewModel(
                 myScriptPageManager?.closeCurrentPage()
             }
             currentPageId = firstPage?.pageId
+            _currentPage.value = firstPage
+            if (firstPage?.kind == "pdf") {
+                _strokes.value = emptyList()
+                return@launch
+            }
             currentPageId?.let { pageId ->
                 myScriptPageManager?.onPageEnter(pageId)
                 val loadedStrokes = repository.getStrokesForPage(pageId)
@@ -159,6 +176,7 @@ fun NoteEditorScreen(
     val repository = app.noteRepository
     val noteDao = app.database.noteDao()
     val pageDao = app.database.pageDao()
+    val pdfAssetStorage = remember { PdfAssetStorage(app) }
 
     val myScriptPageManager =
         remember {
@@ -180,10 +198,43 @@ fun NoteEditorScreen(
     var brush by remember { mutableStateOf(Brush()) }
     var lastNonEraserTool by remember { mutableStateOf(brush.tool) }
     val strokes by viewModel.strokes.collectAsState()
+    val currentPage by viewModel.currentPage.collectAsState()
     val undoStack = remember { mutableStateListOf<InkAction>() }
     val redoStack = remember { mutableStateListOf<InkAction>() }
     val maxUndoActions = 50
     var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
+    val isPdfPage = currentPage?.kind == "pdf"
+    val pdfRenderer =
+        remember(currentPage?.pdfAssetId) {
+            currentPage?.pdfAssetId?.let { assetId ->
+                PdfRenderer(pdfAssetStorage.getFileForAsset(assetId))
+            }
+        }
+    var pdfBitmap by remember(currentPage?.pageId) { mutableStateOf<android.graphics.Bitmap?>(null) }
+    val pageWidth = currentPage?.width ?: 0f
+    val pageHeight = currentPage?.height ?: 0f
+    val pageWidthDp = with(LocalDensity.current) { pageWidth.toDp() }
+    val pageHeightDp = with(LocalDensity.current) { pageHeight.toDp() }
+
+    DisposableEffect(pdfRenderer) {
+        onDispose {
+            pdfRenderer?.close()
+        }
+    }
+
+    LaunchedEffect(currentPage?.pageId, viewTransform.zoom) {
+        if (!isPdfPage) {
+            pdfBitmap = null
+            return@LaunchedEffect
+        }
+        val renderer = pdfRenderer ?: return@LaunchedEffect
+        val pageIndex = currentPage?.pdfPageNo ?: return@LaunchedEffect
+        val zoom = viewTransform.zoom
+        pdfBitmap =
+            withContext(Dispatchers.Default) {
+                renderer.renderPage(pageIndex, zoom)
+            }
+    }
     val transformState =
         rememberTransformableState { zoomChange, panChange, _ ->
             viewTransform =
@@ -426,28 +477,46 @@ fun NoteEditorScreen(
                             .fillMaxSize()
                             .transformable(state = transformState),
                 ) {
-                    InkCanvas(
-                        strokes = strokes,
-                        viewTransform = viewTransform,
-                        brush = brush,
-                        onStrokeFinished = { newStroke ->
-                            viewModel.addStroke(newStroke, persist = true)
-                            undoStack.add(InkAction.AddStroke(newStroke))
-                            if (undoStack.size > maxUndoActions) {
-                                undoStack.removeAt(0)
-                            }
-                            redoStack.clear()
-                        },
-                        onStrokeErased = { erasedStroke ->
-                            viewModel.removeStroke(erasedStroke)
-                            undoStack.add(InkAction.RemoveStroke(erasedStroke))
-                            if (undoStack.size > maxUndoActions) {
-                                undoStack.removeAt(0)
-                            }
-                            redoStack.clear()
-                        },
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                    if (isPdfPage) {
+                        val bitmap = pdfBitmap
+                        if (bitmap != null) {
+                            Image(
+                                bitmap = bitmap.asImageBitmap(),
+                                contentDescription = "PDF page",
+                                modifier =
+                                    Modifier
+                                        .graphicsLayer(
+                                            scaleX = viewTransform.zoom,
+                                            scaleY = viewTransform.zoom,
+                                            translationX = viewTransform.panX,
+                                            translationY = viewTransform.panY,
+                                        ).size(pageWidthDp, pageHeightDp),
+                            )
+                        }
+                    } else {
+                        InkCanvas(
+                            strokes = strokes,
+                            viewTransform = viewTransform,
+                            brush = brush,
+                            onStrokeFinished = { newStroke ->
+                                viewModel.addStroke(newStroke, persist = true)
+                                undoStack.add(InkAction.AddStroke(newStroke))
+                                if (undoStack.size > maxUndoActions) {
+                                    undoStack.removeAt(0)
+                                }
+                                redoStack.clear()
+                            },
+                            onStrokeErased = { erasedStroke ->
+                                viewModel.removeStroke(erasedStroke)
+                                undoStack.add(InkAction.RemoveStroke(erasedStroke))
+                                if (undoStack.size > maxUndoActions) {
+                                    undoStack.removeAt(0)
+                                }
+                                redoStack.clear()
+                            },
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
                 }
             }
         }

@@ -4655,7 +4655,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 6.3 Render PDF page to canvas
+- [x] 6.3 Render PDF page to canvas
 
   **What to do**:
   - Create `pdf/PdfRenderer.kt`
@@ -4715,7 +4715,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 6.4 Implement PDF zoom and pan
+- [x] 6.4 Implement PDF zoom and pan
 
   **What to do**:
   - Apply same zoom/pan gestures as ink canvas
