@@ -1,0 +1,56 @@
+{
+  "name": "onyx",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "bun@1.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev --filter=!@onyx/android",
+    "build": "turbo run build --filter=!@onyx/android",
+    "build:all": "turbo run build",
+    "test": "turbo run test --filter=!@onyx/android",
+    "test:all": "turbo run test",
+    "e2e": "turbo run e2e --filter=@onyx/web",
+    "lint": "turbo run lint --filter=!@onyx/android",
+    "lint:all": "turbo run lint",
+    "lint:quick": "turbo run lint:quick --filter=!@onyx/android",
+    "lint:fix": "turbo run lint:fix --filter=!@onyx/android",
+    "typecheck": "turbo run typecheck --filter=!@onyx/android",
+    "typecheck:quick": "turbo run typecheck:quick --filter=!@onyx/android",
+    "format": "turbo run format --filter=!@onyx/android",
+    "format:check": "turbo run format:check --filter=!@onyx/android",
+    "clean": "turbo run clean",
+    "android:build": "turbo run build --filter=@onyx/android",
+    "android:test": "turbo run test --filter=@onyx/android",
+    "android:lint": "turbo run lint --filter=@onyx/android",
+    "ktlint": "turbo run ktlint --filter=@onyx/android",
+    "detekt": "turbo run detekt --filter=@onyx/android",
+    "prepare": "simple-git-hooks"
+  },
+  "dependencies": {
+    "convex": "^1.31.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@typescript-eslint/eslint-plugin": "^7.17.0",
+    "@typescript-eslint/parser": "^7.17.0",
+    "@typescript/native-preview": "latest",
+    "@vitest/coverage-v8": "^1.6.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-tailwindcss": "^3.13.0",
+    "oxlint": "^0.5.0",
+    "prettier": "^3.2.5",
+    "simple-git-hooks": "^2.11.1",
+    "turbo": "^2.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^1.6.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "bun run lint && bun run typecheck"
+  }
+}

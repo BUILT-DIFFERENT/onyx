@@ -1,0 +1,6 @@
+{
+  "project": "onyx",
+  "codegen": {
+    "outputDirectory": "./_generated"
+  }
+}

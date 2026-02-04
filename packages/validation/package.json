@@ -1,0 +1,19 @@
+{
+  "name": "@onyx/validation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "zod": "^3.23.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "lint:quick": "oxlint .",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run --passWithNoTests",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
+  }
+}

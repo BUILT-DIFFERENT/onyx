@@ -1,0 +1,13 @@
+{
+  "name": "@onyx/android",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "node ../../scripts/gradlew.js :app:assembleDebug",
+    "test": "node ../../scripts/gradlew.js :app:test",
+    "lint": "node ../../scripts/gradlew.js :app:lint :app:ktlintCheck :app:detekt",
+    "ktlint": "node ../../scripts/gradlew.js :app:ktlintCheck",
+    "format": "node ../../scripts/gradlew.js :app:ktlintFormat",
+    "detekt": "node ../../scripts/gradlew.js :app:detekt"
+  }
+}

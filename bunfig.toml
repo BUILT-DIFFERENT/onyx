@@ -1,0 +1,6 @@
+[install]
+# Use workspace dependencies and hoist when possible.
+peer = true
+
+[test]
+# Placeholder for future test runner config.

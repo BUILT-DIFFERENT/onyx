@@ -1,0 +1,34 @@
+{
+  "name": "@onyx/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsc -w -p tsconfig.json",
+    "build": "tsc -p tsconfig.json --noEmit",
+    "start": "node -e \"console.log('TODO: wire TanStack Start server')\"",
+    "lint": "eslint .",
+    "lint:quick": "oxlint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:quick": "tsgo -p tsconfig.json --noEmit || tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "e2e": "playwright test --pass-with-no-tests",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
+  },
+  "dependencies": {
+    "@clerk/clerk-react": "^5.0.0",
+    "convex": "^1.31.7",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.7"
+  }
+}

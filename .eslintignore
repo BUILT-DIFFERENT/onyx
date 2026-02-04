@@ -1,0 +1,8 @@
+node_modules/
+.bun/
+.turbo/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
