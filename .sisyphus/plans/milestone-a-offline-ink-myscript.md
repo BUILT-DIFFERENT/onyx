@@ -4826,7 +4826,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 6.6 Overlay ink on PDF
+- [x] 6.6 Overlay ink on PDF
 
   **What to do**:
   - Create composite view with PDF layer + ink layer

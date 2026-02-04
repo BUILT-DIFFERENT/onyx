@@ -154,6 +154,14 @@ private class NoteEditorViewModel(
         _strokes.value = _strokes.value - stroke
     }
 
+    fun upgradePageToMixed(pageId: String) {
+        viewModelScope.launch {
+            repository.upgradePageToMixed(pageId)
+            _currentPage.value = pageDao.getById(pageId)
+            android.util.Log.d("PageKind", "Updated page kind to mixed for pageId=$pageId")
+        }
+    }
+
     override fun onCleared() {
         myScriptPageManager?.closeCurrentPage()
         super.onCleared()
@@ -218,7 +226,7 @@ fun NoteEditorScreen(
     val redoStack = remember { mutableStateListOf<InkAction>() }
     val maxUndoActions = 50
     var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
-    val isPdfPage = currentPage?.kind == "pdf"
+    val isPdfPage = currentPage?.kind == "pdf" || currentPage?.kind == "mixed"
     val pdfRenderer =
         remember(currentPage?.pdfAssetId) {
             currentPage?.pdfAssetId?.let { assetId ->
@@ -304,6 +312,34 @@ fun NoteEditorScreen(
         if (brush.tool != Tool.ERASER) {
             lastNonEraserTool = brush.tool
         }
+    }
+    val onStrokeFinished: (Stroke) -> Unit = { newStroke ->
+        viewModel.addStroke(newStroke, persist = true)
+        undoStack.add(InkAction.AddStroke(newStroke))
+        if (undoStack.size > maxUndoActions) {
+            undoStack.removeAt(0)
+        }
+        redoStack.clear()
+        val pageId = currentPage?.pageId
+        if (pageId != null && currentPage?.kind == "pdf") {
+            viewModel.upgradePageToMixed(pageId)
+        }
+        val firstPoint = newStroke.points.firstOrNull()
+        val lastPoint = newStroke.points.lastOrNull()
+        if (firstPoint != null && lastPoint != null) {
+            android.util.Log.d(
+                "InkStroke",
+                "Saved stroke points in pt: start=(${firstPoint.x}, ${firstPoint.y}) end=(${lastPoint.x}, ${lastPoint.y})",
+            )
+        }
+    }
+    val onStrokeErased: (Stroke) -> Unit = { erasedStroke ->
+        viewModel.removeStroke(erasedStroke)
+        undoStack.add(InkAction.RemoveStroke(erasedStroke))
+        if (undoStack.size > maxUndoActions) {
+            undoStack.removeAt(0)
+        }
+        redoStack.clear()
     }
     Scaffold(
         topBar = {
@@ -573,28 +609,22 @@ fun NoteEditorScreen(
                                     }
                                 }
                             }
+                            InkCanvas(
+                                strokes = strokes,
+                                viewTransform = viewTransform,
+                                brush = brush,
+                                onStrokeFinished = onStrokeFinished,
+                                onStrokeErased = onStrokeErased,
+                                modifier = Modifier.fillMaxSize(),
+                            )
                         }
                     } else {
                         InkCanvas(
                             strokes = strokes,
                             viewTransform = viewTransform,
                             brush = brush,
-                            onStrokeFinished = { newStroke ->
-                                viewModel.addStroke(newStroke, persist = true)
-                                undoStack.add(InkAction.AddStroke(newStroke))
-                                if (undoStack.size > maxUndoActions) {
-                                    undoStack.removeAt(0)
-                                }
-                                redoStack.clear()
-                            },
-                            onStrokeErased = { erasedStroke ->
-                                viewModel.removeStroke(erasedStroke)
-                                undoStack.add(InkAction.RemoveStroke(erasedStroke))
-                                if (undoStack.size > maxUndoActions) {
-                                    undoStack.removeAt(0)
-                                }
-                                redoStack.clear()
-                            },
+                            onStrokeFinished = onStrokeFinished,
+                            onStrokeErased = onStrokeErased,
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
