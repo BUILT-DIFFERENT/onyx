@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -165,7 +166,10 @@ fun HomeScreen(onNavigateToEditor: (String) -> Unit) {
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 80.dp),
                 ) {
                     items(searchResults) { result ->
-                        SearchResultRow(result = result)
+                        SearchResultRow(
+                            result = result,
+                            onClick = { onNavigateToEditor(result.noteId) },
+                        )
                     }
                 }
             } else {
@@ -187,12 +191,16 @@ fun HomeScreen(onNavigateToEditor: (String) -> Unit) {
 }
 
 @Composable
-private fun SearchResultRow(result: SearchResultItem) {
+private fun SearchResultRow(
+    result: SearchResultItem,
+    onClick: () -> Unit,
+) {
     Surface(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(vertical = 4.dp),
+                .padding(vertical = 4.dp)
+                .clickable(onClick = onClick),
         tonalElevation = 1.dp,
         shape = MaterialTheme.shapes.medium,
     ) {

@@ -5092,7 +5092,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 7.4 Navigate from search result
+- [x] 7.4 Navigate from search result
 
   **What to do**:
   - On search result tap, navigate to note/page

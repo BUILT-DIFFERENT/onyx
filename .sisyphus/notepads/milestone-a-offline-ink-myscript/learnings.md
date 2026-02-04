@@ -542,3 +542,13 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - Flow search pipeline uses `_searchQuery.debounce(300).flatMapLatest { ... }.stateIn(...)` to cancel stale queries
 - `NoteRepository.searchNotes()` joins FTS hits with page/note metadata, generates 100-char snippets, and dedupes by `noteId`
 - Search UI on Home screen uses `OutlinedTextField` + `LazyColumn` results with title/snippet display
+
+## Session current - 2026-02-04
+
+### Task 7.4: Search Result Navigation ✅
+
+- SearchResultRow made clickable via `.clickable(onClick = onClick)` modifier
+- onClick parameter added to SearchResultRow composable signature
+- HomeScreen passes `onClick = { onNavigateToEditor(result.noteId) }` to navigate from search results
+- Tapping search result opens the corresponding note in editor with all strokes/content
+- Build verified: compileDebugKotlin + assembleDebug successful
