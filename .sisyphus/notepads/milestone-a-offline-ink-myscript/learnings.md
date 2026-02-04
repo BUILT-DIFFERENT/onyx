@@ -277,3 +277,12 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - Palette uses 7 swatches (black, blue, red, green, yellow, orange, purple) with a primary-colored selection ring and subtle neutral border for contrast on light colors.
 - Size picker uses a Material 3 Slider (1f..8f, step = 1) with a live preview dot and numeric label to make the selected size obvious.
 - All accents and text styles are derived from `MaterialTheme.colorScheme` to stay aligned with OnyxPrimary/Secondary theme colors.
+
+## Session ses_task-3-6-stroke-eraser - 2026-02-04
+
+### Stroke Eraser Hit-Testing
+
+- Convert touch screen coordinates to page coordinates with `ViewTransform.screenToPage`.
+- Use a hit radius of 10 screen pixels scaled by zoom (`10f / viewTransform.zoom`).
+- Early reject strokes by expanding bounds by hit radius and skipping if the point is outside.
+- For remaining strokes, compute point-to-segment distance across stroke points and erase on first distance <= hit radius.

@@ -36,6 +36,7 @@ import java.util.UUID
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
+import kotlin.math.sqrt
 import androidx.compose.ui.graphics.drawscope.Stroke as ComposeStroke
 import androidx.ink.brush.Brush as InkBrush
 
@@ -45,11 +46,14 @@ fun InkCanvas(
     viewTransform: ViewTransform,
     brush: Brush,
     onStrokeFinished: (Stroke) -> Unit,
+    onStrokeErased: (Stroke) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val currentBrush by rememberUpdatedState(brush)
     val currentTransform by rememberUpdatedState(viewTransform)
     val currentOnStrokeFinished by rememberUpdatedState(onStrokeFinished)
+    val currentOnStrokeErased by rememberUpdatedState(onStrokeErased)
+    val currentStrokes by rememberUpdatedState(strokes)
     val hoverPreviewState = remember { HoverPreviewState() }
 
     val activeStrokeIds = remember { mutableMapOf<Int, InProgressStrokeId>() }
@@ -81,6 +85,8 @@ fun InkCanvas(
                             motionPredictionAdapter = motionPredictionAdapter,
                             hoverPreviewState = hoverPreviewState,
                             onStrokeFinished = currentOnStrokeFinished,
+                            onStrokeErased = currentOnStrokeErased,
+                            strokes = currentStrokes,
                         )
                     }
                 }
@@ -106,10 +112,33 @@ private fun handleTouchEvent(
     motionPredictionAdapter: MotionPredictionAdapter?,
     hoverPreviewState: HoverPreviewState,
     onStrokeFinished: (Stroke) -> Unit,
+    onStrokeErased: (Stroke) -> Unit,
+    strokes: List<Stroke>,
 ): Boolean {
     val actionIndex = event.actionIndex
     val pointerId = event.getPointerId(actionIndex)
     val actionToolType = event.getToolType(actionIndex)
+
+    if (brush.tool == Tool.ERASER) {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN,
+            MotionEvent.ACTION_MOVE,
+            -> {
+                val erasedStroke =
+                    findStrokeToErase(
+                        screenX = event.getX(actionIndex),
+                        screenY = event.getY(actionIndex),
+                        strokes = strokes,
+                        viewTransform = viewTransform,
+                    )
+                if (erasedStroke != null) {
+                    onStrokeErased(erasedStroke)
+                }
+                return true
+            }
+        }
+        return true
+    }
 
     when (event.actionMasked) {
         MotionEvent.ACTION_DOWN,
@@ -413,6 +442,66 @@ private fun calculateBounds(points: List<StrokePoint>): StrokeBounds {
         w = maxX - minX,
         h = maxY - minY,
     )
+}
+
+private fun findStrokeToErase(
+    screenX: Float,
+    screenY: Float,
+    strokes: List<Stroke>,
+    viewTransform: ViewTransform,
+): Stroke? {
+    val (pageX, pageY) = viewTransform.screenToPage(screenX, screenY)
+    val hitRadius = 10f / viewTransform.zoom
+    for (stroke in strokes) {
+        val expandedBounds =
+            stroke.bounds.run {
+                StrokeBounds(
+                    x = x - hitRadius,
+                    y = y - hitRadius,
+                    w = w + 2 * hitRadius,
+                    h = h + 2 * hitRadius,
+                )
+            }
+        if (
+            pageX < expandedBounds.x ||
+            pageX > expandedBounds.x + expandedBounds.w ||
+            pageY < expandedBounds.y ||
+            pageY > expandedBounds.y + expandedBounds.h
+        ) {
+            continue
+        }
+        val points = stroke.points
+        for (index in 0 until points.size - 1) {
+            val p1 = points[index]
+            val p2 = points[index + 1]
+            val distance = pointToSegmentDistance(pageX, pageY, p1.x, p1.y, p2.x, p2.y)
+            if (distance <= hitRadius) {
+                return stroke
+            }
+        }
+    }
+    return null
+}
+
+private fun pointToSegmentDistance(
+    px: Float,
+    py: Float,
+    x1: Float,
+    y1: Float,
+    x2: Float,
+    y2: Float,
+): Float {
+    val dx = x2 - x1
+    val dy = y2 - y1
+    val lenSq = dx * dx + dy * dy
+    if (lenSq == 0f) {
+        return sqrt((px - x1) * (px - x1) + (py - y1) * (py - y1))
+    }
+    val t = ((px - x1) * dx + (py - y1) * dy) / lenSq
+    val clampedT = t.coerceIn(0f, 1f)
+    val nearestX = x1 + clampedT * dx
+    val nearestY = y1 + clampedT * dy
+    return sqrt((px - nearestX) * (px - nearestX) + (py - nearestY) * (py - nearestY))
 }
 
 private fun Brush.toInkBrush(

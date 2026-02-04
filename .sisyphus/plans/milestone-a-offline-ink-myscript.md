@@ -2489,7 +2489,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 3.6 Implement stroke eraser tool
+- [x] 3.6 Implement stroke eraser tool
 
   **What to do**:
   - Add eraser button to toolbar

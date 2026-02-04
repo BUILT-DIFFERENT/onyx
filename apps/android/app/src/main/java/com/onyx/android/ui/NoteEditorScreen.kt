@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -30,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Stroke
+import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
 import kotlin.math.roundToInt
@@ -51,6 +54,12 @@ fun NoteEditorScreen(
     onNavigateBack: () -> Unit,
 ) {
     var brush by remember { mutableStateOf(Brush()) }
+    var lastNonEraserTool by remember { mutableStateOf(brush.tool) }
+    LaunchedEffect(brush.tool) {
+        if (brush.tool != Tool.ERASER) {
+            lastNonEraserTool = brush.tool
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -119,6 +128,52 @@ fun NoteEditorScreen(
                                         },
                                 ) {
                                 }
+                            }
+                        }
+                    }
+                    val isEraserSelected = brush.tool == Tool.ERASER
+                    IconButton(
+                        onClick = {
+                            brush =
+                                if (isEraserSelected) {
+                                    brush.copy(tool = lastNonEraserTool)
+                                } else {
+                                    brush.copy(tool = Tool.ERASER)
+                                }
+                        },
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(32.dp),
+                            shape = CircleShape,
+                            color =
+                                if (isEraserSelected) {
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                } else {
+                                    Color.Transparent
+                                },
+                            border =
+                                if (isEraserSelected) {
+                                    BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+                                } else {
+                                    BorderStroke(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                            alpha = 0.35f,
+                                        ),
+                                    )
+                                },
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Eraser",
+                                    tint =
+                                        if (isEraserSelected) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        },
+                                )
                             }
                         }
                     }
@@ -191,6 +246,9 @@ fun NoteEditorScreen(
                         brush = brush,
                         onStrokeFinished = { newStroke ->
                             strokes = strokes + newStroke
+                        },
+                        onStrokeErased = { erasedStroke ->
+                            strokes = strokes - erasedStroke
                         },
                         modifier = Modifier.fillMaxSize(),
                     )
