@@ -558,6 +558,7 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 ### Task 8.1: Multi-page Note Support ✅
 
 **ViewModel State Management:**
+
 - Added `_pages: StateFlow<List<PageEntity>>` to track all pages in note
 - Added `_currentPageIndex: StateFlow<Int>` for current page position (0-based)
 - `navigateToNextPage()` and `navigateToPreviousPage()` update index and load page
@@ -566,6 +567,7 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - `setCurrentPage(page)` closes MyScript editor for old page, loads strokes for new page
 
 **UI Implementation:**
+
 - TopAppBar title shows "Page X of Y" format (1-based display)
 - TopAppBar actions: Previous (ArrowBack), Next (ArrowForward), New Page (Add)
 - Previous button disabled when `currentPageIndex == 0`
@@ -573,22 +575,26 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - All buttons use Material Icons from `androidx.compose.material.icons.filled`
 
 **Page Lifecycle:**
+
 - MyScript OffscreenEditor closed on page switch via `myScriptPageManager?.closeCurrentPage()`
 - New editor initialized for new page in `onPageEnter(pageId)`
 - Strokes loaded per-page via `repository.getStrokesForPage(pageId)`
 - PDF pages (kind="pdf") skip stroke loading, render bitmap only
 
 **Repository Extension:**
+
 - `getPagesForNote(noteId): Flow<List<PageEntity>>` for reactive page list
 - `createPage(page)` inserts page + recognition index + updates note timestamp
 - Used by `createPageForNote()` which generates UUID and page metadata
 
 **Build Status:**
+
 - compileDebugKotlin: SUCCESS (warnings for deprecated icon usage - pre-existing)
 - assembleDebug: SUCCESS
 - APK created successfully
 
 **Verification Checklist:**
+
 - ✅ "New Page" button in TopAppBar
 - ✅ Previous/Next navigation buttons with enabled state logic
 - ✅ Page indicator "Page X of Y" in title
@@ -596,3 +602,45 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - ✅ Page switching loads correct strokes via ViewModel state
 - ✅ MyScript editor lifecycle managed per-page
 - ✅ Build passes without errors
+
+## Session current - 2026-02-04
+
+### Task 8.1: Multi-page Note Support (Navigation UI)
+
+- NoteEditorViewModel now tracks pages and current index to enable page navigation
+- TopAppBar shows "Page X of Y" and exposes Previous/Next/New Page actions
+- Page switches close/reopen MyScript editors and load strokes per pageId
+- `./gradlew :app:assembleDebug` succeeded after changes
+
+## Session current - 2026-02-04
+
+### Task 8.4: Schema Audit ✅
+
+**Audit Scope:**
+- Verified all Android Room entities against v0 API contract in `V0-api.md`
+- Created comprehensive schema alignment document at `docs/schema-audit.md`
+- Checked field-by-field compatibility for sync readiness (Milestone C)
+
+**Key Findings:**
+- ✅ All IDs use String (UUID format) - matches API IdStr types
+- ✅ All timestamps use Long (Unix ms) - matches API UnixMs type
+- ✅ Page kinds align: "ink", "pdf", "mixed" (no legacy "page" value)
+- ✅ Geometry uses "fixed" | "infinite" with "pt" units as recommended
+- ✅ StrokePoint fields use short names: t, p, tx, ty, r (not verbose names)
+- ✅ StrokeStyle matches API: tool, color, baseWidth, minWidthFactor, maxWidthFactor, nibRotation
+- ✅ Tool enum serializes to strings: "pen", "highlighter", "eraser" (@SerialName annotations)
+- ✅ Bounds use {x, y, w, h} format (not x0/y0/x1/y1)
+- ✅ Lamport clock fields present: createdLamport (strokes), contentLamportMax (pages)
+
+**Intentional Deviations:**
+- PageEntity.indexInNote (local ordering, not synced)
+- Preview fields omitted (server-side generation)
+- Tool enum extended beyond "pen" for future-proofing (safe with @SerialName)
+
+**Migration Readiness:**
+- No schema changes needed before Milestone C (Convex sync)
+- Strokes can serialize directly to OpPayload.StrokeAdd format
+- Recognition text compatible as extended PageMeta or search index
+
+**Document Created:**
+- `docs/schema-audit.md` - 300+ line comprehensive audit with entity-by-entity verification tables

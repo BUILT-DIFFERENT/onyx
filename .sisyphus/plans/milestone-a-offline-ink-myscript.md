@@ -5162,7 +5162,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 8.4 Verify sync-compatible schema
+- [x] 8.4 Verify sync-compatible schema
 
   **What to do**:
   - Review all entity schemas against v0 API contract (`V0-api.md`)
