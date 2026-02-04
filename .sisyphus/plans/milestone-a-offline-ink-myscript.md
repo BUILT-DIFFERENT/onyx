@@ -3528,7 +3528,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 4.12 Create OnyxApplication and register in AndroidManifest
+- [x] 4.12 Create OnyxApplication and register in AndroidManifest
 
   **What to do**:
   - Create `apps/android/app/src/main/java/com/onyx/android/OnyxApplication.kt`

@@ -347,3 +347,11 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - Timestamp cascade: stroke/page changes update page.updatedAt and note.updatedAt
 - createNote automatically creates a first page and initializes recognition index
 - Lamport clocks remain 0 in Plan A; reserved for future Plan C sync
+
+## Session ses_task-4-12-application-singletons - 2026-02-04
+
+### Application Singletons
+
+- Added `OnyxApplication` to initialize Room database, DeviceIdentity, and NoteRepository
+- Room builder includes `fallbackToDestructiveMigration()` during v0 development
+- Registered `android:name=".OnyxApplication"` in `AndroidManifest.xml`
