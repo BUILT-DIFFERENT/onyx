@@ -516,3 +516,12 @@ apps/android/app/src/main/java/com/onyx/android/ink/
 - NoteEditorScreen now detects `PageEntity.kind == "pdf"` and displays rendered bitmap instead of InkCanvas
 - Zoom/pan shares `ViewTransform` with ink, `transformable` gestures clamp 0.5x..4x and use `graphicsLayer` translation/scale
 - PDF bitmap re-renders on zoom change via coroutine (Dispatchers.Default)
+
+## Session current - 2026-02-04
+
+### Task 6.5: PDF Text Selection
+
+- MuPDF Android `StructuredText` exposes nested types (`StructuredText.TextBlock`, `StructuredText.TextLine`, `StructuredText.TextChar`) with arrays on `TextBlock.lines` and `TextLine.chars`.
+- `StructuredText.getBlocks()` returns blocks; `TextChar.c` is an int and should be converted via `toChar()` when building strings.
+- `Quad` fields are `ul_x/ul_y/ur_x/ur_y/lr_x/lr_y/ll_x/ll_y`; `Quad.contains(x, y)` exists for hit-testing.
+- Use `ViewTransform.screenToPage()` and `pageToScreen()` to keep selection hit tests and highlights aligned under zoom/pan.

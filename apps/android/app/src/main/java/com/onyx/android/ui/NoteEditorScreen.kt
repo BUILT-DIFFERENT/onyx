@@ -1,7 +1,9 @@
 package com.onyx.android.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.horizontalScroll
@@ -43,12 +45,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -56,6 +61,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.artifex.mupdf.fitz.Quad
+import com.artifex.mupdf.fitz.StructuredText
+import com.artifex.mupdf.fitz.StructuredText.TextChar
 import com.onyx.android.OnyxApplication
 import com.onyx.android.data.dao.NoteDao
 import com.onyx.android.data.dao.PageDao
@@ -166,6 +174,13 @@ private class NoteEditorViewModelFactory(
     }
 }
 
+private data class TextSelection(
+    val structuredText: StructuredText,
+    val startChar: TextChar,
+    val endChar: TextChar,
+    val quads: List<Quad>,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteEditorScreen(
@@ -215,6 +230,8 @@ fun NoteEditorScreen(
     val pageHeight = currentPage?.height ?: 0f
     val pageWidthDp = with(LocalDensity.current) { pageWidth.toDp() }
     val pageHeightDp = with(LocalDensity.current) { pageHeight.toDp() }
+    var textSelection by remember { mutableStateOf<TextSelection?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     DisposableEffect(pdfRenderer) {
         onDispose {
@@ -234,6 +251,9 @@ fun NoteEditorScreen(
             withContext(Dispatchers.Default) {
                 renderer.renderPage(pageIndex, zoom)
             }
+    }
+    LaunchedEffect(currentPage?.pageId) {
+        textSelection = null
     }
     val transformState =
         rememberTransformableState { zoomChange, panChange, _ ->
@@ -479,19 +499,80 @@ fun NoteEditorScreen(
                 ) {
                     if (isPdfPage) {
                         val bitmap = pdfBitmap
-                        if (bitmap != null) {
-                            Image(
-                                bitmap = bitmap.asImageBitmap(),
-                                contentDescription = "PDF page",
-                                modifier =
-                                    Modifier
-                                        .graphicsLayer(
-                                            scaleX = viewTransform.zoom,
-                                            scaleY = viewTransform.zoom,
-                                            translationX = viewTransform.panX,
-                                            translationY = viewTransform.panY,
-                                        ).size(pageWidthDp, pageHeightDp),
-                            )
+                        val highlightColor = Color(0x500078FF)
+                        Box(
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .pointerInput(currentPage?.pageId, viewTransform) {
+                                        detectTapGestures(
+                                            onLongPress = { offset ->
+                                                val renderer = pdfRenderer ?: return@detectTapGestures
+                                                val pageIndex = currentPage?.pdfPageNo ?: return@detectTapGestures
+                                                val (pageX, pageY) = viewTransform.screenToPage(offset.x, offset.y)
+                                                coroutineScope.launch {
+                                                    val structuredText =
+                                                        withContext(Dispatchers.Default) {
+                                                            renderer.extractTextStructure(pageIndex)
+                                                        }
+                                                    val char = renderer.findCharAtPagePoint(structuredText, pageX, pageY)
+                                                    if (char != null) {
+                                                        val quads = renderer.getSelectionQuads(structuredText, char, char)
+                                                        textSelection =
+                                                            TextSelection(
+                                                                structuredText = structuredText,
+                                                                startChar = char,
+                                                                endChar = char,
+                                                                quads = quads,
+                                                            )
+                                                        val selectedText =
+                                                            renderer.extractSelectedText(structuredText, char, char)
+                                                        android.util.Log.d(
+                                                            "PdfSelection",
+                                                            "Selected text: $selectedText",
+                                                        )
+                                                    } else {
+                                                        textSelection = null
+                                                    }
+                                                }
+                                            },
+                                        )
+                                    },
+                        ) {
+                            if (bitmap != null) {
+                                Image(
+                                    bitmap = bitmap.asImageBitmap(),
+                                    contentDescription = "PDF page",
+                                    modifier =
+                                        Modifier
+                                            .graphicsLayer(
+                                                scaleX = viewTransform.zoom,
+                                                scaleY = viewTransform.zoom,
+                                                translationX = viewTransform.panX,
+                                                translationY = viewTransform.panY,
+                                            ).size(pageWidthDp, pageHeightDp),
+                                )
+                            }
+                            val selection = textSelection
+                            if (selection != null) {
+                                Canvas(modifier = Modifier.fillMaxSize()) {
+                                    selection.quads.forEach { quad ->
+                                        val (ulX, ulY) = viewTransform.pageToScreen(quad.ul_x, quad.ul_y)
+                                        val (urX, urY) = viewTransform.pageToScreen(quad.ur_x, quad.ur_y)
+                                        val (lrX, lrY) = viewTransform.pageToScreen(quad.lr_x, quad.lr_y)
+                                        val (llX, llY) = viewTransform.pageToScreen(quad.ll_x, quad.ll_y)
+                                        val path =
+                                            Path().apply {
+                                                moveTo(ulX, ulY)
+                                                lineTo(urX, urY)
+                                                lineTo(lrX, lrY)
+                                                lineTo(llX, llY)
+                                                close()
+                                            }
+                                        drawPath(path, color = highlightColor)
+                                    }
+                                }
+                            }
                         }
                     } else {
                         InkCanvas(

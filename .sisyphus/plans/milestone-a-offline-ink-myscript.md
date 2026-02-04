@@ -4736,7 +4736,7 @@ dependencyResolutionManagement {
 
 ---
 
-- [ ] 6.5 Implement PDF text selection
+- [x] 6.5 Implement PDF text selection
 
   **What to do**:
   - Use MuPDF text extraction APIs
