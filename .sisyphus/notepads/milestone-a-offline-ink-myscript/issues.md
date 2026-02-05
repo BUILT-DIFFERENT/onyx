@@ -59,3 +59,38 @@
 - Can mark milestone A as "code complete" pending device verification
 - APK builds successfully and is ready for device testing
 - All Room entities, DAOs, ViewModels, UI screens implemented
+
+## Session current - 2026-02-04 (Final Status)
+
+### Task 3.2a - Ink API Fallback Decision - INFRASTRUCTURE COMPLETE, RUNTIME BLOCKED
+
+**What's Done:**
+- ✅ `InkApiCompatTest.kt` exists in androidTest source set
+- ✅ `InkApiTestActivity` declared in androidTest/AndroidManifest.xml
+- ✅ Test code implements all verification steps from plan (lines 2102-2216)
+- ✅ Test compiles successfully (verified via Gradle build)
+
+**What's Blocked:**
+- ⚠️ Cannot run `./gradlew :app:connectedDebugAndroidTest` without connected device
+- ⚠️ Cannot verify InProgressStrokesView works on target API level
+- ⚠️ Cannot make fallback decision (PASS vs FAIL) without test results
+
+**Current Implementation Status:**
+- App uses `InProgressStrokesView` from Jetpack Ink alpha02
+- No fallback implemented yet (LowLatencyInkView.kt does not exist)
+- If test FAILS on device, fallback must be implemented per plan lines 2197-2201
+
+**Decision Required (when device available):**
+```bash
+# On physical device with stylus:
+cd /home/gamer/onyx/apps/android
+./gradlew :app:connectedDebugAndroidTest --tests "*.InkApiCompatTest"
+
+# If PASS → mark task complete, no code changes
+# If FAIL → implement LowLatencyInkView.kt fallback (plan lines 302-335)
+```
+
+**Recommendation:**
+- Mark task 3.2a as "infrastructure complete, pending device verification"
+- Current InProgressStrokesView implementation is tested on API 30+ in AOSP
+- Fallback can be added later if needed (does not block other milestones)
