@@ -64,16 +64,9 @@ class PdfRenderer(
         pageX: Float,
         pageY: Float,
     ): TextChar? {
-        for (block in text.blocks) {
-            for (line in block.lines) {
-                for (char in line.chars) {
-                    if (char.quad.contains(pageX, pageY)) {
-                        return char
-                    }
-                }
-            }
+        return text.charSequence().firstOrNull { char ->
+            char.quad.contains(pageX, pageY)
         }
-        return null
     }
 
     fun getSelectionQuads(
@@ -81,22 +74,19 @@ class PdfRenderer(
         startChar: TextChar,
         endChar: TextChar,
     ): List<Quad> {
+        val (orderedStart, orderedEnd) = orderSelection(text, startChar, endChar)
         val quads = mutableListOf<Quad>()
         var collecting = false
 
-        for (block in text.blocks) {
-            for (line in block.lines) {
-                for (char in line.chars) {
-                    if (char == startChar) {
-                        collecting = true
-                    }
-                    if (collecting) {
-                        quads.add(char.quad)
-                    }
-                    if (char == endChar) {
-                        return quads
-                    }
-                }
+        for (char in text.charSequence()) {
+            if (char == orderedStart) {
+                collecting = true
+            }
+            if (collecting) {
+                quads.add(char.quad)
+            }
+            if (char == orderedEnd) {
+                break
             }
         }
         return quads
@@ -107,28 +97,46 @@ class PdfRenderer(
         startChar: TextChar,
         endChar: TextChar,
     ): String {
+        val (orderedStart, orderedEnd) = orderSelection(text, startChar, endChar)
         val builder = StringBuilder()
         var collecting = false
 
-        for (block in text.blocks) {
-            for (line in block.lines) {
-                for (char in line.chars) {
-                    if (char == startChar) {
-                        collecting = true
-                    }
-                    if (collecting) {
-                        builder.append(char.c.toChar())
-                    }
-                    if (char == endChar) {
-                        return builder.toString()
-                    }
-                }
+        for (char in text.charSequence()) {
+            if (char == orderedStart) {
+                collecting = true
+            }
+            if (collecting) {
+                builder.append(char.c.toChar())
+            }
+            if (char == orderedEnd) {
+                break
             }
         }
         return builder.toString()
+    }
+
+    private fun orderSelection(
+        text: StructuredText,
+        startChar: TextChar,
+        endChar: TextChar,
+    ): Pair<TextChar, TextChar> {
+        val startIndex = text.indexOfChar(startChar)
+        val endIndex = text.indexOfChar(endChar)
+        val shouldSwap = startIndex >= 0 && endIndex >= 0 && endIndex < startIndex
+        return if (shouldSwap) Pair(endChar, startChar) else Pair(startChar, endChar)
     }
 
     fun close() {
         document.destroy()
     }
 }
+
+private fun StructuredText.indexOfChar(target: TextChar): Int {
+    return charSequence().indexOfFirst { char -> char == target }
+}
+
+private fun StructuredText.charSequence(): Sequence<TextChar> =
+    blocks
+        .asSequence()
+        .flatMap { block -> block.lines.asSequence() }
+        .flatMap { line -> line.chars.asSequence() }

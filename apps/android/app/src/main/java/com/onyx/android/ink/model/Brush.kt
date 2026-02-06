@@ -6,8 +6,10 @@ package com.onyx.android.ink.model
  */
 data class Brush(
     val tool: Tool = Tool.PEN,
-    val color: String = "#000000", // hex color
-    val baseWidth: Float = 2.0f, // in page units (pt)
+    // hex color
+    val color: String = "#000000",
+    // in page units (pt)
+    val baseWidth: Float = 2.0f,
     val minWidthFactor: Float = 0.85f,
     val maxWidthFactor: Float = 1.15f,
 ) {

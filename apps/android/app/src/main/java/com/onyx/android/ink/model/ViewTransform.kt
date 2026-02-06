@@ -5,9 +5,12 @@ package com.onyx.android.ink.model
  * This is the SINGLE SOURCE OF TRUTH for all coordinate conversions.
  */
 data class ViewTransform(
-    val zoom: Float = 1f, // 1.0 = 72 DPI (1pt = 1px), 2.0 = 144 DPI
-    val panX: Float = 0f, // Pan offset in screen pixels
-    val panY: Float = 0f, // Pan offset in screen pixels
+    // 1.0 = 72 DPI (1pt = 1px), 2.0 = 144 DPI
+    val zoom: Float = 1f,
+    // Pan offset in screen pixels
+    val panX: Float = 0f,
+    // Pan offset in screen pixels
+    val panY: Float = 0f,
 ) {
     companion object {
         val DEFAULT = ViewTransform()

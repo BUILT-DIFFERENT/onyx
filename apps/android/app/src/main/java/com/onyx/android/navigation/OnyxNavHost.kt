@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName")
+
 package com.onyx.android.navigation
 
 import androidx.compose.runtime.Composable
@@ -10,13 +12,6 @@ import androidx.navigation.navArgument
 import com.onyx.android.ui.HomeScreen
 import com.onyx.android.ui.NoteEditorScreen
 
-object Routes {
-    const val HOME = "home"
-    const val EDITOR = "editor/{noteId}"
-
-    fun editor(noteId: String) = "editor/$noteId"
-}
-
 @Composable
 fun OnyxNavHost(navController: NavHostController = rememberNavController()) {
     NavHost(
@@ -25,8 +20,8 @@ fun OnyxNavHost(navController: NavHostController = rememberNavController()) {
     ) {
         composable(Routes.HOME) {
             HomeScreen(
-                onNavigateToEditor = { noteId ->
-                    navController.navigate(Routes.editor(noteId))
+                onNavigateToEditor = { noteId, pageId ->
+                    navController.navigate(Routes.editor(noteId, pageId))
                 },
             )
         }
@@ -36,11 +31,18 @@ fun OnyxNavHost(navController: NavHostController = rememberNavController()) {
             arguments =
                 listOf(
                     navArgument("noteId") { type = NavType.StringType },
+                    navArgument("pageId") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
                 ),
         ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getString("noteId") ?: return@composable
+            val pageId = backStackEntry.arguments?.getString("pageId")
             NoteEditorScreen(
                 noteId = noteId,
+                initialPageId = pageId,
                 onNavigateBack = { navController.popBackStack() },
             )
         }

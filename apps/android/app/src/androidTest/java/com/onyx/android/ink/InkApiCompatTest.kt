@@ -27,7 +27,8 @@ class InkApiCompatTest {
         Brush.createWithColorIntArgb(
             StockBrushes.markerLatest,
             0xFF000000.toInt(),
-            5f, // 5mm brush
+            // 5mm brush
+            5f,
             0.1f,
         )
 

@@ -33,6 +33,10 @@ class NoteRepository(
     private val deviceIdentity: DeviceIdentity,
     private val strokeSerializer: StrokeSerializer,
 ) {
+    companion object {
+        private const val SNIPPET_LENGTH = 100
+    }
+
     suspend fun createNote(): NoteWithFirstPage {
         val now = System.currentTimeMillis()
         val note =
@@ -54,6 +58,8 @@ class NoteRepository(
         val note: NoteEntity,
         val firstPageId: String,
     )
+
+    fun getAllNotes(): Flow<List<NoteEntity>> = noteDao.getAllNotes()
 
     fun getPagesForNote(noteId: String): Flow<List<PageEntity>> = pageDao.getPagesForNote(noteId)
 
@@ -140,6 +146,16 @@ class NoteRepository(
                 contentLamportMax = 0,
             )
         pageDao.insert(page)
+        recognitionDao.insert(
+            RecognitionIndexEntity(
+                pageId = page.pageId,
+                noteId = noteId,
+                recognizedText = null,
+                recognizedAtLamport = null,
+                recognizerVersion = null,
+                updatedAt = now,
+            ),
+        )
         noteDao.updateTimestamp(noteId, now)
         return page
     }
@@ -167,7 +183,7 @@ class NoteRepository(
     }
 
     suspend fun deleteStroke(strokeId: String) {
-        val stroke = requireNotNull(strokeDao.getById(strokeId)) { "Stroke not found: $strokeId" }
+        val stroke = strokeDao.getById(strokeId) ?: return
         strokeDao.delete(strokeId)
 
         val now = System.currentTimeMillis()
@@ -208,6 +224,19 @@ class NoteRepository(
         val page = requireNotNull(pageDao.getById(pageId)) { "Page not found: $pageId" }
         if (page.kind == "pdf") {
             pageDao.updateKind(pageId, "mixed")
+            if (recognitionDao.getByPageId(pageId) == null) {
+                val now = System.currentTimeMillis()
+                recognitionDao.insert(
+                    RecognitionIndexEntity(
+                        pageId = pageId,
+                        noteId = page.noteId,
+                        recognizedText = null,
+                        recognizedAtLamport = null,
+                        recognizerVersion = null,
+                        updatedAt = now,
+                    ),
+                )
+            }
             updatePageTimestamp(pageId)
         }
     }
@@ -230,7 +259,7 @@ class NoteRepository(
                     val page = pageDao.getById(recognition.pageId) ?: return@mapNotNull null
                     val note = noteDao.getById(page.noteId) ?: return@mapNotNull null
 
-                    val snippet = recognition.recognizedText.orEmpty().take(100)
+                    val snippet = recognition.recognizedText.orEmpty().take(SNIPPET_LENGTH)
 
                     SearchResultItem(
                         noteId = note.noteId,

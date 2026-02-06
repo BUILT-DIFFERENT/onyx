@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName")
+
 package com.onyx.android.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme

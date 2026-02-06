@@ -2,7 +2,17 @@ package com.onyx.android.recognition
 
 import android.content.Context
 import android.util.Log
-import com.myscript.iink.*
+import com.myscript.iink.ContentPackage
+import com.myscript.iink.ContentPart
+import com.myscript.iink.EditorError
+import com.myscript.iink.Engine
+import com.myscript.iink.IOffscreenEditorListener
+import com.myscript.iink.ItemIdHelper
+import com.myscript.iink.MimeType
+import com.myscript.iink.OffscreenEditor
+import com.myscript.iink.PointerEvent
+import com.myscript.iink.PointerEventType
+import com.myscript.iink.PointerType
 import com.onyx.android.ink.model.Stroke
 import java.io.File
 
@@ -48,7 +58,14 @@ class MyScriptPageManager(
      * 1 pt = 1/72 inch, 1 inch = 25.4 mm
      * Therefore: 1 pt = 25.4 / 72 mm ≈ 0.3528 mm
      */
-    private fun ptToMm(pt: Float): Float = pt * 25.4f / 72f
+    private fun ptToMm(pt: Float): Float = pt * MM_PER_POINT
+
+    companion object {
+        private const val MM_PER_INCH = 25.4f
+        private const val POINTS_PER_INCH = 72f
+        private const val MM_PER_POINT = MM_PER_INCH / POINTS_PER_INCH
+        private const val DEFAULT_PRESSURE = 0.5f
+    }
 
     fun onPageEnter(pageId: String) {
         if (currentPageId != pageId) {
@@ -133,7 +150,7 @@ class MyScriptPageManager(
                         ptToMm(point.x),
                         ptToMm(point.y),
                         point.t,
-                        point.p ?: 0.5f,
+                        point.p ?: DEFAULT_PRESSURE,
                         PointerType.PEN,
                         0,
                     )

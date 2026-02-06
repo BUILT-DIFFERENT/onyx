@@ -1,64 +1,18 @@
+@file:Suppress("FunctionName")
+
 package com.onyx.android.ui
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemGesturesPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Redo
-import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -76,18 +30,17 @@ import com.onyx.android.ink.model.InkAction
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
-import com.onyx.android.ink.ui.InkCanvas
 import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfRenderer
 import com.onyx.android.recognition.MyScriptPageManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.roundToInt
 
 private class NoteEditorViewModel(
     private val noteId: String,
@@ -95,6 +48,7 @@ private class NoteEditorViewModel(
     private val noteDao: NoteDao,
     private val pageDao: PageDao,
     private val myScriptPageManager: MyScriptPageManager?,
+    private val initialPageId: String?,
 ) : ViewModel() {
     private val _strokes = MutableStateFlow<List<Stroke>>(emptyList())
     val strokes: StateFlow<List<Stroke>> = _strokes.asStateFlow()
@@ -105,11 +59,18 @@ private class NoteEditorViewModel(
     private val _currentPage = MutableStateFlow<PageEntity?>(null)
     val currentPage: StateFlow<PageEntity?> = _currentPage.asStateFlow()
     private var currentPageId: String? = null
+    private var pendingInitialPageId: String? = initialPageId
+    private val strokeWriteQueue = Channel<suspend () -> Unit>(Channel.UNLIMITED)
 
     init {
         myScriptPageManager?.onRecognitionUpdated = { pageId, text ->
             viewModelScope.launch {
                 repository.updateRecognition(pageId, text, "myscript-4.3")
+            }
+        }
+        viewModelScope.launch {
+            for (task in strokeWriteQueue) {
+                task()
             }
         }
         loadNote()
@@ -118,27 +79,22 @@ private class NoteEditorViewModel(
     fun loadNote() {
         viewModelScope.launch {
             noteDao.getById(noteId)
-            refreshPages(selectIndex = 0)
+            refreshPages(selectPageId = pendingInitialPageId)
+            pendingInitialPageId = null
         }
     }
 
-    fun navigateToNextPage() {
-        val nextIndex = _currentPageIndex.value + 1
-        if (nextIndex <= _pages.value.lastIndex) {
-            _currentPageIndex.value = nextIndex
-            viewModelScope.launch {
-                setCurrentPage(_pages.value.getOrNull(nextIndex))
-            }
+    fun navigateBy(offset: Int) {
+        if (_pages.value.isEmpty()) {
+            return
         }
-    }
-
-    fun navigateToPreviousPage() {
-        val previousIndex = _currentPageIndex.value - 1
-        if (previousIndex >= 0) {
-            _currentPageIndex.value = previousIndex
-            viewModelScope.launch {
-                setCurrentPage(_pages.value.getOrNull(previousIndex))
-            }
+        val targetIndex = (_currentPageIndex.value + offset).coerceIn(0, _pages.value.lastIndex)
+        if (targetIndex == _currentPageIndex.value) {
+            return
+        }
+        _currentPageIndex.value = targetIndex
+        viewModelScope.launch {
+            setCurrentPage(_pages.value.getOrNull(targetIndex))
         }
     }
 
@@ -154,19 +110,34 @@ private class NoteEditorViewModel(
     fun addStroke(
         stroke: Stroke,
         persist: Boolean,
+        updateRecognition: Boolean = true,
     ) {
         _strokes.value = _strokes.value + stroke
         if (persist) {
             val pageId = currentPageId ?: return
-            viewModelScope.launch {
+            enqueueStrokeWrite {
                 repository.saveStroke(pageId, stroke)
             }
+        }
+        if (updateRecognition) {
             myScriptPageManager?.addStroke(stroke)
         }
     }
 
-    fun removeStroke(stroke: Stroke) {
+    fun removeStroke(
+        stroke: Stroke,
+        persist: Boolean,
+        updateRecognition: Boolean = true,
+    ) {
         _strokes.value = _strokes.value - stroke
+        if (persist) {
+            enqueueStrokeWrite {
+                repository.deleteStroke(stroke.id)
+            }
+        }
+        if (updateRecognition) {
+            myScriptPageManager?.onStrokeErased(stroke.id, _strokes.value)
+        }
     }
 
     fun upgradePageToMixed(pageId: String) {
@@ -188,7 +159,10 @@ private class NoteEditorViewModel(
         }
     }
 
-    private suspend fun refreshPages(selectIndex: Int? = null) {
+    private suspend fun refreshPages(
+        selectIndex: Int? = null,
+        selectPageId: String? = null,
+    ) {
         val pages = pageDao.getPagesForNote(noteId).first()
         _pages.value = pages
         if (pages.isEmpty()) {
@@ -196,8 +170,13 @@ private class NoteEditorViewModel(
             setCurrentPage(null)
             return
         }
+        val pageIdIndex =
+            selectPageId?.let { pageId ->
+                pages.indexOfFirst { it.pageId == pageId }.takeIf { it >= 0 }
+            }
         val resolvedIndex =
-            selectIndex?.coerceIn(0, pages.lastIndex)
+            pageIdIndex
+                ?: selectIndex?.coerceIn(0, pages.lastIndex)
                 ?: _currentPageIndex.value.coerceIn(0, pages.lastIndex)
         _currentPageIndex.value = resolvedIndex
         setCurrentPage(pages.getOrNull(resolvedIndex))
@@ -227,7 +206,16 @@ private class NoteEditorViewModel(
 
     override fun onCleared() {
         myScriptPageManager?.closeCurrentPage()
+        strokeWriteQueue.close()
         super.onCleared()
+    }
+
+    private fun enqueueStrokeWrite(task: suspend () -> Unit) {
+        strokeWriteQueue.trySend {
+            withContext(Dispatchers.IO) {
+                task()
+            }
+        }
     }
 }
 
@@ -237,25 +225,174 @@ private class NoteEditorViewModelFactory(
     private val noteDao: NoteDao,
     private val pageDao: PageDao,
     private val myScriptPageManager: MyScriptPageManager?,
+    private val initialPageId: String?,
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         require(modelClass.isAssignableFrom(NoteEditorViewModel::class.java))
-        return NoteEditorViewModel(noteId, repository, noteDao, pageDao, myScriptPageManager) as T
+        return NoteEditorViewModel(
+            noteId,
+            repository,
+            noteDao,
+            pageDao,
+            myScriptPageManager,
+            initialPageId,
+        ) as T
     }
 }
 
-private data class TextSelection(
+private class UndoController(
+    private val viewModel: NoteEditorViewModel,
+    private val maxUndoActions: Int,
+) {
+    val undoStack = mutableStateListOf<InkAction>()
+    val redoStack = mutableStateListOf<InkAction>()
+
+    fun clear() {
+        undoStack.clear()
+        redoStack.clear()
+    }
+
+    fun undo() {
+        val action = undoStack.removeLastOrNull() ?: return
+        when (action) {
+            is InkAction.AddStroke -> viewModel.removeStroke(action.stroke, persist = true)
+            is InkAction.RemoveStroke -> viewModel.addStroke(action.stroke, persist = true)
+        }
+        redoStack.add(action)
+    }
+
+    fun redo() {
+        val action = redoStack.removeLastOrNull() ?: return
+        when (action) {
+            is InkAction.AddStroke -> viewModel.addStroke(action.stroke, persist = true)
+            is InkAction.RemoveStroke -> viewModel.removeStroke(action.stroke, persist = true)
+        }
+        undoStack.add(action)
+        trimUndoStack()
+    }
+
+    fun onStrokeFinished(
+        stroke: Stroke,
+        currentPage: PageEntity?,
+    ) {
+        viewModel.addStroke(stroke, persist = true)
+        undoStack.add(InkAction.AddStroke(stroke))
+        trimUndoStack()
+        redoStack.clear()
+        val pageId = currentPage?.pageId
+        if (pageId != null && currentPage.kind == "pdf") {
+            viewModel.upgradePageToMixed(pageId)
+        }
+        logStrokePoints(stroke)
+    }
+
+    fun onStrokeErased(stroke: Stroke) {
+        viewModel.removeStroke(stroke, persist = true)
+        undoStack.add(InkAction.RemoveStroke(stroke))
+        trimUndoStack()
+        redoStack.clear()
+    }
+
+    private fun trimUndoStack() {
+        if (undoStack.size > maxUndoActions) {
+            undoStack.removeAt(0)
+        }
+    }
+
+    private fun logStrokePoints(stroke: Stroke) {
+        val firstPoint = stroke.points.firstOrNull()
+        val lastPoint = stroke.points.lastOrNull()
+        if (firstPoint != null && lastPoint != null) {
+            val message =
+                "Saved stroke points in pt: " +
+                    "start=(${firstPoint.x}, ${firstPoint.y}) " +
+                    "end=(${lastPoint.x}, ${lastPoint.y})"
+            android.util.Log.d("InkStroke", message)
+        }
+    }
+}
+
+internal data class TextSelection(
     val structuredText: StructuredText,
     val startChar: TextChar,
     val endChar: TextChar,
     val quads: List<Quad>,
 )
 
+internal data class NoteEditorTopBarState(
+    val totalPages: Int,
+    val currentPageIndex: Int,
+    val canNavigatePrevious: Boolean,
+    val canNavigateNext: Boolean,
+    val canUndo: Boolean,
+    val canRedo: Boolean,
+    val onNavigateBack: () -> Unit,
+    val onNavigatePrevious: () -> Unit,
+    val onNavigateNext: () -> Unit,
+    val onCreatePage: () -> Unit,
+    val onUndo: () -> Unit,
+    val onRedo: () -> Unit,
+)
+
+internal data class NoteEditorToolbarState(
+    val brush: Brush,
+    val lastNonEraserTool: Tool,
+    val onBrushChange: (Brush) -> Unit,
+)
+
+internal data class NoteEditorContentState(
+    val isPdfPage: Boolean,
+    val pdfBitmap: android.graphics.Bitmap?,
+    val pdfRenderer: PdfRenderer?,
+    val currentPage: PageEntity?,
+    val viewTransform: ViewTransform,
+    val pageWidthDp: androidx.compose.ui.unit.Dp,
+    val pageHeightDp: androidx.compose.ui.unit.Dp,
+    val strokes: List<Stroke>,
+    val brush: Brush,
+    val onStrokeFinished: (Stroke) -> Unit,
+    val onStrokeErased: (Stroke) -> Unit,
+)
+
+private data class NoteEditorPageState(
+    val strokes: List<Stroke>,
+    val pages: List<PageEntity>,
+    val currentPageIndex: Int,
+    val currentPage: PageEntity?,
+)
+
+private data class NoteEditorPdfState(
+    val isPdfPage: Boolean,
+    val pdfRenderer: PdfRenderer?,
+    val pdfBitmap: android.graphics.Bitmap?,
+    val pageWidthDp: androidx.compose.ui.unit.Dp,
+    val pageHeightDp: androidx.compose.ui.unit.Dp,
+)
+
+private data class NoteEditorUiState(
+    val topBarState: NoteEditorTopBarState,
+    val toolbarState: NoteEditorToolbarState,
+    val contentState: NoteEditorContentState,
+    val transformState: androidx.compose.foundation.gestures.TransformableState,
+)
+
+private data class BrushState(
+    val brush: Brush,
+    val lastNonEraserTool: Tool,
+    val onBrushChange: (Brush) -> Unit,
+)
+
+private data class StrokeCallbacks(
+    val onStrokeFinished: (Stroke) -> Unit,
+    val onStrokeErased: (Stroke) -> Unit,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteEditorScreen(
     noteId: String,
+    initialPageId: String? = null,
     onNavigateBack: () -> Unit,
 ) {
     val app = LocalContext.current.applicationContext as OnyxApplication
@@ -279,18 +416,170 @@ fun NoteEditorScreen(
     val viewModel: NoteEditorViewModel =
         viewModel(
             key = "NoteEditorViewModel_$noteId",
-            factory = NoteEditorViewModelFactory(noteId, repository, noteDao, pageDao, myScriptPageManager),
+            factory =
+                NoteEditorViewModelFactory(
+                    noteId,
+                    repository,
+                    noteDao,
+                    pageDao,
+                    myScriptPageManager,
+                    initialPageId,
+                ),
         )
+    NoteEditorScreenContent(
+        noteId = noteId,
+        viewModel = viewModel,
+        pdfAssetStorage = pdfAssetStorage,
+        onNavigateBack = onNavigateBack,
+    )
+}
+
+@Composable
+private fun NoteEditorScreenContent(
+    noteId: String,
+    viewModel: NoteEditorViewModel,
+    pdfAssetStorage: PdfAssetStorage,
+    onNavigateBack: () -> Unit,
+) {
+    val uiState =
+        rememberNoteEditorUiState(
+            noteId = noteId,
+            viewModel = viewModel,
+            pdfAssetStorage = pdfAssetStorage,
+            onNavigateBack = onNavigateBack,
+        )
+    NoteEditorScaffold(
+        topBarState = uiState.topBarState,
+        toolbarState = uiState.toolbarState,
+        contentState = uiState.contentState,
+        transformState = uiState.transformState,
+    )
+}
+
+@Composable
+private fun rememberNoteEditorUiState(
+    noteId: String,
+    viewModel: NoteEditorViewModel,
+    pdfAssetStorage: PdfAssetStorage,
+    onNavigateBack: () -> Unit,
+): NoteEditorUiState {
+    val brushState = rememberBrushState()
+    val pageState = rememberPageState(viewModel)
+    val undoController = remember(viewModel) { UndoController(viewModel, MAX_UNDO_ACTIONS) }
+    var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
+    val pdfState = rememberPdfState(pageState.currentPage, pdfAssetStorage, viewTransform)
+    DisposePdfRenderer(pdfState.pdfRenderer)
+    ObserveNoteEditorLifecycle(
+        noteId = noteId,
+        currentPageId = pageState.currentPage?.pageId,
+        viewModel = viewModel,
+        undoController = undoController,
+    )
+    val strokeCallbacks = buildStrokeCallbacks(undoController, pageState.currentPage)
+    val topBarState =
+        buildTopBarState(
+            totalPages = pageState.pages.size,
+            currentPageIndex = pageState.currentPageIndex,
+            undoController = undoController,
+            onNavigateBack = onNavigateBack,
+            viewModel = viewModel,
+        )
+    val toolbarState =
+        buildToolbarState(
+            brush = brushState.brush,
+            lastNonEraserTool = brushState.lastNonEraserTool,
+            onBrushChange = brushState.onBrushChange,
+        )
+    val contentState =
+        NoteEditorContentState(
+            isPdfPage = pdfState.isPdfPage,
+            pdfBitmap = pdfState.pdfBitmap,
+            pdfRenderer = pdfState.pdfRenderer,
+            currentPage = pageState.currentPage,
+            viewTransform = viewTransform,
+            pageWidthDp = pdfState.pageWidthDp,
+            pageHeightDp = pdfState.pageHeightDp,
+            strokes = pageState.strokes,
+            brush = brushState.brush,
+            onStrokeFinished = strokeCallbacks.onStrokeFinished,
+            onStrokeErased = strokeCallbacks.onStrokeErased,
+        )
+
+    return NoteEditorUiState(
+        topBarState = topBarState,
+        toolbarState = toolbarState,
+        contentState = contentState,
+        transformState =
+            rememberTransformState(viewTransform) { updatedTransform ->
+                viewTransform = updatedTransform
+            },
+    )
+}
+
+@Composable
+private fun rememberBrushState(): BrushState {
     var brush by remember { mutableStateOf(Brush()) }
     var lastNonEraserTool by remember { mutableStateOf(brush.tool) }
+    LaunchedEffect(brush.tool) {
+        if (brush.tool != Tool.ERASER) {
+            lastNonEraserTool = brush.tool
+        }
+    }
+    return BrushState(
+        brush = brush,
+        lastNonEraserTool = lastNonEraserTool,
+        onBrushChange = { updatedBrush -> brush = updatedBrush },
+    )
+}
+
+@Composable
+private fun ObserveNoteEditorLifecycle(
+    noteId: String,
+    currentPageId: String?,
+    viewModel: NoteEditorViewModel,
+    undoController: UndoController,
+) {
+    LaunchedEffect(noteId) {
+        viewModel.loadNote()
+    }
+    LaunchedEffect(currentPageId) {
+        undoController.clear()
+    }
+}
+
+private fun buildStrokeCallbacks(
+    undoController: UndoController,
+    currentPage: PageEntity?,
+): StrokeCallbacks =
+    StrokeCallbacks(
+        onStrokeFinished = { newStroke ->
+            undoController.onStrokeFinished(newStroke, currentPage)
+        },
+        onStrokeErased = { erasedStroke ->
+            undoController.onStrokeErased(erasedStroke)
+        },
+    )
+
+@Composable
+private fun rememberPageState(viewModel: NoteEditorViewModel): NoteEditorPageState {
     val strokes by viewModel.strokes.collectAsState()
     val pages by viewModel.pages.collectAsState()
     val currentPageIndex by viewModel.currentPageIndex.collectAsState()
     val currentPage by viewModel.currentPage.collectAsState()
-    val undoStack = remember { mutableStateListOf<InkAction>() }
-    val redoStack = remember { mutableStateListOf<InkAction>() }
-    val maxUndoActions = 50
-    var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
+    return NoteEditorPageState(
+        strokes = strokes,
+        pages = pages,
+        currentPageIndex = currentPageIndex,
+        currentPage = currentPage,
+    )
+}
+
+@Composable
+private fun rememberPdfState(
+    currentPage: PageEntity?,
+    pdfAssetStorage: PdfAssetStorage,
+    viewTransform: ViewTransform,
+): NoteEditorPdfState {
     val isPdfPage = currentPage?.kind == "pdf" || currentPage?.kind == "mixed"
     val pdfRenderer =
         remember(currentPage?.pdfAssetId) {
@@ -298,431 +587,49 @@ fun NoteEditorScreen(
                 PdfRenderer(pdfAssetStorage.getFileForAsset(assetId))
             }
         }
-    var pdfBitmap by remember(currentPage?.pageId) { mutableStateOf<android.graphics.Bitmap?>(null) }
+    val pdfBitmap = rememberPdfBitmap(isPdfPage, currentPage, pdfRenderer, viewTransform)
     val pageWidth = currentPage?.width ?: 0f
     val pageHeight = currentPage?.height ?: 0f
     val pageWidthDp = with(LocalDensity.current) { pageWidth.toDp() }
     val pageHeightDp = with(LocalDensity.current) { pageHeight.toDp() }
-    var textSelection by remember { mutableStateOf<TextSelection?>(null) }
-    val coroutineScope = rememberCoroutineScope()
-
-    DisposableEffect(pdfRenderer) {
-        onDispose {
-            pdfRenderer?.close()
-        }
-    }
-
-    LaunchedEffect(currentPage?.pageId, viewTransform.zoom) {
-        if (!isPdfPage) {
-            pdfBitmap = null
-            return@LaunchedEffect
-        }
-        val renderer = pdfRenderer ?: return@LaunchedEffect
-        val pageIndex = currentPage?.pdfPageNo ?: return@LaunchedEffect
-        val zoom = viewTransform.zoom
-        pdfBitmap =
-            withContext(Dispatchers.Default) {
-                renderer.renderPage(pageIndex, zoom)
-            }
-    }
-    LaunchedEffect(currentPage?.pageId) {
-        textSelection = null
-    }
-    val transformState =
-        rememberTransformableState { zoomChange, panChange, _ ->
-            viewTransform =
-                viewTransform.copy(
-                    zoom =
-                        (viewTransform.zoom * zoomChange)
-                            .coerceIn(ViewTransform.MIN_ZOOM, ViewTransform.MAX_ZOOM),
-                    panX = viewTransform.panX + panChange.x,
-                    panY = viewTransform.panY + panChange.y,
-                )
-        }
-
-    fun undo() {
-        val action = undoStack.removeLastOrNull() ?: return
-        when (action) {
-            is InkAction.AddStroke -> {
-                viewModel.removeStroke(action.stroke)
-            }
-
-            is InkAction.RemoveStroke -> {
-                viewModel.addStroke(action.stroke, persist = false)
-            }
-        }
-        redoStack.add(action)
-    }
-
-    fun redo() {
-        val action = redoStack.removeLastOrNull() ?: return
-        when (action) {
-            is InkAction.AddStroke -> {
-                viewModel.addStroke(action.stroke, persist = false)
-            }
-
-            is InkAction.RemoveStroke -> {
-                viewModel.removeStroke(action.stroke)
-            }
-        }
-        undoStack.add(action)
-        if (undoStack.size > maxUndoActions) {
-            undoStack.removeAt(0)
-        }
-    }
-    LaunchedEffect(noteId) {
-        viewModel.loadNote()
-    }
-    LaunchedEffect(brush.tool) {
-        if (brush.tool != Tool.ERASER) {
-            lastNonEraserTool = brush.tool
-        }
-    }
-    val onStrokeFinished: (Stroke) -> Unit = { newStroke ->
-        viewModel.addStroke(newStroke, persist = true)
-        undoStack.add(InkAction.AddStroke(newStroke))
-        if (undoStack.size > maxUndoActions) {
-            undoStack.removeAt(0)
-        }
-        redoStack.clear()
-        val pageId = currentPage?.pageId
-        if (pageId != null && currentPage?.kind == "pdf") {
-            viewModel.upgradePageToMixed(pageId)
-        }
-        val firstPoint = newStroke.points.firstOrNull()
-        val lastPoint = newStroke.points.lastOrNull()
-        if (firstPoint != null && lastPoint != null) {
-            android.util.Log.d(
-                "InkStroke",
-                "Saved stroke points in pt: start=(${firstPoint.x}, ${firstPoint.y}) end=(${lastPoint.x}, ${lastPoint.y})",
-            )
-        }
-    }
-    val onStrokeErased: (Stroke) -> Unit = { erasedStroke ->
-        viewModel.removeStroke(erasedStroke)
-        undoStack.add(InkAction.RemoveStroke(erasedStroke))
-        if (undoStack.size > maxUndoActions) {
-            undoStack.removeAt(0)
-        }
-        redoStack.clear()
-    }
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    val totalPages = pages.size
-                    val pageNumber = if (totalPages == 0) 0 else currentPageIndex + 1
-                    Text(text = "Page $pageNumber of $totalPages")
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { viewModel.navigateToPreviousPage() },
-                        enabled = currentPageIndex > 0,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Previous page",
-                        )
-                    }
-                    IconButton(
-                        onClick = { viewModel.navigateToNextPage() },
-                        enabled = currentPageIndex < pages.size - 1,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowForward,
-                            contentDescription = "Next page",
-                        )
-                    }
-                    IconButton(onClick = { viewModel.createNewPage() }) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "New page",
-                        )
-                    }
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More options",
-                        )
-                    }
-                    IconButton(
-                        onClick = { undo() },
-                        enabled = undoStack.isNotEmpty(),
-                    ) {
-                        Icon(imageVector = Icons.Default.Undo, contentDescription = "Undo")
-                    }
-                    IconButton(
-                        onClick = { redo() },
-                        enabled = redoStack.isNotEmpty(),
-                    ) {
-                        Icon(imageVector = Icons.Default.Redo, contentDescription = "Redo")
-                    }
-                },
-            )
-        },
-        bottomBar = {
-            Surface(tonalElevation = 2.dp) {
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .navigationBarsPadding()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    val palette =
-                        listOf(
-                            "#111111",
-                            "#1E88E5",
-                            "#E53935",
-                            "#43A047",
-                            "#FDD835",
-                            "#FB8C00",
-                            "#8E24AA",
-                        )
-                    Row(
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        palette.forEach { hexColor ->
-                            val swatchColor = Color(android.graphics.Color.parseColor(hexColor))
-                            val isSelected = brush.color == hexColor
-                            IconButton(onClick = { brush = brush.copy(color = hexColor) }) {
-                                Surface(
-                                    modifier = Modifier.size(28.dp),
-                                    color = swatchColor,
-                                    shape = CircleShape,
-                                    border =
-                                        if (isSelected) {
-                                            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-                                        } else {
-                                            BorderStroke(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                                    alpha = 0.35f,
-                                                ),
-                                            )
-                                        },
-                                ) {
-                                }
-                            }
-                        }
-                    }
-                    val isEraserSelected = brush.tool == Tool.ERASER
-                    IconButton(
-                        onClick = {
-                            brush =
-                                if (isEraserSelected) {
-                                    brush.copy(tool = lastNonEraserTool)
-                                } else {
-                                    brush.copy(tool = Tool.ERASER)
-                                }
-                        },
-                    ) {
-                        Surface(
-                            modifier = Modifier.size(32.dp),
-                            shape = CircleShape,
-                            color =
-                                if (isEraserSelected) {
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                                } else {
-                                    Color.Transparent
-                                },
-                            border =
-                                if (isEraserSelected) {
-                                    BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-                                } else {
-                                    BorderStroke(
-                                        1.dp,
-                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                            alpha = 0.35f,
-                                        ),
-                                    )
-                                },
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Eraser",
-                                    tint =
-                                        if (isEraserSelected) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurfaceVariant
-                                        },
-                                )
-                            }
-                        }
-                    }
-                    VerticalDivider(
-                        modifier =
-                            Modifier
-                                .height(32.dp)
-                                .padding(horizontal = 12.dp),
-                    )
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Surface(
-                            modifier =
-                                Modifier
-                                    .size((brush.baseWidth * 2.6f).coerceIn(12f, 24f).dp),
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        ) {
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Size",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Slider(
-                                value = brush.baseWidth,
-                                onValueChange = { newSize ->
-                                    brush = brush.copy(baseWidth = newSize)
-                                },
-                                valueRange = 1f..8f,
-                                steps = 6,
-                            )
-                        }
-                        Text(
-                            text = brush.baseWidth.roundToInt().toString(),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-        },
-    ) { paddingValues ->
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .consumeWindowInsets(paddingValues),
-        ) {
-            Surface(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .systemGesturesPadding(),
-            ) {
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .transformable(state = transformState),
-                ) {
-                    if (isPdfPage) {
-                        val bitmap = pdfBitmap
-                        val highlightColor = Color(0x500078FF)
-                        Box(
-                            modifier =
-                                Modifier
-                                    .fillMaxSize()
-                                    .pointerInput(currentPage?.pageId, viewTransform) {
-                                        detectTapGestures(
-                                            onLongPress = { offset ->
-                                                val renderer = pdfRenderer ?: return@detectTapGestures
-                                                val pageIndex = currentPage?.pdfPageNo ?: return@detectTapGestures
-                                                val (pageX, pageY) = viewTransform.screenToPage(offset.x, offset.y)
-                                                coroutineScope.launch {
-                                                    val structuredText =
-                                                        withContext(Dispatchers.Default) {
-                                                            renderer.extractTextStructure(pageIndex)
-                                                        }
-                                                    val char = renderer.findCharAtPagePoint(structuredText, pageX, pageY)
-                                                    if (char != null) {
-                                                        val quads = renderer.getSelectionQuads(structuredText, char, char)
-                                                        textSelection =
-                                                            TextSelection(
-                                                                structuredText = structuredText,
-                                                                startChar = char,
-                                                                endChar = char,
-                                                                quads = quads,
-                                                            )
-                                                        val selectedText =
-                                                            renderer.extractSelectedText(structuredText, char, char)
-                                                        android.util.Log.d(
-                                                            "PdfSelection",
-                                                            "Selected text: $selectedText",
-                                                        )
-                                                    } else {
-                                                        textSelection = null
-                                                    }
-                                                }
-                                            },
-                                        )
-                                    },
-                        ) {
-                            if (bitmap != null) {
-                                Image(
-                                    bitmap = bitmap.asImageBitmap(),
-                                    contentDescription = "PDF page",
-                                    modifier =
-                                        Modifier
-                                            .graphicsLayer(
-                                                scaleX = viewTransform.zoom,
-                                                scaleY = viewTransform.zoom,
-                                                translationX = viewTransform.panX,
-                                                translationY = viewTransform.panY,
-                                            ).size(pageWidthDp, pageHeightDp),
-                                )
-                            }
-                            val selection = textSelection
-                            if (selection != null) {
-                                Canvas(modifier = Modifier.fillMaxSize()) {
-                                    selection.quads.forEach { quad ->
-                                        val (ulX, ulY) = viewTransform.pageToScreen(quad.ul_x, quad.ul_y)
-                                        val (urX, urY) = viewTransform.pageToScreen(quad.ur_x, quad.ur_y)
-                                        val (lrX, lrY) = viewTransform.pageToScreen(quad.lr_x, quad.lr_y)
-                                        val (llX, llY) = viewTransform.pageToScreen(quad.ll_x, quad.ll_y)
-                                        val path =
-                                            Path().apply {
-                                                moveTo(ulX, ulY)
-                                                lineTo(urX, urY)
-                                                lineTo(lrX, lrY)
-                                                lineTo(llX, llY)
-                                                close()
-                                            }
-                                        drawPath(path, color = highlightColor)
-                                    }
-                                }
-                            }
-                            InkCanvas(
-                                strokes = strokes,
-                                viewTransform = viewTransform,
-                                brush = brush,
-                                onStrokeFinished = onStrokeFinished,
-                                onStrokeErased = onStrokeErased,
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-                    } else {
-                        InkCanvas(
-                            strokes = strokes,
-                            viewTransform = viewTransform,
-                            brush = brush,
-                            onStrokeFinished = onStrokeFinished,
-                            onStrokeErased = onStrokeErased,
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    }
-                }
-            }
-        }
-    }
+    return NoteEditorPdfState(
+        isPdfPage = isPdfPage,
+        pdfRenderer = pdfRenderer,
+        pdfBitmap = pdfBitmap,
+        pageWidthDp = pageWidthDp,
+        pageHeightDp = pageHeightDp,
+    )
 }
+
+private fun buildTopBarState(
+    totalPages: Int,
+    currentPageIndex: Int,
+    undoController: UndoController,
+    onNavigateBack: () -> Unit,
+    viewModel: NoteEditorViewModel,
+): NoteEditorTopBarState =
+    NoteEditorTopBarState(
+        totalPages = totalPages,
+        currentPageIndex = currentPageIndex,
+        canNavigatePrevious = currentPageIndex > 0,
+        canNavigateNext = currentPageIndex < totalPages - 1,
+        canUndo = undoController.undoStack.isNotEmpty(),
+        canRedo = undoController.redoStack.isNotEmpty(),
+        onNavigateBack = onNavigateBack,
+        onNavigatePrevious = { viewModel.navigateBy(-1) },
+        onNavigateNext = { viewModel.navigateBy(1) },
+        onCreatePage = { viewModel.createNewPage() },
+        onUndo = undoController::undo,
+        onRedo = undoController::redo,
+    )
+
+private fun buildToolbarState(
+    brush: Brush,
+    lastNonEraserTool: Tool,
+    onBrushChange: (Brush) -> Unit,
+): NoteEditorToolbarState =
+    NoteEditorToolbarState(
+        brush = brush,
+        lastNonEraserTool = lastNonEraserTool,
+        onBrushChange = onBrushChange,
+    )
