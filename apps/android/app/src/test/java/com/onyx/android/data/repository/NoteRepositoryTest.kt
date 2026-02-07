@@ -5,6 +5,7 @@ import com.onyx.android.data.dao.PageDao
 import com.onyx.android.data.dao.RecognitionDao
 import com.onyx.android.data.dao.StrokeDao
 import com.onyx.android.data.entity.PageEntity
+import com.onyx.android.data.entity.RecognitionIndexEntity
 import com.onyx.android.data.entity.StrokeEntity
 import com.onyx.android.data.serialization.StrokeSerializer
 import com.onyx.android.device.DeviceIdentity
@@ -18,6 +19,8 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -220,6 +223,270 @@ class NoteRepositoryTest {
             coVerify(exactly = 1) { pageDao.updateKind(pageId, "mixed", any()) }
             coVerify(exactly = 1) { pageDao.updateTimestamp(pageId, any()) }
             coVerify(exactly = 1) { noteDao.updateTimestamp("note-id", any()) }
+        }
+
+    @Test
+    fun `createPage inserts recognition index and updates note timestamp`() =
+        runTest {
+            val page =
+                PageEntity(
+                    pageId = "new-page",
+                    noteId = "note-id",
+                    kind = "ink",
+                    geometryKind = "fixed",
+                    indexInNote = 1,
+                    width = 612f,
+                    height = 792f,
+                    unit = "pt",
+                    pdfAssetId = null,
+                    pdfPageNo = null,
+                    updatedAt = 0L,
+                    contentLamportMax = 0,
+                )
+            val pageSlot = slot<PageEntity>()
+            val recognitionSlot = slot<RecognitionIndexEntity>()
+
+            val storedPage = repository.createPage(page)
+
+            coVerify(exactly = 1) { pageDao.insert(capture(pageSlot)) }
+            coVerify(exactly = 1) { recognitionDao.insert(capture(recognitionSlot)) }
+            coVerify(exactly = 1) { noteDao.updateTimestamp("note-id", any()) }
+            assertEquals("new-page", storedPage.pageId)
+            assertEquals("new-page", recognitionSlot.captured.pageId)
+            assertEquals("note-id", recognitionSlot.captured.noteId)
+        }
+
+    @Test
+    fun `deleteStroke removes stroke and updates parent timestamps`() =
+        runTest {
+            val strokeId = "stroke-id"
+            val pageId = "page-id"
+            val strokeEntity =
+                StrokeEntity(
+                    strokeId = strokeId,
+                    pageId = pageId,
+                    strokeData = byteArrayOf(1, 2, 3),
+                    style = "{}",
+                    bounds = "{}",
+                    createdAt = 1234L,
+                    createdLamport = 0L,
+                )
+
+            coEvery { strokeDao.getById(strokeId) } returns strokeEntity
+            coEvery {
+                pageDao.getById(pageId)
+            } returns
+                PageEntity(
+                    pageId = pageId,
+                    noteId = "note-id",
+                    kind = "ink",
+                    geometryKind = "fixed",
+                    indexInNote = 0,
+                    width = 612f,
+                    height = 792f,
+                    unit = "pt",
+                    pdfAssetId = null,
+                    pdfPageNo = null,
+                    updatedAt = 0L,
+                    contentLamportMax = 0,
+                )
+
+            repository.deleteStroke(strokeId)
+
+            coVerify(exactly = 1) { strokeDao.delete(strokeId) }
+            coVerify(exactly = 1) { pageDao.updateTimestamp(pageId, any()) }
+            coVerify(exactly = 1) { noteDao.updateTimestamp("note-id", any()) }
+        }
+
+    @Test
+    fun `deleteStroke returns early when stroke does not exist`() =
+        runTest {
+            coEvery { strokeDao.getById("missing") } returns null
+
+            repository.deleteStroke("missing")
+
+            coVerify(exactly = 0) { strokeDao.delete(any()) }
+            coVerify(exactly = 0) { pageDao.updateTimestamp(any(), any()) }
+            coVerify(exactly = 0) { noteDao.updateTimestamp(any(), any()) }
+        }
+
+    @Test
+    fun `updateRecognition stores text and updates page and note timestamps`() =
+        runTest {
+            val pageId = "page-id"
+            coEvery {
+                pageDao.getById(pageId)
+            } returns
+                PageEntity(
+                    pageId = pageId,
+                    noteId = "note-id",
+                    kind = "ink",
+                    geometryKind = "fixed",
+                    indexInNote = 0,
+                    width = 612f,
+                    height = 792f,
+                    unit = "pt",
+                    pdfAssetId = null,
+                    pdfPageNo = null,
+                    updatedAt = 0L,
+                    contentLamportMax = 0,
+                )
+
+            repository.updateRecognition(pageId, "hello", "myscript-4.3")
+
+            coVerify(exactly = 1) {
+                recognitionDao.updateRecognition(
+                    pageId = pageId,
+                    text = "hello",
+                    version = "myscript-4.3",
+                    updatedAt = any(),
+                )
+            }
+            coVerify(exactly = 1) { pageDao.updateTimestamp(pageId, any()) }
+            coVerify(exactly = 1) { noteDao.updateTimestamp("note-id", any()) }
+        }
+
+    @Test
+    fun `upgradePageToMixed does nothing when page is not pdf`() =
+        runTest {
+            val pageId = "ink-page-id"
+            coEvery {
+                pageDao.getById(pageId)
+            } returns
+                PageEntity(
+                    pageId = pageId,
+                    noteId = "note-id",
+                    kind = "ink",
+                    geometryKind = "fixed",
+                    indexInNote = 0,
+                    width = 612f,
+                    height = 792f,
+                    unit = "pt",
+                    pdfAssetId = null,
+                    pdfPageNo = null,
+                    updatedAt = 0L,
+                    contentLamportMax = 0,
+                )
+
+            repository.upgradePageToMixed(pageId)
+
+            coVerify(exactly = 0) { pageDao.updateKind(any(), any(), any()) }
+            coVerify(exactly = 0) { recognitionDao.insert(any()) }
+            coVerify(exactly = 0) { noteDao.updateTimestamp(any(), any()) }
+        }
+
+    @Test
+    fun `searchNotes deduplicates by note and truncates snippets`() =
+        runTest {
+            val firstText = "a".repeat(130)
+            val recognitions =
+                listOf(
+                    RecognitionIndexEntity(
+                        pageId = "page-1",
+                        noteId = "note-1",
+                        recognizedText = firstText,
+                        recognizedAtLamport = null,
+                        recognizerVersion = null,
+                        updatedAt = 1L,
+                    ),
+                    RecognitionIndexEntity(
+                        pageId = "page-2",
+                        noteId = "note-1",
+                        recognizedText = "duplicate note hit",
+                        recognizedAtLamport = null,
+                        recognizerVersion = null,
+                        updatedAt = 2L,
+                    ),
+                    RecognitionIndexEntity(
+                        pageId = "page-3",
+                        noteId = "note-2",
+                        recognizedText = "hello world",
+                        recognizedAtLamport = null,
+                        recognizerVersion = null,
+                        updatedAt = 3L,
+                    ),
+                )
+            every { recognitionDao.search("hello") } returns flowOf(recognitions)
+            coEvery {
+                pageDao.getById("page-1")
+            } returns
+                PageEntity(
+                    pageId = "page-1",
+                    noteId = "note-1",
+                    kind = "ink",
+                    geometryKind = "fixed",
+                    indexInNote = 0,
+                    width = 612f,
+                    height = 792f,
+                    unit = "pt",
+                    pdfAssetId = null,
+                    pdfPageNo = null,
+                    updatedAt = 1L,
+                    contentLamportMax = 0,
+                )
+            coEvery {
+                pageDao.getById("page-2")
+            } returns
+                PageEntity(
+                    pageId = "page-2",
+                    noteId = "note-1",
+                    kind = "ink",
+                    geometryKind = "fixed",
+                    indexInNote = 1,
+                    width = 612f,
+                    height = 792f,
+                    unit = "pt",
+                    pdfAssetId = null,
+                    pdfPageNo = null,
+                    updatedAt = 1L,
+                    contentLamportMax = 0,
+                )
+            coEvery {
+                pageDao.getById("page-3")
+            } returns
+                PageEntity(
+                    pageId = "page-3",
+                    noteId = "note-2",
+                    kind = "ink",
+                    geometryKind = "fixed",
+                    indexInNote = 2,
+                    width = 612f,
+                    height = 792f,
+                    unit = "pt",
+                    pdfAssetId = null,
+                    pdfPageNo = null,
+                    updatedAt = 1L,
+                    contentLamportMax = 0,
+                )
+            coEvery { noteDao.getById("note-1") } returns
+                com.onyx.android.data.entity.NoteEntity(
+                    noteId = "note-1",
+                    ownerUserId = "owner",
+                    title = "",
+                    createdAt = 1L,
+                    updatedAt = 1L,
+                    deletedAt = null,
+                )
+            coEvery { noteDao.getById("note-2") } returns
+                com.onyx.android.data.entity.NoteEntity(
+                    noteId = "note-2",
+                    ownerUserId = "owner",
+                    title = "Project",
+                    createdAt = 1L,
+                    updatedAt = 1L,
+                    deletedAt = null,
+                )
+
+            val results = repository.searchNotes("hello").first()
+
+            assertEquals(2, results.size)
+            val first = results.first { it.noteId == "note-1" }
+            val second = results.first { it.noteId == "note-2" }
+            assertEquals("Untitled Note", first.noteTitle)
+            assertEquals(1, first.pageNumber)
+            assertEquals(100, first.snippetText.length)
+            assertEquals("Project", second.noteTitle)
+            assertEquals(3, second.pageNumber)
         }
 
     private fun createStroke(

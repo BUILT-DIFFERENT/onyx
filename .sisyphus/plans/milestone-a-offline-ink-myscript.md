@@ -12,12 +12,12 @@ This plan has been refined into micro-tasks (~35 tasks) for a developer new to A
 
 ### Key Decisions
 
-- **Target API**: 30 (Android 11), Compile SDK 35
+- **Target API**: 35 (Android 15), Compile SDK 35
 - **UI Stack**: Jetpack Compose only
 - **Ink API**: Android Ink API (Jetpack Ink) for low-latency drawing
   - **SDK Compatibility Note**: Jetpack Ink tests show `@SdkSuppress(minSdkVersion = 35)` but the library itself may work on lower APIs
-  - **Decision**: Target API 30 but verify InProgressStrokesView works on test device
-  - **Fallback Strategy**: If InProgressStrokesView fails on API 30, implement `CanvasFrontBufferedRenderer` directly (same low-latency approach, lower-level API)
+  - **Decision**: Target API 35 but verify InProgressStrokesView works on test device
+  - **Fallback Strategy**: If InProgressStrokesView fails on API 35, implement `CanvasFrontBufferedRenderer` directly (same low-latency approach, lower-level API)
   - **Verification**: Task 3.2 includes runtime compatibility check
 - **Brush model v1**: Simple round brush only (pen + highlighter tools)
 - **Stroke storage**: Raw points + style (not smoothed curves, allows future smoothing evolution)
@@ -278,7 +278,7 @@ fun NoteEditorScreen(noteId: String) {
 
 ### Ink API Fallback Strategy (InProgressStrokesView → CanvasFrontBufferedRenderer)
 
-**Problem**: Jetpack Ink `InProgressStrokesView` tests show `@SdkSuppress(minSdkVersion = 35)` but our target is API 30.
+**Problem**: Jetpack Ink `InProgressStrokesView` tests show `@SdkSuppress(minSdkVersion = 35)` and should be verified on-device even with target API 35.
 
 **Decision**: Attempt `InProgressStrokesView` first; implement `CanvasFrontBufferedRenderer` fallback if needed.
 
@@ -300,7 +300,7 @@ fun isInProgressStrokesViewSupported(): Boolean {
 
 **Fallback Implementation (if needed):**
 
-If `InProgressStrokesView` fails on API 30, create `LowLatencyInkView` using `CanvasFrontBufferedRenderer`:
+If `InProgressStrokesView` fails on API 35, create `LowLatencyInkView` using `CanvasFrontBufferedRenderer`:
 
 ```kotlin
 /**
@@ -544,7 +544,7 @@ android {
     defaultConfig {
         applicationId = "com.onyx.android"
         minSdk = 28    // Android 9 (Pie)
-        targetSdk = 30 // Android 11
+        targetSdk = 35 // Android 15
         versionCode = 1
         versionName = "1.0"
     }
@@ -570,7 +570,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
 
     // Low-latency graphics for fallback renderer (LowLatencyInkView)
-    // Required if InProgressStrokesView doesn't work on targetSdk 30
+    // Required if InProgressStrokesView doesn't work on targetSdk 35
     // Provides: CanvasFrontBufferedRenderer for front-buffered rendering
     implementation("androidx.graphics:graphics-core:1.0.0")
 
@@ -971,7 +971,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
       defaultConfig {
           applicationId = "com.onyx.android"
           minSdk = 28      // Android 9 (Pie) - for Jetpack Ink support
-          targetSdk = 30   // Android 11 - for test tablet
+          targetSdk = 35   // Android 15
           versionCode = 1
           versionName = "1.0"
 
@@ -1054,7 +1054,7 @@ Build a functional Android tablet app that captures stylus ink with low latency,
   - [ ] `cd apps/android && ./gradlew :app:assembleDebug` succeeds (or `gradlew.bat` on Windows)
   - [ ] App launches on tablet showing default Compose screen
   - [ ] `compileSdk = 35` in build.gradle.kts
-  - [ ] `minSdk = 28` and `targetSdk = 30` in build.gradle.kts
+  - [ ] `minSdk = 28` and `targetSdk = 35` in build.gradle.kts
   - [ ] kotlinx-serialization-json dependency present
   - [ ] KSP plugin configured (for Room in Phase 4)
 
