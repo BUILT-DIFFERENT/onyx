@@ -56,16 +56,15 @@ class MyScriptEngine(
             // Copied at first launch to: {filesDir}/myscript-recognition-assets/
             val conf = checkNotNull(engine).configuration
             val assetsPath = File(context.filesDir, "myscript-recognition-assets")
-
-            // Copy bundled assets to filesDir if not already done
-            if (!assetsPath.exists()) {
-                copyAssetsToFilesDir(context, "myscript-assets/recognition-assets", assetsPath)
-            }
+            ensureRecognitionAssetsPresent(assetsPath)
+            val recognitionSearchPath = resolveRecognitionAssetsRoot(assetsPath)
+            val tempFolder = File(context.cacheDir, "myscript-temp").apply { mkdirs() }
 
             conf.setStringArray(
                 "configuration-manager.search-path",
-                arrayOf(assetsPath.absolutePath),
+                arrayOf(recognitionSearchPath.absolutePath),
             )
+            conf.setString("content-package.temp-folder", tempFolder.absolutePath)
             // Use Canadian assets by default; allow US as fallback.
             conf.setString("lang", "en_CA")
 
@@ -113,6 +112,31 @@ class MyScriptEngine(
 
             copyAssetFile(assetManager, srcPath, targetFile)
         }
+    }
+
+    private fun ensureRecognitionAssetsPresent(assetsPath: File) {
+        val existingRoot = resolveRecognitionAssetsRoot(assetsPath)
+        if (hasRecognitionConfig(existingRoot)) {
+            return
+        }
+
+        if (assetsPath.exists()) {
+            assetsPath.deleteRecursively()
+        }
+        copyAssetsToFilesDir(context, "myscript-assets/recognition-assets", assetsPath)
+    }
+
+    private fun resolveRecognitionAssetsRoot(assetsPath: File): File {
+        val legacyNestedRoot = File(assetsPath, "recognition-assets")
+        return when {
+            hasRecognitionConfig(assetsPath) -> assetsPath
+            hasRecognitionConfig(legacyNestedRoot) -> legacyNestedRoot
+            else -> assetsPath
+        }
+    }
+
+    private fun hasRecognitionConfig(path: File): Boolean {
+        return File(path, "conf").isDirectory && File(path, "resources").isDirectory
     }
 
     private fun copyAssetFile(

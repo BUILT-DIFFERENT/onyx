@@ -41,6 +41,11 @@ class MyScriptPageManager(
     private val context: Context,
     // NOTE: displayMetrics not needed - we use fixed pt→mm conversion
 ) {
+    private data class PageContext(
+        val contentPackage: ContentPackage,
+        val contentPart: ContentPart,
+    )
+
     private var currentPageId: String? = null
     private var currentPackage: ContentPackage? = null
     private var currentPart: ContentPart? = null
@@ -68,37 +73,83 @@ class MyScriptPageManager(
     }
 
     fun onPageEnter(pageId: String) {
+        if (currentPageId == pageId && currentPackage != null) {
+            Log.d("MyScript", "Page already active: $pageId")
+            return
+        }
         if (currentPageId != pageId) {
             closeCurrentPage()
         }
 
+        val pageContext = openOrCreatePageContext(pageId) ?: return
+
+        currentPackage = pageContext.contentPackage
+        currentPart = pageContext.contentPart
         currentPageId = pageId
+
+        try {
+            val editor = engine.createOffscreenEditor(1f, 1f)
+            editor.part = currentPart
+            editor.addListener(recognitionListener)
+            offscreenEditor = editor
+            itemIdHelper = engine.createItemIdHelper(editor)
+        } catch (e: IllegalStateException) {
+            Log.e("MyScript", "Recognition unavailable for page $pageId: ${e.message}", e)
+            offscreenEditor?.close()
+            offscreenEditor = null
+            itemIdHelper?.close()
+            itemIdHelper = null
+        }
+        strokeIdsMapping.clear()
+
+        Log.d("MyScript", "Page entered: $pageId (recognitionReady=${offscreenEditor != null})")
+    }
+
+    private fun openOrCreatePageContext(pageId: String): PageContext? {
         val packagePath = File(context.filesDir, "myscript/page_$pageId.iink")
         packagePath.parentFile?.mkdirs()
 
-        currentPackage =
+        var openedPackage: ContentPackage? = null
+        var openedPart: ContentPart? = null
+
+        runCatching {
             if (packagePath.exists()) {
                 engine.openPackage(packagePath)
             } else {
                 engine.createPackage(packagePath)
             }
+        }.onSuccess { contentPackage ->
+            openedPackage = contentPackage
+            openedPart =
+                runCatching {
+                    if (contentPackage.partCount > 0) {
+                        contentPackage.getPart(0)
+                    } else {
+                        contentPackage.createPart("Raw Content")
+                    }
+                }.onFailure { error ->
+                    Log.e(
+                        "MyScript",
+                        "Failed to open content part for page $pageId: ${error.message}",
+                        error,
+                    )
+                }.getOrNull()
+        }.onFailure { error ->
+            Log.e("MyScript", "Failed to open package for page $pageId: ${error.message}", error)
+        }
 
-        currentPart =
-            if (currentPackage!!.partCount > 0) {
-                currentPackage!!.getPart(0)
-            } else {
-                currentPackage!!.createPart("Raw Content")
-            }
+        if (openedPackage != null && openedPart == null) {
+            openedPackage?.close()
+        }
 
-        offscreenEditor = engine.createOffscreenEditor(1f, 1f)
-        offscreenEditor?.part = currentPart
-
-        offscreenEditor?.addListener(recognitionListener)
-
-        itemIdHelper = engine.createItemIdHelper(offscreenEditor!!)
-        strokeIdsMapping.clear()
-
-        Log.d("MyScript", "Page entered: $pageId")
+        return if (openedPackage != null && openedPart != null) {
+            PageContext(
+                contentPackage = openedPackage!!,
+                contentPart = openedPart!!,
+            )
+        } else {
+            null
+        }
     }
 
     /**

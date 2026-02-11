@@ -375,6 +375,7 @@ class NoteRepositoryTest {
             coVerify(exactly = 0) { noteDao.updateTimestamp(any(), any()) }
         }
 
+    @Suppress("LongMethod")
     @Test
     fun `searchNotes deduplicates by note and truncates snippets`() =
         runTest {

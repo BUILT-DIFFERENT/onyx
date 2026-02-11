@@ -12,11 +12,13 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.ink.authoring.InProgressStrokeId
+import androidx.ink.authoring.InProgressStrokesFinishedListener
 import androidx.ink.authoring.InProgressStrokesView
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.ViewTransform
+import androidx.ink.strokes.Stroke as InkStroke
 
 internal class InkCanvasRuntime(
     val activeStrokeIds: MutableMap<Int, InProgressStrokeId>,
@@ -26,6 +28,10 @@ internal class InkCanvasRuntime(
     val hoverPreviewState: HoverPreviewState,
 ) {
     var motionPredictionAdapter: MotionPredictionAdapter? = null
+    var isTransforming = false
+    var previousTransformDistance = 0f
+    var previousTransformCentroidX = 0f
+    var previousTransformCentroidY = 0f
 }
 
 data class InkCanvasState(
@@ -37,9 +43,17 @@ data class InkCanvasState(
 data class InkCanvasCallbacks(
     val onStrokeFinished: (Stroke) -> Unit,
     val onStrokeErased: (Stroke) -> Unit,
+    val onTransformGesture: (
+        zoomChange: Float,
+        panChangeX: Float,
+        panChangeY: Float,
+        centroidX: Float,
+        centroidY: Float,
+    ) -> Unit,
 )
 
 @Composable
+@Suppress("LongMethod")
 fun InkCanvas(
     state: InkCanvasState,
     callbacks: InkCanvasCallbacks,
@@ -73,6 +87,16 @@ fun InkCanvas(
             factory = { context ->
                 runtime.motionPredictionAdapter = MotionPredictionAdapter.create(context)
                 InProgressStrokesView(context).apply {
+                    eagerInit()
+                    addFinishedStrokesListener(
+                        object : InProgressStrokesFinishedListener {
+                            override fun onStrokesFinished(strokes: Map<InProgressStrokeId, InkStroke>) {
+                                if (strokes.isNotEmpty()) {
+                                    removeFinishedStrokes(strokes.keys)
+                                }
+                            }
+                        },
+                    )
                     setOnTouchListener { _, event ->
                         val interaction =
                             InkCanvasInteraction(
@@ -81,6 +105,7 @@ fun InkCanvas(
                                 strokes = currentStrokes,
                                 onStrokeFinished = currentCallbacks.onStrokeFinished,
                                 onStrokeErased = currentCallbacks.onStrokeErased,
+                                onTransformGesture = currentCallbacks.onTransformGesture,
                             )
                         handleTouchEvent(
                             view = this@apply,
@@ -89,6 +114,12 @@ fun InkCanvas(
                             runtime = runtime,
                         )
                     }
+                }
+            },
+            update = { inProgressView ->
+                val finishedStrokeIds = inProgressView.getFinishedStrokes().keys.toSet()
+                if (finishedStrokeIds.isNotEmpty()) {
+                    inProgressView.removeFinishedStrokes(finishedStrokeIds)
                 }
             },
             modifier = Modifier.fillMaxSize(),

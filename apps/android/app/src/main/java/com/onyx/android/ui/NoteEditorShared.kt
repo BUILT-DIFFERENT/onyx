@@ -43,6 +43,39 @@ internal fun rememberTransformState(
         )
     }
 
+internal data class TransformGesture(
+    val zoomChange: Float,
+    val panChangeX: Float,
+    val panChangeY: Float,
+    val centroidX: Float,
+    val centroidY: Float,
+)
+
+internal fun applyTransformGesture(
+    current: ViewTransform,
+    gesture: TransformGesture,
+): ViewTransform {
+    val currentZoom = current.zoom
+    val targetZoom =
+        (currentZoom * gesture.zoomChange).coerceIn(
+            ViewTransform.MIN_ZOOM,
+            ViewTransform.MAX_ZOOM,
+        )
+    val appliedZoomChange =
+        if (currentZoom > 0f) {
+            targetZoom / currentZoom
+        } else {
+            1f
+        }
+    val anchoredPanX = gesture.centroidX - (gesture.centroidX - current.panX) * appliedZoomChange
+    val anchoredPanY = gesture.centroidY - (gesture.centroidY - current.panY) * appliedZoomChange
+    return current.copy(
+        zoom = targetZoom,
+        panX = anchoredPanX + gesture.panChangeX,
+        panY = anchoredPanY + gesture.panChangeY,
+    )
+}
+
 @Composable
 internal fun rememberPdfBitmap(
     isPdfPage: Boolean,

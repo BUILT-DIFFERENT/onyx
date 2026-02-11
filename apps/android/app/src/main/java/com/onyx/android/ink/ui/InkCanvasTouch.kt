@@ -9,7 +9,7 @@ import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 
-private const val PALM_CONTACT_SIZE_THRESHOLD = 0.5f
+private const val PALM_CONTACT_SIZE_THRESHOLD = 1.0f
 private const val PREDICTED_STROKE_ALPHA = 0.35f
 
 internal data class InkCanvasInteraction(
@@ -18,6 +18,13 @@ internal data class InkCanvasInteraction(
     val strokes: List<Stroke>,
     val onStrokeFinished: (Stroke) -> Unit,
     val onStrokeErased: (Stroke) -> Unit,
+    val onTransformGesture: (
+        zoomChange: Float,
+        panChangeX: Float,
+        panChangeY: Float,
+        centroidX: Float,
+        centroidY: Float,
+    ) -> Unit,
 )
 
 internal fun handleTouchEvent(
@@ -26,34 +33,43 @@ internal fun handleTouchEvent(
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
 ): Boolean {
-    if (interaction.brush.tool == Tool.ERASER) {
-        return handleEraserInput(event, interaction, runtime)
-    }
+    val handled =
+        when {
+            runtime.isTransforming || shouldStartTransformGesture(event) -> {
+                handleTransformGesture(view, event, interaction, runtime)
+            }
 
-    return when (event.actionMasked) {
-        MotionEvent.ACTION_DOWN,
-        MotionEvent.ACTION_POINTER_DOWN,
-        -> handlePointerDown(view, event, interaction, runtime)
+            interaction.brush.tool == Tool.ERASER -> {
+                handleEraserInput(event, interaction, runtime)
+            }
 
-        MotionEvent.ACTION_MOVE -> handlePointerMove(view, event, interaction, runtime)
+            else ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN,
+                    MotionEvent.ACTION_POINTER_DOWN,
+                    -> handlePointerDown(view, event, interaction, runtime)
 
-        MotionEvent.ACTION_UP,
-        MotionEvent.ACTION_POINTER_UP,
-        -> handlePointerUp(view, event, interaction, runtime)
+                    MotionEvent.ACTION_MOVE -> handlePointerMove(view, event, interaction, runtime)
 
-        MotionEvent.ACTION_HOVER_ENTER,
-        MotionEvent.ACTION_HOVER_MOVE,
-        -> handleHover(event, interaction, runtime)
+                    MotionEvent.ACTION_UP,
+                    MotionEvent.ACTION_POINTER_UP,
+                    -> handlePointerUp(view, event, interaction, runtime)
 
-        MotionEvent.ACTION_HOVER_EXIT -> {
-            runtime.hoverPreviewState.hide()
-            true
+                    MotionEvent.ACTION_HOVER_ENTER,
+                    MotionEvent.ACTION_HOVER_MOVE,
+                    -> handleHover(event, interaction, runtime)
+
+                    MotionEvent.ACTION_HOVER_EXIT -> {
+                        runtime.hoverPreviewState.hide()
+                        true
+                    }
+
+                    MotionEvent.ACTION_CANCEL -> handleCancel(view, event, runtime)
+
+                    else -> false
+                }
         }
-
-        MotionEvent.ACTION_CANCEL -> handleCancel(view, event, runtime)
-
-        else -> false
-    }
+    return handled
 }
 
 private fun handleEraserInput(
@@ -92,8 +108,10 @@ private fun handlePointerDown(
     val pointerId = event.getPointerId(actionIndex)
     val actionToolType = event.getToolType(actionIndex)
     val contactSize = event.getSize(actionIndex)
+    val isKnownDrawingTool = isSupportedToolType(actionToolType)
+    val isUnknownTool = actionToolType == MotionEvent.TOOL_TYPE_UNKNOWN
     val shouldHandle =
-        isSupportedToolType(actionToolType) && contactSize <= PALM_CONTACT_SIZE_THRESHOLD
+        (isKnownDrawingTool || isUnknownTool) && contactSize <= PALM_CONTACT_SIZE_THRESHOLD
     if (!shouldHandle) {
         return false
     }
@@ -131,10 +149,9 @@ private fun handlePointerMove(
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
     val pointerCount = event.pointerCount
     for (index in 0 until pointerCount) {
-        val toolType = event.getToolType(index)
         val movePointerId = event.getPointerId(index)
         val strokeId = runtime.activeStrokeIds[movePointerId]
-        if (isSupportedToolType(toolType) && strokeId != null) {
+        if (strokeId != null) {
             view.addToStroke(event, movePointerId, strokeId)
             runtime.activeStrokePoints[movePointerId]?.add(
                 createStrokePoint(event, index, interaction.viewTransform),
@@ -157,7 +174,7 @@ private fun handlePredictedStrokes(
         val toolType = predictedEvent.getToolType(index)
         val predictedPointerId = predictedEvent.getPointerId(index)
         val isActive = runtime.activeStrokeIds.containsKey(predictedPointerId)
-        if (isSupportedToolType(toolType) && isActive) {
+        if (isActive) {
             val startTime =
                 runtime.activeStrokeStartTimes[predictedPointerId] ?: predictedEvent.eventTime
             val startIndex = event.findPointerIndex(predictedPointerId)
@@ -167,7 +184,12 @@ private fun handlePredictedStrokes(
                 } else {
                     createStrokeInput(predictedEvent, index, startTime)
                 }
-            val effectiveBrush = interaction.brush.withToolType(toolType)
+            val effectiveBrush =
+                if (toolType == MotionEvent.TOOL_TYPE_UNKNOWN) {
+                    interaction.brush
+                } else {
+                    interaction.brush.withToolType(toolType)
+                }
             val predictedStrokeId =
                 view.startStroke(
                     startInput,

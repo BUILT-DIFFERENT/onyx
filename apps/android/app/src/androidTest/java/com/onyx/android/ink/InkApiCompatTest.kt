@@ -9,15 +9,10 @@ import androidx.ink.brush.StockBrushes
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.onyx.android.MainActivity
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
-
-/**
- * Test Activity for InProgressStrokesView compatibility testing.
- * Must be declared in androidTest/AndroidManifest.xml
- */
-class InkApiTestActivity : android.app.Activity()
 
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalInkCustomBrushApi::class)
@@ -40,8 +35,8 @@ class InkApiCompatTest {
         val view = InProgressStrokesView(context)
         assertNotNull(view)
 
-        // Test 2: Can attach to activity and accept touch input
-        val scenario = ActivityScenario.launch(InkApiTestActivity::class.java)
+        // Test 2: Can attach to app activity and accept touch input
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
         scenario.onActivity { activity ->
             activity.setContentView(view)
 

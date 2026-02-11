@@ -353,6 +353,13 @@ internal data class NoteEditorContentState(
     val brush: Brush,
     val onStrokeFinished: (Stroke) -> Unit,
     val onStrokeErased: (Stroke) -> Unit,
+    val onTransformGesture: (
+        zoomChange: Float,
+        panChangeX: Float,
+        panChangeY: Float,
+        centroidX: Float,
+        centroidY: Float,
+    ) -> Unit,
 )
 
 private data class NoteEditorPageState(
@@ -457,6 +464,7 @@ private fun NoteEditorScreenContent(
 }
 
 @Composable
+@Suppress("LongMethod")
 private fun rememberNoteEditorUiState(
     noteId: String,
     viewModel: NoteEditorViewModel,
@@ -478,18 +486,33 @@ private fun rememberNoteEditorUiState(
     val strokeCallbacks = buildStrokeCallbacks(undoController, pageState.currentPage)
     val topBarState =
         buildTopBarState(
-            totalPages = pageState.pages.size,
-            currentPageIndex = pageState.currentPageIndex,
-            undoController = undoController,
-            onNavigateBack = onNavigateBack,
-            viewModel = viewModel,
+            pageState.pages.size,
+            pageState.currentPageIndex,
+            undoController,
+            onNavigateBack,
+            viewModel,
         )
     val toolbarState =
         buildToolbarState(
-            brush = brushState.brush,
-            lastNonEraserTool = brushState.lastNonEraserTool,
-            onBrushChange = brushState.onBrushChange,
+            brushState.brush,
+            brushState.lastNonEraserTool,
+            brushState.onBrushChange,
         )
+    val onTransformGesture: (Float, Float, Float, Float, Float) -> Unit =
+        { zoomChange, panChangeX, panChangeY, centroidX, centroidY ->
+            viewTransform =
+                applyTransformGesture(
+                    current = viewTransform,
+                    gesture =
+                        TransformGesture(
+                            zoomChange,
+                            panChangeX,
+                            panChangeY,
+                            centroidX,
+                            centroidY,
+                        ),
+                )
+        }
     val contentState =
         NoteEditorContentState(
             isPdfPage = pdfState.isPdfPage,
@@ -503,6 +526,7 @@ private fun rememberNoteEditorUiState(
             brush = brushState.brush,
             onStrokeFinished = strokeCallbacks.onStrokeFinished,
             onStrokeErased = strokeCallbacks.onStrokeErased,
+            onTransformGesture = onTransformGesture,
         )
 
     return NoteEditorUiState(

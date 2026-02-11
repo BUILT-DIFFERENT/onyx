@@ -331,7 +331,10 @@ private fun NoteEditorContent(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .transformable(state = transformState),
+                        .transformable(
+                            state = transformState,
+                            enabled = false,
+                        ),
             ) {
                 if (contentState.isPdfPage) {
                     PdfPageContent(contentState)
@@ -346,6 +349,7 @@ private fun NoteEditorContent(
                         InkCanvasCallbacks(
                             onStrokeFinished = contentState.onStrokeFinished,
                             onStrokeErased = contentState.onStrokeErased,
+                            onTransformGesture = contentState.onTransformGesture,
                         )
                     InkCanvas(
                         state = inkCanvasState,
