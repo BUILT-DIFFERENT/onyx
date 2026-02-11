@@ -71,8 +71,9 @@ Redesign the Onyx Android app UI combining the best of Samsung Notes and Notewis
 
 ### Spacing & Layout
 
-- **Unified Top Toolbar Height**: 48dp (slim, always visible)
-- **No Secondary Toolbar**: All controls live in the single top bar
+- **Toolbar Group Height**: 48dp (slim, always visible)
+- **Pill Group Theme**: Toolbar content is split into floating pill groups (left nav/title, center tools+colors, right actions/menu)
+- **No Secondary Toolbar**: All controls live in the top pill groups
 - **Toolbar Icon Size**: 28dp touch target, 24dp icon
 - **Color Dot Size**: 24dp with 2dp selected ring
 - **Floating Panel Padding**: 16dp
@@ -1050,8 +1051,8 @@ enum class FingerAction {
 **Unified Top Toolbar (Title + Tools)**
 
 **Toolbar Approach:**
-- **Single slim bar at the top** of the editor that merges titlebar + tools + actions
-- **Back button + Settings/overflow are inside the toolbar** (no separate title bar)
+- **Single top toolbar system using floating pill groups** (Samsung Notes style chrome)
+- **Back button + Settings/overflow are inside the same top toolbar system** (no separate title bar)
 - **Tools + 5 color dots inline** in the same row (Samsung Notes style)
 - **NO secondary toolbar** and **NO bottom toolbar**
 - If width is constrained: tool cluster can scroll horizontally; secondary actions collapse into overflow
@@ -1066,11 +1067,11 @@ enum class FingerAction {
 
 #### EDIT_MODE (Default)
 
-**Unified Toolbar (48dp height, always visible):**
+**Unified Toolbar Groups (48dp height, always visible):**
 ```
-┌───────────────────────────────────────────────────────────────────────────┐
-│ ←  Note title  [🖐️][✏️][🖍️][🧼][🔍] [⚫][🔵][🔴][🟢][🟣] [↩️][↪️][🔍%][🔒] ⋮ │
-└───────────────────────────────────────────────────────────────────────────┘
+┌─────────────────┐  ┌───────────────────────────────────────┐  ┌──────────────────────┐
+│ ←  Note title   │  │ [🖐️][✏️][🖍️][🧼][🔍] [⚫][🔵][🔴][🟢][🟣] │  │ [↩️][↪️][🔍%][🔒] ⋮ │
+└─────────────────┘  └───────────────────────────────────────┘  └──────────────────────┘
 ```
 - Back arrow: Return to home
 - Title: Editable, inline within toolbar (tap to rename)
@@ -1078,10 +1079,11 @@ enum class FingerAction {
 - More (⋮): Search, Change template, Stylus & finger, View mode, Settings (and Share/Add if collapsed)
 
 **Toolbar Layout (single row):**
-- **Left cluster**: Back + editable title
-- **Center cluster**: Hand, Pen, Highlighter, Eraser, Lasso
+- **Left pill**: Back + editable title
+- **Center pill**: Hand, Pen, Highlighter, Eraser, Lasso
 - **Inline colors**: 5 color dots integrated into the same row
-- **Right cluster**: Undo, Redo, Zoom (show %), Lock, Overflow (⋮)
+- **Right pill**: Undo, Redo, Zoom (show %), Lock, Overflow (⋮)
+- Pills use rounded/segmented chrome with subtle elevation and divider separators between major sections
 
 **Behavior (Updated):**
 - **Toolbar does NOT hide on canvas tap**; titlebar stays visible while drawing
@@ -1852,8 +1854,8 @@ fun UnifiedEditorToolbar(
 ```
 
 **Layout:**
-- **Single horizontal toolbar** (title + tools + actions in one row)
-- Back + editable title on the left, tools/colors in the middle, actions + overflow on the right
+- **Single horizontal toolbar system** composed of floating pill groups (title, tools/colors, actions)
+- Back + editable title in left pill, tools/colors in center pill, actions + overflow in right pill
 - No separate top bar or bottom toolbar
 - Height: **48dp (fixed, always visible)**
 
@@ -2664,8 +2666,9 @@ Phase 4-7: Sequential phases (each depends on prior)
 - [ ] 3.1 Refine UnifiedEditorToolbar visuals (baseline exists from Milestone A)
 
   **What to do**:
-  - Update the existing single top toolbar to match Samsung Notes + Notewise styling.
+  - Update the existing single top toolbar system to match Samsung Notes + Notewise pill-group styling.
   - Toolbar (48dp): Back + editable title + tools (Hand, Pen, Highlighter, Eraser, Lasso) + **5 color dots inline** + Undo, Redo, Zoom (show %) + Lock + Overflow (⋮)
+  - Split into three visible pill groups: left (navigation/title), center (reduced tool set + inline colors), right (actions/menu).
   - Share/Add are either inline (right cluster) **or** folded into overflow on narrow widths.
   - All elements remain in ONE row; allow horizontal scroll for tool cluster if needed.
   - **NO secondary toolbar** and **NO bottom toolbar** (already enforced in Milestone A).
