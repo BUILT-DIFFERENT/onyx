@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -54,6 +55,8 @@ private class NoteEditorViewModel(
     val strokes: StateFlow<List<Stroke>> = _strokes.asStateFlow()
     private val _pages = MutableStateFlow<List<PageEntity>>(emptyList())
     val pages: StateFlow<List<PageEntity>> = _pages.asStateFlow()
+    private val _noteTitle = MutableStateFlow("")
+    val noteTitle: StateFlow<String> = _noteTitle.asStateFlow()
     private val _currentPageIndex = MutableStateFlow(0)
     val currentPageIndex: StateFlow<Int> = _currentPageIndex.asStateFlow()
     private val _currentPage = MutableStateFlow<PageEntity?>(null)
@@ -78,7 +81,7 @@ private class NoteEditorViewModel(
 
     fun loadNote() {
         viewModelScope.launch {
-            noteDao.getById(noteId)
+            _noteTitle.value = noteDao.getById(noteId)?.title.orEmpty()
             refreshPages(selectPageId = pendingInitialPageId)
             pendingInitialPageId = null
         }
@@ -321,8 +324,10 @@ internal data class TextSelection(
 )
 
 internal data class NoteEditorTopBarState(
+    val noteTitle: String,
     val totalPages: Int,
     val currentPageIndex: Int,
+    val isReadOnly: Boolean,
     val canNavigatePrevious: Boolean,
     val canNavigateNext: Boolean,
     val canUndo: Boolean,
@@ -333,6 +338,7 @@ internal data class NoteEditorTopBarState(
     val onCreatePage: () -> Unit,
     val onUndo: () -> Unit,
     val onRedo: () -> Unit,
+    val onToggleReadOnly: () -> Unit,
 )
 
 internal data class NoteEditorToolbarState(
@@ -343,6 +349,7 @@ internal data class NoteEditorToolbarState(
 
 internal data class NoteEditorContentState(
     val isPdfPage: Boolean,
+    val isReadOnly: Boolean,
     val pdfBitmap: android.graphics.Bitmap?,
     val pdfRenderer: PdfRenderer?,
     val currentPage: PageEntity?,
@@ -363,6 +370,7 @@ internal data class NoteEditorContentState(
 )
 
 private data class NoteEditorPageState(
+    val noteTitle: String,
     val strokes: List<Stroke>,
     val pages: List<PageEntity>,
     val currentPageIndex: Int,
@@ -474,6 +482,7 @@ private fun rememberNoteEditorUiState(
     val brushState = rememberBrushState()
     val pageState = rememberPageState(viewModel)
     val undoController = remember(viewModel) { UndoController(viewModel, MAX_UNDO_ACTIONS) }
+    var isReadOnly by rememberSaveable { mutableStateOf(false) }
     var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
     val pdfState = rememberPdfState(pageState.currentPage, pdfAssetStorage, viewTransform)
     DisposePdfRenderer(pdfState.pdfRenderer)
@@ -486,11 +495,13 @@ private fun rememberNoteEditorUiState(
     val strokeCallbacks = buildStrokeCallbacks(undoController, pageState.currentPage)
     val topBarState =
         buildTopBarState(
-            pageState.pages.size,
-            pageState.currentPageIndex,
+            pageState,
             undoController,
             onNavigateBack,
             viewModel,
+        ).copy(
+            isReadOnly = isReadOnly,
+            onToggleReadOnly = { isReadOnly = !isReadOnly },
         )
     val toolbarState =
         buildToolbarState(
@@ -516,6 +527,7 @@ private fun rememberNoteEditorUiState(
     val contentState =
         NoteEditorContentState(
             isPdfPage = pdfState.isPdfPage,
+            isReadOnly = isReadOnly,
             pdfBitmap = pdfState.pdfBitmap,
             pdfRenderer = pdfState.pdfRenderer,
             currentPage = pageState.currentPage,
@@ -586,11 +598,13 @@ private fun buildStrokeCallbacks(
 
 @Composable
 private fun rememberPageState(viewModel: NoteEditorViewModel): NoteEditorPageState {
+    val noteTitle by viewModel.noteTitle.collectAsState()
     val strokes by viewModel.strokes.collectAsState()
     val pages by viewModel.pages.collectAsState()
     val currentPageIndex by viewModel.currentPageIndex.collectAsState()
     val currentPage by viewModel.currentPage.collectAsState()
     return NoteEditorPageState(
+        noteTitle = noteTitle,
         strokes = strokes,
         pages = pages,
         currentPageIndex = currentPageIndex,
@@ -626,17 +640,18 @@ private fun rememberPdfState(
 }
 
 private fun buildTopBarState(
-    totalPages: Int,
-    currentPageIndex: Int,
+    pageState: NoteEditorPageState,
     undoController: UndoController,
     onNavigateBack: () -> Unit,
     viewModel: NoteEditorViewModel,
 ): NoteEditorTopBarState =
     NoteEditorTopBarState(
-        totalPages = totalPages,
-        currentPageIndex = currentPageIndex,
-        canNavigatePrevious = currentPageIndex > 0,
-        canNavigateNext = currentPageIndex < totalPages - 1,
+        noteTitle = pageState.noteTitle,
+        totalPages = pageState.pages.size,
+        currentPageIndex = pageState.currentPageIndex,
+        isReadOnly = false,
+        canNavigatePrevious = pageState.currentPageIndex > 0,
+        canNavigateNext = pageState.currentPageIndex < pageState.pages.size - 1,
         canUndo = undoController.undoStack.isNotEmpty(),
         canRedo = undoController.redoStack.isNotEmpty(),
         onNavigateBack = onNavigateBack,
@@ -645,6 +660,7 @@ private fun buildTopBarState(
         onCreatePage = { viewModel.createNewPage() },
         onUndo = undoController::undo,
         onRedo = undoController::redo,
+        onToggleReadOnly = {},
     )
 
 private fun buildToolbarState(
