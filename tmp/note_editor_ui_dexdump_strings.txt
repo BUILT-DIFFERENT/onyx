@@ -1,0 +1,3152 @@
+Processing 'C:\onyx\apps\android\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\com\onyx\android\ui\NoteEditorUiKt.dex'...
+Opened 'C:\onyx\apps\android\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\com\onyx\android\ui\NoteEditorUiKt.dex', DEX version '039'
+
+Displaying 722 strings from string_ids:
+  string[000000] - ''
+  string[000001] - 'skipped (not printable)'
+  string[000002] - '#'
+  string[000003] - '#%02X%02X%02X%02X'
+  string[000004] - '#111111'
+  string[000005] - '#1E88E5'
+  string[000006] - '#43A047'
+  string[000007] - '#8E24AA'
+  string[000008] - '#E53935'
+  string[000009] - '$EnumSwitchMapping$0'
+  string[000010] - '$activeToolPanel$delegate'
+  string[000011] - '$changed'
+  string[000012] - '$changed$iv'
+  string[000013] - '$changed$iv$iv'
+  string[000014] - '$changed$iv$iv$iv'
+  string[000015] - '$colorPickerInput$delegate'
+  string[000016] - '$composer'
+  string[000017] - '$composer$iv'
+  string[000018] - '$dirty'
+  string[000019] - '$eraserMode$delegate'
+  string[000020] - '$hexInput$delegate'
+  string[000021] - '$i$a$-Box-NoteEditorUiKt$EraserToggleButton$2'
+  string[000022] - '$i$a$-Box-NoteEditorUiKt$PaletteSwatch$2'
+  string[000023] - '$i$a$-Box-NoteEditorUiKt$ToolToggleButton$2'
+  string[000024] - '$i$a$-Column-NoteEditorUiKt$BrushSizeControl$1$1'
+  string[000025] - '$i$a$-Column-NoteEditorUiKt$NoteEditorContent$1'
+  string[000026] - '$i$a$-Layout-BoxKt$Box$1$iv'
+  string[000027] - '$i$a$-Layout-ColumnKt$Column$1$iv'
+  string[000028] - '$i$a$-Layout-RowKt$Row$1$iv'
+  string[000029] - '$i$a$-ReusableComposeNode-LayoutKt$Layout$1$iv$iv'
+  string[000030] - '$i$a$-Row-NoteEditorUiKt$BrushSizeControl$1'
+  string[000031] - '$i$a$-Row-NoteEditorUiKt$PaletteRow$1'
+  string[000032] - '$i$a$-cache-NoteEditorUiKt$BrushSizeControl$1$1$2'
+  string[000033] - '$i$a$-cache-NoteEditorUiKt$ColorPickerDialog$hexInput$2'
+  string[000034] - '$i$a$-cache-NoteEditorUiKt$EraserToggleButton$1'
+  string[000035] - '$i$a$-cache-NoteEditorUiKt$NoteEditorTopBar$3$1'
+  string[000036] - '$i$a$-cache-NoteEditorUiKt$NoteEditorTopBar$4'
+  string[000037] - '$i$a$-cache-NoteEditorUiKt$NoteEditorTopBar$5'
+  string[000038] - '$i$a$-cache-NoteEditorUiKt$NoteEditorTopBar$colorPickerInput$2'
+  string[000039] - '$i$a$-cache-NoteEditorUiKt$PaletteRow$1$1$1'
+  string[000040] - '$i$a$-cache-NoteEditorUiKt$PaletteRow$1$1$2'
+  string[000041] - '$i$a$-cache-NoteEditorUiKt$PaletteSwatch$1'
+  string[000042] - '$i$a$-cache-NoteEditorUiKt$ToolToggleButton$1'
+  string[000043] - '$i$a$-cache-NoteEditorUiKt$ToolbarGroup$1'
+  string[000044] - '$i$a$-forEach-NoteEditorUiKt$PaletteRow$1$1'
+  string[000045] - '$i$a$-ifBlank-NoteEditorUiKt$NoteEditorTopBar$resolvedTitle$1'
+  string[000046] - '$i$a$-let-ComposerKt$cache$1$iv'
+  string[000047] - '$i$a$-let-NoteEditorUiKt$ColorPickerDialog$previewColor$1'
+  string[000048] - '$i$a$-let-NoteEditorUiKt$NoteEditorTopBar$3'
+  string[000049] - '$i$a$-let-NoteEditorUiKt$applyOpacity$parsedColor$1'
+  string[000050] - '$i$a$-runCatching-NoteEditorUiKt$applyOpacity$parsedColor$1$1'
+  string[000051] - '$i$a$-runCatching-NoteEditorUiKt$resolveOpacity$1'
+  string[000052] - '$i$a$-with-Updater$set$1$iv$iv$iv'
+  string[000053] - '$i$f$Box'
+  string[000054] - '$i$f$Column'
+  string[000055] - '$i$f$Layout'
+  string[000056] - '$i$f$ReusableComposeNode'
+  string[000057] - '$i$f$Row'
+  string[000058] - '$i$f$cache'
+  string[000059] - '$i$f$forEach'
+  string[000060] - '$i$f$getDp'
+  string[000061] - '$i$f$getValue'
+  string[000062] - '$i$f$set-impl'
+  string[000063] - '$i$f$setValue'
+  string[000064] - '$isColorPickerVisible$delegate'
+  string[000065] - '$receiver'
+  string[000066] - '$stable'
+  string[000067] - '$this$BrushSizeControl_u24lambda_u2425'
+  string[000068] - '$this$BrushSizeControl_u24lambda_u2425_u24lambda_u2424'
+  string[000069] - '$this$EraserToggleButton_u24lambda_u2422'
+  string[000070] - '$this$Layout_u24lambda_u240$iv$iv'
+  string[000071] - '$this$NoteEditorContent_u24lambda_u2432'
+  string[000072] - '$this$PaletteRow_u24lambda_u2418'
+  string[000073] - '$this$PaletteSwatch_u24lambda_u2420'
+  string[000074] - '$this$ToolToggleButton_u24lambda_u2413'
+  string[000075] - '$this$applyStabilization'
+  string[000076] - '$this$cache$iv'
+  string[000077] - '$this$dp$iv'
+  string[000078] - '$this$forEach$iv'
+  string[000079] - '$this$getValue$iv'
+  string[000080] - '$this$resolveOpacity'
+  string[000081] - '$this$resolveOpacity_u24lambda_u2433'
+  string[000082] - '$this$resolveStabilization'
+  string[000083] - '$this$setValue$iv'
+  string[000084] - '$this$set_impl_u24lambda_u240$iv$iv$iv'
+  string[000085] - '$this$toggleEraser'
+  string[000086] - '('
+  string[000087] - '(Landroidx/compose/runtime/Composer;I)V'
+  string[000088] - '(Lcom/onyx/android/ink/model/Brush;ZLkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V'
+  string[000089] - '(Lcom/onyx/android/ui/NoteEditorContentState;Landroidx/compose/foundation/gestures/TransformableState;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/runtime/Composer;I)V'
+  string[000090] - '(Lcom/onyx/android/ui/NoteEditorTopBarState;Lcom/onyx/android/ui/NoteEditorToolbarState;Landroidx/compose/runtime/Composer;I)V'
+  string[000091] - '(Lcom/onyx/android/ui/NoteEditorTopBarState;Lcom/onyx/android/ui/NoteEditorToolbarState;Lcom/onyx/android/ui/NoteEditorContentState;Landroidx/compose/foundation/gestures/TransformableState;Landroidx/compose/runtime/Composer;I)V'
+  string[000092] - '(Lcom/onyx/android/ui/ToolButtonVisuals;ZZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;I)V'
+  string[000093] - '(Lcom/onyx/android/ui/ToolPanelType;Lcom/onyx/android/ink/model/Brush;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V'
+  string[000094] - '(Ljava/lang/String;Lcom/onyx/android/ink/model/Brush;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V'
+  string[000095] - '(Ljava/lang/String;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V'
+  string[000096] - '(Ljava/lang/String;ZLkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V'
+  string[000097] - '(Ljava/lang/String;ZZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;I)V'
+  string[000098] - '(ZZ'
+  string[000099] - '(ZZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;I)V'
+  string[000100] - ')V'
+  string[000101] - '*298@12683L26,295@12577L199'
+  string[000102] - '*413@16364L29,414@16425L30,409@16195L275'
+  string[000103] - '-'
+  string[000104] - '345@14128L11'
+  string[000105] - '351@14397L11'
+  string[000106] - '355@14570L11'
+  string[000107] - '460@17856L11'
+  string[000108] - '499@18967L11'
+  string[000109] - '505@19236L11'
+  string[000110] - '509@19409L11'
+  string[000111] - '<clinit>'
+  string[000112] - '<init>'
+  string[000113] - '>;'
+  string[000114] - '>;)'
+  string[000115] - '>;)Z'
+  string[000116] - '>;Z)V'
+  string[000117] - 'AlertDialog-Oix01E0'
+  string[000118] - 'AndroidView'
+  string[000119] - 'BorderStroke-cXLIe8U'
+  string[000120] - 'BrushSizeControl'
+  string[000121] - 'C(BrushSizeControl)547@20452L1638:NoteEditorUi.kt#5oqfka'
+  string[000122] - 'C(ColorPickerDialog)P(1!1,3)745@29010L32,745@28979L63,749@29242L2851:NoteEditorUi.kt#5oqfka'
+  string[000123] - 'C(EraserToggleButton)P(1!1,3)480@18301L134,478@18246L1828:NoteEditorUi.kt#5oqfka'
+  string[000124] - 'C(NoteEditorContent)P(!1,2)824@32264L2191:NoteEditorUi.kt#5oqfka'
+  string[000125] - 'C(NoteEditorScaffold)P(2,1)84@3862L368:NoteEditorUi.kt#5oqfka'
+  string[000126] - 'C(NoteEditorTopBar)P(1)110@4732L57,111@4822L42,112@4910L31,112@4893L48,113@4946L7582,306@12945L32,307@13001L155,303@12823L344:NoteEditorUi.kt#5oqfka'
+  string[000127] - 'C(PaletteRow)P(3!1,2)404@15986L500:NoteEditorUi.kt#5oqfka'
+  string[000128] - 'C(PaletteSwatch)P(1,2)433@16876L150,431@16821L1226:NoteEditorUi.kt#5oqfka'
+  string[000129] - 'C(ReadOnlyInputBlocker)887@34512L371:NoteEditorUi.kt#5oqfka'
+  string[000130] - 'C(ToolSettingsDialog)P(3!1,2)598@22275L52,605@22550L6249:NoteEditorUi.kt#5oqfka'
+  string[000131] - 'C(ToolToggleButton)P(4,1!1,3)326@13457L139,324@13402L1563:NoteEditorUi.kt#5oqfka'
+  string[000132] - 'C(ToolbarDivider)533@20125L197:NoteEditorUi.kt#5oqfka'
+  string[000133] - 'C(ToolbarGroup)P(1)378@15203L11,380@15301L76,376@15093L717:NoteEditorUi.kt#5oqfka'
+  string[000134] - 'C340@13934L1025:NoteEditorUi.kt#5oqfka'
+  string[000135] - 'C447@17363L678:NoteEditorUi.kt#5oqfka'
+  string[000136] - 'C494@18773L1295:NoteEditorUi.kt#5oqfka'
+  string[000137] - 'C557@20914L11,554@20782L176,560@20967L830,585@21987L10,586@22045L11,582@21806L278:NoteEditorUi.kt#5oqfka'
+  string[000138] - 'C563@21095L10,564@21156L11,561@21020L179,574@21537L97,566@21212L575:NoteEditorUi.kt#5oqfka'
+  string[000139] - 'C73@3426L9:Box.kt#2w3rfo'
+  string[000140] - 'C79@3979L9:Column.kt#2w3rfo'
+  string[000141] - 'C831@32452L1997:NoteEditorUi.kt#5oqfka'
+  string[000142] - 'C92@4661L9:Row.kt#2w3rfo'
+  string[000143] - 'C:NoteEditorUi.kt#5oqfka'
+  string[000144] - 'CC(Box)P(2,1,3)71@3309L67,72@3381L130:Box.kt#2w3rfo'
+  string[000145] - 'CC(Column)P(2,3,1)77@3865L61,78@3931L133:Column.kt#2w3rfo'
+  string[000146] - 'CC(Layout)P(!1,2)78@3182L23,80@3272L420:Layout.kt#80mrfh'
+  string[000147] - 'CC(Row)P(2,1,3)90@4553L58,91@4616L130:Row.kt#2w3rfo'
+  string[000148] - 'CC(remember):NoteEditorUi.kt#9igjgp'
+  string[000149] - 'COLOR_ALPHA_MAX_FLOAT'
+  string[000150] - 'Color'
+  string[000151] - 'ColorPickerDialog'
+  string[000152] - 'ColorPickerDialog$lambda$29'
+  string[000153] - 'ColorPickerDialog$lambda$30'
+  string[000154] - 'Companion'
+  string[000155] - 'ERASER'
+  string[000156] - 'Edit mode'
+  string[000157] - 'Eraser options'
+  string[000158] - 'EraserToggleButton'
+  string[000159] - 'F'
+  string[000160] - 'FF'
+  string[000161] - 'FFF'
+  string[000162] - 'FFFF'
+  string[000163] - 'FL'
+  string[000164] - 'HALF_FACTOR'
+  string[000165] - 'HEX_COLOR_LENGTH_RGB'
+  string[000166] - 'HEX_COLOR_REGEX'
+  string[000167] - 'Highlighter settings'
+  string[000168] - 'I'
+  string[000169] - 'I)V'
+  string[000170] - 'IF'
+  string[000171] - 'II'
+  string[000172] - 'IIII'
+  string[000173] - 'IL'
+  string[000174] - 'ILI'
+  string[000175] - 'INSTANCE'
+  string[000176] - 'J'
+  string[000177] - 'JI'
+  string[000178] - 'JJFFFFIL'
+  string[000179] - 'L'
+  string[000180] - 'LF'
+  string[000181] - 'LFF'
+  string[000182] - 'LFJ'
+  string[000183] - 'LI'
+  string[000184] - 'LJ'
+  string[000185] - 'LL'
+  string[000186] - 'LLF'
+  string[000187] - 'LLFFIL'
+  string[000188] - 'LLFIL'
+  string[000189] - 'LLI'
+  string[000190] - 'LLIZL'
+  string[000191] - 'LLL'
+  string[000192] - 'LLLFZIL'
+  string[000193] - 'LLLL'
+  string[000194] - 'LLLLFFFIL'
+  string[000195] - 'LLLLI'
+  string[000196] - 'LLLLLLII'
+  string[000197] - 'LLZLI'
+  string[000198] - 'LLZLIL'
+  string[000199] - 'LLZLLLLLLIL'
+  string[000200] - 'LZ'
+  string[000201] - 'Landroid/graphics/Color;'
+  string[000202] - 'Landroidx/compose/foundation/BorderStroke;'
+  string[000203] - 'Landroidx/compose/foundation/BorderStrokeKt;'
+  string[000204] - 'Landroidx/compose/foundation/ClickableKt;'
+  string[000205] - 'Landroidx/compose/foundation/gestures/TransformableState;'
+  string[000206] - 'Landroidx/compose/foundation/interaction/MutableInteractionSource;'
+  string[000207] - 'Landroidx/compose/foundation/layout/Arrangement$Horizontal;'
+  string[000208] - 'Landroidx/compose/foundation/layout/Arrangement$HorizontalOrVertical;'
+  string[000209] - 'Landroidx/compose/foundation/layout/Arrangement$Vertical;'
+  string[000210] - 'Landroidx/compose/foundation/layout/Arrangement;'
+  string[000211] - 'Landroidx/compose/foundation/layout/BoxKt;'
+  string[000212] - 'Landroidx/compose/foundation/layout/BoxScope;'
+  string[000213] - 'Landroidx/compose/foundation/layout/BoxScopeInstance;'
+  string[000214] - 'Landroidx/compose/foundation/layout/ColumnKt;'
+  string[000215] - 'Landroidx/compose/foundation/layout/ColumnScope;'
+  string[000216] - 'Landroidx/compose/foundation/layout/ColumnScopeInstance;'
+  string[000217] - 'Landroidx/compose/foundation/layout/PaddingKt;'
+  string[000218] - 'Landroidx/compose/foundation/layout/PaddingValues;'
+  string[000219] - 'Landroidx/compose/foundation/layout/RowKt;'
+  string[000220] - 'Landroidx/compose/foundation/layout/RowScope;'
+  string[000221] - 'Landroidx/compose/foundation/layout/RowScopeInstance;'
+  string[000222] - 'Landroidx/compose/foundation/layout/SizeKt;'
+  string[000223] - 'Landroidx/compose/foundation/layout/WindowInsets;'
+  string[000224] - 'Landroidx/compose/foundation/layout/WindowInsetsPaddingKt;'
+  string[000225] - 'Landroidx/compose/foundation/layout/WindowInsetsPadding_androidKt;'
+  string[000226] - 'Landroidx/compose/foundation/shape/RoundedCornerShape;'
+  string[000227] - 'Landroidx/compose/foundation/shape/RoundedCornerShapeKt;'
+  string[000228] - 'Landroidx/compose/material3/AndroidAlertDialog_androidKt;'
+  string[000229] - 'Landroidx/compose/material3/ColorScheme;'
+  string[000230] - 'Landroidx/compose/material3/DividerKt;'
+  string[000231] - 'Landroidx/compose/material3/MaterialTheme;'
+  string[000232] - 'Landroidx/compose/material3/ScaffoldKt;'
+  string[000233] - 'Landroidx/compose/material3/SliderColors;'
+  string[000234] - 'Landroidx/compose/material3/SliderKt;'
+  string[000235] - 'Landroidx/compose/material3/SurfaceKt;'
+  string[000236] - 'Landroidx/compose/material3/TextKt;'
+  string[000237] - 'Landroidx/compose/material3/Typography;'
+  string[000238] - 'Landroidx/compose/runtime/Applier;'
+  string[000239] - 'Landroidx/compose/runtime/Composable;'
+  string[000240] - 'Landroidx/compose/runtime/ComposableInferredTarget;'
+  string[000241] - 'Landroidx/compose/runtime/ComposableTarget;'
+  string[000242] - 'Landroidx/compose/runtime/ComposablesKt;'
+  string[000243] - 'Landroidx/compose/runtime/Composer$Companion;'
+  string[000244] - 'Landroidx/compose/runtime/Composer;'
+  string[000245] - 'Landroidx/compose/runtime/ComposerKt;'
+  string[000246] - 'Landroidx/compose/runtime/CompositionLocalMap;'
+  string[000247] - 'Landroidx/compose/runtime/MutableState;'
+  string[000248] - 'Landroidx/compose/runtime/MutableState<'
+  string[000249] - 'Landroidx/compose/runtime/ScopeUpdateScope;'
+  string[000250] - 'Landroidx/compose/runtime/SkippableUpdater;'
+  string[000251] - 'Landroidx/compose/runtime/State;'
+  string[000252] - 'Landroidx/compose/runtime/Updater;'
+  string[000253] - 'Landroidx/compose/runtime/internal/ComposableLambda;'
+  string[000254] - 'Landroidx/compose/runtime/internal/ComposableLambdaKt;'
+  string[000255] - 'Landroidx/compose/runtime/saveable/RememberSaveableKt;'
+  string[000256] - 'Landroidx/compose/runtime/saveable/Saver;'
+  string[000257] - 'Landroidx/compose/ui/Alignment$Companion;'
+  string[000258] - 'Landroidx/compose/ui/Alignment$Horizontal;'
+  string[000259] - 'Landroidx/compose/ui/Alignment$Vertical;'
+  string[000260] - 'Landroidx/compose/ui/Alignment;'
+  string[000261] - 'Landroidx/compose/ui/Modifier$Companion;'
+  string[000262] - 'Landroidx/compose/ui/Modifier;'
+  string[000263] - 'Landroidx/compose/ui/graphics/Color$Companion;'
+  string[000264] - 'Landroidx/compose/ui/graphics/Color;'
+  string[000265] - 'Landroidx/compose/ui/graphics/ColorKt;'
+  string[000266] - 'Landroidx/compose/ui/graphics/Shape;'
+  string[000267] - 'Landroidx/compose/ui/layout/LayoutKt;'
+  string[000268] - 'Landroidx/compose/ui/layout/MeasurePolicy;'
+  string[000269] - 'Landroidx/compose/ui/node/ComposeUiNode$Companion;'
+  string[000270] - 'Landroidx/compose/ui/node/ComposeUiNode;'
+  string[000271] - 'Landroidx/compose/ui/semantics/Role$Companion;'
+  string[000272] - 'Landroidx/compose/ui/semantics/Role;'
+  string[000273] - 'Landroidx/compose/ui/semantics/SemanticsModifierKt;'
+  string[000274] - 'Landroidx/compose/ui/text/TextStyle;'
+  string[000275] - 'Landroidx/compose/ui/text/font/FontFamily;'
+  string[000276] - 'Landroidx/compose/ui/text/font/FontStyle;'
+  string[000277] - 'Landroidx/compose/ui/text/font/FontWeight;'
+  string[000278] - 'Landroidx/compose/ui/text/style/TextAlign;'
+  string[000279] - 'Landroidx/compose/ui/text/style/TextDecoration;'
+  string[000280] - 'Landroidx/compose/ui/unit/Dp;'
+  string[000281] - 'Landroidx/compose/ui/viewinterop/AndroidView_androidKt;'
+  string[000282] - 'Landroidx/compose/ui/window/DialogProperties;'
+  string[000283] - 'Lcom/onyx/android/ink/model/Brush;'
+  string[000284] - 'Lcom/onyx/android/ink/model/Tool;'
+  string[000285] - 'Lcom/onyx/android/ui/ComposableSingletons$NoteEditorUiKt;'
+  string[000286] - 'Lcom/onyx/android/ui/EraserMode;'
+  string[000287] - 'Lcom/onyx/android/ui/NoteEditorConstantsKt;'
+  string[000288] - 'Lcom/onyx/android/ui/NoteEditorContentState;'
+  string[000289] - 'Lcom/onyx/android/ui/NoteEditorToolbarState;'
+  string[000290] - 'Lcom/onyx/android/ui/NoteEditorTopBarState;'
+  string[000291] - 'Lcom/onyx/android/ui/NoteEditorUiKt$BrushSizeControl$1$1$1;'
+  string[000292] - 'Lcom/onyx/android/ui/NoteEditorUiKt$BrushSizeControl$1$1$2$1;'
+  string[000293] - 'Lcom/onyx/android/ui/NoteEditorUiKt$BrushSizeControl$2;'
+  string[000294] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ColorPickerDialog$1;'
+  string[000295] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ColorPickerDialog$2;'
+  string[000296] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ColorPickerDialog$3;'
+  string[000297] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ColorPickerDialog$4;'
+  string[000298] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ColorPickerDialog$hexInput$2$1;'
+  string[000299] - 'Lcom/onyx/android/ui/NoteEditorUiKt$EraserToggleButton$1$1;'
+  string[000300] - 'Lcom/onyx/android/ui/NoteEditorUiKt$EraserToggleButton$2$1;'
+  string[000301] - 'Lcom/onyx/android/ui/NoteEditorUiKt$EraserToggleButton$3;'
+  string[000302] - 'Lcom/onyx/android/ui/NoteEditorUiKt$NoteEditorContent$1$1;'
+  string[000303] - 'Lcom/onyx/android/ui/NoteEditorUiKt$NoteEditorContent$2;'
+  string[000304] - 'Lcom/onyx/android/ui/NoteEditorUiKt$NoteEditorScaffold$1;'
+  string[000305] - 'Lcom/onyx/android/ui/NoteEditorUiKt$NoteEditorScaffold$2;'
+  string[000306] - 'Lcom/onyx/android/ui/NoteEditorUiKt$NoteEditorScaffold$3;'
+  string[000307] - 'Lcom/onyx/android/ui/NoteEditorUiKt$NoteEditorTopBar$1;'
+  string[000308] - 'Lcom/onyx/android/ui/NoteEditorUiKt$NoteEditorTopBar$2;'
+  string[000309] - 'Lcom/onyx/android/ui/NoteEditorUiKt$NoteEditorTopBar$3$1$1;'
+  string[000310] - 'Lcom/onyx/android/ui/NoteEditorUiKt$NoteEditorTopBar$4$1;'
+  string[000311] - 'Lcom/onyx/android/ui/NoteEditorUiKt$NoteEditorTopBar$5$1;'
+  string[000312] - 'Lcom/onyx/android/ui/NoteEditorUiKt$NoteEditorTopBar$6;'
+  string[000313] - 'Lcom/onyx/android/ui/NoteEditorUiKt$NoteEditorTopBar$activeToolPanel$2;'
+  string[000314] - 'Lcom/onyx/android/ui/NoteEditorUiKt$NoteEditorTopBar$colorPickerInput$2$1;'
+  string[000315] - 'Lcom/onyx/android/ui/NoteEditorUiKt$NoteEditorTopBar$isColorPickerVisible$2;'
+  string[000316] - 'Lcom/onyx/android/ui/NoteEditorUiKt$PaletteRow$1$1$1$1;'
+  string[000317] - 'Lcom/onyx/android/ui/NoteEditorUiKt$PaletteRow$1$1$2$1;'
+  string[000318] - 'Lcom/onyx/android/ui/NoteEditorUiKt$PaletteRow$2;'
+  string[000319] - 'Lcom/onyx/android/ui/NoteEditorUiKt$PaletteSwatch$1$1;'
+  string[000320] - 'Lcom/onyx/android/ui/NoteEditorUiKt$PaletteSwatch$3;'
+  string[000321] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ReadOnlyInputBlocker$1;'
+  string[000322] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ReadOnlyInputBlocker$2;'
+  string[000323] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ReadOnlyInputBlocker$3;'
+  string[000324] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ToolSettingsDialog$1;'
+  string[000325] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ToolSettingsDialog$2;'
+  string[000326] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ToolSettingsDialog$3;'
+  string[000327] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ToolSettingsDialog$4;'
+  string[000328] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ToolSettingsDialog$eraserMode$2;'
+  string[000329] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ToolToggleButton$1$1;'
+  string[000330] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ToolToggleButton$2$1;'
+  string[000331] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ToolToggleButton$3;'
+  string[000332] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ToolbarDivider$1;'
+  string[000333] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ToolbarGroup$1$1;'
+  string[000334] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ToolbarGroup$2;'
+  string[000335] - 'Lcom/onyx/android/ui/NoteEditorUiKt$ToolbarGroup$3;'
+  string[000336] - 'Lcom/onyx/android/ui/NoteEditorUiKt$WhenMappings;'
+  string[000337] - 'Lcom/onyx/android/ui/NoteEditorUiKt;'
+  string[000338] - 'Lcom/onyx/android/ui/ToolButtonVisuals;'
+  string[000339] - 'Lcom/onyx/android/ui/ToolPanelType;'
+  string[000340] - 'Ldalvik/annotation/MemberClasses;'
+  string[000341] - 'Ldalvik/annotation/Signature;'
+  string[000342] - 'Ldalvik/annotation/SourceDebugExtension;'
+  string[000343] - 'Ljava/lang/Boolean;'
+  string[000344] - 'Ljava/lang/CharSequence;'
+  string[000345] - 'Ljava/lang/Float;'
+  string[000346] - 'Ljava/lang/Integer;'
+  string[000347] - 'Ljava/lang/Iterable;'
+  string[000348] - 'Ljava/lang/Number;'
+  string[000349] - 'Ljava/lang/Object;'
+  string[000350] - 'Ljava/lang/String;'
+  string[000351] - 'Ljava/lang/StringBuilder;'
+  string[000352] - 'Ljava/lang/Throwable;'
+  string[000353] - 'Ljava/util/Arrays;'
+  string[000354] - 'Ljava/util/Iterator;'
+  string[000355] - 'Ljava/util/List;'
+  string[000356] - 'Ljava/util/Locale;'
+  string[000357] - 'Lkotlin/ExtensionFunctionType;'
+  string[000358] - 'Lkotlin/Function0;'
+  string[000359] - 'Lkotlin/Function1;'
+  string[000360] - 'Lkotlin/Metadata;'
+  string[000361] - 'Lkotlin/NoWhenBranchMatchedException;'
+  string[000362] - 'Lkotlin/Result$Companion;'
+  string[000363] - 'Lkotlin/Result;'
+  string[000364] - 'Lkotlin/ResultKt;'
+  string[000365] - 'Lkotlin/Unit;'
+  string[000366] - 'Lkotlin/jvm/functions/Function0;'
+  string[000367] - 'Lkotlin/jvm/functions/Function0<'
+  string[000368] - 'Lkotlin/jvm/functions/Function1;'
+  string[000369] - 'Lkotlin/jvm/functions/Function1<'
+  string[000370] - 'Lkotlin/jvm/functions/Function2;'
+  string[000371] - 'Lkotlin/jvm/functions/Function3;'
+  string[000372] - 'Lkotlin/jvm/functions/Function3<'
+  string[000373] - 'Lkotlin/jvm/internal/Intrinsics;'
+  string[000374] - 'Lkotlin/jvm/internal/SourceDebugExtension;'
+  string[000375] - 'Lkotlin/jvm/internal/StringCompanionObject;'
+  string[000376] - 'Lkotlin/math/MathKt;'
+  string[000377] - 'Lkotlin/ranges/ClosedFloatingPointRange;'
+  string[000378] - 'Lkotlin/ranges/RangesKt;'
+  string[000379] - 'Lkotlin/reflect/KProperty;'
+  string[000380] - 'Lkotlin/text/Regex;'
+  string[000381] - 'Lkotlin/text/StringsKt;'
+  string[000382] - 'Lorg/jetbrains/annotations/NotNull;'
+  string[000383] - 'Lorg/jetbrains/annotations/Nullable;'
+  string[000384] - 'MAX_COLOR_CHANNEL'
+  string[000385] - 'MIN_COLOR_CHANNEL'
+  string[000386] - 'MIN_WIDTH_FACTOR_FLOOR'
+  string[000387] - 'NoteEditorContent'
+  string[000388] - 'NoteEditorScaffold'
+  string[000389] - 'NoteEditorTopBar'
+  string[000390] - 'NoteEditorTopBar$lambda$1'
+  string[000391] - 'NoteEditorTopBar$lambda$2'
+  string[000392] - 'NoteEditorTopBar$lambda$3'
+  string[000393] - 'NoteEditorTopBar$lambda$4'
+  string[000394] - 'NoteEditorTopBar$lambda$6'
+  string[000395] - 'NoteEditorTopBar$lambda$7'
+  string[000396] - 'NoteEditorUi.kt'
+  string[000397] - 'PaletteRow'
+  string[000398] - 'PaletteSwatch'
+  string[000399] - 'Pen settings'
+  string[000400] - 'ROOT'
+  string[000401] - 'ReadOnlyInputBlocker'
+  string[000402] - 'RoundedCornerShape-0680j_4'
+  string[000403] - 'skipped (not printable)'
+  string[000404] - 'Scaffold-TvnljyQ'
+  string[000405] - 'Size'
+  string[000406] - 'Slider'
+  string[000407] - 'Surface-T9BRK9s'
+  string[000408] - 'Text--4IGK_g'
+  string[000409] - 'ToolSettingsDialog'
+  string[000410] - 'ToolSettingsDialog$lambda$26'
+  string[000411] - 'ToolSettingsDialog$lambda$27'
+  string[000412] - 'ToolToggleButton'
+  string[000413] - 'ToolbarDivider'
+  string[000414] - 'ToolbarGroup'
+  string[000415] - 'US'
+  string[000416] - 'Untitled Note'
+  string[000417] - 'V'
+  string[000418] - 'VFLLZLILLLLII'
+  string[000419] - 'VI'
+  string[000420] - 'VIIIL'
+  string[000421] - 'VL'
+  string[000422] - 'VLFJLII'
+  string[000423] - 'VLI'
+  string[000424] - 'VLIL'
+  string[000425] - 'VLL'
+  string[000426] - 'VLLI'
+  string[000427] - 'VLLJJFFLLLII'
+  string[000428] - 'VLLJJLLLJLLJIZIILLLIII'
+  string[000429] - 'VLLL'
+  string[000430] - 'VLLLI'
+  string[000431] - 'VLLLL'
+  string[000432] - 'VLLLLI'
+  string[000433] - 'VLLLLII'
+  string[000434] - 'VLLLLLI'
+  string[000435] - 'VLLLLLIJJLLLII'
+  string[000436] - 'VLLLLLLLLJJJJFLLIII'
+  string[000437] - 'VLLLLLLLZIL'
+  string[000438] - 'VLLLZ'
+  string[000439] - 'VLZ'
+  string[000440] - 'VLZLI'
+  string[000441] - 'VLZLLI'
+  string[000442] - 'VLZLLLI'
+  string[000443] - 'VLZZLLI'
+  string[000444] - 'VLZZLLLI'
+  string[000445] - 'VZ'
+  string[000446] - 'VZLLL'
+  string[000447] - 'VZZLLI'
+  string[000448] - 'VZZLLLI'
+  string[000449] - 'VerticalDivider-9IZ8Weo'
+  string[000450] - 'View mode'
+  string[000451] - 'Z'
+  string[000452] - 'ZL'
+  string[000453] - 'ZLL'
+  string[000454] - 'ZLLZIL'
+  string[000455] - 'ZZ'
+  string[000456] - '[I'
+  string[000457] - '[Ljava/lang/Object;'
+  string[000458] - '[androidx.compose.ui.UiComposable[androidx.compose.ui.UiComposable]]'
+  string[000459] - '^#([0-9A-F]{6}|[0-9A-F]{8})$'
+  string[000460] - 'access$BrushSizeControl'
+  string[000461] - 'access$ColorPickerDialog'
+  string[000462] - 'access$ColorPickerDialog$lambda$29'
+  string[000463] - 'access$ColorPickerDialog$lambda$30'
+  string[000464] - 'access$EraserToggleButton'
+  string[000465] - 'access$NoteEditorContent'
+  string[000466] - 'access$NoteEditorTopBar'
+  string[000467] - 'access$NoteEditorTopBar$lambda$2'
+  string[000468] - 'access$NoteEditorTopBar$lambda$4'
+  string[000469] - 'access$NoteEditorTopBar$lambda$7'
+  string[000470] - 'access$PaletteRow'
+  string[000471] - 'access$PaletteSwatch'
+  string[000472] - 'access$ReadOnlyInputBlocker'
+  string[000473] - 'access$ToolSettingsDialog'
+  string[000474] - 'access$ToolSettingsDialog$lambda$26'
+  string[000475] - 'access$ToolSettingsDialog$lambda$27'
+  string[000476] - 'access$ToolToggleButton'
+  string[000477] - 'access$ToolbarDivider'
+  string[000478] - 'access$ToolbarGroup'
+  string[000479] - 'access$applyOpacity'
+  string[000480] - 'access$applyStabilization'
+  string[000481] - 'access$normalizeHexColor'
+  string[000482] - 'access$resolveOpacity'
+  string[000483] - 'access$resolveStabilization'
+  string[000484] - 'access$toggleEraser'
+  string[000485] - 'activeToolPanel'
+  string[000486] - 'activeToolPanel$delegate'
+  string[000487] - 'alpha'
+  string[000488] - 'androidx.compose.ui.UiComposable'
+  string[000489] - 'app_debug'
+  string[000490] - 'append'
+  string[000491] - 'applier'
+  string[000492] - 'apply'
+  string[000493] - 'applyOpacity'
+  string[000494] - 'applyStabilization'
+  string[000495] - 'areEqual'
+  string[000496] - 'black'
+  string[000497] - 'block$iv$iv$iv'
+  string[000498] - 'blue'
+  string[000499] - 'booleanValue'
+  string[000500] - 'box-impl'
+  string[000501] - 'brush'
+  string[000502] - 'changed'
+  string[000503] - 'changedInstance'
+  string[000504] - 'checkNotNullExpressionValue'
+  string[000505] - 'checkNotNullParameter'
+  string[000506] - 'clampedLevel'
+  string[000507] - 'coerceAtLeast'
+  string[000508] - 'coerceIn'
+  string[000509] - 'colorHex'
+  string[000510] - 'colorName'
+  string[000511] - 'colorPickerInput'
+  string[000512] - 'colorPickerInput$delegate'
+  string[000513] - 'columnMeasurePolicy'
+  string[000514] - 'com.onyx.android.ui.BrushSizeControl (NoteEditorUi.kt:546)'
+  string[000515] - 'com.onyx.android.ui.ColorPickerDialog (NoteEditorUi.kt:744)'
+  string[000516] - 'com.onyx.android.ui.EraserToggleButton (NoteEditorUi.kt:477)'
+  string[000517] - 'com.onyx.android.ui.NoteEditorContent (NoteEditorUi.kt:823)'
+  string[000518] - 'com.onyx.android.ui.NoteEditorScaffold (NoteEditorUi.kt:83)'
+  string[000519] - 'com.onyx.android.ui.NoteEditorTopBar (NoteEditorUi.kt:104)'
+  string[000520] - 'com.onyx.android.ui.PaletteRow (NoteEditorUi.kt:403)'
+  string[000521] - 'com.onyx.android.ui.PaletteSwatch (NoteEditorUi.kt:428)'
+  string[000522] - 'com.onyx.android.ui.ReadOnlyInputBlocker (NoteEditorUi.kt:886)'
+  string[000523] - 'com.onyx.android.ui.ToolSettingsDialog (NoteEditorUi.kt:597)'
+  string[000524] - 'com.onyx.android.ui.ToolToggleButton (NoteEditorUi.kt:323)'
+  string[000525] - 'com.onyx.android.ui.ToolbarDivider (NoteEditorUi.kt:532)'
+  string[000526] - 'com.onyx.android.ui.ToolbarGroup (NoteEditorUi.kt:375)'
+  string[000527] - 'combinedClickable-cJG_KMw$default'
+  string[000528] - 'composableLambda'
+  string[000529] - 'compositeKeyHash$iv$iv'
+  string[000530] - 'constructor-impl'
+  string[000531] - 'consumeWindowInsets'
+  string[000532] - 'content'
+  string[000533] - 'contentAlignment$iv'
+  string[000534] - 'contentDescription'
+  string[000535] - 'contentState'
+  string[000536] - 'copy$default'
+  string[000537] - 'copy-wmQWz5c$default'
+  string[000538] - 'copyOf'
+  string[000539] - 'createFailure'
+  string[000540] - 'createNode'
+  string[000541] - 'currentBrush'
+  string[000542] - 'custom'
+  string[000543] - 'd1'
+  string[000544] - 'd2'
+  string[000545] - 'delta'
+  string[000546] - 'element$iv'
+  string[000547] - 'enabled'
+  string[000548] - 'endNode'
+  string[000549] - 'endReplaceableGroup'
+  string[000550] - 'endRestartGroup'
+  string[000551] - 'equals'
+  string[000552] - 'eraserMode'
+  string[000553] - 'eraserMode$delegate'
+  string[000554] - 'factory$iv$iv$iv'
+  string[000555] - 'fillMaxSize$default'
+  string[000556] - 'floatValue'
+  string[000557] - 'format'
+  string[000558] - 'format(...)'
+  string[000559] - 'getApplier'
+  string[000560] - 'getBaseWidth'
+  string[000561] - 'getBrush'
+  string[000562] - 'getButton-o7Vup1c'
+  string[000563] - 'getCenter'
+  string[000564] - 'getCenterVertically'
+  string[000565] - 'getCircleShape'
+  string[000566] - 'getColor'
+  string[000567] - 'getColorScheme'
+  string[000568] - 'getConstructor'
+  string[000569] - 'getCurrentCompositeKeyHash'
+  string[000570] - 'getCurrentCompositionLocalMap'
+  string[000571] - 'getCurrentPageIndex'
+  string[000572] - 'getDEFAULT_PALETTE'
+  string[000573] - 'getEmpty'
+  string[000574] - 'getInserting'
+  string[000575] - 'getLabelMedium'
+  string[000576] - 'getLabelSmall'
+  string[000577] - 'getLambda-14$app_debug'
+  string[000578] - 'getLambda-7$app_debug'
+  string[000579] - 'getLambda-8$app_debug'
+  string[000580] - 'getMaxWidthFactor'
+  string[000581] - 'getMinWidthFactor'
+  string[000582] - 'getNoteTitle'
+  string[000583] - 'getOnBrushChange'
+  string[000584] - 'getOnSurface-0d7_KjU'
+  string[000585] - 'getOnSurfaceVariant-0d7_KjU'
+  string[000586] - 'getPrimary-0d7_KjU'
+  string[000587] - 'getSetCompositeKeyHash'
+  string[000588] - 'getSetMeasurePolicy'
+  string[000589] - 'getSetResolvedCompositionLocals'
+  string[000590] - 'getSkipping'
+  string[000591] - 'getStart'
+  string[000592] - 'getSurfaceVariant-0d7_KjU'
+  string[000593] - 'getTool'
+  string[000594] - 'getTop'
+  string[000595] - 'getTotalPages'
+  string[000596] - 'getTransparent-0d7_KjU'
+  string[000597] - 'getTypography'
+  string[000598] - 'getValue'
+  string[000599] - 'getWhite-0d7_KjU'
+  string[000600] - 'green'
+  string[000601] - 'hasNext'
+  string[000602] - 'hashCode'
+  string[000603] - 'height-3ABfNKs'
+  string[000604] - 'hexColor'
+  string[000605] - 'hexInput'
+  string[000606] - 'hexInput$delegate'
+  string[000607] - 'horizontalAlignment$iv'
+  string[000608] - 'horizontalArrangement$iv'
+  string[000609] - 'indicatorSize'
+  string[000610] - 'initialValue'
+  string[000611] - 'intValue'
+  string[000612] - 'invalid$iv'
+  string[000613] - 'invalidApplier'
+  string[000614] - 'invoke'
+  string[000615] - 'isBlank'
+  string[000616] - 'isColorPickerVisible'
+  string[000617] - 'isColorPickerVisible$delegate'
+  string[000618] - 'isEraserSelected'
+  string[000619] - 'isFailure-impl'
+  string[000620] - 'isReadOnly'
+  string[000621] - 'isSelected'
+  string[000622] - 'isTraceInProgress'
+  string[000623] - 'it'
+  string[000624] - 'it$iv'
+  string[000625] - 'iterator'
+  string[000626] - 'k'
+  string[000627] - 'lastNonEraserTool'
+  string[000628] - 'level'
+  string[000629] - 'localMap$iv$iv'
+  string[000630] - 'matches'
+  string[000631] - 'measurePolicy$iv'
+  string[000632] - 'modifier$iv'
+  string[000633] - 'modifierMaterializerOf'
+  string[000634] - 'mv'
+  string[000635] - 'next'
+  string[000636] - 'normalizeHexColor'
+  string[000637] - 'normalized'
+  string[000638] - 'normalizedColor'
+  string[000639] - 'onApply'
+  string[000640] - 'onBrushChange'
+  string[000641] - 'onClick'
+  string[000642] - 'onColorLongPress'
+  string[000643] - 'onColorSelected'
+  string[000644] - 'onDismiss'
+  string[000645] - 'onLongPress'
+  string[000646] - 'onToggle'
+  string[000647] - 'opacity'
+  string[000648] - 'ordinal'
+  string[000649] - 'padding'
+  string[000650] - 'padding-VpY3zN4$default'
+  string[000651] - 'paddingValues'
+  string[000652] - 'pageNumber'
+  string[000653] - 'paletteColorName'
+  string[000654] - 'panelType'
+  string[000655] - 'parseColor'
+  string[000656] - 'parsedColor'
+  string[000657] - 'prefixed'
+  string[000658] - 'previewColor'
+  string[000659] - 'propagateMinConstraints$iv'
+  string[000660] - 'property$iv'
+  string[000661] - 'purple'
+  string[000662] - 'rangeTo'
+  string[000663] - 'rawColor'
+  string[000664] - 'red'
+  string[000665] - 'rememberBoxMeasurePolicy'
+  string[000666] - 'rememberSaveable'
+  string[000667] - 'rememberedValue'
+  string[000668] - 'resolveOpacity'
+  string[000669] - 'resolveStabilization'
+  string[000670] - 'resolvedTitle'
+  string[000671] - 'roundToInt'
+  string[000672] - 'rowMeasurePolicy'
+  string[000673] - 'scheme'
+  string[000674] - 'selectedColor'
+  string[000675] - 'semantics$default'
+  string[000676] - 'set-impl'
+  string[000677] - 'setValue'
+  string[000678] - 'size-3ABfNKs'
+  string[000679] - 'skipToGroupEnd'
+  string[000680] - 'skippableUpdate$iv$iv$iv'
+  string[000681] - 'sourceInformation'
+  string[000682] - 'sourceInformationMarkerEnd'
+  string[000683] - 'sourceInformationMarkerStart'
+  string[000684] - 'spacedBy-0680j_4'
+  string[000685] - 'startReplaceableGroup'
+  string[000686] - 'startRestartGroup'
+  string[000687] - 'startReusableNode'
+  string[000688] - 'startsWith$default'
+  string[000689] - 'supportsApply'
+  string[000690] - 'swatchColor'
+  string[000691] - 'systemGesturesPadding'
+  string[000692] - 'thisObj$iv'
+  string[000693] - 'title'
+  string[000694] - 'toString'
+  string[000695] - 'toUpperCase'
+  string[000696] - 'toUpperCase(...)'
+  string[000697] - 'toggleEraser'
+  string[000698] - 'toolbarState'
+  string[000699] - 'topBarState'
+  string[000700] - 'traceEventEnd'
+  string[000701] - 'traceEventStart'
+  string[000702] - 'transformState'
+  string[000703] - 'trim'
+  string[000704] - 'trimmed'
+  string[000705] - 'updateRememberedValue'
+  string[000706] - 'updateScope'
+  string[000707] - 'useNode'
+  string[000708] - 'validHex'
+  string[000709] - 'value'
+  string[000710] - 'value$iv'
+  string[000711] - 'valueOf'
+  string[000712] - 'verticalAlignment$iv'
+  string[000713] - 'verticalArrangement$iv'
+  string[000714] - 'viewModeActionLabel'
+  string[000715] - 'visuals'
+  string[000716] - 'weight$default'
+  string[000717] - 'width-3ABfNKs'
+  string[000718] - 'widthIn-VpY3zN4$default'
+  string[000719] - 'xi'
+  string[000720] - '~~D8{"backend":"dex","compilation-mode":"debug","has-checksums":true,"min-api":28,"version":"8.13.19"}'
+  string[000721] - '~~~{"Lcom/onyx/android/ui/NoteEditorUiKt;":"1dccf7f7"}'
+
+Class #0            -
+  Class descriptor  : 'Lcom/onyx/android/ui/NoteEditorUiKt;'
+  Access flags      : 0x0011 (PUBLIC FINAL)
+  Superclass        : 'Ljava/lang/Object;'
+  Interfaces        -
+  Static fields     -
+    #0              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'COLOR_ALPHA_MAX_FLOAT'
+      type          : 'F'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      value         : 255
+    #1              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'HALF_FACTOR'
+      type          : 'F'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      value         : 2
+    #2              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'HEX_COLOR_LENGTH_RGB'
+      type          : 'I'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      value         : 7
+    #3              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'HEX_COLOR_REGEX'
+      type          : 'Lkotlin/text/Regex;'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      value         : null
+    #4              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'MAX_COLOR_CHANNEL'
+      type          : 'I'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      value         : 255
+    #5              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'MIN_COLOR_CHANNEL'
+      type          : 'I'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      value         : 0
+    #6              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'MIN_WIDTH_FACTOR_FLOOR'
+      type          : 'F'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      value         : 0.1
+  Instance fields   -
+  Direct methods    -
+    #0              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : '<clinit>'
+      type          : '()V'
+      access        : 0x10008 (STATIC CONSTRUCTOR)
+      code          -
+      registers     : 2
+      ins           : 0
+      outs          : 2
+      insns size    : 10 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1003
+      locals        :
+    #1              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'BrushSizeControl'
+      type          : '(Lcom/onyx/android/ink/model/Brush;ZLkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 88
+      ins           : 5
+      outs          : 25
+      insns size    : 1181 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=547
+        0x0053 line=590
+        0x005c line=547
+        0x0068 line=549
+        0x006e line=550
+        0x0073 line=1249
+        0x0078 line=550
+        0x007c line=548
+        0x008d line=1250
+        0x0093 line=1255
+        0x00a6 line=1256
+        0x00b5 line=1257
+        0x00ba line=1258
+        0x00be line=1260
+        0x00c4 line=1267
+        0x00ce line=1259
+        0x00d3 line=1268
+        0x00de line=1269
+        0x00e1 line=1270
+        0x00e7 line=1271
+        0x00eb line=1273
+        0x00ee line=1275
+        0x00f4 line=1262
+        0x00fd line=1263
+        0x0106 line=1265
+        0x010e line=1276
+        0x0112 line=1277
+        0x012a line=1278
+        0x0133 line=1279
+        0x013a line=1281
+        0x013b line=1276
+        0x013c line=1281
+        0x013d line=1266
+        0x013e line=1275
+        0x013f line=1282
+        0x0152 line=1283
+        0x0158 line=1284
+        0x015f line=1285
+        0x0176 line=552
+        0x017e line=553
+        0x0186 line=554
+        0x018e line=552
+        0x0190 line=556
+        0x0197 line=1286
+        0x019b line=556
+        0x019f line=557
+        0x01a7 line=558
+        0x01b9 line=555
+        0x01ca line=561
+        0x01ee line=1287
+        0x01f4 line=1288
+        0x01fa line=1291
+        0x020c line=1292
+        0x021a line=1293
+        0x021f line=1294
+        0x0223 line=1296
+        0x0229 line=1303
+        0x0233 line=1295
+        0x023a line=1304
+        0x0247 line=1305
+        0x024a line=1306
+        0x0250 line=1307
+        0x0254 line=1309
+        0x0257 line=1311
+        0x025d line=1298
+        0x0268 line=1299
+        0x0271 line=1301
+        0x0279 line=1312
+        0x027d line=1313
+        0x029d line=1314
+        0x02a6 line=1315
+        0x02ad line=1317
+        0x02ae line=1312
+        0x02af line=1317
+        0x02b0 line=1302
+        0x02b1 line=1311
+        0x02b2 line=1318
+        0x02c5 line=1319
+        0x02cb line=1320
+        0x02d2 line=1321
+        0x02e9 line=562
+        0x02f1 line=564
+        0x02fd line=565
+        0x0309 line=563
+        0x030a line=565
+        0x030b line=564
+        0x030c line=562
+        0x0336 line=569
+        0x033c line=570
+        0x0340 line=1322
+        0x0347 line=570
+        0x034b line=571
+        0x035a line=574
+        0x0361 line=578
+        0x0369 line=574
+        0x0389 line=575
+        0x038b line=1323
+        0x0393 line=1324
+        0x03a0 line=1328
+        0x03a3 line=1324
+        0x03a5 line=1325
+        0x03a6 line=575
+        0x03af line=1325
+        0x03b0 line=1326
+        0x03b3 line=1327
+        0x03b4 line=1324
+        0x03b5 line=1323
+        0x03b6 line=575
+        0x03bc line=571
+        0x03bd line=580
+        0x03be line=578
+        0x03bf line=579
+        0x03c6 line=567
+        0x03f1 line=562
+        0x03f4 line=582
+        0x03f5 line=1321
+        0x03f8 line=1320
+        0x03f9 line=1329
+        0x03fc line=1330
+        0x03ff line=1331
+        0x0403 line=1332
+        0x0407 line=1333
+        0x0408 line=584
+        0x040f line=1334
+        0x0414 line=584
+        0x0419 line=585
+        0x0425 line=586
+        0x0433 line=587
+        0x043f line=585
+        0x0440 line=584
+        0x0441 line=587
+        0x0442 line=586
+        0x0443 line=583
+        0x0467 line=552
+        0x046a line=589
+        0x046b line=1285
+        0x046e line=1284
+        0x046f line=1335
+        0x0472 line=1336
+        0x0475 line=1337
+        0x0479 line=1338
+        0x047d line=1339
+        0x0487 line=590
+      locals        :
+        0x0000 - 0x0011 reg=86 $composer Landroidx/compose/runtime/Composer;
+        0x0072 - 0x0078 reg=8 $this$dp$iv I
+        0x0073 - 0x0078 reg=9 $i$f$getDp I
+        0x0110 - 0x0130 reg=27 $this$set_impl_u24lambda_u240$iv$iv$iv Landroidx/compose/runtime/Composer;
+        0x0130 - 0x013b reg=9 $this$set_impl_u24lambda_u240$iv$iv$iv Landroidx/compose/runtime/Composer;
+        0x0112 - 0x013b reg=28 $i$a$-with-Updater$set$1$iv$iv$iv I
+        0x010c - 0x013d reg=5 block$iv$iv$iv Lkotlin/jvm/functions/Function2;
+        0x010e - 0x013d reg=25 $i$f$set-impl I
+        0x00f2 - 0x013e reg=6 $this$Layout_u24lambda_u240$iv$iv Landroidx/compose/runtime/Composer;
+        0x00f4 - 0x013e reg=24 $i$a$-ReusableComposeNode-LayoutKt$Layout$1$iv$iv I
+        0x0171 - 0x0173 reg=7 $this$BrushSizeControl_u24lambda_u2425 Landroidx/compose/foundation/layout/RowScope;
+        0x0196 - 0x019b reg=5 $this$dp$iv F
+        0x0197 - 0x019b reg=9 $i$f$getDp I
+        0x0174 - 0x01c7 reg=7 $composer Landroidx/compose/runtime/Composer;
+        0x01c7 - 0x01cc reg=42 $composer Landroidx/compose/runtime/Composer;
+        0x01df - 0x01e1 reg=5 $changed$iv I
+        0x00a2 - 0x0214 reg=1 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x01f4 - 0x023c reg=5 verticalArrangement$iv Landroidx/compose/foundation/layout/Arrangement$Vertical;
+        0x0236 - 0x0261 reg=4 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x0223 - 0x0285 reg=1 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x015d - 0x028b reg=6 $composer$iv Landroidx/compose/runtime/Composer;
+        0x0285 - 0x0299 reg=48 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x028b - 0x0299 reg=49 $composer$iv Landroidx/compose/runtime/Composer;
+        0x0299 - 0x029d reg=1 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x0299 - 0x029d reg=6 $composer$iv Landroidx/compose/runtime/Composer;
+        0x027b - 0x02a3 reg=46 $this$set_impl_u24lambda_u240$iv$iv$iv Landroidx/compose/runtime/Composer;
+        0x02a3 - 0x02ae reg=6 $this$set_impl_u24lambda_u240$iv$iv$iv Landroidx/compose/runtime/Composer;
+        0x027d - 0x02ae reg=47 $i$a$-with-Updater$set$1$iv$iv$iv I
+        0x0277 - 0x02b0 reg=4 block$iv$iv$iv Lkotlin/jvm/functions/Function2;
+        0x0279 - 0x02b0 reg=43 $i$f$set-impl I
+        0x025b - 0x02b1 reg=5 $this$Layout_u24lambda_u240$iv$iv Landroidx/compose/runtime/Composer;
+        0x025d - 0x02b1 reg=42 $i$a$-ReusableComposeNode-LayoutKt$Layout$1$iv$iv I
+        0x02e4 - 0x02e7 reg=4 $this$BrushSizeControl_u24lambda_u2425_u24lambda_u2424 Landroidx/compose/foundation/layout/ColumnScope;
+        0x02e5 - 0x0333 reg=5 $composer Landroidx/compose/runtime/Composer;
+        0x0333 - 0x0338 reg=79 $composer Landroidx/compose/runtime/Composer;
+        0x02d0 - 0x0342 reg=1 $composer$iv Landroidx/compose/runtime/Composer;
+        0x033e - 0x0347 reg=6 $this$dp$iv I
+        0x0340 - 0x0347 reg=50 $i$f$getDp I
+        0x01fa - 0x0352 reg=7 horizontalAlignment$iv Landroidx/compose/ui/Alignment$Horizontal;
+        0x01cc - 0x0356 reg=3 $composer Landroidx/compose/runtime/Composer;
+        0x038a - 0x038d reg=1 invalid$iv Z
+        0x0018 - 0x0399 reg=2 $dirty I
+        0x0399 - 0x03a3 reg=55 $dirty I
+        0x03a3 - 0x03a5 reg=2 $dirty I
+        0x0391 - 0x03a8 reg=1 it$iv Ljava/lang/Object;
+        0x03a6 - 0x03af reg=2 $i$a$-cache-NoteEditorUiKt$BrushSizeControl$1$1$2 I
+        0x03b0 - 0x03b4 reg=1 value$iv Ljava/lang/Object;
+        0x0393 - 0x03b5 reg=30 $i$a$-let-ComposerKt$cache$1$iv I
+        0x03a8 - 0x03b5 reg=52 it$iv Ljava/lang/Object;
+        0x038a - 0x03b6 reg=6 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x038b - 0x03b6 reg=7 $i$f$cache I
+        0x038d - 0x03b6 reg=26 invalid$iv Z
+        0x0238 - 0x03ca reg=8 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x0208 - 0x03cd reg=9 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x00cf - 0x03d0 reg=12 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x0338 - 0x03ee reg=4 $composer Landroidx/compose/runtime/Composer;
+        0x00cf - 0x03ee reg=11 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x0011 - 0x03ee reg=15 $composer Landroidx/compose/runtime/Composer;
+        0x0342 - 0x03ee reg=51 $composer$iv Landroidx/compose/runtime/Composer;
+        0x03d0 - 0x03ee reg=52 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x03a5 - 0x03ee reg=55 $dirty I
+        0x00be - 0x03ee reg=10 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x03ca - 0x03ee reg=26 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x03cd - 0x03ee reg=30 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x029d - 0x03ee reg=49 $composer$iv Landroidx/compose/runtime/Composer;
+        0x03ee - 0x03f5 reg=10 $composer Landroidx/compose/runtime/Composer;
+        0x02e2 - 0x03f5 reg=45 $changed I
+        0x02e7 - 0x03f5 reg=46 $this$BrushSizeControl_u24lambda_u2425_u24lambda_u2424 Landroidx/compose/foundation/layout/ColumnScope;
+        0x02e9 - 0x03f5 reg=47 $i$a$-Column-NoteEditorUiKt$BrushSizeControl$1$1 I
+        0x02cf - 0x03f8 reg=42 $changed$iv I
+        0x02d2 - 0x03f8 reg=43 $i$a$-Layout-ColumnKt$Column$1$iv I
+        0x03ee - 0x03f8 reg=79 $composer$iv Landroidx/compose/runtime/Composer;
+        0x023a - 0x0400 reg=39 $i$f$ReusableComposeNode I
+        0x0235 - 0x0400 reg=40 $changed$iv$iv$iv I
+        0x0261 - 0x0400 reg=44 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x03ee - 0x0400 reg=49 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x020d - 0x0404 reg=35 $changed$iv$iv I
+        0x0214 - 0x0404 reg=36 $i$f$Layout I
+        0x021f - 0x0404 reg=38 compositeKeyHash$iv$iv I
+        0x029d - 0x0404 reg=48 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x01de - 0x0408 reg=32 modifier$iv Landroidx/compose/ui/Modifier;
+        0x01e1 - 0x0408 reg=33 $changed$iv I
+        0x01e3 - 0x0408 reg=34 $i$f$Column I
+        0x0214 - 0x0408 reg=37 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x023c - 0x0408 reg=41 verticalArrangement$iv Landroidx/compose/foundation/layout/Arrangement$Vertical;
+        0x0352 - 0x0408 reg=50 horizontalAlignment$iv Landroidx/compose/ui/Alignment$Horizontal;
+        0x040e - 0x0414 reg=2 $this$dp$iv I
+        0x040f - 0x0414 reg=3 $i$f$getDp I
+        0x0356 - 0x042b reg=53 $composer Landroidx/compose/runtime/Composer;
+        0x042b - 0x0464 reg=3 $composer Landroidx/compose/runtime/Composer;
+        0x0190 - 0x046a reg=57 indicatorSize F
+        0x016f - 0x046b reg=27 $changed I
+        0x0176 - 0x046b reg=28 $i$a$-Row-NoteEditorUiKt$BrushSizeControl$1 I
+        0x0173 - 0x046b reg=31 $this$BrushSizeControl_u24lambda_u2425 Landroidx/compose/foundation/layout/RowScope;
+        0x0464 - 0x046b reg=53 $composer Landroidx/compose/runtime/Composer;
+        0x015c - 0x046e reg=24 $changed$iv I
+        0x015f - 0x046e reg=25 $i$a$-Layout-RowKt$Row$1$iv I
+        0x03ee - 0x046e reg=60 $composer$iv Landroidx/compose/runtime/Composer;
+        0x00d1 - 0x0476 reg=22 $changed$iv$iv$iv I
+        0x00d3 - 0x0476 reg=23 $i$f$ReusableComposeNode I
+        0x03ee - 0x0476 reg=58 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x03ee - 0x0476 reg=59 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x00a8 - 0x047a reg=19 $changed$iv$iv I
+        0x00aa - 0x047a reg=20 $i$f$Layout I
+        0x00ba - 0x047a reg=21 compositeKeyHash$iv$iv I
+        0x03ee - 0x047a reg=30 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x0080 - 0x047e reg=16 $changed$iv I
+        0x0082 - 0x047e reg=17 $i$f$Row I
+        0x0093 - 0x047e reg=18 modifier$iv Landroidx/compose/ui/Modifier;
+        0x03ee - 0x047e reg=29 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x03ee - 0x049d reg=26 $dirty I
+        0x0000 - 0x049d reg=83 brush Lcom/onyx/android/ink/model/Brush;
+        0x0000 - 0x049d reg=84 enabled Z
+        0x0000 - 0x049d reg=85 onBrushChange Lkotlin/jvm/functions/Function1;
+        0x03ee - 0x049d reg=86 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x049d reg=87 $changed I
+    #2              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'ColorPickerDialog'
+      type          : '(Ljava/lang/String;Lcom/onyx/android/ink/model/Brush;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 36
+      ins           : 6
+      outs          : 22
+      insns size    : 375 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=745
+        0x0067 line=817
+        0x006e line=745
+        0x007a line=746
+        0x0093 line=1340
+        0x0098 line=1341
+        0x00a3 line=1345
+        0x00a5 line=1342
+        0x00a6 line=746
+        0x00ad line=1342
+        0x00ae line=1343
+        0x00b1 line=1344
+        0x00b2 line=1341
+        0x00b3 line=1340
+        0x00b4 line=746
+        0x00c5 line=747
+        0x00cd line=748
+        0x00d0 line=1011
+        0x00d1 line=748
+        0x00df line=749
+        0x00e5 line=751
+        0x00e6 line=798
+        0x00f4 line=793
+        0x0108 line=753
+        0x011f line=750
+        0x0160 line=817
+      locals        :
+        0x0000 - 0x0013 reg=34 $composer Landroidx/compose/runtime/Composer;
+        0x001a - 0x005a reg=6 $dirty I
+        0x00a6 - 0x00ad reg=12 $i$a$-cache-NoteEditorUiKt$ColorPickerDialog$hexInput$2 I
+        0x00ae - 0x00b2 reg=14 value$iv Ljava/lang/Object;
+        0x0097 - 0x00b3 reg=9 it$iv Ljava/lang/Object;
+        0x0098 - 0x00b3 reg=11 $i$a$-let-ComposerKt$cache$1$iv I
+        0x0091 - 0x00b4 reg=5 invalid$iv Z
+        0x0092 - 0x00b4 reg=7 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x0093 - 0x00b4 reg=8 $i$f$cache I
+        0x00d0 - 0x00d9 reg=7 it Ljava/lang/String;
+        0x00d1 - 0x00d9 reg=8 $i$a$-let-NoteEditorUiKt$ColorPickerDialog$previewColor$1 I
+        0x00c5 - 0x0120 reg=5 hexInput$delegate Landroidx/compose/runtime/MutableState;
+        0x00df - 0x0122 reg=7 previewColor Landroidx/compose/ui/graphics/Color;
+        0x0013 - 0x0125 reg=10 $composer Landroidx/compose/runtime/Composer;
+        0x00cd - 0x012c reg=6 normalizedColor Ljava/lang/String;
+        0x00e5 - 0x012c reg=8 supportsApply Z
+        0x005a - 0x0132 reg=13 $dirty I
+        0x0120 - 0x0132 reg=14 hexInput$delegate Landroidx/compose/runtime/MutableState;
+        0x0122 - 0x0138 reg=15 previewColor Landroidx/compose/ui/graphics/Color;
+        0x012c - 0x0138 reg=16 normalizedColor Ljava/lang/String;
+        0x012c - 0x013e reg=17 supportsApply Z
+        0x0132 - 0x013e reg=18 $dirty I
+        0x0132 - 0x0142 reg=19 hexInput$delegate Landroidx/compose/runtime/MutableState;
+        0x0138 - 0x0146 reg=20 normalizedColor Ljava/lang/String;
+        0x0138 - 0x014a reg=23 previewColor Landroidx/compose/ui/graphics/Color;
+        0x013e - 0x014e reg=24 $dirty I
+        0x0125 - 0x0157 reg=21 $composer Landroidx/compose/runtime/Composer;
+        0x013e - 0x0160 reg=25 supportsApply Z
+        0x0142 - 0x0160 reg=26 hexInput$delegate Landroidx/compose/runtime/MutableState;
+        0x0146 - 0x0160 reg=27 normalizedColor Ljava/lang/String;
+        0x014a - 0x0160 reg=28 previewColor Landroidx/compose/ui/graphics/Color;
+        0x0157 - 0x0177 reg=10 $composer Landroidx/compose/runtime/Composer;
+        0x014e - 0x0177 reg=29 $dirty I
+        0x0000 - 0x0177 reg=30 initialValue Ljava/lang/String;
+        0x0000 - 0x0177 reg=31 currentBrush Lcom/onyx/android/ink/model/Brush;
+        0x0000 - 0x0177 reg=32 onDismiss Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x0177 reg=33 onApply Lkotlin/jvm/functions/Function1;
+        0x0000 - 0x0177 reg=35 $changed I
+    #3              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'ColorPickerDialog$lambda$29'
+      type          : '(Landroidx/compose/runtime/MutableState;)Ljava/lang/String;'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 5
+      ins           : 1
+      outs          : 1
+      insns size    : 13 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=746
+        0x0006 line=1398
+        0x000c line=746
+      locals        :
+        0x0003 - 0x000a reg=0 $this$getValue$iv Landroidx/compose/runtime/State;
+        0x0004 - 0x000a reg=1 thisObj$iv Ljava/lang/Object;
+        0x0005 - 0x000a reg=2 property$iv Lkotlin/reflect/KProperty;
+        0x0006 - 0x000a reg=3 $i$f$getValue I
+        0x0000 - 0x000d reg=4 $hexInput$delegate Landroidx/compose/runtime/MutableState;
+    #4              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'ColorPickerDialog$lambda$30'
+      type          : '(Landroidx/compose/runtime/MutableState;Ljava/lang/String;)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 6
+      ins           : 2
+      outs          : 2
+      insns size    : 9 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=746
+        0x0004 line=1399
+        0x0007 line=1400
+        0x0008 line=746
+      locals        :
+        0x0001 - 0x0008 reg=0 thisObj$iv Ljava/lang/Object;
+        0x0002 - 0x0008 reg=1 property$iv Lkotlin/reflect/KProperty;
+        0x0003 - 0x0008 reg=2 $this$setValue$iv Landroidx/compose/runtime/MutableState;
+        0x0004 - 0x0008 reg=3 $i$f$setValue I
+        0x0000 - 0x0009 reg=4 $hexInput$delegate Landroidx/compose/runtime/MutableState;
+        0x0000 - 0x0009 reg=5 value Ljava/lang/String;
+    #5              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'EraserToggleButton'
+      type          : '(ZZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 47
+      ins           : 6
+      outs          : 13
+      insns size    : 784 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=478
+        0x006f line=530
+        0x0076 line=478
+        0x0082 line=481
+        0x009b line=1198
+        0x00a0 line=1199
+        0x00ab line=1203
+        0x00ad line=1200
+        0x00ae line=481
+        0x00b5 line=1200
+        0x00b6 line=1201
+        0x00b9 line=1202
+        0x00ba line=1199
+        0x00bb line=1198
+        0x00bc line=481
+        0x00c7 line=486
+        0x00ca line=1204
+        0x00cf line=486
+        0x00d3 line=489
+        0x00d9 line=486
+        0x00da line=488
+        0x00db line=487
+        0x00dc line=489
+        0x00e0 line=487
+        0x00e1 line=491
+        0x00e2 line=487
+        0x00e3 line=490
+        0x00e4 line=487
+        0x00f0 line=493
+        0x00f6 line=479
+        0x0105 line=1205
+        0x0106 line=1208
+        0x0117 line=1209
+        0x0124 line=1210
+        0x0128 line=1211
+        0x012c line=1213
+        0x0132 line=1220
+        0x013c line=1212
+        0x0141 line=1221
+        0x014e line=1222
+        0x0151 line=1223
+        0x0157 line=1224
+        0x015b line=1226
+        0x015e line=1228
+        0x0164 line=1215
+        0x016f line=1216
+        0x0178 line=1218
+        0x0180 line=1229
+        0x0184 line=1230
+        0x01a4 line=1231
+        0x01ad line=1232
+        0x01b4 line=1234
+        0x01b5 line=1229
+        0x01b6 line=1234
+        0x01b7 line=1219
+        0x01b8 line=1228
+        0x01b9 line=1235
+        0x01ce line=1236
+        0x01d4 line=1237
+        0x01da line=1238
+        0x01f4 line=495
+        0x0204 line=496
+        0x020c line=1239
+        0x0213 line=496
+        0x0217 line=497
+        0x022a line=499
+        0x022c line=500
+        0x024a line=502
+        0x0250 line=499
+        0x0253 line=505
+        0x0260 line=506
+        0x0262 line=1240
+        0x0267 line=506
+        0x0277 line=505
+        0x027d line=507
+        0x0288 line=509
+        0x028a line=1241
+        0x028f line=510
+        0x029b line=511
+        0x029c line=510
+        0x02ad line=508
+        0x02b1 line=507
+        0x02b6 line=515
+        0x02c7 line=495
+        0x02da line=529
+        0x02db line=1238
+        0x02de line=1237
+        0x02df line=1242
+        0x02e2 line=1243
+        0x02e5 line=1244
+        0x02e9 line=1245
+        0x02ed line=1246
+        0x02f7 line=530
+      locals        :
+        0x0000 - 0x000d reg=45 $composer Landroidx/compose/runtime/Composer;
+        0x00ae - 0x00b5 reg=15 $i$a$-cache-NoteEditorUiKt$EraserToggleButton$1 I
+        0x00b6 - 0x00ba reg=7 value$iv Ljava/lang/Object;
+        0x009f - 0x00bb reg=11 it$iv Ljava/lang/Object;
+        0x00a0 - 0x00bb reg=13 $i$a$-let-ComposerKt$cache$1$iv I
+        0x0099 - 0x00bc reg=3 invalid$iv Z
+        0x009a - 0x00bc reg=4 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x009b - 0x00bc reg=10 $i$f$cache I
+        0x00c9 - 0x00cf reg=3 $this$dp$iv I
+        0x00ca - 0x00cf reg=7 $i$f$getDp I
+        0x0128 - 0x0143 reg=0 compositeKeyHash$iv$iv I
+        0x0014 - 0x0168 reg=2 $dirty I
+        0x00f9 - 0x018c reg=3 modifier$iv Landroidx/compose/ui/Modifier;
+        0x013d - 0x0192 reg=4 $changed$iv$iv$iv I
+        0x018c - 0x01a0 reg=24 modifier$iv Landroidx/compose/ui/Modifier;
+        0x0192 - 0x01a0 reg=25 $changed$iv$iv$iv I
+        0x01a0 - 0x01a4 reg=3 modifier$iv Landroidx/compose/ui/Modifier;
+        0x01a0 - 0x01a4 reg=4 $changed$iv$iv$iv I
+        0x0182 - 0x01aa reg=22 $this$set_impl_u24lambda_u240$iv$iv$iv Landroidx/compose/runtime/Composer;
+        0x01aa - 0x01b5 reg=4 $this$set_impl_u24lambda_u240$iv$iv$iv Landroidx/compose/runtime/Composer;
+        0x0184 - 0x01b5 reg=23 $i$a$-with-Updater$set$1$iv$iv$iv I
+        0x017e - 0x01b7 reg=2 block$iv$iv$iv Lkotlin/jvm/functions/Function2;
+        0x0180 - 0x01b7 reg=20 $i$f$set-impl I
+        0x0162 - 0x01b8 reg=0 $this$Layout_u24lambda_u240$iv$iv Landroidx/compose/runtime/Composer;
+        0x0164 - 0x01b8 reg=19 $i$a$-ReusableComposeNode-LayoutKt$Layout$1$iv$iv I
+        0x013f - 0x01cb reg=17 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x01d8 - 0x01dc reg=0 $changed$iv I
+        0x01cb - 0x01e1 reg=3 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x01f0 - 0x01f6 reg=0 $this$EraserToggleButton_u24lambda_u2422 Landroidx/compose/foundation/layout/BoxScope;
+        0x01d9 - 0x01fb reg=2 $composer$iv Landroidx/compose/runtime/Composer;
+        0x01f2 - 0x0201 reg=36 $composer Landroidx/compose/runtime/Composer;
+        0x01ee - 0x0201 reg=3 $changed I
+        0x01da - 0x020e reg=4 $i$a$-Layout-BoxKt$Box$1$iv I
+        0x020a - 0x0213 reg=2 $this$dp$iv I
+        0x020c - 0x0213 reg=26 $i$f$getDp I
+        0x0261 - 0x0267 reg=0 $this$dp$iv I
+        0x0262 - 0x0267 reg=2 $i$f$getDp I
+        0x0289 - 0x028f reg=0 $this$dp$iv I
+        0x028a - 0x028f reg=2 $i$f$getDp I
+        0x0201 - 0x02d4 reg=3 $composer Landroidx/compose/runtime/Composer;
+        0x02d4 - 0x02d7 reg=36 $composer Landroidx/compose/runtime/Composer;
+        0x02d7 - 0x02db reg=3 $composer Landroidx/compose/runtime/Composer;
+        0x01f4 - 0x02db reg=20 $i$a$-Box-NoteEditorUiKt$EraserToggleButton$2 I
+        0x01f6 - 0x02db reg=22 $this$EraserToggleButton_u24lambda_u2422 Landroidx/compose/foundation/layout/BoxScope;
+        0x0201 - 0x02db reg=39 $changed I
+        0x01dc - 0x02de reg=17 $changed$iv I
+        0x01fb - 0x02de reg=23 $composer$iv Landroidx/compose/runtime/Composer;
+        0x020e - 0x02de reg=40 $i$a$-Layout-BoxKt$Box$1$iv I
+        0x013d - 0x02e6 reg=15 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x0141 - 0x02e6 reg=16 $i$f$ReusableComposeNode I
+        0x01e1 - 0x02e6 reg=19 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x01a4 - 0x02e6 reg=25 $changed$iv$iv$iv I
+        0x0118 - 0x02ea reg=12 $changed$iv$iv I
+        0x0119 - 0x02ea reg=13 $i$f$Layout I
+        0x012c - 0x02ea reg=14 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x0143 - 0x02ea reg=18 compositeKeyHash$iv$iv I
+        0x00f7 - 0x02ee reg=7 contentAlignment$iv Landroidx/compose/ui/Alignment;
+        0x00f9 - 0x02ee reg=8 $changed$iv I
+        0x00fa - 0x02ee reg=9 $i$f$Box I
+        0x0106 - 0x02ee reg=10 propagateMinConstraints$iv Z
+        0x0113 - 0x02ee reg=11 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x01a4 - 0x02ee reg=24 modifier$iv Landroidx/compose/ui/Modifier;
+        0x000d - 0x0310 reg=6 $composer Landroidx/compose/runtime/Composer;
+        0x0168 - 0x0310 reg=21 $dirty I
+        0x0000 - 0x0310 reg=41 isSelected Z
+        0x0000 - 0x0310 reg=42 enabled Z
+        0x0000 - 0x0310 reg=43 onToggle Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x0310 reg=44 onLongPress Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x0310 reg=46 $changed I
+    #6              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'NoteEditorContent'
+      type          : '(Lcom/onyx/android/ui/NoteEditorContentState;Landroidx/compose/foundation/gestures/TransformableState;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 47
+      ins           : 5
+      outs          : 13
+      insns size    : 440 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=824
+        0x0022 line=827
+        0x0026 line=828
+        0x002d line=829
+        0x0031 line=830
+        0x0035 line=825
+        0x0043 line=1346
+        0x0049 line=1347
+        0x004f line=1350
+        0x0060 line=1351
+        0x006e line=1352
+        0x0072 line=1353
+        0x0076 line=1355
+        0x007c line=1362
+        0x0086 line=1354
+        0x008c line=1363
+        0x0097 line=1364
+        0x009a line=1365
+        0x00a0 line=1366
+        0x00a6 line=1368
+        0x00ab line=1370
+        0x00b3 line=1357
+        0x00be line=1358
+        0x00c7 line=1360
+        0x00cf line=1371
+        0x00d3 line=1372
+        0x00f3 line=1373
+        0x00fc line=1374
+        0x0103 line=1376
+        0x0104 line=1371
+        0x0105 line=1376
+        0x0106 line=1361
+        0x0107 line=1370
+        0x0108 line=1377
+        0x011d line=1378
+        0x0123 line=1379
+        0x0129 line=1380
+        0x0143 line=832
+        0x0151 line=834
+        0x0155 line=835
+        0x0160 line=836
+        0x0164 line=837
+        0x0174 line=832
+        0x018a line=883
+        0x018b line=1380
+        0x018e line=1379
+        0x018f line=1381
+        0x0192 line=1382
+        0x0195 line=1383
+        0x0199 line=1384
+        0x019d line=1385
+        0x01b7 line=884
+      locals        :
+        0x0000 - 0x0011 reg=45 $composer Landroidx/compose/runtime/Composer;
+        0x0088 - 0x00a2 reg=20 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x00a2 - 0x00a6 reg=8 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x00a6 - 0x00a8 reg=20 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x0037 - 0x00ad reg=4 modifier$iv Landroidx/compose/ui/Modifier;
+        0x0072 - 0x00b7 reg=6 compositeKeyHash$iv$iv I
+        0x008a - 0x00db reg=7 $changed$iv$iv$iv I
+        0x00a8 - 0x00e1 reg=8 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x00db - 0x00ef reg=26 $changed$iv$iv$iv I
+        0x00e1 - 0x00ef reg=27 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x00ef - 0x00f3 reg=7 $changed$iv$iv$iv I
+        0x00ef - 0x00f3 reg=8 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x00d1 - 0x00f9 reg=24 $this$set_impl_u24lambda_u240$iv$iv$iv Landroidx/compose/runtime/Composer;
+        0x00f9 - 0x0104 reg=8 $this$set_impl_u24lambda_u240$iv$iv$iv Landroidx/compose/runtime/Composer;
+        0x00d3 - 0x0104 reg=25 $i$a$-with-Updater$set$1$iv$iv$iv I
+        0x00cd - 0x0106 reg=6 block$iv$iv$iv Lkotlin/jvm/functions/Function2;
+        0x00cf - 0x0106 reg=22 $i$f$set-impl I
+        0x00b1 - 0x0107 reg=4 $this$Layout_u24lambda_u240$iv$iv Landroidx/compose/runtime/Composer;
+        0x00b3 - 0x0107 reg=21 $i$a$-ReusableComposeNode-LayoutKt$Layout$1$iv$iv I
+        0x008a - 0x011a reg=17 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x0127 - 0x012b reg=4 $changed$iv I
+        0x0011 - 0x0130 reg=5 $composer Landroidx/compose/runtime/Composer;
+        0x013f - 0x0145 reg=4 $this$NoteEditorContent_u24lambda_u2432 Landroidx/compose/foundation/layout/ColumnScope;
+        0x013d - 0x014a reg=5 $changed I
+        0x0141 - 0x014e reg=38 $composer Landroidx/compose/runtime/Composer;
+        0x0128 - 0x014e reg=6 $composer$iv Landroidx/compose/runtime/Composer;
+        0x011a - 0x015c reg=7 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x0129 - 0x015c reg=8 $i$a$-Layout-ColumnKt$Column$1$iv I
+        0x014e - 0x0184 reg=6 $composer Landroidx/compose/runtime/Composer;
+        0x0184 - 0x0187 reg=38 $composer Landroidx/compose/runtime/Composer;
+        0x0187 - 0x018b reg=6 $composer Landroidx/compose/runtime/Composer;
+        0x0143 - 0x018b reg=22 $i$a$-Column-NoteEditorUiKt$NoteEditorContent$1 I
+        0x0145 - 0x018b reg=24 $this$NoteEditorContent_u24lambda_u2432 Landroidx/compose/foundation/layout/ColumnScope;
+        0x014a - 0x018b reg=25 $changed I
+        0x012b - 0x018e reg=17 $changed$iv I
+        0x014e - 0x018e reg=41 $composer$iv Landroidx/compose/runtime/Composer;
+        0x015c - 0x018e reg=45 $i$a$-Layout-ColumnKt$Column$1$iv I
+        0x008c - 0x0196 reg=18 $i$f$ReusableComposeNode I
+        0x015c - 0x0196 reg=19 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x00f3 - 0x0196 reg=26 $changed$iv$iv$iv I
+        0x00f3 - 0x0196 reg=27 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x0076 - 0x019a reg=9 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x0061 - 0x019a reg=15 $changed$iv$iv I
+        0x0063 - 0x019a reg=16 $i$f$Layout I
+        0x00b7 - 0x019a reg=23 compositeKeyHash$iv$iv I
+        0x0037 - 0x019e reg=10 $changed$iv I
+        0x0038 - 0x019e reg=11 $i$f$Column I
+        0x0049 - 0x019e reg=12 verticalArrangement$iv Landroidx/compose/foundation/layout/Arrangement$Vertical;
+        0x004f - 0x019e reg=13 horizontalAlignment$iv Landroidx/compose/ui/Alignment$Horizontal;
+        0x005c - 0x019e reg=14 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x00ad - 0x019e reg=20 modifier$iv Landroidx/compose/ui/Modifier;
+        0x0130 - 0x01b8 reg=21 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x01b8 reg=42 contentState Lcom/onyx/android/ui/NoteEditorContentState;
+        0x0000 - 0x01b8 reg=43 transformState Landroidx/compose/foundation/gestures/TransformableState;
+        0x0000 - 0x01b8 reg=44 paddingValues Landroidx/compose/foundation/layout/PaddingValues;
+        0x0000 - 0x01b8 reg=46 $changed I
+    #7              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'NoteEditorScaffold'
+      type          : '(Lcom/onyx/android/ui/NoteEditorTopBarState;Lcom/onyx/android/ui/NoteEditorToolbarState;Lcom/onyx/android/ui/NoteEditorContentState;Landroidx/compose/foundation/gestures/TransformableState;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x0019 (PUBLIC STATIC FINAL)
+      code          -
+      registers     : 26
+      ins           : 6
+      outs          : 15
+      insns size    : 139 16-bit code units
+      catches       : (none)
+      positions     :
+        0x001c line=84
+        0x003b line=86
+        0x004b line=92
+        0x005b line=85
+        0x008a line=99
+      locals        :
+        0x0000 - 0x0025 reg=24 $composer Landroidx/compose/runtime/Composer;
+        0x0025 - 0x005d reg=5 $composer Landroidx/compose/runtime/Composer;
+        0x005d - 0x008b reg=17 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x008b reg=20 topBarState Lcom/onyx/android/ui/NoteEditorTopBarState;
+        0x0000 - 0x008b reg=21 toolbarState Lcom/onyx/android/ui/NoteEditorToolbarState;
+        0x0000 - 0x008b reg=22 contentState Lcom/onyx/android/ui/NoteEditorContentState;
+        0x0000 - 0x008b reg=23 transformState Landroidx/compose/foundation/gestures/TransformableState;
+        0x0000 - 0x008b reg=25 $changed I
+    #8              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'NoteEditorTopBar'
+      type          : '(Lcom/onyx/android/ui/NoteEditorTopBarState;Lcom/onyx/android/ui/NoteEditorToolbarState;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 34
+      ins           : 4
+      outs          : 13
+      insns size    : 670 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=105
+        0x0041 line=314
+        0x004c line=105
+        0x0058 line=106
+        0x0068 line=107
+        0x0074 line=108
+        0x0080 line=1011
+        0x0081 line=108
+        0x0086 line=109
+        0x008a line=110
+        0x0099 line=111
+        0x00ae line=112
+        0x00cf line=113
+        0x00d4 line=1012
+        0x00da line=1013
+        0x00e5 line=1017
+        0x00e9 line=1014
+        0x00ea line=113
+        0x00f1 line=1014
+        0x00f2 line=1015
+        0x00f7 line=1016
+        0x00f8 line=1013
+        0x00f9 line=1012
+        0x00fa line=113
+        0x0111 line=115
+        0x0113 line=1018
+        0x0118 line=115
+        0x0119 line=117
+        0x012a line=115
+        0x012b line=120
+        0x0155 line=114
+        0x0176 line=295
+        0x018f line=297
+        0x0190 line=298
+        0x019d line=299
+        0x01a1 line=1019
+        0x01a7 line=1020
+        0x01b4 line=1024
+        0x01b6 line=1020
+        0x01b8 line=1021
+        0x01b9 line=299
+        0x01c2 line=1021
+        0x01c3 line=1022
+        0x01c6 line=1023
+        0x01c7 line=1020
+        0x01c8 line=1019
+        0x01c9 line=299
+        0x01ce line=300
+        0x01d2 line=296
+        0x01de line=302
+        0x01df line=295
+        0x01e4 line=303
+        0x01ea line=305
+        0x01ee line=306
+        0x01fb line=307
+        0x01fe line=1025
+        0x0204 line=1026
+        0x0211 line=1030
+        0x0213 line=1026
+        0x0215 line=1027
+        0x0216 line=307
+        0x021f line=1027
+        0x0220 line=1028
+        0x0223 line=1029
+        0x0224 line=1026
+        0x0225 line=1025
+        0x0226 line=307
+        0x0249 line=308
+        0x024c line=1031
+        0x0251 line=1032
+        0x025e line=1036
+        0x0260 line=1032
+        0x0262 line=1033
+        0x0263 line=308
+        0x026c line=1033
+        0x026d line=1034
+        0x0270 line=1035
+        0x0271 line=1032
+        0x0272 line=1031
+        0x0273 line=308
+        0x0279 line=304
+        0x0282 line=303
+        0x0284 line=304
+        0x028d line=314
+      locals        :
+        0x0000 - 0x000f reg=32 $composer Landroidx/compose/runtime/Composer;
+        0x0081 - 0x0082 reg=0 $i$a$-ifBlank-NoteEditorUiKt$NoteEditorTopBar$resolvedTitle$1 I
+        0x000f - 0x00a6 reg=5 $composer Landroidx/compose/runtime/Composer;
+        0x00a6 - 0x00ba reg=16 $composer Landroidx/compose/runtime/Composer;
+        0x00ea - 0x00f1 reg=3 $i$a$-cache-NoteEditorUiKt$NoteEditorTopBar$colorPickerInput$2 I
+        0x00d2 - 0x00f4 reg=32 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x00f2 - 0x00f8 reg=7 value$iv Ljava/lang/Object;
+        0x00d8 - 0x00f9 reg=6 it$iv Ljava/lang/Object;
+        0x00da - 0x00f9 reg=17 $i$a$-let-ComposerKt$cache$1$iv I
+        0x00f4 - 0x00fa reg=3 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x00d0 - 0x00fa reg=15 invalid$iv Z
+        0x00d4 - 0x00fa reg=16 $i$f$cache I
+        0x00ba - 0x0106 reg=13 $composer Landroidx/compose/runtime/Composer;
+        0x0106 - 0x010f reg=16 $composer Landroidx/compose/runtime/Composer;
+        0x0112 - 0x0118 reg=7 $this$dp$iv I
+        0x0113 - 0x0118 reg=12 $i$f$getDp I
+        0x0086 - 0x0126 reg=0 resolvedTitle Ljava/lang/String;
+        0x0097 - 0x013e reg=19 isEraserSelected Z
+        0x00be - 0x013e reg=20 isColorPickerVisible$delegate Landroidx/compose/runtime/MutableState;
+        0x0126 - 0x013e reg=32 resolvedTitle Ljava/lang/String;
+        0x0016 - 0x013e reg=2 $dirty I
+        0x008a - 0x013e reg=8 brush Lcom/onyx/android/ink/model/Brush;
+        0x00ac - 0x014c reg=5 activeToolPanel$delegate Landroidx/compose/runtime/MutableState;
+        0x0111 - 0x014c reg=6 colorPickerInput$delegate Landroidx/compose/runtime/MutableState;
+        0x013e - 0x014c reg=7 isColorPickerVisible$delegate Landroidx/compose/runtime/MutableState;
+        0x013e - 0x014c reg=2 resolvedTitle Ljava/lang/String;
+        0x013e - 0x014c reg=3 brush Lcom/onyx/android/ink/model/Brush;
+        0x013e - 0x014c reg=8 isEraserSelected Z
+        0x010f - 0x0156 reg=13 $composer Landroidx/compose/runtime/Composer;
+        0x0156 - 0x0160 reg=16 $composer Landroidx/compose/runtime/Composer;
+        0x0160 - 0x0178 reg=22 $composer Landroidx/compose/runtime/Composer;
+        0x014c - 0x01ad reg=2 brush Lcom/onyx/android/ink/model/Brush;
+        0x01ad - 0x01b6 reg=32 brush Lcom/onyx/android/ink/model/Brush;
+        0x01b6 - 0x01b8 reg=2 brush Lcom/onyx/android/ink/model/Brush;
+        0x01b9 - 0x01bb reg=2 $i$a$-cache-NoteEditorUiKt$NoteEditorTopBar$3$1 I
+        0x01bb - 0x01c2 reg=18 $i$a$-cache-NoteEditorUiKt$NoteEditorTopBar$3$1 I
+        0x01c3 - 0x01c7 reg=2 value$iv Ljava/lang/Object;
+        0x01a5 - 0x01c8 reg=4 it$iv Ljava/lang/Object;
+        0x01a7 - 0x01c8 reg=17 $i$a$-let-ComposerKt$cache$1$iv I
+        0x019e - 0x01c9 reg=14 invalid$iv Z
+        0x019f - 0x01c9 reg=15 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x01a1 - 0x01c9 reg=16 $i$f$cache I
+        0x018e - 0x01d4 reg=6 panelType Lcom/onyx/android/ui/ToolPanelType;
+        0x014c - 0x01d4 reg=1 activeToolPanel$delegate Landroidx/compose/runtime/MutableState;
+        0x014c - 0x01db reg=3 isColorPickerVisible$delegate Landroidx/compose/runtime/MutableState;
+        0x01b8 - 0x01db reg=32 brush Lcom/onyx/android/ink/model/Brush;
+        0x0178 - 0x01db reg=13 $composer Landroidx/compose/runtime/Composer;
+        0x01d4 - 0x01df reg=1 panelType Lcom/onyx/android/ui/ToolPanelType;
+        0x018f - 0x01df reg=12 $i$a$-let-NoteEditorUiKt$NoteEditorTopBar$3 I
+        0x0216 - 0x0218 reg=1 $i$a$-cache-NoteEditorUiKt$NoteEditorTopBar$4 I
+        0x0218 - 0x021f reg=17 $i$a$-cache-NoteEditorUiKt$NoteEditorTopBar$4 I
+        0x0220 - 0x0224 reg=1 value$iv Ljava/lang/Object;
+        0x0202 - 0x0225 reg=12 it$iv Ljava/lang/Object;
+        0x0204 - 0x0225 reg=16 $i$a$-let-ComposerKt$cache$1$iv I
+        0x01fc - 0x0226 reg=3 invalid$iv Z
+        0x01fd - 0x0226 reg=4 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x01fe - 0x0226 reg=6 $i$f$cache I
+        0x024a - 0x0257 reg=1 invalid$iv Z
+        0x0257 - 0x0260 reg=17 invalid$iv Z
+        0x0260 - 0x0262 reg=1 invalid$iv Z
+        0x0263 - 0x0265 reg=1 $i$a$-cache-NoteEditorUiKt$NoteEditorTopBar$5 I
+        0x0265 - 0x026c reg=16 $i$a$-cache-NoteEditorUiKt$NoteEditorTopBar$5 I
+        0x026d - 0x0271 reg=1 value$iv Ljava/lang/Object;
+        0x0250 - 0x0272 reg=12 it$iv Ljava/lang/Object;
+        0x0251 - 0x0272 reg=15 $i$a$-let-ComposerKt$cache$1$iv I
+        0x024b - 0x0273 reg=4 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x024c - 0x0273 reg=6 $i$f$cache I
+        0x0262 - 0x0273 reg=17 invalid$iv Z
+        0x01db - 0x0281 reg=5 $composer Landroidx/compose/runtime/Composer;
+        0x0281 - 0x0282 reg=16 $composer Landroidx/compose/runtime/Composer;
+        0x0282 - 0x0284 reg=5 $composer Landroidx/compose/runtime/Composer;
+        0x01db - 0x028d reg=2 brush Lcom/onyx/android/ink/model/Brush;
+        0x014c - 0x028d reg=8 resolvedTitle Ljava/lang/String;
+        0x0068 - 0x028d reg=9 pageNumber I
+        0x0074 - 0x028d reg=10 viewModeActionLabel Ljava/lang/String;
+        0x01db - 0x028d reg=13 isColorPickerVisible$delegate Landroidx/compose/runtime/MutableState;
+        0x01d4 - 0x028d reg=14 activeToolPanel$delegate Landroidx/compose/runtime/MutableState;
+        0x014c - 0x028d reg=27 isEraserSelected Z
+        0x014c - 0x028d reg=28 colorPickerInput$delegate Landroidx/compose/runtime/MutableState;
+        0x0284 - 0x029e reg=16 $composer Landroidx/compose/runtime/Composer;
+        0x013e - 0x029e reg=25 $dirty I
+        0x0000 - 0x029e reg=30 topBarState Lcom/onyx/android/ui/NoteEditorTopBarState;
+        0x0000 - 0x029e reg=31 toolbarState Lcom/onyx/android/ui/NoteEditorToolbarState;
+        0x0000 - 0x029e reg=33 $changed I
+    #9              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'NoteEditorTopBar$lambda$1'
+      type          : '(Landroidx/compose/runtime/MutableState;)Lcom/onyx/android/ui/ToolPanelType;'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 5
+      ins           : 1
+      outs          : 1
+      insns size    : 13 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=111
+        0x0006 line=1386
+        0x000c line=111
+      locals        :
+        0x0003 - 0x000a reg=0 $this$getValue$iv Landroidx/compose/runtime/State;
+        0x0004 - 0x000a reg=1 thisObj$iv Ljava/lang/Object;
+        0x0005 - 0x000a reg=2 property$iv Lkotlin/reflect/KProperty;
+        0x0006 - 0x000a reg=3 $i$f$getValue I
+        0x0000 - 0x000d reg=4 $activeToolPanel$delegate Landroidx/compose/runtime/MutableState;
+    #10              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'NoteEditorTopBar$lambda$2'
+      type          : '(Landroidx/compose/runtime/MutableState;Lcom/onyx/android/ui/ToolPanelType;)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 6
+      ins           : 2
+      outs          : 2
+      insns size    : 9 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=111
+        0x0004 line=1387
+        0x0007 line=1388
+        0x0008 line=111
+      locals        :
+        0x0001 - 0x0008 reg=0 thisObj$iv Ljava/lang/Object;
+        0x0002 - 0x0008 reg=1 property$iv Lkotlin/reflect/KProperty;
+        0x0003 - 0x0008 reg=2 $this$setValue$iv Landroidx/compose/runtime/MutableState;
+        0x0004 - 0x0008 reg=3 $i$f$setValue I
+        0x0000 - 0x0009 reg=4 $activeToolPanel$delegate Landroidx/compose/runtime/MutableState;
+        0x0000 - 0x0009 reg=5 value Lcom/onyx/android/ui/ToolPanelType;
+    #11              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'NoteEditorTopBar$lambda$3'
+      type          : '(Landroidx/compose/runtime/MutableState;)Z'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 5
+      ins           : 1
+      outs          : 1
+      insns size    : 17 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=112
+        0x0006 line=1389
+        0x0010 line=112
+      locals        :
+        0x0003 - 0x000a reg=0 $this$getValue$iv Landroidx/compose/runtime/State;
+        0x0004 - 0x000a reg=1 thisObj$iv Ljava/lang/Object;
+        0x0005 - 0x000a reg=2 property$iv Lkotlin/reflect/KProperty;
+        0x0006 - 0x000a reg=3 $i$f$getValue I
+        0x0000 - 0x0011 reg=4 $isColorPickerVisible$delegate Landroidx/compose/runtime/MutableState;
+    #12              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'NoteEditorTopBar$lambda$4'
+      type          : '(Landroidx/compose/runtime/MutableState;Z)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 7
+      ins           : 2
+      outs          : 2
+      insns size    : 13 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=112
+        0x0008 line=1390
+        0x000b line=1391
+        0x000c line=112
+      locals        :
+        0x0001 - 0x000c reg=0 thisObj$iv Ljava/lang/Object;
+        0x0002 - 0x000c reg=1 property$iv Lkotlin/reflect/KProperty;
+        0x0006 - 0x000c reg=2 value$iv Ljava/lang/Object;
+        0x0007 - 0x000c reg=3 $this$setValue$iv Landroidx/compose/runtime/MutableState;
+        0x0008 - 0x000c reg=4 $i$f$setValue I
+        0x0000 - 0x000d reg=5 $isColorPickerVisible$delegate Landroidx/compose/runtime/MutableState;
+        0x0000 - 0x000d reg=6 value Z
+    #13              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'NoteEditorTopBar$lambda$6'
+      type          : '(Landroidx/compose/runtime/MutableState;)Ljava/lang/String;'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 5
+      ins           : 1
+      outs          : 1
+      insns size    : 13 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=113
+        0x0006 line=1392
+        0x000c line=113
+      locals        :
+        0x0003 - 0x000a reg=0 $this$getValue$iv Landroidx/compose/runtime/State;
+        0x0004 - 0x000a reg=1 thisObj$iv Ljava/lang/Object;
+        0x0005 - 0x000a reg=2 property$iv Lkotlin/reflect/KProperty;
+        0x0006 - 0x000a reg=3 $i$f$getValue I
+        0x0000 - 0x000d reg=4 $colorPickerInput$delegate Landroidx/compose/runtime/MutableState;
+    #14              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'NoteEditorTopBar$lambda$7'
+      type          : '(Landroidx/compose/runtime/MutableState;Ljava/lang/String;)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 6
+      ins           : 2
+      outs          : 2
+      insns size    : 9 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=113
+        0x0004 line=1393
+        0x0007 line=1394
+        0x0008 line=113
+      locals        :
+        0x0001 - 0x0008 reg=0 thisObj$iv Ljava/lang/Object;
+        0x0002 - 0x0008 reg=1 property$iv Lkotlin/reflect/KProperty;
+        0x0003 - 0x0008 reg=2 $this$setValue$iv Landroidx/compose/runtime/MutableState;
+        0x0004 - 0x0008 reg=3 $i$f$setValue I
+        0x0000 - 0x0009 reg=4 $colorPickerInput$delegate Landroidx/compose/runtime/MutableState;
+        0x0000 - 0x0009 reg=5 value Ljava/lang/String;
+    #15              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'PaletteRow'
+      type          : '(Ljava/lang/String;ZLkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 50
+      ins           : 6
+      outs          : 7
+      insns size    : 728 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=404
+        0x0069 line=419
+        0x006e line=404
+        0x007a line=406
+        0x007f line=1093
+        0x0084 line=406
+        0x008a line=407
+        0x0090 line=405
+        0x00a2 line=1094
+        0x00a8 line=1099
+        0x00b9 line=1100
+        0x00c8 line=1101
+        0x00cd line=1102
+        0x00d1 line=1104
+        0x00d7 line=1111
+        0x00e1 line=1103
+        0x00e7 line=1112
+        0x00f2 line=1113
+        0x00f5 line=1114
+        0x00fb line=1115
+        0x00ff line=1117
+        0x0102 line=1119
+        0x0108 line=1106
+        0x0111 line=1107
+        0x011a line=1109
+        0x0122 line=1120
+        0x0126 line=1121
+        0x0142 line=1122
+        0x014b line=1123
+        0x0152 line=1125
+        0x0153 line=1120
+        0x0154 line=1125
+        0x0155 line=1110
+        0x0156 line=1119
+        0x0157 line=1126
+        0x016a line=1127
+        0x0170 line=1128
+        0x0178 line=1129
+        0x0190 line=409
+        0x01ad line=1130
+        0x01c1 line=411
+        0x01c2 line=412
+        0x01c8 line=413
+        0x01e9 line=414
+        0x01ed line=1131
+        0x01f3 line=1132
+        0x0200 line=1136
+        0x0206 line=1132
+        0x0208 line=1133
+        0x0209 line=414
+        0x0212 line=1133
+        0x0213 line=1134
+        0x021a line=1135
+        0x021b line=1132
+        0x021c line=1131
+        0x021d line=414
+        0x023a line=415
+        0x023e line=1137
+        0x0244 line=1138
+        0x0251 line=1142
+        0x0257 line=1138
+        0x0259 line=1139
+        0x025a line=415
+        0x0263 line=1139
+        0x0264 line=1140
+        0x026b line=1141
+        0x026c line=1138
+        0x026d line=1137
+        0x026e line=415
+        0x0277 line=410
+        0x0287 line=417
+        0x0288 line=1130
+        0x0297 line=1143
+        0x02a3 line=409
+        0x02a6 line=418
+        0x02a7 line=1129
+        0x02aa line=1128
+        0x02ab line=1144
+        0x02ae line=1145
+        0x02b1 line=1146
+        0x02b5 line=1147
+        0x02b9 line=1148
+        0x02c3 line=419
+      locals        :
+        0x0000 - 0x0011 reg=48 $composer Landroidx/compose/runtime/Composer;
+        0x0018 - 0x005c reg=2 $dirty I
+        0x007e - 0x0084 reg=2 $this$dp$iv I
+        0x007f - 0x0084 reg=9 $i$f$getDp I
+        0x0091 - 0x0132 reg=0 horizontalArrangement$iv Landroidx/compose/foundation/layout/Arrangement$Horizontal;
+        0x0132 - 0x0140 reg=30 horizontalArrangement$iv Landroidx/compose/foundation/layout/Arrangement$Horizontal;
+        0x0140 - 0x0142 reg=0 horizontalArrangement$iv Landroidx/compose/foundation/layout/Arrangement$Horizontal;
+        0x0124 - 0x0148 reg=27 $this$set_impl_u24lambda_u240$iv$iv$iv Landroidx/compose/runtime/Composer;
+        0x0148 - 0x0153 reg=15 $this$set_impl_u24lambda_u240$iv$iv$iv Landroidx/compose/runtime/Composer;
+        0x0126 - 0x0153 reg=28 $i$a$-with-Updater$set$1$iv$iv$iv I
+        0x0120 - 0x0155 reg=8 block$iv$iv$iv Lkotlin/jvm/functions/Function2;
+        0x0122 - 0x0155 reg=25 $i$f$set-impl I
+        0x0106 - 0x0156 reg=14 $this$Layout_u24lambda_u240$iv$iv Landroidx/compose/runtime/Composer;
+        0x0108 - 0x0156 reg=24 $i$a$-ReusableComposeNode-LayoutKt$Layout$1$iv$iv I
+        0x0175 - 0x0176 reg=8 $composer$iv Landroidx/compose/runtime/Composer;
+        0x00e2 - 0x018b reg=13 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x018b - 0x018e reg=8 $this$PaletteRow_u24lambda_u2418 Landroidx/compose/foundation/layout/RowScope;
+        0x0174 - 0x0195 reg=0 $changed$iv I
+        0x00b5 - 0x01c4 reg=9 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x01ab - 0x01ca reg=0 $this$forEach$iv Ljava/lang/Iterable;
+        0x0091 - 0x01dd reg=2 verticalAlignment$iv Landroidx/compose/ui/Alignment$Vertical;
+        0x01eb - 0x01f9 reg=1 invalid$iv Z
+        0x01f9 - 0x0206 reg=43 invalid$iv Z
+        0x0206 - 0x0208 reg=1 invalid$iv Z
+        0x0209 - 0x020b reg=1 $i$a$-cache-NoteEditorUiKt$PaletteRow$1$1$1 I
+        0x020b - 0x0212 reg=42 $i$a$-cache-NoteEditorUiKt$PaletteRow$1$1$1 I
+        0x01eb - 0x0217 reg=29 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x01f1 - 0x0217 reg=2 it$iv Ljava/lang/Object;
+        0x0213 - 0x021b reg=1 value$iv Ljava/lang/Object;
+        0x01f3 - 0x021c reg=41 $i$a$-let-ComposerKt$cache$1$iv I
+        0x0217 - 0x021c reg=42 it$iv Ljava/lang/Object;
+        0x0217 - 0x021d reg=2 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x01ed - 0x021d reg=40 $i$f$cache I
+        0x0208 - 0x021d reg=43 invalid$iv Z
+        0x023c - 0x024a reg=0 invalid$iv Z
+        0x024a - 0x0257 reg=42 invalid$iv Z
+        0x0257 - 0x0259 reg=0 invalid$iv Z
+        0x025a - 0x025c reg=0 $i$a$-cache-NoteEditorUiKt$PaletteRow$1$1$2 I
+        0x025c - 0x0263 reg=41 $i$a$-cache-NoteEditorUiKt$PaletteRow$1$1$2 I
+        0x023c - 0x0268 reg=26 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x0264 - 0x026c reg=0 value$iv Ljava/lang/Object;
+        0x0242 - 0x026d reg=2 it$iv Ljava/lang/Object;
+        0x0244 - 0x026d reg=40 $i$a$-let-ComposerKt$cache$1$iv I
+        0x0268 - 0x026e reg=1 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x023e - 0x026e reg=29 $i$f$cache I
+        0x0259 - 0x026e reg=42 invalid$iv Z
+        0x00e5 - 0x0284 reg=11 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x00d1 - 0x0284 reg=12 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x018b - 0x0284 reg=14 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x01bf - 0x0288 reg=8 hexColor Ljava/lang/String;
+        0x01c1 - 0x0288 reg=35 $i$a$-forEach-NoteEditorUiKt$PaletteRow$1$1 I
+        0x01bb - 0x0295 reg=34 element$iv Ljava/lang/Object;
+        0x0284 - 0x0297 reg=1 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x01c4 - 0x0297 reg=36 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x01ca - 0x0297 reg=37 $this$forEach$iv Ljava/lang/Iterable;
+        0x01dd - 0x0297 reg=39 verticalAlignment$iv Landroidx/compose/ui/Alignment$Vertical;
+        0x0284 - 0x0297 reg=0 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x0284 - 0x0297 reg=2 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x0297 - 0x02a0 reg=9 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x0297 - 0x02a0 reg=11 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x0297 - 0x02a0 reg=12 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x0297 - 0x02a0 reg=14 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x01ad - 0x02a0 reg=32 $i$f$forEach I
+        0x0297 - 0x02a0 reg=0 $this$forEach$iv Ljava/lang/Iterable;
+        0x0297 - 0x02a0 reg=2 verticalAlignment$iv Landroidx/compose/ui/Alignment$Vertical;
+        0x018c - 0x02a7 reg=13 $composer Landroidx/compose/runtime/Composer;
+        0x0188 - 0x02a7 reg=25 $changed I
+        0x018e - 0x02a7 reg=27 $this$PaletteRow_u24lambda_u2418 Landroidx/compose/foundation/layout/RowScope;
+        0x0190 - 0x02a7 reg=28 $i$a$-Row-NoteEditorUiKt$PaletteRow$1 I
+        0x0176 - 0x02aa reg=15 $composer$iv Landroidx/compose/runtime/Composer;
+        0x0178 - 0x02aa reg=24 $i$a$-Layout-RowKt$Row$1$iv I
+        0x0195 - 0x02aa reg=31 $changed$iv I
+        0x02a0 - 0x02b2 reg=1 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x02a0 - 0x02b2 reg=2 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x00e4 - 0x02b2 reg=22 $changed$iv$iv$iv I
+        0x00e7 - 0x02b2 reg=23 $i$f$ReusableComposeNode I
+        0x02a0 - 0x02b6 reg=0 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x00bb - 0x02b6 reg=19 $changed$iv$iv I
+        0x00bd - 0x02b6 reg=20 $i$f$Layout I
+        0x00cd - 0x02b6 reg=21 compositeKeyHash$iv$iv I
+        0x0095 - 0x02ba reg=16 $changed$iv I
+        0x0097 - 0x02ba reg=17 $i$f$Row I
+        0x00a8 - 0x02ba reg=18 modifier$iv Landroidx/compose/ui/Modifier;
+        0x0142 - 0x02ba reg=30 horizontalArrangement$iv Landroidx/compose/foundation/layout/Arrangement$Horizontal;
+        0x02a0 - 0x02ba reg=36 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x02a0 - 0x02ba reg=39 verticalAlignment$iv Landroidx/compose/ui/Alignment$Vertical;
+        0x0011 - 0x02d8 reg=6 $composer Landroidx/compose/runtime/Composer;
+        0x005c - 0x02d8 reg=7 $dirty I
+        0x0000 - 0x02d8 reg=44 selectedColor Ljava/lang/String;
+        0x0000 - 0x02d8 reg=45 enabled Z
+        0x0000 - 0x02d8 reg=46 onColorSelected Lkotlin/jvm/functions/Function1;
+        0x0000 - 0x02d8 reg=47 onColorLongPress Lkotlin/jvm/functions/Function1;
+        0x0000 - 0x02d8 reg=49 $changed I
+    #16              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'PaletteSwatch'
+      type          : '(Ljava/lang/String;ZZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 51
+      ins           : 7
+      outs          : 13
+      insns size    : 772 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=429
+        0x0088 line=469
+        0x008f line=429
+        0x009b line=430
+        0x00a3 line=431
+        0x00a7 line=434
+        0x00c4 line=1149
+        0x00ca line=1150
+        0x00d5 line=1154
+        0x00d7 line=1151
+        0x00d8 line=434
+        0x00df line=1151
+        0x00e0 line=1152
+        0x00e3 line=1153
+        0x00e4 line=1150
+        0x00e5 line=1149
+        0x00e6 line=434
+        0x00f2 line=439
+        0x00f5 line=1155
+        0x00fa line=439
+        0x00fe line=442
+        0x0104 line=439
+        0x0105 line=441
+        0x0106 line=440
+        0x0107 line=442
+        0x010b line=440
+        0x010c line=444
+        0x010d line=440
+        0x010e line=443
+        0x010f line=440
+        0x011b line=446
+        0x0121 line=432
+        0x0132 line=1156
+        0x0133 line=1159
+        0x0144 line=1160
+        0x0153 line=1161
+        0x0157 line=1162
+        0x015b line=1164
+        0x0161 line=1171
+        0x016b line=1163
+        0x016f line=1172
+        0x017a line=1173
+        0x017d line=1174
+        0x0183 line=1175
+        0x0187 line=1177
+        0x018a line=1179
+        0x018f line=1166
+        0x019a line=1167
+        0x01a3 line=1169
+        0x01ab line=1180
+        0x01af line=1181
+        0x01cb line=1182
+        0x01d4 line=1183
+        0x01db line=1185
+        0x01dc line=1180
+        0x01dd line=1185
+        0x01de line=1170
+        0x01df line=1179
+        0x01e0 line=1186
+        0x01f3 line=1187
+        0x01f9 line=1188
+        0x01ff line=1189
+        0x0216 line=448
+        0x0220 line=449
+        0x0228 line=1190
+        0x022f line=449
+        0x0233 line=451
+        0x0242 line=453
+        0x0244 line=455
+        0x0247 line=1191
+        0x024e line=456
+        0x0258 line=454
+        0x025d line=460
+        0x0265 line=1192
+        0x026a line=461
+        0x0276 line=462
+        0x0277 line=461
+        0x0288 line=459
+        0x028c line=453
+        0x028f line=449
+        0x0290 line=451
+        0x0294 line=450
+        0x0295 line=453
+        0x029b line=448
+        0x02cd line=468
+        0x02ce line=1189
+        0x02d1 line=1188
+        0x02d2 line=1193
+        0x02d5 line=1194
+        0x02d8 line=1195
+        0x02dc line=1196
+        0x02e0 line=1197
+        0x02ea line=469
+      locals        :
+        0x0000 - 0x000d reg=49 $composer Landroidx/compose/runtime/Composer;
+        0x00d8 - 0x00df reg=11 $i$a$-cache-NoteEditorUiKt$PaletteSwatch$1 I
+        0x00e0 - 0x00e4 reg=12 value$iv Ljava/lang/Object;
+        0x00c8 - 0x00e5 reg=14 it$iv Ljava/lang/Object;
+        0x00ca - 0x00e5 reg=16 $i$a$-let-ComposerKt$cache$1$iv I
+        0x00c2 - 0x00e6 reg=5 invalid$iv Z
+        0x00c3 - 0x00e6 reg=8 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x00c4 - 0x00e6 reg=10 $i$f$cache I
+        0x00f4 - 0x00fa reg=5 $this$dp$iv I
+        0x00f5 - 0x00fa reg=8 $i$f$getDp I
+        0x00a7 - 0x0193 reg=0 colorName Ljava/lang/String;
+        0x0014 - 0x01b7 reg=1 $dirty I
+        0x01b7 - 0x01c9 reg=27 $dirty I
+        0x01c9 - 0x01cb reg=1 $dirty I
+        0x01ad - 0x01d1 reg=17 $this$set_impl_u24lambda_u240$iv$iv$iv Landroidx/compose/runtime/Composer;
+        0x01d1 - 0x01dc reg=2 $this$set_impl_u24lambda_u240$iv$iv$iv Landroidx/compose/runtime/Composer;
+        0x01af - 0x01dc reg=20 $i$a$-with-Updater$set$1$iv$iv$iv I
+        0x01a9 - 0x01de reg=0 block$iv$iv$iv Lkotlin/jvm/functions/Function2;
+        0x01ab - 0x01de reg=16 $i$f$set-impl I
+        0x018e - 0x01df reg=14 $this$Layout_u24lambda_u240$iv$iv Landroidx/compose/runtime/Composer;
+        0x018f - 0x01df reg=15 $i$a$-ReusableComposeNode-LayoutKt$Layout$1$iv$iv I
+        0x0211 - 0x0214 reg=14 $this$PaletteSwatch_u24lambda_u2420 Landroidx/compose/foundation/layout/BoxScope;
+        0x01fd - 0x021b reg=0 $changed$iv I
+        0x01fe - 0x022a reg=1 $composer$iv Landroidx/compose/runtime/Composer;
+        0x0226 - 0x022f reg=14 $this$dp$iv I
+        0x0228 - 0x022f reg=16 $i$f$getDp I
+        0x0245 - 0x024e reg=14 $this$dp$iv I
+        0x0247 - 0x024e reg=16 $i$f$getDp I
+        0x01ff - 0x0254 reg=2 $i$a$-Layout-BoxKt$Box$1$iv I
+        0x0254 - 0x025d reg=33 $i$a$-Layout-BoxKt$Box$1$iv I
+        0x025d - 0x0263 reg=2 $i$a$-Layout-BoxKt$Box$1$iv I
+        0x0264 - 0x026a reg=0 $this$dp$iv I
+        0x0265 - 0x026a reg=1 $i$f$getDp I
+        0x016d - 0x029e reg=12 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x016d - 0x029e reg=13 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x029e - 0x02a2 reg=14 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x015b - 0x02ad reg=11 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x0212 - 0x02ad reg=15 $composer Landroidx/compose/runtime/Composer;
+        0x0140 - 0x02ad reg=10 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x00a3 - 0x02ad reg=18 swatchColor J
+        0x02ad - 0x02b0 reg=19 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x02a2 - 0x02b5 reg=20 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x0125 - 0x02c7 reg=8 contentAlignment$iv Landroidx/compose/ui/Alignment;
+        0x0133 - 0x02c7 reg=9 propagateMinConstraints$iv Z
+        0x029e - 0x02c7 reg=16 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x02ad - 0x02ce reg=18 $composer Landroidx/compose/runtime/Composer;
+        0x020f - 0x02ce reg=28 $changed I
+        0x0214 - 0x02ce reg=29 $this$PaletteSwatch_u24lambda_u2420 Landroidx/compose/foundation/layout/BoxScope;
+        0x0216 - 0x02ce reg=30 $i$a$-Box-NoteEditorUiKt$PaletteSwatch$2 I
+        0x021b - 0x02d1 reg=31 $changed$iv I
+        0x022a - 0x02d1 reg=32 $composer$iv Landroidx/compose/runtime/Composer;
+        0x0263 - 0x02d1 reg=33 $i$a$-Layout-BoxKt$Box$1$iv I
+        0x02c7 - 0x02d9 reg=2 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x016d - 0x02d9 reg=25 $changed$iv$iv$iv I
+        0x016f - 0x02d9 reg=26 $i$f$ReusableComposeNode I
+        0x02b5 - 0x02d9 reg=36 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x0157 - 0x02dd reg=4 compositeKeyHash$iv$iv I
+        0x0146 - 0x02dd reg=23 $changed$iv$iv I
+        0x0148 - 0x02dd reg=24 $i$f$Layout I
+        0x02ad - 0x02dd reg=34 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x02c7 - 0x02e1 reg=0 contentAlignment$iv Landroidx/compose/ui/Alignment;
+        0x02c7 - 0x02e1 reg=1 propagateMinConstraints$iv Z
+        0x0125 - 0x02e1 reg=5 modifier$iv Landroidx/compose/ui/Modifier;
+        0x0125 - 0x02e1 reg=21 $changed$iv I
+        0x0127 - 0x02e1 reg=22 $i$f$Box I
+        0x02b0 - 0x02e1 reg=35 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x02ad - 0x02ea reg=10 swatchColor J
+        0x0193 - 0x02ea reg=49 colorName Ljava/lang/String;
+        0x000d - 0x0304 reg=7 $composer Landroidx/compose/runtime/Composer;
+        0x01cb - 0x0304 reg=27 $dirty I
+        0x0000 - 0x0304 reg=44 hexColor Ljava/lang/String;
+        0x0000 - 0x0304 reg=45 isSelected Z
+        0x0000 - 0x0304 reg=46 enabled Z
+        0x0000 - 0x0304 reg=47 onClick Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x0304 reg=48 onLongPress Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x0304 reg=50 $changed I
+    #17              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'ReadOnlyInputBlocker'
+      type          : '(Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 9
+      ins           : 2
+      outs          : 6
+      insns size    : 93 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=887
+        0x0015 line=901
+        0x0019 line=887
+        0x0025 line=888
+        0x002a line=895
+        0x002e line=896
+        0x0035 line=897
+        0x003e line=888
+        0x004c line=901
+      locals        :
+        0x0000 - 0x0007 reg=7 $composer Landroidx/compose/runtime/Composer;
+        0x0007 - 0x005d reg=4 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x005d reg=8 $changed I
+    #18              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'ToolSettingsDialog'
+      type          : '(Lcom/onyx/android/ui/ToolPanelType;Lcom/onyx/android/ink/model/Brush;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 34
+      ins           : 6
+      outs          : 22
+      insns size    : 314 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=598
+        0x0066 line=737
+        0x006d line=598
+        0x007c line=599
+        0x008c line=601
+        0x0097 line=604
+        0x00a0 line=603
+        0x00a3 line=602
+        0x00a5 line=601
+        0x00a6 line=600
+        0x00a7 line=607
+        0x00a8 line=731
+        0x00b7 line=608
+        0x00c5 line=609
+        0x00dc line=606
+        0x0119 line=737
+      locals        :
+        0x0000 - 0x0013 reg=32 $composer Landroidx/compose/runtime/Composer;
+        0x001a - 0x0059 reg=6 $dirty I
+        0x008c - 0x00dd reg=5 eraserMode$delegate Landroidx/compose/runtime/MutableState;
+        0x00a7 - 0x00df reg=6 title Ljava/lang/String;
+        0x0013 - 0x00e4 reg=10 $composer Landroidx/compose/runtime/Composer;
+        0x00dd - 0x00e7 reg=11 eraserMode$delegate Landroidx/compose/runtime/MutableState;
+        0x00df - 0x00e7 reg=12 title Ljava/lang/String;
+        0x0059 - 0x00ed reg=13 $dirty I
+        0x00e7 - 0x00ed reg=14 eraserMode$delegate Landroidx/compose/runtime/MutableState;
+        0x00e7 - 0x00f3 reg=15 title Ljava/lang/String;
+        0x00ed - 0x00f3 reg=16 $dirty I
+        0x00ed - 0x00f9 reg=17 eraserMode$delegate Landroidx/compose/runtime/MutableState;
+        0x00f3 - 0x00f9 reg=18 $dirty I
+        0x00f3 - 0x00fd reg=19 title Ljava/lang/String;
+        0x00f9 - 0x0101 reg=20 $dirty I
+        0x00f9 - 0x0105 reg=23 eraserMode$delegate Landroidx/compose/runtime/MutableState;
+        0x00fd - 0x0109 reg=24 title Ljava/lang/String;
+        0x00e4 - 0x0110 reg=21 $composer Landroidx/compose/runtime/Composer;
+        0x0105 - 0x0119 reg=26 eraserMode$delegate Landroidx/compose/runtime/MutableState;
+        0x0109 - 0x0119 reg=27 title Ljava/lang/String;
+        0x0110 - 0x013a reg=10 $composer Landroidx/compose/runtime/Composer;
+        0x0101 - 0x013a reg=25 $dirty I
+        0x0000 - 0x013a reg=28 panelType Lcom/onyx/android/ui/ToolPanelType;
+        0x0000 - 0x013a reg=29 brush Lcom/onyx/android/ink/model/Brush;
+        0x0000 - 0x013a reg=30 onDismiss Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x013a reg=31 onBrushChange Lkotlin/jvm/functions/Function1;
+        0x0000 - 0x013a reg=33 $changed I
+    #19              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'ToolSettingsDialog$lambda$26'
+      type          : '(Landroidx/compose/runtime/MutableState;)Lcom/onyx/android/ui/EraserMode;'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 5
+      ins           : 1
+      outs          : 1
+      insns size    : 13 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=599
+        0x0006 line=1395
+        0x000c line=599
+      locals        :
+        0x0003 - 0x000a reg=0 $this$getValue$iv Landroidx/compose/runtime/State;
+        0x0004 - 0x000a reg=1 thisObj$iv Ljava/lang/Object;
+        0x0005 - 0x000a reg=2 property$iv Lkotlin/reflect/KProperty;
+        0x0006 - 0x000a reg=3 $i$f$getValue I
+        0x0000 - 0x000d reg=4 $eraserMode$delegate Landroidx/compose/runtime/MutableState;
+    #20              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'ToolSettingsDialog$lambda$27'
+      type          : '(Landroidx/compose/runtime/MutableState;Lcom/onyx/android/ui/EraserMode;)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 6
+      ins           : 2
+      outs          : 2
+      insns size    : 9 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=599
+        0x0004 line=1396
+        0x0007 line=1397
+        0x0008 line=599
+      locals        :
+        0x0001 - 0x0008 reg=0 thisObj$iv Ljava/lang/Object;
+        0x0002 - 0x0008 reg=1 property$iv Lkotlin/reflect/KProperty;
+        0x0003 - 0x0008 reg=2 $this$setValue$iv Landroidx/compose/runtime/MutableState;
+        0x0004 - 0x0008 reg=3 $i$f$setValue I
+        0x0000 - 0x0009 reg=4 $eraserMode$delegate Landroidx/compose/runtime/MutableState;
+        0x0000 - 0x0009 reg=5 value Lcom/onyx/android/ui/EraserMode;
+    #21              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'ToolToggleButton'
+      type          : '(Lcom/onyx/android/ui/ToolButtonVisuals;ZZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 49
+      ins           : 7
+      outs          : 13
+      insns size    : 830 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=324
+        0x0086 line=370
+        0x008d line=324
+        0x0099 line=327
+        0x00b9 line=1037
+        0x00be line=1038
+        0x00c9 line=1042
+        0x00cb line=1039
+        0x00cc line=327
+        0x00d3 line=1039
+        0x00d4 line=1040
+        0x00d7 line=1041
+        0x00d8 line=1038
+        0x00d9 line=1037
+        0x00da line=327
+        0x00e6 line=332
+        0x00e9 line=1043
+        0x00ee line=332
+        0x00f2 line=335
+        0x00f8 line=332
+        0x00f9 line=334
+        0x00fa line=333
+        0x00fb line=335
+        0x00ff line=333
+        0x0100 line=337
+        0x0101 line=333
+        0x0102 line=336
+        0x0103 line=333
+        0x0115 line=339
+        0x011b line=325
+        0x012a line=1044
+        0x012b line=1047
+        0x013c line=1048
+        0x0149 line=1049
+        0x014d line=1050
+        0x0151 line=1052
+        0x0157 line=1059
+        0x0161 line=1051
+        0x0167 line=1060
+        0x0174 line=1061
+        0x0177 line=1062
+        0x017d line=1063
+        0x0183 line=1065
+        0x0188 line=1067
+        0x0190 line=1054
+        0x0199 line=1055
+        0x01a2 line=1057
+        0x01aa line=1068
+        0x01ae line=1069
+        0x01ce line=1070
+        0x01d7 line=1071
+        0x01de line=1073
+        0x01df line=1068
+        0x01e0 line=1073
+        0x01e1 line=1058
+        0x01e2 line=1067
+        0x01e3 line=1074
+        0x01f8 line=1075
+        0x01fe line=1076
+        0x0204 line=1077
+        0x021e line=341
+        0x022e line=342
+        0x0236 line=1078
+        0x023d line=342
+        0x0241 line=343
+        0x0254 line=345
+        0x0256 line=346
+        0x0274 line=348
+        0x027a line=345
+        0x027d line=351
+        0x028a line=352
+        0x028c line=1079
+        0x0291 line=352
+        0x02a3 line=351
+        0x02a9 line=353
+        0x02b6 line=355
+        0x02b8 line=1080
+        0x02bd line=356
+        0x02c9 line=357
+        0x02ca line=356
+        0x02db line=354
+        0x02df line=353
+        0x02e4 line=361
+        0x02f5 line=341
+        0x0308 line=369
+        0x0309 line=1077
+        0x030c line=1076
+        0x030d line=1081
+        0x0310 line=1082
+        0x0313 line=1083
+        0x0317 line=1084
+        0x031b line=1085
+        0x0325 line=370
+      locals        :
+        0x0000 - 0x000f reg=47 $composer Landroidx/compose/runtime/Composer;
+        0x00cc - 0x00d3 reg=11 $i$a$-cache-NoteEditorUiKt$ToolToggleButton$1 I
+        0x00d4 - 0x00d8 reg=12 value$iv Ljava/lang/Object;
+        0x00bd - 0x00d9 reg=13 it$iv Ljava/lang/Object;
+        0x00be - 0x00d9 reg=15 $i$a$-let-ComposerKt$cache$1$iv I
+        0x00b7 - 0x00da reg=5 invalid$iv Z
+        0x00b8 - 0x00da reg=8 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x00b9 - 0x00da reg=9 $i$f$cache I
+        0x00e8 - 0x00ee reg=5 $this$dp$iv I
+        0x00e9 - 0x00ee reg=11 $i$f$getDp I
+        0x014d - 0x0169 reg=0 compositeKeyHash$iv$iv I
+        0x0165 - 0x017f reg=17 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x017f - 0x0183 reg=0 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x0183 - 0x0185 reg=17 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x0185 - 0x018a reg=0 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x0016 - 0x01b6 reg=3 $dirty I
+        0x011c - 0x01bc reg=4 modifier$iv Landroidx/compose/ui/Modifier;
+        0x01b6 - 0x01ca reg=24 $dirty I
+        0x01bc - 0x01ca reg=25 modifier$iv Landroidx/compose/ui/Modifier;
+        0x01ca - 0x01ce reg=3 $dirty I
+        0x01ca - 0x01ce reg=4 modifier$iv Landroidx/compose/ui/Modifier;
+        0x01ac - 0x01d4 reg=22 $this$set_impl_u24lambda_u240$iv$iv$iv Landroidx/compose/runtime/Composer;
+        0x01d4 - 0x01df reg=4 $this$set_impl_u24lambda_u240$iv$iv$iv Landroidx/compose/runtime/Composer;
+        0x01ae - 0x01df reg=23 $i$a$-with-Updater$set$1$iv$iv$iv I
+        0x01a8 - 0x01e1 reg=2 block$iv$iv$iv Lkotlin/jvm/functions/Function2;
+        0x01aa - 0x01e1 reg=21 $i$f$set-impl I
+        0x018e - 0x01e2 reg=0 $this$Layout_u24lambda_u240$iv$iv Landroidx/compose/runtime/Composer;
+        0x0190 - 0x01e2 reg=20 $i$a$-ReusableComposeNode-LayoutKt$Layout$1$iv$iv I
+        0x0163 - 0x01f5 reg=18 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x0202 - 0x0206 reg=0 $changed$iv I
+        0x01f5 - 0x020b reg=3 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x021a - 0x0220 reg=0 $this$ToolToggleButton_u24lambda_u2413 Landroidx/compose/foundation/layout/BoxScope;
+        0x0203 - 0x0225 reg=2 $composer$iv Landroidx/compose/runtime/Composer;
+        0x021c - 0x022b reg=36 $composer Landroidx/compose/runtime/Composer;
+        0x0218 - 0x022b reg=3 $changed I
+        0x0204 - 0x0238 reg=4 $i$a$-Layout-BoxKt$Box$1$iv I
+        0x0234 - 0x023d reg=2 $this$dp$iv I
+        0x0236 - 0x023d reg=26 $i$f$getDp I
+        0x028b - 0x0291 reg=0 $this$dp$iv I
+        0x028c - 0x0291 reg=2 $i$f$getDp I
+        0x011c - 0x029b reg=5 contentAlignment$iv Landroidx/compose/ui/Alignment;
+        0x029b - 0x02a9 reg=41 contentAlignment$iv Landroidx/compose/ui/Alignment;
+        0x02a9 - 0x02ab reg=5 contentAlignment$iv Landroidx/compose/ui/Alignment;
+        0x02b7 - 0x02bd reg=0 $this$dp$iv I
+        0x02b8 - 0x02bd reg=2 $i$f$getDp I
+        0x022b - 0x0302 reg=3 $composer Landroidx/compose/runtime/Composer;
+        0x0302 - 0x0305 reg=36 $composer Landroidx/compose/runtime/Composer;
+        0x0305 - 0x0309 reg=3 $composer Landroidx/compose/runtime/Composer;
+        0x021e - 0x0309 reg=21 $i$a$-Box-NoteEditorUiKt$ToolToggleButton$2 I
+        0x0220 - 0x0309 reg=22 $this$ToolToggleButton_u24lambda_u2413 Landroidx/compose/foundation/layout/BoxScope;
+        0x022b - 0x0309 reg=39 $changed I
+        0x0206 - 0x030c reg=18 $changed$iv I
+        0x0225 - 0x030c reg=23 $composer$iv Landroidx/compose/runtime/Composer;
+        0x0238 - 0x030c reg=40 $i$a$-Layout-BoxKt$Box$1$iv I
+        0x0165 - 0x0314 reg=8 $changed$iv$iv$iv I
+        0x0167 - 0x0314 reg=16 $i$f$ReusableComposeNode I
+        0x018a - 0x0314 reg=17 factory$iv$iv$iv Lkotlin/jvm/functions/Function0;
+        0x020b - 0x0314 reg=20 skippableUpdate$iv$iv$iv Lkotlin/jvm/functions/Function3;
+        0x013d - 0x0318 reg=13 $changed$iv$iv I
+        0x013e - 0x0318 reg=14 $i$f$Layout I
+        0x0151 - 0x0318 reg=15 localMap$iv$iv Landroidx/compose/runtime/CompositionLocalMap;
+        0x0169 - 0x0318 reg=19 compositeKeyHash$iv$iv I
+        0x011e - 0x031c reg=9 $changed$iv I
+        0x011f - 0x031c reg=10 $i$f$Box I
+        0x012b - 0x031c reg=11 propagateMinConstraints$iv Z
+        0x0138 - 0x031c reg=12 measurePolicy$iv Landroidx/compose/ui/layout/MeasurePolicy;
+        0x01ce - 0x031c reg=25 modifier$iv Landroidx/compose/ui/Modifier;
+        0x02ab - 0x031c reg=41 contentAlignment$iv Landroidx/compose/ui/Alignment;
+        0x000f - 0x033e reg=7 $composer Landroidx/compose/runtime/Composer;
+        0x01ce - 0x033e reg=24 $dirty I
+        0x0000 - 0x033e reg=42 visuals Lcom/onyx/android/ui/ToolButtonVisuals;
+        0x0000 - 0x033e reg=43 isSelected Z
+        0x0000 - 0x033e reg=44 enabled Z
+        0x0000 - 0x033e reg=45 onToggle Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x033e reg=46 onLongPress Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x033e reg=48 $changed I
+    #22              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'ToolbarDivider'
+      type          : '(Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 10
+      ins           : 2
+      outs          : 7
+      insns size    : 102 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=533
+        0x0015 line=540
+        0x0019 line=533
+        0x0025 line=536
+        0x0029 line=537
+        0x002c line=1247
+        0x0031 line=537
+        0x0035 line=538
+        0x0038 line=1248
+        0x003d line=538
+        0x0044 line=534
+        0x0055 line=540
+      locals        :
+        0x0000 - 0x0007 reg=8 $composer Landroidx/compose/runtime/Composer;
+        0x002b - 0x0031 reg=0 $this$dp$iv I
+        0x002c - 0x0031 reg=1 $i$f$getDp I
+        0x0037 - 0x003d reg=0 $this$dp$iv I
+        0x0038 - 0x003d reg=1 $i$f$getDp I
+        0x0007 - 0x0066 reg=5 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x0066 reg=9 $changed I
+    #23              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'ToolbarGroup'
+      type          : '(Ljava/lang/String;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 28
+      ins           : 4
+      outs          : 13
+      insns size    : 257 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=376
+        0x0042 line=396
+        0x0048 line=376
+        0x0054 line=378
+        0x0057 line=1086
+        0x005c line=378
+        0x0060 line=379
+        0x007d line=381
+        0x0095 line=1087
+        0x009a line=1088
+        0x00a5 line=1092
+        0x00a7 line=1089
+        0x00a8 line=381
+        0x00af line=1089
+        0x00b0 line=1090
+        0x00b3 line=1091
+        0x00b4 line=1088
+        0x00b5 line=1087
+        0x00b6 line=381
+        0x00c2 line=378
+        0x00c4 line=379
+        0x00c5 line=384
+        0x00d4 line=377
+        0x00f0 line=396
+      locals        :
+        0x0000 - 0x000f reg=26 $composer Landroidx/compose/runtime/Composer;
+        0x0056 - 0x005c reg=3 $this$dp$iv I
+        0x0057 - 0x005c reg=5 $i$f$getDp I
+        0x00a8 - 0x00af reg=10 $i$a$-cache-NoteEditorUiKt$ToolbarGroup$1 I
+        0x00b0 - 0x00b4 reg=11 value$iv Ljava/lang/Object;
+        0x0099 - 0x00b5 reg=13 it$iv Ljava/lang/Object;
+        0x009a - 0x00b5 reg=15 $i$a$-let-ComposerKt$cache$1$iv I
+        0x0093 - 0x00b6 reg=6 invalid$iv Z
+        0x0094 - 0x00b6 reg=9 $this$cache$iv Landroidx/compose/runtime/Composer;
+        0x0095 - 0x00b6 reg=12 $i$f$cache I
+        0x0016 - 0x00e4 reg=4 $dirty I
+        0x00e4 - 0x0101 reg=3 $dirty I
+        0x000f - 0x0101 reg=14 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x0101 reg=24 contentDescription Ljava/lang/String;
+        0x0000 - 0x0101 reg=25 content Lkotlin/jvm/functions/Function3;
+        0x0000 - 0x0101 reg=27 $changed I
+    #24              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$BrushSizeControl'
+      type          : '(Lcom/onyx/android/ink/model/Brush;ZLkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 5
+      ins           : 5
+      outs          : 5
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 brush Lcom/onyx/android/ink/model/Brush;
+        0x0000 - 0x0004 reg=1 enabled Z
+        0x0000 - 0x0004 reg=2 onBrushChange Lkotlin/jvm/functions/Function1;
+        0x0000 - 0x0004 reg=3 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x0004 reg=4 $changed I
+    #25              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$ColorPickerDialog'
+      type          : '(Ljava/lang/String;Lcom/onyx/android/ink/model/Brush;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 6
+      ins           : 6
+      outs          : 6
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 initialValue Ljava/lang/String;
+        0x0000 - 0x0004 reg=1 currentBrush Lcom/onyx/android/ink/model/Brush;
+        0x0000 - 0x0004 reg=2 onDismiss Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x0004 reg=3 onApply Lkotlin/jvm/functions/Function1;
+        0x0000 - 0x0004 reg=4 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x0004 reg=5 $changed I
+    #26              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$ColorPickerDialog$lambda$29'
+      type          : '(Landroidx/compose/runtime/MutableState;)Ljava/lang/String;'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 2
+      ins           : 1
+      outs          : 1
+      insns size    : 5 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0005 reg=1 $hexInput$delegate Landroidx/compose/runtime/MutableState;
+    #27              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$ColorPickerDialog$lambda$30'
+      type          : '(Landroidx/compose/runtime/MutableState;Ljava/lang/String;)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 2
+      ins           : 2
+      outs          : 2
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 $hexInput$delegate Landroidx/compose/runtime/MutableState;
+        0x0000 - 0x0004 reg=1 value Ljava/lang/String;
+    #28              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$EraserToggleButton'
+      type          : '(ZZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 6
+      ins           : 6
+      outs          : 6
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 isSelected Z
+        0x0000 - 0x0004 reg=1 enabled Z
+        0x0000 - 0x0004 reg=2 onToggle Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x0004 reg=3 onLongPress Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x0004 reg=4 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x0004 reg=5 $changed I
+    #29              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$NoteEditorContent'
+      type          : '(Lcom/onyx/android/ui/NoteEditorContentState;Landroidx/compose/foundation/gestures/TransformableState;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 5
+      ins           : 5
+      outs          : 5
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 contentState Lcom/onyx/android/ui/NoteEditorContentState;
+        0x0000 - 0x0004 reg=1 transformState Landroidx/compose/foundation/gestures/TransformableState;
+        0x0000 - 0x0004 reg=2 paddingValues Landroidx/compose/foundation/layout/PaddingValues;
+        0x0000 - 0x0004 reg=3 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x0004 reg=4 $changed I
+    #30              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$NoteEditorTopBar'
+      type          : '(Lcom/onyx/android/ui/NoteEditorTopBarState;Lcom/onyx/android/ui/NoteEditorToolbarState;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 4
+      ins           : 4
+      outs          : 4
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 topBarState Lcom/onyx/android/ui/NoteEditorTopBarState;
+        0x0000 - 0x0004 reg=1 toolbarState Lcom/onyx/android/ui/NoteEditorToolbarState;
+        0x0000 - 0x0004 reg=2 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x0004 reg=3 $changed I
+    #31              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$NoteEditorTopBar$lambda$2'
+      type          : '(Landroidx/compose/runtime/MutableState;Lcom/onyx/android/ui/ToolPanelType;)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 2
+      ins           : 2
+      outs          : 2
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 $activeToolPanel$delegate Landroidx/compose/runtime/MutableState;
+        0x0000 - 0x0004 reg=1 value Lcom/onyx/android/ui/ToolPanelType;
+    #32              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$NoteEditorTopBar$lambda$4'
+      type          : '(Landroidx/compose/runtime/MutableState;Z)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 2
+      ins           : 2
+      outs          : 2
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 $isColorPickerVisible$delegate Landroidx/compose/runtime/MutableState;
+        0x0000 - 0x0004 reg=1 value Z
+    #33              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$NoteEditorTopBar$lambda$7'
+      type          : '(Landroidx/compose/runtime/MutableState;Ljava/lang/String;)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 2
+      ins           : 2
+      outs          : 2
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 $colorPickerInput$delegate Landroidx/compose/runtime/MutableState;
+        0x0000 - 0x0004 reg=1 value Ljava/lang/String;
+    #34              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$PaletteRow'
+      type          : '(Ljava/lang/String;ZLkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 6
+      ins           : 6
+      outs          : 6
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 selectedColor Ljava/lang/String;
+        0x0000 - 0x0004 reg=1 enabled Z
+        0x0000 - 0x0004 reg=2 onColorSelected Lkotlin/jvm/functions/Function1;
+        0x0000 - 0x0004 reg=3 onColorLongPress Lkotlin/jvm/functions/Function1;
+        0x0000 - 0x0004 reg=4 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x0004 reg=5 $changed I
+    #35              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$PaletteSwatch'
+      type          : '(Ljava/lang/String;ZZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 7
+      ins           : 7
+      outs          : 7
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 hexColor Ljava/lang/String;
+        0x0000 - 0x0004 reg=1 isSelected Z
+        0x0000 - 0x0004 reg=2 enabled Z
+        0x0000 - 0x0004 reg=3 onClick Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x0004 reg=4 onLongPress Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x0004 reg=5 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x0004 reg=6 $changed I
+    #36              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$ReadOnlyInputBlocker'
+      type          : '(Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 2
+      ins           : 2
+      outs          : 2
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x0004 reg=1 $changed I
+    #37              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$ToolSettingsDialog'
+      type          : '(Lcom/onyx/android/ui/ToolPanelType;Lcom/onyx/android/ink/model/Brush;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 6
+      ins           : 6
+      outs          : 6
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 panelType Lcom/onyx/android/ui/ToolPanelType;
+        0x0000 - 0x0004 reg=1 brush Lcom/onyx/android/ink/model/Brush;
+        0x0000 - 0x0004 reg=2 onDismiss Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x0004 reg=3 onBrushChange Lkotlin/jvm/functions/Function1;
+        0x0000 - 0x0004 reg=4 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x0004 reg=5 $changed I
+    #38              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$ToolSettingsDialog$lambda$26'
+      type          : '(Landroidx/compose/runtime/MutableState;)Lcom/onyx/android/ui/EraserMode;'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 2
+      ins           : 1
+      outs          : 1
+      insns size    : 5 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0005 reg=1 $eraserMode$delegate Landroidx/compose/runtime/MutableState;
+    #39              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$ToolSettingsDialog$lambda$27'
+      type          : '(Landroidx/compose/runtime/MutableState;Lcom/onyx/android/ui/EraserMode;)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 2
+      ins           : 2
+      outs          : 2
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 $eraserMode$delegate Landroidx/compose/runtime/MutableState;
+        0x0000 - 0x0004 reg=1 value Lcom/onyx/android/ui/EraserMode;
+    #40              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$ToolToggleButton'
+      type          : '(Lcom/onyx/android/ui/ToolButtonVisuals;ZZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 7
+      ins           : 7
+      outs          : 7
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 visuals Lcom/onyx/android/ui/ToolButtonVisuals;
+        0x0000 - 0x0004 reg=1 isSelected Z
+        0x0000 - 0x0004 reg=2 enabled Z
+        0x0000 - 0x0004 reg=3 onToggle Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x0004 reg=4 onLongPress Lkotlin/jvm/functions/Function0;
+        0x0000 - 0x0004 reg=5 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x0004 reg=6 $changed I
+    #41              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$ToolbarDivider'
+      type          : '(Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 2
+      ins           : 2
+      outs          : 2
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x0004 reg=1 $changed I
+    #42              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$ToolbarGroup'
+      type          : '(Ljava/lang/String;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 4
+      ins           : 4
+      outs          : 4
+      insns size    : 4 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0004 reg=0 contentDescription Ljava/lang/String;
+        0x0000 - 0x0004 reg=1 content Lkotlin/jvm/functions/Function3;
+        0x0000 - 0x0004 reg=2 $composer Landroidx/compose/runtime/Composer;
+        0x0000 - 0x0004 reg=3 $changed I
+    #43              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$applyOpacity'
+      type          : '(Ljava/lang/String;F)Ljava/lang/String;'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 3
+      ins           : 2
+      outs          : 2
+      insns size    : 5 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0005 reg=1 colorHex Ljava/lang/String;
+        0x0000 - 0x0005 reg=2 opacity F
+    #44              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$applyStabilization'
+      type          : '(Lcom/onyx/android/ink/model/Brush;F)Lcom/onyx/android/ink/model/Brush;'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 3
+      ins           : 2
+      outs          : 2
+      insns size    : 5 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0005 reg=1 $receiver Lcom/onyx/android/ink/model/Brush;
+        0x0000 - 0x0005 reg=2 level F
+    #45              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$normalizeHexColor'
+      type          : '(Ljava/lang/String;)Ljava/lang/String;'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 2
+      ins           : 1
+      outs          : 1
+      insns size    : 5 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0005 reg=1 rawColor Ljava/lang/String;
+    #46              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$resolveOpacity'
+      type          : '(Lcom/onyx/android/ink/model/Brush;)F'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 2
+      ins           : 1
+      outs          : 1
+      insns size    : 5 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0005 reg=1 $receiver Lcom/onyx/android/ink/model/Brush;
+    #47              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$resolveStabilization'
+      type          : '(Lcom/onyx/android/ink/model/Brush;)F'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 2
+      ins           : 1
+      outs          : 1
+      insns size    : 5 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0005 reg=1 $receiver Lcom/onyx/android/ink/model/Brush;
+    #48              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'access$toggleEraser'
+      type          : '(Lcom/onyx/android/ink/model/Brush;Lcom/onyx/android/ink/model/Tool;)Lcom/onyx/android/ink/model/Brush;'
+      access        : 0x1019 (PUBLIC STATIC FINAL SYNTHETIC)
+      code          -
+      registers     : 3
+      ins           : 2
+      outs          : 2
+      insns size    : 5 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=1
+      locals        :
+        0x0000 - 0x0005 reg=1 $receiver Lcom/onyx/android/ink/model/Brush;
+        0x0000 - 0x0005 reg=2 lastNonEraserTool Lcom/onyx/android/ink/model/Tool;
+    #49              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'applyOpacity'
+      type          : '(Ljava/lang/String;F)Ljava/lang/String;'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 10
+      ins           : 2
+      outs          : 4
+      insns size    : 143 16-bit code units
+      catches       : 1
+        0x0009 - 0x0018
+          <any> -> 0x0019
+      positions     :
+        0x0000 line=950
+        0x0004 line=952
+        0x0009 line=953
+        0x000c line=954
+        0x0014 line=953
+        0x0024 line=955
+        0x002e line=952
+        0x002f line=951
+        0x0030 line=957
+        0x0032 line=958
+        0x0034 line=961
+        0x003e line=962
+        0x0042 line=963
+        0x0049 line=960
+        0x004a line=964
+        0x004c line=965
+        0x004e line=966
+        0x004f line=967
+        0x0053 line=968
+        0x005f line=967
+        0x0060 line=969
+        0x006c line=967
+        0x006d line=970
+        0x007d line=967
+        0x007e line=964
+        0x008e line=957
+      locals        :
+        0x000c - 0x0010 reg=4 $i$a$-runCatching-NoteEditorUiKt$applyOpacity$parsedColor$1$1 I
+        0x0008 - 0x002e reg=2 validHex Ljava/lang/String;
+        0x0009 - 0x002e reg=3 $i$a$-let-NoteEditorUiKt$applyOpacity$parsedColor$1 I
+        0x004a - 0x008e reg=2 alpha I
+        0x0004 - 0x008f reg=0 normalizedColor Ljava/lang/String;
+        0x0030 - 0x008f reg=1 parsedColor Ljava/lang/Integer;
+        0x0000 - 0x008f reg=8 colorHex Ljava/lang/String;
+        0x0000 - 0x008f reg=9 opacity F
+    #50              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'applyStabilization'
+      type          : '(Lcom/onyx/android/ink/model/Brush;F)Lcom/onyx/android/ink/model/Brush;'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 15
+      ins           : 2
+      outs          : 8
+      insns size    : 39 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=930
+        0x0007 line=932
+        0x0008 line=933
+        0x000c line=932
+        0x000f line=931
+        0x0010 line=934
+        0x0011 line=935
+        0x001a line=936
+        0x001c line=934
+      locals        :
+        0x0000 - 0x0022 reg=13 $this$applyStabilization Lcom/onyx/android/ink/model/Brush;
+        0x0007 - 0x0027 reg=0 clampedLevel F
+        0x0010 - 0x0027 reg=3 delta F
+        0x0022 - 0x0027 reg=5 $this$applyStabilization Lcom/onyx/android/ink/model/Brush;
+        0x0000 - 0x0027 reg=14 level F
+    #51              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'normalizeHexColor'
+      type          : '(Ljava/lang/String;)Ljava/lang/String;'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 6
+      ins           : 1
+      outs          : 5
+      insns size    : 72 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=976
+        0x001b line=978
+        0x0026 line=979
+        0x0028 line=981
+        0x0039 line=978
+        0x003a line=977
+        0x003b line=983
+      locals        :
+        0x001b - 0x0048 reg=0 trimmed Ljava/lang/String;
+        0x003b - 0x0048 reg=1 prefixed Ljava/lang/String;
+        0x0000 - 0x0048 reg=5 rawColor Ljava/lang/String;
+    #52              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'paletteColorName'
+      type          : '(Ljava/lang/String;)Ljava/lang/String;'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 3
+      ins           : 1
+      outs          : 2
+      insns size    : 104 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=994
+        0x001c line=997
+        0x001f line=994
+        0x0028 line=999
+        0x002b line=994
+        0x0034 line=998
+        0x0037 line=994
+        0x0040 line=996
+        0x0043 line=994
+        0x004c line=995
+        0x004f line=1000
+        0x0051 line=1001
+      locals        :
+        0x0000 - 0x0068 reg=2 hexColor Ljava/lang/String;
+    #53              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'resolveOpacity'
+      type          : '(Lcom/onyx/android/ink/model/Brush;)F'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 6
+      ins           : 1
+      outs          : 1
+      insns size    : 60 16-bit code units
+      catches       : 1
+        0x0000 - 0x001c
+          <any> -> 0x001d
+      positions     :
+        0x0000 line=941
+        0x0004 line=942
+        0x000c line=943
+        0x0018 line=941
+        0x0028 line=944
+      locals        :
+        0x0003 - 0x0014 reg=0 $this$resolveOpacity_u24lambda_u2433 Lcom/onyx/android/ink/model/Brush;
+        0x0004 - 0x0014 reg=1 $i$a$-runCatching-NoteEditorUiKt$resolveOpacity$1 I
+        0x000c - 0x0014 reg=2 parsedColor I
+        0x0000 - 0x003c reg=5 $this$resolveOpacity Lcom/onyx/android/ink/model/Brush;
+    #54              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'resolveStabilization'
+      type          : '(Lcom/onyx/android/ink/model/Brush;)F'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 5
+      ins           : 1
+      outs          : 3
+      insns size    : 37 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=921
+        0x000c line=922
+        0x0015 line=920
+        0x0016 line=924
+        0x0017 line=925
+        0x0018 line=924
+        0x001c line=923
+        0x001d line=926
+      locals        :
+        0x0016 - 0x0025 reg=0 delta F
+        0x001d - 0x0025 reg=2 normalized F
+        0x0000 - 0x0025 reg=4 $this$resolveStabilization Lcom/onyx/android/ink/model/Brush;
+    #55              : (in Lcom/onyx/android/ui/NoteEditorUiKt;)
+      name          : 'toggleEraser'
+      type          : '(Lcom/onyx/android/ink/model/Brush;Lcom/onyx/android/ink/model/Tool;)Lcom/onyx/android/ink/model/Brush;'
+      access        : 0x001a (PRIVATE STATIC FINAL)
+      code          -
+      registers     : 12
+      ins           : 2
+      outs          : 8
+      insns size    : 38 16-bit code units
+      catches       : (none)
+      positions     :
+        0x0000 line=987
+        0x0008 line=988
+        0x0017 line=990
+        0x0025 line=991
+      locals        :
+        0x0000 - 0x0011 reg=10 $this$toggleEraser Lcom/onyx/android/ink/model/Brush;
+        0x0000 - 0x0011 reg=11 lastNonEraserTool Lcom/onyx/android/ink/model/Tool;
+        0x0011 - 0x0016 reg=2 $this$toggleEraser Lcom/onyx/android/ink/model/Brush;
+        0x0011 - 0x0016 reg=3 lastNonEraserTool Lcom/onyx/android/ink/model/Tool;
+        0x0016 - 0x0017 reg=0 $this$toggleEraser Lcom/onyx/android/ink/model/Brush;
+        0x0017 - 0x0018 reg=10 $this$toggleEraser Lcom/onyx/android/ink/model/Brush;
+        0x0018 - 0x0026 reg=0 $this$toggleEraser Lcom/onyx/android/ink/model/Brush;
+        0x0016 - 0x0026 reg=11 lastNonEraserTool Lcom/onyx/android/ink/model/Tool;
+  Virtual methods   -
+  source_file_idx   : 396 (NoteEditorUi.kt)
+

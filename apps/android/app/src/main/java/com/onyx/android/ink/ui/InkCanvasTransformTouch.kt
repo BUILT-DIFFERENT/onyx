@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package com.onyx.android.ink.ui
 
 import android.view.MotionEvent
@@ -15,6 +17,61 @@ private data class TwoPointerTransform(
 
 internal fun shouldStartTransformGesture(event: MotionEvent): Boolean =
     event.actionMasked == MotionEvent.ACTION_POINTER_DOWN && event.pointerCount >= 2
+
+internal fun shouldStartSingleFingerPanGesture(event: MotionEvent): Boolean =
+    event.actionMasked == MotionEvent.ACTION_DOWN &&
+        event.pointerCount == 1 &&
+        event.getToolType(0) == MotionEvent.TOOL_TYPE_FINGER
+
+internal fun handleSingleFingerPanGesture(
+    view: InProgressStrokesView,
+    event: MotionEvent,
+    interaction: InkCanvasInteraction,
+    runtime: InkCanvasRuntime,
+): Boolean =
+    when (event.actionMasked) {
+        MotionEvent.ACTION_DOWN -> {
+            startSingleFingerPanGesture(view, event, runtime)
+            true
+        }
+
+        MotionEvent.ACTION_MOVE -> {
+            if (runtime.isSingleFingerPanning) {
+                updateSingleFingerPanGesture(event, interaction, runtime)
+            } else {
+                false
+            }
+        }
+
+        MotionEvent.ACTION_POINTER_DOWN -> {
+            if (runtime.isSingleFingerPanning && event.pointerCount >= 2) {
+                endSingleFingerPanGesture(runtime)
+                startTransformGesture(view, event, runtime)
+                true
+            } else {
+                false
+            }
+        }
+
+        MotionEvent.ACTION_POINTER_UP -> {
+            val pointerId = event.getPointerId(event.actionIndex)
+            if (runtime.isSingleFingerPanning && pointerId == runtime.singleFingerPanPointerId) {
+                endSingleFingerPanGesture(runtime)
+                true
+            } else {
+                runtime.isSingleFingerPanning
+            }
+        }
+
+        MotionEvent.ACTION_UP,
+        MotionEvent.ACTION_CANCEL,
+        -> {
+            endSingleFingerPanGesture(runtime)
+            true
+        }
+
+        else -> runtime.isSingleFingerPanning
+    }
 
 internal fun handleTransformGesture(
     view: InProgressStrokesView,
@@ -66,6 +123,7 @@ private fun startTransformGesture(
     event: MotionEvent,
     runtime: InkCanvasRuntime,
 ) {
+    endSingleFingerPanGesture(runtime)
     cancelActiveStrokes(view, event, runtime)
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
     runtime.hoverPreviewState.hide()
@@ -116,6 +174,56 @@ private fun endTransformGesture(runtime: InkCanvasRuntime) {
     runtime.previousTransformDistance = 0f
     runtime.previousTransformCentroidX = 0f
     runtime.previousTransformCentroidY = 0f
+}
+
+private fun startSingleFingerPanGesture(
+    view: InProgressStrokesView,
+    event: MotionEvent,
+    runtime: InkCanvasRuntime,
+) {
+    endTransformGesture(runtime)
+    cancelActiveStrokes(view, event, runtime)
+    cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
+    runtime.hoverPreviewState.hide()
+    val actionIndex = event.actionIndex
+    runtime.isSingleFingerPanning = true
+    runtime.singleFingerPanPointerId = event.getPointerId(actionIndex)
+    runtime.previousSingleFingerPanX = event.getX(actionIndex)
+    runtime.previousSingleFingerPanY = event.getY(actionIndex)
+}
+
+private fun updateSingleFingerPanGesture(
+    event: MotionEvent,
+    interaction: InkCanvasInteraction,
+    runtime: InkCanvasRuntime,
+): Boolean {
+    val panPointerId = runtime.singleFingerPanPointerId
+    val pointerIndex = event.findPointerIndex(panPointerId)
+    if (pointerIndex < 0) {
+        endSingleFingerPanGesture(runtime)
+        return false
+    }
+    val x = event.getX(pointerIndex)
+    val y = event.getY(pointerIndex)
+    val panChangeX = x - runtime.previousSingleFingerPanX
+    val panChangeY = y - runtime.previousSingleFingerPanY
+    interaction.onTransformGesture(
+        1f,
+        panChangeX,
+        panChangeY,
+        x,
+        y,
+    )
+    runtime.previousSingleFingerPanX = x
+    runtime.previousSingleFingerPanY = y
+    return true
+}
+
+private fun endSingleFingerPanGesture(runtime: InkCanvasRuntime) {
+    runtime.isSingleFingerPanning = false
+    runtime.singleFingerPanPointerId = MotionEvent.INVALID_POINTER_ID
+    runtime.previousSingleFingerPanX = 0f
+    runtime.previousSingleFingerPanY = 0f
 }
 
 private fun readTwoPointerTransform(event: MotionEvent): TwoPointerTransform? {

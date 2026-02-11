@@ -1,10 +1,9 @@
 package com.onyx.android.ui
 
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -22,7 +21,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class NoteEditorToolbarTest {
     @get:Rule
-    val composeRule = createAndroidComposeRule<ComponentActivity>()
+    val composeRule = createComposeRule()
 
     @Test
     fun eraserAction_isVisible_andTogglesToolThroughCallback() {
@@ -120,6 +119,26 @@ class NoteEditorToolbarTest {
         }
         composeRule.onNodeWithText("Custom brush color").assertIsDisplayed()
         composeRule.onNodeWithText("Hex color").assertIsDisplayed()
+    }
+
+    @Test
+    fun colorTap_whenEraserSelected_switchesToLastNonEraserTool_andAppliesColor() {
+        var updatedBrush: Brush? = null
+        setEditorScaffold(
+            toolbarState =
+                NoteEditorToolbarState(
+                    brush = Brush(tool = Tool.ERASER, color = "#111111"),
+                    lastNonEraserTool = Tool.PEN,
+                    onBrushChange = { brush -> updatedBrush = brush },
+                ),
+        )
+
+        composeRule.onNodeWithContentDescription("Brush color blue").performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(Tool.PEN, updatedBrush?.tool)
+            assertEquals("#1E88E5", updatedBrush?.color)
+        }
     }
 
     private fun setEditorScaffold(toolbarState: NoteEditorToolbarState) {

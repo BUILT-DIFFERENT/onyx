@@ -44,3 +44,24 @@ Android:
 - `bun run android:lint`
 - `bun run ktlint`
 - `bun run detekt`
+
+## Java setup for Android builds
+- Android builds require a JDK (17+ recommended) and `JAVA_HOME` set to that JDK root.
+- The Android build wrapper now auto-detects Java from `JAVA_HOME` first, then common installs (`Microsoft JDK`, `Eclipse Adoptium`, `Android Studio JBR`) on Windows.
+- Android SDK is resolved from `ANDROID_HOME`/`ANDROID_SDK_ROOT`, then `%LOCALAPPDATA%\Android\Sdk` on Windows.
+- If detection fails, set `JAVA_HOME` explicitly and restart your terminal.
+
+Windows (cmd):
+```bat
+setx JAVA_HOME "C:\Program Files\Microsoft\jdk-17.0.16.8-hotspot"
+```
+
+Windows (PowerShell):
+```powershell
+[Environment]::SetEnvironmentVariable("JAVA_HOME", "C:\Program Files\Microsoft\jdk-17.0.16.8-hotspot", "User")
+```
+
+Optional Android SDK env var (if SDK is not in the default location):
+```bat
+setx ANDROID_HOME "%LOCALAPPDATA%\Android\Sdk"
+```

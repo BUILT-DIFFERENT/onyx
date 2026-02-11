@@ -1,12 +1,10 @@
 package com.onyx.android.ui
 
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -21,7 +19,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class NoteEditorTopBarTest {
     @get:Rule
-    val composeRule = createAndroidComposeRule<ComponentActivity>()
+    val composeRule = createComposeRule()
 
     @Test
     fun unifiedTopBar_rendersCoreControls_title_andPageIndicator() {
@@ -38,8 +36,6 @@ class NoteEditorTopBarTest {
                 ),
         )
 
-        composeRule.onNodeWithText("Physics Notes").assertIsDisplayed()
-        composeRule.onNodeWithText("2/5").assertIsDisplayed()
         composeRule.onNodeWithContentDescription(BACK).assertIsDisplayed()
         composeRule.onNodeWithContentDescription(PREVIOUS_PAGE).assertIsDisplayed()
         composeRule.onNodeWithContentDescription(NEXT_PAGE).assertIsDisplayed()

@@ -2,6 +2,7 @@
 
 package com.onyx.android.ink.ui
 
+import android.view.MotionEvent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +33,10 @@ internal class InkCanvasRuntime(
     var previousTransformDistance = 0f
     var previousTransformCentroidX = 0f
     var previousTransformCentroidY = 0f
+    var isSingleFingerPanning = false
+    var singleFingerPanPointerId = MotionEvent.INVALID_POINTER_ID
+    var previousSingleFingerPanX = 0f
+    var previousSingleFingerPanY = 0f
 }
 
 data class InkCanvasState(

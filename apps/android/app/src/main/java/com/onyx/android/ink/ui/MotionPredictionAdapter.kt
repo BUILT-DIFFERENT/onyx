@@ -61,8 +61,7 @@ internal fun Int.toInputToolType(): InputToolType =
 
 internal fun isSupportedToolType(toolType: Int): Boolean =
     toolType == MotionEvent.TOOL_TYPE_STYLUS ||
-        toolType == MotionEvent.TOOL_TYPE_ERASER ||
-        toolType == MotionEvent.TOOL_TYPE_FINGER
+        toolType == MotionEvent.TOOL_TYPE_ERASER
 
 internal fun isStylusToolType(toolType: Int): Boolean =
     toolType == MotionEvent.TOOL_TYPE_STYLUS ||

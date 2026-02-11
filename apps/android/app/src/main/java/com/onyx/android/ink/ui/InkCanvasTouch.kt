@@ -39,6 +39,10 @@ internal fun handleTouchEvent(
                 handleTransformGesture(view, event, interaction, runtime)
             }
 
+            runtime.isSingleFingerPanning || shouldStartSingleFingerPanGesture(event) -> {
+                handleSingleFingerPanGesture(view, event, interaction, runtime)
+            }
+
             interaction.brush.tool == Tool.ERASER -> {
                 handleEraserInput(event, interaction, runtime)
             }
