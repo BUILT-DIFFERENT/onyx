@@ -8,8 +8,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.ink.brush.StockBrushes
@@ -20,6 +18,7 @@ import com.onyx.android.ink.model.StrokeStyle
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import kotlin.math.pow
+import kotlin.math.sqrt
 import androidx.compose.ui.graphics.drawscope.Stroke as ComposeStroke
 import androidx.ink.brush.Brush as InkBrush
 
@@ -28,7 +27,6 @@ private const val MIN_INK_BRUSH_EPSILON = 0.1f
 private const val INK_BRUSH_EPSILON_SCALE = 0.15f
 private const val PREVIEW_STROKE_WIDTH_SCALE = 0.12f
 private const val MIN_PREVIEW_STROKE_WIDTH = 1f
-private const val MIN_SCREEN_STROKE_WIDTH_PX = 1f
 private const val ERASER_PREVIEW_ALPHA = 0.6f
 private const val PEN_PREVIEW_ALPHA = 0.35f
 private const val ERASER_PREVIEW_COLOR: Long = 0xFF6B6B6B
@@ -36,16 +34,15 @@ private const val ALPHA_SHIFT_BITS = 24
 private const val ALPHA_MASK = 0xFF
 private const val RGB_MASK = 0x00FFFFFF
 private const val MAX_ALPHA = 255
-private const val PRESSURE_FALLBACK = 0.5f
+internal const val PRESSURE_FALLBACK = 0.5f
 private const val MIN_STROKE_POINTS = 2
-private const val MIN_ZOOM_FOR_STROKE_WIDTH = 0.001f
-private const val CURVE_MIDPOINT_FACTOR = 0.5f
 private const val CATMULL_ROM_TENSION = 0.5f
-private const val CATMULL_ROM_SUBDIVISIONS = 8
+internal const val CATMULL_ROM_SUBDIVISIONS = 8
 private const val PRESSURE_GAMMA = 0.6f
 private const val TAPER_POINT_COUNT = 5
 private const val TAPER_MIN_FACTOR = 0.15f
 private const val PATH_CACHE_MAX_ENTRIES = 500
+private const val MIN_WIDTH_FOR_OUTLINE = 0.01f
 
 /**
  * Thread-safe LRU-bounded color cache to avoid per-frame Color.parseColor() calls.
@@ -63,10 +60,14 @@ internal object ColorCache {
     }
 }
 
+/**
+ * Cached filled-outline path for a stroke. The path is a closed shape whose
+ * boundary follows the per-point widths (pressure + tapering), giving each
+ * stroke natural variable-width appearance. Drawn with `drawPath(Fill)` —
+ * no stroke width parameter needed.
+ */
 internal data class StrokePathCacheEntry(
     val path: Path,
-    val perPointWidths: List<Float>,
-    val averagePressure: Float,
 )
 
 internal class HoverPreviewState {
@@ -137,17 +138,6 @@ internal fun DrawScope.drawStrokesInWorldSpace(
             drawPath(
                 path = cacheEntry.path,
                 color = color,
-                style =
-                    ComposeStroke(
-                        width =
-                            strokeWorldWidth(
-                                style = stroke.style,
-                                averagePressure = cacheEntry.averagePressure,
-                                transform = transform,
-                            ),
-                        cap = StrokeCap.Round,
-                        join = StrokeJoin.Round,
-                    ),
             )
         }
     }
@@ -159,55 +149,156 @@ private fun boundPathCache(
 ) {
     if (pathCache.size <= PATH_CACHE_MAX_ENTRIES) return
     val activeIds = activeStrokes.mapTo(mutableSetOf()) { it.id }
-    val keysToRemove = pathCache.keys.filter { it !in activeIds }
-    keysToRemove.forEach { pathCache.remove(it) }
-    if (pathCache.size > PATH_CACHE_MAX_ENTRIES) {
-        val excess = pathCache.size - PATH_CACHE_MAX_ENTRIES
-        pathCache.keys.take(excess).forEach { pathCache.remove(it) }
+    val iter = pathCache.keys.iterator()
+    while (iter.hasNext() && pathCache.size > PATH_CACHE_MAX_ENTRIES) {
+        val key = iter.next()
+        if (key !in activeIds) {
+            iter.remove()
+        }
     }
 }
 
-private fun strokeWorldWidth(
-    style: StrokeStyle,
-    averagePressure: Float,
-    transform: ViewTransform,
-): Float {
-    val pressureAdjusted =
-        pressureWidth(
-            baseWidth = style.baseWidth,
-            minWidthFactor = style.minWidthFactor,
-            maxWidthFactor = style.maxWidthFactor,
-            pressure = averagePressure,
-        )
-    val minimumWorldWidth = MIN_SCREEN_STROKE_WIDTH_PX / transform.zoom.coerceAtLeast(MIN_ZOOM_FOR_STROKE_WIDTH)
-    return pressureAdjusted.coerceAtLeast(minimumWorldWidth)
-}
-
+/**
+ * Build a filled-outline path for a stroke. Instead of drawing a stroked center line
+ * with uniform width, we compute two offset curves (left and right edges) based on
+ * per-point widths, then close them into a filled shape. This produces proper
+ * variable-width strokes with pressure sensitivity and tapering.
+ *
+ * For single-point strokes, a small circle is drawn instead.
+ */
 private fun buildStrokePathCacheEntry(
     points: List<StrokePoint>,
     style: StrokeStyle,
 ): StrokePathCacheEntry {
     val samples = catmullRomSmooth(points)
+    val widths = computePerPointWidths(samples, style)
+    val path = buildVariableWidthOutline(samples, widths)
+    return StrokePathCacheEntry(path = path)
+}
+
+/**
+ * Builds a closed [Path] representing the filled outline of a variable-width stroke.
+ *
+ * Algorithm:
+ * 1. For each sample point, compute the unit normal perpendicular to the stroke direction.
+ * 2. Offset left and right by half the per-point width along that normal.
+ * 3. Walk forward along the left edge, then backward along the right edge, closing the shape.
+ * 4. For end caps, add a semicircle at the start and end for a rounded appearance.
+ */
+internal fun buildVariableWidthOutline(
+    samples: List<StrokeRenderPoint>,
+    widths: List<Float>,
+): Path {
     val path = Path()
-    if (samples.isNotEmpty()) {
-        path.moveTo(samples.first().x, samples.first().y)
+    if (samples.isEmpty() || widths.isEmpty()) return path
+
+    if (samples.size == 1) {
+        val p = samples[0]
+        val r = (widths[0] / 2f).coerceAtLeast(MIN_WIDTH_FOR_OUTLINE)
+        path.addOval(Rect(p.x - r, p.y - r, p.x + r, p.y + r))
+        return path
     }
-    if (samples.size == MIN_STROKE_POINTS) {
-        path.lineTo(samples.last().x, samples.last().y)
-    } else if (samples.size > MIN_STROKE_POINTS) {
-        for (index in 1 until samples.lastIndex) {
-            val current = samples[index]
-            val next = samples[index + 1]
-            val midX = (current.x + next.x) * CURVE_MIDPOINT_FACTOR
-            val midY = (current.y + next.y) * CURVE_MIDPOINT_FACTOR
-            path.quadraticBezierTo(current.x, current.y, midX, midY)
+
+    val count = samples.size
+    val leftX = FloatArray(count)
+    val leftY = FloatArray(count)
+    val rightX = FloatArray(count)
+    val rightY = FloatArray(count)
+
+    for (i in 0 until count) {
+        val halfW = (widths[i] / 2f).coerceAtLeast(MIN_WIDTH_FOR_OUTLINE)
+        val (nx, ny) = computeNormal(samples, i)
+        leftX[i] = samples[i].x + nx * halfW
+        leftY[i] = samples[i].y + ny * halfW
+        rightX[i] = samples[i].x - nx * halfW
+        rightY[i] = samples[i].y - ny * halfW
+    }
+
+    // Start cap: semicircle at the first point
+    val startHalfW = (widths[0] / 2f).coerceAtLeast(MIN_WIDTH_FOR_OUTLINE)
+    path.moveTo(leftX[0], leftY[0])
+    path.addRoundCap(samples[0].x, samples[0].y, leftX[0], leftY[0], rightX[0], rightY[0], startHalfW)
+
+    // Right edge: backward from first to last (bottom of outline)
+    path.moveTo(rightX[0], rightY[0])
+    // Forward along left edge
+    for (i in 0 until count) {
+        path.lineTo(leftX[i], leftY[i])
+    }
+
+    // End cap: semicircle at the last point
+    val lastIdx = count - 1
+    val endHalfW = (widths[lastIdx] / 2f).coerceAtLeast(MIN_WIDTH_FOR_OUTLINE)
+    path.addRoundCap(
+        samples[lastIdx].x, samples[lastIdx].y,
+        leftX[lastIdx], leftY[lastIdx],
+        rightX[lastIdx], rightY[lastIdx],
+        endHalfW,
+    )
+
+    // Backward along right edge
+    for (i in lastIdx downTo 0) {
+        path.lineTo(rightX[i], rightY[i])
+    }
+
+    path.close()
+    return path
+}
+
+/**
+ * Adds a semicircular end cap by drawing a quadratic Bézier arc from one side to the other.
+ */
+private fun Path.addRoundCap(
+    cx: Float,
+    cy: Float,
+    fromX: Float,
+    fromY: Float,
+    toX: Float,
+    toY: Float,
+    radius: Float,
+) {
+    // Control point is at the center offset by radius in the stroke direction
+    val dx = toX - fromX
+    val dy = toY - fromY
+    val perpX = -dy
+    val perpY = dx
+    val len = sqrt(perpX * perpX + perpY * perpY)
+    if (len < MIN_WIDTH_FOR_OUTLINE) return
+    val nx = perpX / len * radius
+    val ny = perpY / len * radius
+    quadraticBezierTo(cx + nx, cy + ny, toX, toY)
+}
+
+/**
+ * Computes the unit normal (perpendicular) at sample index [i].
+ * Uses central differences for interior points and forward/backward differences at endpoints.
+ */
+private fun computeNormal(
+    samples: List<StrokeRenderPoint>,
+    i: Int,
+): Pair<Float, Float> {
+    val dx: Float
+    val dy: Float
+    when {
+        i == 0 -> {
+            dx = samples[1].x - samples[0].x
+            dy = samples[1].y - samples[0].y
         }
-        val last = samples.last()
-        path.lineTo(last.x, last.y)
+        i == samples.lastIndex -> {
+            dx = samples[i].x - samples[i - 1].x
+            dy = samples[i].y - samples[i - 1].y
+        }
+        else -> {
+            dx = samples[i + 1].x - samples[i - 1].x
+            dy = samples[i + 1].y - samples[i - 1].y
+        }
     }
-    val perPointWidths = computePerPointWidths(samples, style)
-    val averagePressure = samples.mapNotNull { it.pressure }.average().toFloat().coerceIn(0f, 1f)
-    return StrokePathCacheEntry(path = path, perPointWidths = perPointWidths, averagePressure = averagePressure)
+    val len = sqrt(dx * dx + dy * dy)
+    return if (len < MIN_WIDTH_FOR_OUTLINE) {
+        Pair(0f, -1f)
+    } else {
+        Pair(-dy / len, dx / len)
+    }
 }
 
 private fun ViewTransform.viewportPageRect(
