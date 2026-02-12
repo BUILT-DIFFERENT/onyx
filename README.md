@@ -20,7 +20,14 @@ v0 focuses on an offline-first Android authoring client and a view-only web clie
 - Observability: BetterStack; correlation IDs passed from clients to Convex logs.
 
 ## Status
-This repo is a structural scaffold for the rewrite. No production code yet.
+This repo now contains an implemented Android offline authoring baseline plus early web/Convex scaffolding.
+
+- Android: active implementation with Room persistence, ink rendering, PDF support, and MyScript integration in progress.
+- Web: early viewer scaffold.
+- Convex/backend: schema and functions are still in scaffold phase in this branch.
+
+For current architecture review and recommended next changes, see:
+- `docs/architecture/branch-architecture-analysis.md`
 
 ## Tooling (planned)
 - Turborepo + Bun workspaces
