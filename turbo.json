@@ -2,19 +2,9 @@
   "$schema": "https://turbo.build/schema.json",
   "envMode": "strict",
   "globalDependencies": [".env"],
-  "globalEnv": [
-    "CONVEX_*",
-    "CLERK_*",
-    "STORAGE_*",
-    "JAVA_HOME",
-    "ANDROID_HOME",
-    "ANDROID_SDK_ROOT"
-  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "env": ["CONVEX_*", "CLERK_*", "STORAGE_*", "JAVA_HOME", "ANDROID_HOME", "ANDROID_SDK_ROOT"],
       "outputs": ["dist/**", ".next/**", "build/**", "app/build/**"]
     },
     "typecheck": {
@@ -26,14 +16,10 @@
     },
     "test": {
       "dependsOn": ["build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "env": ["CONVEX_*", "CLERK_*", "STORAGE_*", "JAVA_HOME", "ANDROID_HOME", "ANDROID_SDK_ROOT"],
       "outputs": ["coverage/**"]
     },
     "e2e": {
       "dependsOn": ["build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "env": ["CONVEX_*", "CLERK_*", "STORAGE_*"],
       "outputs": ["playwright-report/**", "test-results/**"]
     },
     "lint": {

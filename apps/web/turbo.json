@@ -1,0 +1,17 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "env": ["CONVEX_*", "CLERK_*", "STORAGE_*"]
+    },
+    "test": {
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "env": ["CONVEX_*", "CLERK_*", "STORAGE_*"]
+    },
+    "e2e": {
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "env": ["CONVEX_*", "CLERK_*", "STORAGE_*"]
+    }
+  }
+}

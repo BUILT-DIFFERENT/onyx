@@ -1,0 +1,29 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": ["JAVA_HOME", "ANDROID_HOME", "ANDROID_SDK_ROOT"],
+      "passThroughEnv": ["PATH", "ProgramFiles", "LOCALAPPDATA", "USERPROFILE", "ComSpec"]
+    },
+    "test": {
+      "env": ["JAVA_HOME", "ANDROID_HOME", "ANDROID_SDK_ROOT"],
+      "passThroughEnv": ["PATH", "ProgramFiles", "LOCALAPPDATA", "USERPROFILE", "ComSpec"]
+    },
+    "lint": {
+      "env": ["JAVA_HOME", "ANDROID_HOME", "ANDROID_SDK_ROOT"],
+      "passThroughEnv": ["PATH", "ProgramFiles", "LOCALAPPDATA", "USERPROFILE", "ComSpec"]
+    },
+    "ktlint": {
+      "env": ["JAVA_HOME", "ANDROID_HOME", "ANDROID_SDK_ROOT"],
+      "passThroughEnv": ["PATH", "ProgramFiles", "LOCALAPPDATA", "USERPROFILE", "ComSpec"]
+    },
+    "detekt": {
+      "env": ["JAVA_HOME", "ANDROID_HOME", "ANDROID_SDK_ROOT"],
+      "passThroughEnv": ["PATH", "ProgramFiles", "LOCALAPPDATA", "USERPROFILE", "ComSpec"]
+    },
+    "format": {
+      "env": ["JAVA_HOME", "ANDROID_HOME", "ANDROID_SDK_ROOT"],
+      "passThroughEnv": ["PATH", "ProgramFiles", "LOCALAPPDATA", "USERPROFILE", "ComSpec"]
+    }
+  }
+}
