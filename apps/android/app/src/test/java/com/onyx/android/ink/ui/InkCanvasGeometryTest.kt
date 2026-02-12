@@ -1,9 +1,7 @@
 package com.onyx.android.ink.ui
 
-import com.onyx.android.ink.model.StrokeBounds
 import com.onyx.android.ink.model.StrokePoint
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class InkCanvasGeometryTest {

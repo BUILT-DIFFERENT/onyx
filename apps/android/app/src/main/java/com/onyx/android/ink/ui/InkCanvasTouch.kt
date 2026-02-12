@@ -489,6 +489,11 @@ private fun addPointDeduped(
 ) {
     val lastPoint = outPoints.lastOrNull()
     if (lastPoint != null && lastPoint.x == point.x && lastPoint.y == point.y) {
+        // Position unchanged but pressure may have changed — update last point
+        // to preserve pressure variation (e.g., pressing harder without moving)
+        if (point.p != null && point.p != lastPoint.p) {
+            outPoints[outPoints.lastIndex] = lastPoint.copy(p = point.p, t = point.t)
+        }
         return
     }
     outPoints.add(point)

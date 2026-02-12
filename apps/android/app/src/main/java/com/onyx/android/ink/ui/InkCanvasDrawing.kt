@@ -202,6 +202,9 @@ internal fun buildVariableWidthOutline(
 ): Path {
     val path = Path()
     if (samples.isEmpty() || widths.isEmpty()) return path
+    require(widths.size >= samples.size) {
+        "widths (${widths.size}) must have at least as many entries as samples (${samples.size})"
+    }
 
     if (samples.size == 1) {
         val p = samples[0]

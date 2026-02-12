@@ -51,6 +51,15 @@ internal fun findStrokeToErase(
             continue
         }
         val points = stroke.points
+        // Handle single-point strokes (dot) — check point proximity directly
+        if (points.size == 1) {
+            val dx = pageX - points[0].x
+            val dy = pageY - points[0].y
+            if (sqrt(dx * dx + dy * dy) <= hitRadius) {
+                return stroke
+            }
+            continue
+        }
         for (index in 0 until points.size - 1) {
             val p1 = Offset(points[index].x, points[index].y)
             val p2 = Offset(points[index + 1].x, points[index + 1].y)

@@ -189,7 +189,7 @@ The deduplication logic (`LinkedHashMap` merge of persisted + pending strokes) p
 | 2 | Sort strokes: highlighters first, then pens | Consistent z-order | P3 |
 | 3 | Render highlighter strokes to a separate layer | Eliminates alpha stacking | P3 |
 
-**Status:** ❌ Not Yet Fixed — Requires blend mode changes in `drawStrokesInWorldSpace()`
+**Status:** ✅ Fixed — `BlendMode.Multiply` + `0.35f` alpha applied for highlighter strokes in `drawStrokesInWorldSpace()`
 
 ---
 
@@ -321,6 +321,12 @@ When the user zooms in:
 | 8 | MyScript erase is O(n) | Direct `eraseStrokes()` with fallback to clear+re-feed | `MyScriptPageManager.kt` |
 | 9 | MyScript init blocks startup | Async initialization on background thread; `@Volatile engine` field | `OnyxApplication.kt`, `MyScriptEngine.kt` |
 | 10 | Tests | 30+ unit tests for smoothing, tapering, outline, pipeline | `CatmullRomSmoothTest.kt`, `StrokeTaperingTest.kt`, `VariableWidthOutlineTest.kt` |
+| 11 | Highlighter blending | `BlendMode.Multiply` + alpha for highlighter strokes | `InkCanvasDrawing.kt` |
+| 12 | MyScript erase O(n) lookup | Reverse mapping for O(1) stroke ID lookup on erase | `MyScriptPageManager.kt` |
+| 13 | Single-point strokes unerasable | `findStrokeToErase` now checks single-point proximity | `InkCanvasGeometry.kt` |
+| 14 | Pressure lost on dedup | `addPointDeduped` updates pressure when position unchanged | `InkCanvasTouch.kt` |
+| 15 | Outline size mismatch | `buildVariableWidthOutline` validates widths/samples size | `InkCanvasDrawing.kt` |
+| 16 | Additional tests | 37+ more tests for bounds, eraser, color, transforms, coordinates | Multiple test files |
 
 ### Remaining Work (By Priority)
 
@@ -331,7 +337,6 @@ When the user zooms in:
 | P1 | Toolbar occlusion | Add content padding for toolbar height |
 | P2 | PDF zoom clarity | Tile-based PDF rendering with async pipeline |
 | P2 | Pan/zoom stutter | Async PDF re-render, keep previous bitmap visible |
-| P2 | Highlighter blending | Use `BlendMode.Multiply` for overlapping strokes |
 | P2 | Single page lock | Continuous vertical scroll with `LazyColumn` |
 | P2 | Page boundary indicators | Draw visible page border and edge glow |
 | P3 | Canvas flashing | Hold previous frame, dirty-flag mask path |

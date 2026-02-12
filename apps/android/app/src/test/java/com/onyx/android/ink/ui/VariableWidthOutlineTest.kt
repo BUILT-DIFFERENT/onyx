@@ -146,4 +146,13 @@ class VariableWidthOutlineTest {
         val expected = 1 + (points.size - 1) * CATMULL_ROM_SUBDIVISIONS
         assertEquals(expected, result.size, "Should produce expected number of subdivisions")
     }
+
+    @Test
+    fun `outline rejects mismatched widths and samples sizes`() {
+        val samples = (0..5).map { StrokeRenderPoint(it * 10f, 0f, 0.5f) }
+        val widths = listOf(4f, 4f) // too few widths
+        org.junit.jupiter.api.assertThrows<IllegalArgumentException> {
+            buildVariableWidthOutline(samples, widths)
+        }
+    }
 }
