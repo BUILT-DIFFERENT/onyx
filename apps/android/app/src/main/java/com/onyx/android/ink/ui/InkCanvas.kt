@@ -241,7 +241,8 @@ private fun buildOutsidePageMaskPath(
     if (!hasValidMaskDimensions(viewWidth, viewHeight, pageWidth, pageHeight)) {
         return null
     }
-    val (left, top) = transform.pageToScreen(0f, 0f)
+    val left = transform.pageToScreenX(0f)
+    val top = transform.pageToScreenY(0f)
     val width = transform.pageWidthToScreen(pageWidth)
     val height = transform.pageWidthToScreen(pageHeight)
     val maskPath = AndroidPath().apply { fillType = AndroidPath.FillType.EVEN_ODD }

@@ -168,8 +168,10 @@ private fun ViewTransform.viewportPageRect(
     viewportWidth: Float,
     viewportHeight: Float,
 ): Rect {
-    val (left, top) = screenToPage(0f, 0f)
-    val (right, bottom) = screenToPage(viewportWidth, viewportHeight)
+    val left = screenToPageX(0f)
+    val top = screenToPageY(0f)
+    val right = screenToPageX(viewportWidth)
+    val bottom = screenToPageY(viewportHeight)
     return Rect(
         left = minOf(left, right),
         top = minOf(top, bottom),

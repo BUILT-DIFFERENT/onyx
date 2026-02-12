@@ -134,6 +134,18 @@ class NoteEditorTransformMathTest {
 
         assertEquals(0.8f, renderScale, DELTA)
     }
+
+    @Test
+    fun `axis-based transform helpers match pair conversion`() {
+        val transform = ViewTransform(zoom = 2.25f, panX = 120f, panY = -30f)
+        val pagePair = transform.pageToScreen(40f, 20f)
+        val screenPair = transform.screenToPage(300f, 90f)
+
+        assertEquals(pagePair.first, transform.pageToScreenX(40f), DELTA)
+        assertEquals(pagePair.second, transform.pageToScreenY(20f), DELTA)
+        assertEquals(screenPair.first, transform.screenToPageX(300f), DELTA)
+        assertEquals(screenPair.second, transform.screenToPageY(90f), DELTA)
+    }
 }
 
 private const val DELTA = 0.0001f

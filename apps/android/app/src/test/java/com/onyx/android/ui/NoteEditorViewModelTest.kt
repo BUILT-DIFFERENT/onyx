@@ -16,14 +16,14 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterEach
+import kotlinx.coroutines.yield
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -32,12 +32,10 @@ class NoteEditorViewModelTest {
     private lateinit var repository: NoteRepository
     private lateinit var noteDao: NoteDao
     private lateinit var pageDao: PageDao
-    private val mainDispatcher = UnconfinedTestDispatcher()
     private val stores = mutableListOf<ViewModelStore>()
 
     @BeforeEach
     fun setup() {
-        Dispatchers.setMain(mainDispatcher)
         repository = mockk(relaxed = true)
         noteDao = mockk(relaxed = true)
         pageDao = mockk(relaxed = true)
@@ -49,51 +47,90 @@ class NoteEditorViewModelTest {
         coEvery { repository.createPageForNote(NOTE_ID, any()) } returns samplePage(index = 1)
     }
 
-    @AfterEach
-    fun teardown() {
-        stores.forEach { store ->
-            store.clear()
-        }
-        Dispatchers.resetMain()
-    }
-
     @Test
     fun `loadNote emits error state when note query fails`() =
-        runTest {
+        runViewModelTest {
             coEvery { noteDao.getById(NOTE_ID) } throws IllegalStateException("db unavailable")
 
             val viewModel = createViewModel()
-            advanceUntilIdle()
+            drainMainQueue()
 
             assertEquals("Failed to load note.", viewModel.errorMessage.value)
         }
 
     @Test
     fun `createNewPage emits error state when page indexing fails`() =
-        runTest {
+        runViewModelTest {
             val viewModel = createViewModel()
-            advanceUntilIdle()
+            drainMainQueue()
             coEvery { pageDao.getMaxIndexForNote(NOTE_ID) } throws IllegalStateException("write failed")
 
             viewModel.createNewPage()
-            advanceUntilIdle()
+            drainMainQueue()
 
             assertEquals("Failed to create a new page.", viewModel.errorMessage.value)
         }
 
     @Test
     fun `addStroke persist failure reports queue error after retry`() =
-        runTest {
+        runViewModelTest {
             coEvery { repository.saveStroke(PAGE_ID, any()) } throws IllegalStateException("disk full")
             val viewModel = createViewModel()
-            advanceUntilIdle()
+            drainMainQueue()
 
             viewModel.addStroke(sampleStroke(), persist = true, updateRecognition = false)
-            advanceUntilIdle()
+            drainMainQueue()
 
-            assertEquals("Failed to persist stroke changes.", viewModel.errorMessage.value)
-            coVerify(exactly = 2) { repository.saveStroke(PAGE_ID, any()) }
+            coVerify(timeout = 1_000, exactly = 2) { repository.saveStroke(PAGE_ID, any()) }
+            assertEquals("Failed to persist stroke changes.", awaitErrorMessage(viewModel))
         }
+
+    @Test
+    fun `addStroke succeeds after retry without surfacing queue error`() =
+        runViewModelTest {
+            coEvery {
+                repository.saveStroke(PAGE_ID, any())
+            } throws IllegalStateException("transient io") andThen Unit
+            val viewModel = createViewModel()
+            drainMainQueue()
+
+            viewModel.addStroke(sampleStroke(), persist = true, updateRecognition = false)
+            drainMainQueue()
+
+            coVerify(timeout = 1_000, exactly = 2) { repository.saveStroke(PAGE_ID, any()) }
+            assertNull(viewModel.errorMessage.value)
+        }
+
+    private fun runViewModelTest(block: suspend () -> Unit) =
+        runBlocking {
+            Dispatchers.setMain(Dispatchers.Unconfined)
+            try {
+                block()
+            } finally {
+                stores.forEach { store ->
+                    store.clear()
+                }
+                stores.clear()
+                Dispatchers.resetMain()
+            }
+        }
+
+    private suspend fun drainMainQueue() {
+        repeat(3) {
+            yield()
+        }
+    }
+
+    private suspend fun awaitErrorMessage(viewModel: NoteEditorViewModel): String? {
+        repeat(40) {
+            viewModel.errorMessage.value?.let { message ->
+                return message
+            }
+            delay(25)
+            yield()
+        }
+        return viewModel.errorMessage.value
+    }
 
     private fun createViewModel(): NoteEditorViewModel {
         val viewModel =

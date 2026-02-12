@@ -835,14 +835,13 @@ private fun ToolSettingsDialog(
                 fontWeight = FontWeight.SemiBold,
             )
 
-            BrushSizeControl(
-                brush = brush,
-                enabled = true,
-                onBrushChange = onBrushChange,
-            )
-
             when (panelType) {
                 ToolPanelType.PEN -> {
+                    BrushSizeControl(
+                        brush = brush,
+                        enabled = true,
+                        onBrushChange = onBrushChange,
+                    )
                     val stabilization = resolveStabilization(brush)
                     Text(text = "Stabilization", style = MaterialTheme.typography.bodyMedium)
                     Slider(
@@ -855,6 +854,11 @@ private fun ToolSettingsDialog(
                     )
                 }
                 ToolPanelType.HIGHLIGHTER -> {
+                    BrushSizeControl(
+                        brush = brush,
+                        enabled = true,
+                        onBrushChange = onBrushChange,
+                    )
                     val opacity = resolveOpacity(brush)
                     Text(text = "Opacity", style = MaterialTheme.typography.bodyMedium)
                     Slider(
@@ -1087,7 +1091,8 @@ private fun FixedPageBackground(contentState: NoteEditorContentState) {
         if (pageWidth <= 0f || pageHeight <= 0f) {
             return@Canvas
         }
-        val (left, top) = transform.pageToScreen(0f, 0f)
+        val left = transform.pageToScreenX(0f)
+        val top = transform.pageToScreenY(0f)
         val pageWidthPx = transform.pageWidthToScreen(pageWidth)
         val pageHeightPx = transform.pageWidthToScreen(pageHeight)
         drawRect(

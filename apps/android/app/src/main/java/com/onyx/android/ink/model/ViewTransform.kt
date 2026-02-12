@@ -26,9 +26,13 @@ data class ViewTransform(
         pageY: Float,
     ): Pair<Float, Float> =
         Pair(
-            pageX * zoom + panX,
-            pageY * zoom + panY,
+            pageToScreenX(pageX),
+            pageToScreenY(pageY),
         )
+
+    fun pageToScreenX(pageX: Float): Float = pageX * zoom + panX
+
+    fun pageToScreenY(pageY: Float): Float = pageY * zoom + panY
 
     /**
      * Convert screen pixels to page coordinates (pt).
@@ -38,9 +42,13 @@ data class ViewTransform(
         screenY: Float,
     ): Pair<Float, Float> =
         Pair(
-            (screenX - panX) / zoom,
-            (screenY - panY) / zoom,
+            screenToPageX(screenX),
+            screenToPageY(screenY),
         )
+
+    fun screenToPageX(screenX: Float): Float = (screenX - panX) / zoom
+
+    fun screenToPageY(screenY: Float): Float = (screenY - panY) / zoom
 
     /**
      * Convert stroke width from page units to screen pixels.

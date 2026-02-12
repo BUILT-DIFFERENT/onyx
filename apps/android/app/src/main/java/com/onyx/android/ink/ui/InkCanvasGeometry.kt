@@ -38,7 +38,8 @@ internal fun findStrokeToErase(
     strokes: List<Stroke>,
     viewTransform: ViewTransform,
 ): Stroke? {
-    val (pageX, pageY) = viewTransform.screenToPage(screenX, screenY)
+    val pageX = viewTransform.screenToPageX(screenX)
+    val pageY = viewTransform.screenToPageY(screenY)
     val hitRadius = ERASE_HIT_RADIUS_PX / viewTransform.zoom
     for (stroke in strokes) {
         val expandedBounds = stroke.bounds.expandBy(hitRadius)

@@ -223,11 +223,8 @@ private fun handlePointerDown(
         handleEraserAtPointer(event, actionIndex, interaction, runtime)
         return true
     }
-    val (downPageX, downPageY) =
-        interaction.viewTransform.screenToPage(
-            screenX = event.getX(actionIndex),
-            screenY = event.getY(actionIndex),
-        )
+    val downPageX = interaction.viewTransform.screenToPageX(event.getX(actionIndex))
+    val downPageY = interaction.viewTransform.screenToPageY(event.getY(actionIndex))
     val tolerance =
         EDGE_TOLERANCE_PX /
             interaction.viewTransform.zoom.coerceAtLeast(MIN_TOLERANCE_ZOOM)
@@ -578,12 +575,10 @@ private fun createStrokePoint(
     pageWidth: Float,
     pageHeight: Float,
 ): StrokePoint {
-    val (rawPageX, rawPageY) =
-        viewTransform.screenToPage(
-            screenX = event.getX(pointerIndex),
-            screenY = event.getY(pointerIndex),
-        )
-    val (pageX, pageY) = clampToPage(rawPageX, rawPageY, pageWidth, pageHeight)
+    val rawPageX = viewTransform.screenToPageX(event.getX(pointerIndex))
+    val rawPageY = viewTransform.screenToPageY(event.getY(pointerIndex))
+    val pageX = clampPageCoordinate(rawPageX, pageWidth)
+    val pageY = clampPageCoordinate(rawPageY, pageHeight)
     val pressure = event.getPressure(pointerIndex).coerceIn(0f, 1f)
     val tilt = event.getAxisValue(MotionEvent.AXIS_TILT, pointerIndex)
     val orientation = event.getOrientation(pointerIndex)
@@ -608,12 +603,16 @@ private fun createHistoricalStrokePoint(
     pageWidth: Float,
     pageHeight: Float,
 ): StrokePoint {
-    val (rawPageX, rawPageY) =
-        viewTransform.screenToPage(
-            screenX = event.getHistoricalX(pointerIndex, historyIndex),
-            screenY = event.getHistoricalY(pointerIndex, historyIndex),
+    val rawPageX =
+        viewTransform.screenToPageX(
+            event.getHistoricalX(pointerIndex, historyIndex),
         )
-    val (pageX, pageY) = clampToPage(rawPageX, rawPageY, pageWidth, pageHeight)
+    val rawPageY =
+        viewTransform.screenToPageY(
+            event.getHistoricalY(pointerIndex, historyIndex),
+        )
+    val pageX = clampPageCoordinate(rawPageX, pageWidth)
+    val pageY = clampPageCoordinate(rawPageY, pageHeight)
     val pressure = event.getHistoricalPressure(pointerIndex, historyIndex).coerceIn(0f, 1f)
     val tilt = event.getHistoricalAxisValue(MotionEvent.AXIS_TILT, pointerIndex, historyIndex)
     val orientation = event.getHistoricalOrientation(pointerIndex, historyIndex)
@@ -644,14 +643,12 @@ private fun isInsidePageWithTolerance(
         pageY in -tolerance..(pageHeight + tolerance)
 }
 
-private fun clampToPage(
-    pageX: Float,
-    pageY: Float,
-    pageWidth: Float,
-    pageHeight: Float,
-): Pair<Float, Float> {
-    if (pageWidth <= 0f || pageHeight <= 0f) {
-        return pageX to pageY
+private fun clampPageCoordinate(
+    coordinate: Float,
+    pageDimension: Float,
+): Float {
+    if (pageDimension <= 0f) {
+        return coordinate
     }
-    return pageX.coerceIn(0f, pageWidth) to pageY.coerceIn(0f, pageHeight)
+    return coordinate.coerceIn(0f, pageDimension)
 }

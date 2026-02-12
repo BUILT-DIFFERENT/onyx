@@ -2,6 +2,7 @@ package com.onyx.android.ui
 
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -151,6 +152,28 @@ class NoteEditorToolbarTest {
             assertEquals(Tool.PEN, updatedBrush?.tool)
             assertEquals("#1E88E5", updatedBrush?.color)
         }
+    }
+
+    @Test
+    fun longPress_eraserButton_showsStrokeOnlyEraserSettings() {
+        setEditorScaffold(
+            toolbarState =
+                NoteEditorToolbarState(
+                    brush = Brush(tool = Tool.ERASER),
+                    lastNonEraserTool = Tool.PEN,
+                    isStylusButtonEraserActive = false,
+                    onBrushChange = {},
+                ),
+        )
+
+        composeRule.onNodeWithContentDescription(ERASER).performTouchInput {
+            down(center)
+            advanceEventTime(650)
+            up()
+        }
+        composeRule.onNodeWithText("Eraser options").assertIsDisplayed()
+        composeRule.onNodeWithText("Stroke eraser").assertIsDisplayed()
+        composeRule.onNodeWithText("Brush size").assertDoesNotExist()
     }
 
     private fun setEditorScaffold(toolbarState: NoteEditorToolbarState) {

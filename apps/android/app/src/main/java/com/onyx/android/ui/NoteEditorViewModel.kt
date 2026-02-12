@@ -29,6 +29,10 @@ internal class NoteEditorViewModel(
     private val myScriptPageManager: MyScriptPageManager?,
     private val initialPageId: String?,
 ) : ViewModel() {
+    companion object {
+        private const val LOG_TAG = "NoteEditorViewModel"
+    }
+
     private val _strokes = MutableStateFlow<List<Stroke>>(emptyList())
     val strokes: StateFlow<List<Stroke>> = _strokes.asStateFlow()
     private val _pages = MutableStateFlow<List<PageEntity>>(emptyList())
@@ -62,6 +66,13 @@ internal class NoteEditorViewModel(
                         task()
                     }
                 if (firstAttempt.isFailure) {
+                    runCatching {
+                        Log.w(
+                            LOG_TAG,
+                            "Stroke persistence failed on first attempt. Retrying once.",
+                            firstAttempt.exceptionOrNull(),
+                        )
+                    }
                     val retryAttempt =
                         runCatching {
                             task()
@@ -71,6 +82,10 @@ internal class NoteEditorViewModel(
                             "Failed to persist stroke changes.",
                             retryAttempt.exceptionOrNull() ?: firstAttempt.exceptionOrNull(),
                         )
+                    } else {
+                        runCatching {
+                            Log.i(LOG_TAG, "Stroke persistence retry succeeded.")
+                        }
                     }
                 }
             }
@@ -287,7 +302,9 @@ internal class NoteEditorViewModel(
         message: String,
         throwable: Throwable? = null,
     ) {
-        Log.e("NoteEditorViewModel", message, throwable)
+        runCatching {
+            Log.e(LOG_TAG, message, throwable)
+        }
         _errorMessage.value = message
     }
 }
