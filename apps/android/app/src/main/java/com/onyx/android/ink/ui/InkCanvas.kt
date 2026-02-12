@@ -195,9 +195,13 @@ fun InkCanvas(
                                     currentCallbacks.onStrokeFinished(stroke)
                                 },
                                 onStrokeErased = { stroke ->
+                                    val bridgeEntry = runtime.finishedInProgressByStrokeId.remove(stroke.id)
+                                    if (bridgeEntry != null) {
+                                        this@apply.removeFinishedStrokes(setOf(bridgeEntry.inProgressStrokeId))
+                                    }
                                     runtime.pendingCommittedStrokes.remove(stroke.id)
                                     runtime.pendingCommittedAtUptimeMs.remove(stroke.id)
-                                    runtime.finishedInProgressByStrokeId.remove(stroke.id)
+                                    runtime.finishedStrokePathCache.remove(stroke.id)
                                     currentCallbacks.onStrokeErased(stroke)
                                 },
                                 onTransformGesture = currentCallbacks.onTransformGesture,
@@ -225,9 +229,13 @@ fun InkCanvas(
                                     currentCallbacks.onStrokeFinished(stroke)
                                 },
                                 onStrokeErased = { stroke ->
+                                    val bridgeEntry = runtime.finishedInProgressByStrokeId.remove(stroke.id)
+                                    if (bridgeEntry != null) {
+                                        this@apply.removeFinishedStrokes(setOf(bridgeEntry.inProgressStrokeId))
+                                    }
                                     runtime.pendingCommittedStrokes.remove(stroke.id)
                                     runtime.pendingCommittedAtUptimeMs.remove(stroke.id)
-                                    runtime.finishedInProgressByStrokeId.remove(stroke.id)
+                                    runtime.finishedStrokePathCache.remove(stroke.id)
                                     currentCallbacks.onStrokeErased(stroke)
                                 },
                                 onTransformGesture = currentCallbacks.onTransformGesture,

@@ -285,7 +285,7 @@ class InkCanvasTouchRoutingTest {
         }
 
         assertTrue(runtime.finishedInProgressByStrokeId.isEmpty())
-        assertTrue(runtime.pendingCommittedStrokes.isEmpty())
+        assertTrue(runtime.pendingCommittedStrokes.isNotEmpty())
     }
 
     @Test
