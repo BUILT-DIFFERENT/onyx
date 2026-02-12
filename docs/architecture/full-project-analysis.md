@@ -90,16 +90,18 @@ These were not critical for the MVP but should be addressed before v1:
 |---|---------|----------|-------------------|
 | 1 | **No Hilt DI** — AppContainer works but won't scale | Medium | Pre-Milestone B |
 | 2 | **Synchronous app startup** — blocking MyScript asset copy | Medium | Milestone Av2 |
-| 3 | **Stroke smoothing insufficient** — 3-point average only | High | Milestone Av2 |
-| 4 | **No stroke tapering** — width is constant per stroke | Medium | Milestone Av2 |
+| 3 | ~~**Stroke smoothing insufficient** — 3-point average only~~ | ~~High~~ | ✅ Fixed (Catmull-Rom) |
+| 4 | ~~**No stroke tapering** — width is constant per stroke~~ | ~~Medium~~ | ✅ Fixed (per-point taper) |
 | 5 | **Motion prediction disabled** — 50ms+ latency gap | Medium | Milestone Av2 |
 | 6 | **Highlighter blending** — uses fixed alpha, not multiply blend | Low | Milestone Av2 |
 | 7 | **No haptic feedback** — no pen-down or tool-switch haptics | Low | UI Overhaul |
 | 8 | **Dark mode absent** | Low | UI Overhaul |
-| 9 | **Color parsing per-frame** — `parseColor()` on every draw | Medium | Next sprint |
-| 10 | **Path cache unbounded** — grows indefinitely in long sessions | Medium | Next sprint |
+| 9 | ~~**Color parsing per-frame** — `parseColor()` on every draw~~ | ~~Medium~~ | ✅ Fixed (ColorCache) |
+| 10 | ~~**Path cache unbounded** — grows indefinitely in long sessions~~ | ~~Medium~~ | ✅ Fixed (500 cap) |
 | 11 | **Lamport clock uninitialised** — always 0, no sync readiness | High | Pre-Milestone C |
 | 12 | **PDF text selection unused** — selected text only logged | Low | Milestone Av2 |
+
+See [`docs/architecture/rendering-discrepancies.md`](rendering-discrepancies.md) for detailed analysis of all rendering gaps vs. Notewise.
 
 ---
 
@@ -153,33 +155,37 @@ MainActivity
 
 ### Current State
 
-The ink pipeline uses a **3-point moving average filter** with quadratic Bézier curve construction:
+The ink pipeline uses **Catmull-Rom spline interpolation** with quadratic Bézier curve construction:
 
 ```
-Raw Points → Smooth (3-point avg) → Quadratic Bézier Path → Cached → Draw
+Raw Points → Catmull-Rom Smooth (8 subdivisions) → Quadratic Bézier Path → Cached → Draw
 ```
 
-**Issues:**
-- 3-point average is too aggressive — it flattens sharp corners and creates visible lag on fast strokes
-- Smoothing is recomputed on every render for cached strokes (waste)
-- No tapering (width start/end variation) — strokes look mechanical
-- Pressure curve is linear (0.85–1.15× baseWidth) — feels dead
+**Improvements Implemented:**
+- Catmull-Rom spline provides C¹ continuity — smooth tangents, passes through all input points
+- Non-linear pressure curve (gamma = 0.6) for responsive light-pressure input
+- Per-point variable width with start/end tapering (first/last 5 points)
+- Color caching via LRU `ColorCache` eliminates per-frame `parseColor()` calls
+- Path cache bounded at 500 entries to prevent memory leaks
+
+**Remaining Issues:**
 - Motion prediction is disabled — creates 50ms+ visible latency gap on pen-up
-- Color parsed from hex string on every frame
+- Stroke "pop-in" on pen-up due to dual-layer rendering (InProgressStrokesView vs Compose Canvas)
+- No front-buffer rendering for in-progress strokes
 
 ### Recommended Improvements
 
-1. **Replace 3-point average with Catmull-Rom spline interpolation:**
+1. ~~**Replace 3-point average with Catmull-Rom spline interpolation:**~~ ✅ Done
    - Catmull-Rom provides C¹ continuity (smooth tangents) without over-smoothing
    - Passes through control points exactly — preserves user intent
    - Tension parameter (0.5 default) controls smoothness vs. sharpness
-   - Much better for handwriting than moving average
+   - 8 subdivision points between each input point for fluid curves
 
-2. **Add variable-width stroke rendering:**
-   - Use a non-linear pressure curve: `width = base * (min + (max - min) * pow(pressure, gamma))`
-   - Default gamma = 0.6 makes light pressure more responsive
-   - Add start/end taper: fade width over first/last 3-5 points
-   - Use tilt data (already captured) to modulate width for calligraphy effects
+2. ~~**Add variable-width stroke rendering:**~~ ✅ Done
+   - Non-linear pressure curve: `width = base * (min + (max - min) * pow(pressure, 0.6))`
+   - Gamma 0.6 makes light pressure more responsive
+   - Start/end taper: fades width over first/last 5 points (min 15% of full width)
+   - Per-point width computation stored in path cache
 
 3. **Enable and fix motion prediction:**
    - The `MotionPredictionAdapter` already exists but is disabled
@@ -187,10 +193,9 @@ Raw Points → Smooth (3-point avg) → Quadratic Bézier Path → Cached → Dr
    - Render predicted points at reduced alpha (already implemented at 0.2)
    - Reduces perceived latency by 30-60ms
 
-4. **Compute smoothing once, not per-frame:**
-   - Move smoothing to stroke finalisation (on pen-up)
-   - Store smoothed points in the path cache entry
-   - In-progress strokes can use raw points with light smoothing
+4. ~~**Compute smoothing once, not per-frame:**~~ ✅ Done (via path cache)
+   - Smoothing is now part of stroke finalization path cache entry
+   - Catmull-Rom result is cached alongside the Path and per-point widths
 
 5. **Implement front-buffer rendering for in-progress strokes:**
    - Use `GLFrontBufferedRenderer` (Android 10+) for active drawing
@@ -198,9 +203,11 @@ Raw Points → Smooth (3-point avg) → Quadratic Bézier Path → Cached → Dr
    - Eliminates compositor latency (reduces by ~16ms at 60Hz)
    - Fall back to `InProgressStrokesView` on older devices
 
-6. **Cache Color.parseColor results:**
-   - Parse once on stroke creation, store as `Int` in a `Map<String, Int>`
-   - Eliminates per-frame string parsing (currently O(strokes) per frame)
+6. ~~**Cache Color.parseColor results:**~~ ✅ Done
+   - LRU `ColorCache` (64 entries, synchronized) parses once per unique color
+   - Eliminates per-frame string parsing (was O(strokes) per frame)
+
+See [`rendering-discrepancies.md`](rendering-discrepancies.md) for the complete gap analysis vs Notewise.
 
 ---
 
@@ -437,8 +444,8 @@ publicLinks: { noteId, token, createdBy, createdAt, expiresAt? }
 |---|------|--------|--------|
 | 1 | **Ink latency** | Enable front-buffer rendering via `GLFrontBufferedRenderer` | −16ms per frame |
 | 2 | **Ink latency** | Re-enable motion prediction with pen-up fix | −30-60ms perceived |
-| 3 | **Stroke rendering** | Cache `Color.parseColor()` results, parse once | Eliminate per-frame string parsing |
-| 4 | **Stroke rendering** | Bound path cache, evict on page change | Prevent memory leak |
+| 3 | ~~**Stroke rendering**~~ | ~~Cache `Color.parseColor()` results, parse once~~ | ✅ Done (ColorCache) |
+| 4 | ~~**Stroke rendering**~~ | ~~Bound path cache, evict on page change~~ | ✅ Done (500 cap) |
 | 5 | **PDF rendering** | Tile-based rendering (512×512 chunks) | Support 300+ pages |
 | 6 | **PDF rendering** | Async tile pipeline with progressive loading | Smooth scrolling |
 | 7 | **PDF memory** | Page recycling (keep ±2 pages in memory) | Reduce memory 10× |
@@ -593,14 +600,14 @@ Changes are grouped by urgency and dependency order.
 2. Fix `docs/README.md` path references
 3. Initialize Lamport clock properly — increment on every local mutation
 4. Embed `deviceId` in stroke entities for sync readiness
-5. Bound the path cache in `InkCanvas` — evict on page change or cap at 500 entries
-6. Cache `Color.parseColor()` results — parse once per unique color
+5. ~~Bound the path cache in `InkCanvas` — evict on page change or cap at 500 entries~~ ✅ Done
+6. ~~Cache `Color.parseColor()` results — parse once per unique color~~ ✅ Done
 
 ### P1 — Drawing Feel (Milestone Av2)
 
-7. Replace 3-point average smoothing with Catmull-Rom spline interpolation
-8. Add pressure curve with configurable gamma (default 0.6)
-9. Add start/end tapering for natural stroke appearance
+7. ~~Replace 3-point average smoothing with Catmull-Rom spline interpolation~~ ✅ Done
+8. ~~Add pressure curve with configurable gamma (default 0.6)~~ ✅ Done
+9. ~~Add start/end tapering for natural stroke appearance~~ ✅ Done
 10. Re-enable motion prediction with proper pen-up handoff
 11. Implement front-buffer rendering via `GLFrontBufferedRenderer`
 12. Add stabilization that affects smoothing, not just width variation

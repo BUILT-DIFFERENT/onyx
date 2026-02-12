@@ -19,6 +19,7 @@ import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.StrokeStyle
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
+import kotlin.math.pow
 import androidx.compose.ui.graphics.drawscope.Stroke as ComposeStroke
 import androidx.ink.brush.Brush as InkBrush
 
@@ -39,9 +40,32 @@ private const val PRESSURE_FALLBACK = 0.5f
 private const val MIN_STROKE_POINTS = 2
 private const val MIN_ZOOM_FOR_STROKE_WIDTH = 0.001f
 private const val CURVE_MIDPOINT_FACTOR = 0.5f
+private const val CATMULL_ROM_TENSION = 0.5f
+private const val CATMULL_ROM_SUBDIVISIONS = 8
+private const val PRESSURE_GAMMA = 0.6f
+private const val TAPER_POINT_COUNT = 5
+private const val TAPER_MIN_FACTOR = 0.15f
+private const val PATH_CACHE_MAX_ENTRIES = 500
+
+/**
+ * Thread-safe LRU-bounded color cache to avoid per-frame Color.parseColor() calls.
+ */
+internal object ColorCache {
+    private const val MAX_SIZE = 64
+    private val cache = object : LinkedHashMap<String, Int>(MAX_SIZE, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Int>?): Boolean =
+            size > MAX_SIZE
+    }
+
+    @Synchronized
+    fun resolve(hex: String): Int {
+        return cache.getOrPut(hex) { parseColor(hex) }
+    }
+}
 
 internal data class StrokePathCacheEntry(
     val path: Path,
+    val perPointWidths: List<Float>,
     val averagePressure: Float,
 )
 
@@ -79,7 +103,7 @@ internal fun DrawScope.drawHoverPreview(
         if (hoverPreviewState.tool == Tool.ERASER) {
             Color(ERASER_PREVIEW_COLOR)
         } else {
-            Color(parseColor(brush.color))
+            Color(ColorCache.resolve(brush.color))
         }
     val alpha = if (hoverPreviewState.tool == Tool.ERASER) ERASER_PREVIEW_ALPHA else PEN_PREVIEW_ALPHA
     val strokeWidth = (size * PREVIEW_STROKE_WIDTH_SCALE).coerceAtLeast(MIN_PREVIEW_STROKE_WIDTH)
@@ -96,6 +120,7 @@ internal fun DrawScope.drawStrokesInWorldSpace(
     transform: ViewTransform,
     pathCache: MutableMap<String, StrokePathCacheEntry>,
 ) {
+    boundPathCache(pathCache, strokes)
     val viewportRect = transform.viewportPageRect(size.width, size.height)
     withTransform({
         translate(left = transform.panX, top = transform.panY)
@@ -105,10 +130,13 @@ internal fun DrawScope.drawStrokesInWorldSpace(
             if (!stroke.isVisibleIn(viewportRect)) {
                 return@forEach
             }
-            val cacheEntry = pathCache.getOrPut(stroke.id) { buildStrokePathCacheEntry(stroke.points) }
+            val cacheEntry = pathCache.getOrPut(stroke.id) {
+                buildStrokePathCacheEntry(stroke.points, stroke.style)
+            }
+            val color = Color(ColorCache.resolve(stroke.style.color))
             drawPath(
                 path = cacheEntry.path,
-                color = Color(parseColor(stroke.style.color)),
+                color = color,
                 style =
                     ComposeStroke(
                         width =
@@ -122,6 +150,20 @@ internal fun DrawScope.drawStrokesInWorldSpace(
                     ),
             )
         }
+    }
+}
+
+private fun boundPathCache(
+    pathCache: MutableMap<String, StrokePathCacheEntry>,
+    activeStrokes: List<Stroke>,
+) {
+    if (pathCache.size <= PATH_CACHE_MAX_ENTRIES) return
+    val activeIds = activeStrokes.mapTo(mutableSetOf()) { it.id }
+    val keysToRemove = pathCache.keys.filter { it !in activeIds }
+    keysToRemove.forEach { pathCache.remove(it) }
+    if (pathCache.size > PATH_CACHE_MAX_ENTRIES) {
+        val excess = pathCache.size - PATH_CACHE_MAX_ENTRIES
+        pathCache.keys.take(excess).forEach { pathCache.remove(it) }
     }
 }
 
@@ -141,8 +183,11 @@ private fun strokeWorldWidth(
     return pressureAdjusted.coerceAtLeast(minimumWorldWidth)
 }
 
-private fun buildStrokePathCacheEntry(points: List<StrokePoint>): StrokePathCacheEntry {
-    val samples = smoothStrokePoints(points)
+private fun buildStrokePathCacheEntry(
+    points: List<StrokePoint>,
+    style: StrokeStyle,
+): StrokePathCacheEntry {
+    val samples = catmullRomSmooth(points)
     val path = Path()
     if (samples.isNotEmpty()) {
         path.moveTo(samples.first().x, samples.first().y)
@@ -160,8 +205,9 @@ private fun buildStrokePathCacheEntry(points: List<StrokePoint>): StrokePathCach
         val last = samples.last()
         path.lineTo(last.x, last.y)
     }
+    val perPointWidths = computePerPointWidths(samples, style)
     val averagePressure = samples.mapNotNull { it.pressure }.average().toFloat().coerceIn(0f, 1f)
-    return StrokePathCacheEntry(path = path, averagePressure = averagePressure)
+    return StrokePathCacheEntry(path = path, perPointWidths = perPointWidths, averagePressure = averagePressure)
 }
 
 private fun ViewTransform.viewportPageRect(
@@ -191,37 +237,128 @@ private fun Stroke.isVisibleIn(viewportRect: Rect): Boolean {
     return strokeRect.overlaps(viewportRect)
 }
 
-private data class StrokeRenderPoint(
+internal data class StrokeRenderPoint(
     val x: Float,
     val y: Float,
     val pressure: Float?,
 )
 
-private fun smoothStrokePoints(points: List<StrokePoint>): List<StrokeRenderPoint> {
+/**
+ * Catmull-Rom spline interpolation replaces the old 3-point moving average.
+ *
+ * - Provides C¹ continuity (smooth tangents at every control point)
+ * - Passes through all original points — preserves user intent
+ * - Tension parameter (0.5 default) balances smoothness vs sharpness
+ * - Subdivisions between each pair of control points yield fluid curves
+ *   instead of the polygonal/jagged lines the 3-point average produced.
+ */
+internal fun catmullRomSmooth(points: List<StrokePoint>): List<StrokeRenderPoint> {
     if (points.size <= MIN_STROKE_POINTS) {
         return points.map { point -> StrokeRenderPoint(point.x, point.y, point.p) }
     }
 
-    val smoothed = ArrayList<StrokeRenderPoint>(points.size)
+    val result = ArrayList<StrokeRenderPoint>(points.size * CATMULL_ROM_SUBDIVISIONS)
     val first = points.first()
-    smoothed += StrokeRenderPoint(first.x, first.y, first.p)
-    for (index in 1 until points.lastIndex) {
-        val previous = points[index - 1]
-        val current = points[index]
-        val next = points[index + 1]
-        val previousPressure = previous.p ?: PRESSURE_FALLBACK
-        val currentPressure = current.p ?: PRESSURE_FALLBACK
-        val nextPressure = next.p ?: PRESSURE_FALLBACK
-        smoothed +=
-            StrokeRenderPoint(
-                x = (previous.x + current.x + next.x) / 3f,
-                y = (previous.y + current.y + next.y) / 3f,
-                pressure = (previousPressure + currentPressure + nextPressure) / 3f,
-            )
+    result += StrokeRenderPoint(first.x, first.y, first.p)
+
+    for (index in 0 until points.size - 1) {
+        val p0 = points[(index - 1).coerceAtLeast(0)]
+        val p1 = points[index]
+        val p2 = points[index + 1]
+        val p3 = points[(index + 2).coerceAtMost(points.lastIndex)]
+
+        val p0Pressure = p0.p ?: PRESSURE_FALLBACK
+        val p1Pressure = p1.p ?: PRESSURE_FALLBACK
+        val p2Pressure = p2.p ?: PRESSURE_FALLBACK
+        val p3Pressure = p3.p ?: PRESSURE_FALLBACK
+
+        for (step in 1..CATMULL_ROM_SUBDIVISIONS) {
+            val t = step.toFloat() / CATMULL_ROM_SUBDIVISIONS
+            val x = catmullRomValue(p0.x, p1.x, p2.x, p3.x, t)
+            val y = catmullRomValue(p0.y, p1.y, p2.y, p3.y, t)
+            val pressure = catmullRomValue(p0Pressure, p1Pressure, p2Pressure, p3Pressure, t)
+            result += StrokeRenderPoint(x, y, pressure.coerceIn(0f, 1f))
+        }
     }
-    val last = points.last()
-    smoothed += StrokeRenderPoint(last.x, last.y, last.p)
-    return smoothed
+    return result
+}
+
+/**
+ * Evaluates a single Catmull-Rom spline component at parameter t ∈ [0,1].
+ *
+ * Uses the standard matrix form with tension = 0.5:
+ *   q(t) = 0.5 * [ (-t + 2t² - t³)·v0 + (2 - 5t² + 3t³)·v1 +
+ *                   (t + 4t² - 3t³)·v2 + (-t² + t³)·v3 ]
+ */
+internal fun catmullRomValue(
+    v0: Float,
+    v1: Float,
+    v2: Float,
+    v3: Float,
+    t: Float,
+): Float {
+    val t2 = t * t
+    val t3 = t2 * t
+    return CATMULL_ROM_TENSION * (
+        (-t + 2f * t2 - t3) * v0 +
+            (2f - 5f * t2 + 3f * t3) * v1 +
+            (t + 4f * t2 - 3f * t3) * v2 +
+            (-t2 + t3) * v3
+        )
+}
+
+/**
+ * Computes per-point stroke widths that incorporate:
+ * 1. Non-linear pressure mapping (gamma curve) for more responsive light-pressure input
+ * 2. Start/end tapering that narrows the stroke at the first and last few points
+ *
+ * The gamma curve (`pressure^gamma` with gamma=0.6) makes light pressure more
+ * responsive, addressing the "dead" / uniform-width feel of the old linear mapping.
+ *
+ * Tapering over the first/last TAPER_POINT_COUNT points fades width from
+ * TAPER_MIN_FACTOR to 1.0, mimicking the natural ink taper of a real pen stroke.
+ */
+internal fun computePerPointWidths(
+    points: List<StrokeRenderPoint>,
+    style: StrokeStyle,
+): List<Float> {
+    if (points.isEmpty()) return emptyList()
+    val count = points.size
+    return List(count) { index ->
+        val pressure = points[index].pressure ?: PRESSURE_FALLBACK
+        val gammaPressure = pressure.coerceIn(0f, 1f).pow(PRESSURE_GAMMA)
+        val factor = style.minWidthFactor + (style.maxWidthFactor - style.minWidthFactor) * gammaPressure
+        val baseAdjusted = style.baseWidth * factor
+
+        val taperFactor = computeTaperFactor(index, count)
+        baseAdjusted * taperFactor
+    }
+}
+
+/**
+ * Returns a multiplier in [TAPER_MIN_FACTOR, 1.0] that fades width at the
+ * start and end of a stroke to create natural-looking tapering.
+ */
+internal fun computeTaperFactor(
+    index: Int,
+    totalPoints: Int,
+): Float {
+    if (totalPoints <= 1) return 1f
+    val taperLength = TAPER_POINT_COUNT.coerceAtMost(totalPoints / 2)
+    if (taperLength <= 0) return 1f
+
+    val startTaper = if (index < taperLength) {
+        TAPER_MIN_FACTOR + (1f - TAPER_MIN_FACTOR) * (index.toFloat() / taperLength)
+    } else {
+        1f
+    }
+    val distFromEnd = totalPoints - 1 - index
+    val endTaper = if (distFromEnd < taperLength) {
+        TAPER_MIN_FACTOR + (1f - TAPER_MIN_FACTOR) * (distFromEnd.toFloat() / taperLength)
+    } else {
+        1f
+    }
+    return minOf(startTaper, endTaper)
 }
 
 internal fun pressureWidth(
@@ -248,7 +385,7 @@ internal fun Brush.toInkBrush(
         }
     val size = viewTransform.pageWidthToScreen(baseWidth).coerceAtLeast(MIN_INK_BRUSH_SIZE)
     val epsilon = (size * INK_BRUSH_EPSILON_SCALE).coerceAtLeast(MIN_INK_BRUSH_EPSILON)
-    val baseColor = parseColor(color)
+    val baseColor = ColorCache.resolve(color)
     val adjustedColor = applyAlpha(baseColor, alphaMultiplier)
     return InkBrush.createWithColorIntArgb(
         family,
