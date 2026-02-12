@@ -32,6 +32,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Redo
@@ -43,13 +45,12 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.Inbox
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,6 +62,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,11 +77,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
@@ -106,22 +111,18 @@ private val NOTEWISE_SELECTED = Color(0xFF136CC5)
 private val NOTEWISE_STROKE = Color(0xFF3B435B)
 private val NOTE_PAPER = Color(0xFFFDFDFD)
 private val NOTE_PAPER_STROKE = Color(0xFFCBCED6)
-private const val NOTEWISE_LEFT_GROUP_WIDTH_DP = 320
+private const val NOTEWISE_LEFT_GROUP_WIDTH_DP = 360
 private const val NOTEWISE_RIGHT_GROUP_WIDTH_DP = 82
 private const val EDITOR_VIEWPORT_TEST_TAG = "note-editor-viewport"
+private const val TITLE_INPUT_TEST_TAG = "note-title-input"
 
-enum class ToolPanelType {
+private enum class ToolPanelType {
     PEN,
     HIGHLIGHTER,
     ERASER,
 }
 
-enum class EraserMode {
-    SOFT,
-    OBJECT,
-}
-
-data class ToolButtonVisuals(
+private data class ToolButtonVisuals(
     val label: String,
     val icon: ImageVector,
 )
@@ -158,6 +159,10 @@ private fun NoteEditorTopBar(
     var activeToolPanel by rememberSaveable { mutableStateOf<ToolPanelType?>(null) }
     var isColorPickerVisible by rememberSaveable { mutableStateOf(false) }
     var colorPickerInput by rememberSaveable { mutableStateOf(toolbarState.brush.color) }
+    var isTitleEditing by rememberSaveable { mutableStateOf(false) }
+    var titleDraft by rememberSaveable { mutableStateOf(topBarState.noteTitle) }
+    var isOverflowMenuExpanded by rememberSaveable { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
     val brush = toolbarState.brush
     val selectedTool =
         if (toolbarState.isStylusButtonEraserActive) {
@@ -166,6 +171,28 @@ private fun NoteEditorTopBar(
             brush.tool
         }
     val isEditingEnabled = !topBarState.isReadOnly
+    val currentPageNumber =
+        if (topBarState.totalPages > 0) {
+            (topBarState.currentPageIndex + 1).coerceIn(1, topBarState.totalPages)
+        } else {
+            0
+        }
+    val pageCounterDescription = "Page $currentPageNumber of ${topBarState.totalPages}"
+    val commitTitleEdit: () -> Unit = {
+        topBarState.onUpdateTitle(titleDraft)
+        isTitleEditing = false
+        focusManager.clearFocus()
+    }
+    LaunchedEffect(topBarState.noteTitle, isTitleEditing) {
+        if (!isTitleEditing) {
+            titleDraft = topBarState.noteTitle
+        }
+    }
+    LaunchedEffect(isEditingEnabled) {
+        if (!isEditingEnabled) {
+            isTitleEditing = false
+        }
+    }
     val onColorSelected: (String) -> Unit = { selectedColor ->
         val targetTool =
             if (brush.tool == Tool.ERASER) {
@@ -218,41 +245,35 @@ private fun NoteEditorTopBar(
                     )
                 }
                 ToolbarDivider()
-                IconButton(onClick = {}, modifier = Modifier.semantics { contentDescription = "Grid" }) {
-                    Icon(
-                        imageVector = Icons.Filled.GridView,
-                        contentDescription = null,
-                        tint = NOTEWISE_ICON,
-                    )
-                }
-                IconButton(
-                    onClick = {
-                        if (isEditingEnabled) {
-                            topBarState.onCreatePage()
-                        }
-                    },
-                    enabled = isEditingEnabled,
-                    modifier = Modifier.semantics { contentDescription = "Quick new page" },
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = null,
-                        tint = if (isEditingEnabled) NOTEWISE_ICON else NOTEWISE_ICON_MUTED,
-                    )
-                }
-                IconButton(onClick = {}, modifier = Modifier.semantics { contentDescription = "Search" }) {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = null,
-                        tint = NOTEWISE_ICON,
-                    )
-                }
-                IconButton(onClick = {}, modifier = Modifier.semantics { contentDescription = "Inbox" }) {
-                    Icon(
-                        imageVector = Icons.Filled.Inbox,
-                        contentDescription = null,
-                        tint = NOTEWISE_ICON,
-                    )
+                NoteTitleEditor(
+                    noteTitle = topBarState.noteTitle,
+                    titleDraft = titleDraft,
+                    isEditing = isTitleEditing,
+                    isEditingEnabled = isEditingEnabled,
+                    onTitleDraftChange = { titleDraft = it },
+                    onStartEditing = { isTitleEditing = true },
+                    onCommit = commitTitleEdit,
+                )
+                Box {
+                    IconButton(
+                        onClick = { isOverflowMenuExpanded = true },
+                        modifier = Modifier.semantics { contentDescription = "More actions" },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = null,
+                            tint = NOTEWISE_ICON,
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = isOverflowMenuExpanded,
+                        onDismissRequest = { isOverflowMenuExpanded = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Grid, search, and inbox are coming soon") },
+                            onClick = { isOverflowMenuExpanded = false },
+                        )
+                    }
                 }
             }
 
@@ -460,6 +481,12 @@ private fun NoteEditorTopBar(
                         tint = if (topBarState.canNavigateNext) NOTEWISE_ICON else NOTEWISE_ICON_MUTED,
                     )
                 }
+                Text(
+                    text = "$currentPageNumber/${topBarState.totalPages}",
+                    color = NOTEWISE_ICON,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.semantics { contentDescription = pageCounterDescription },
+                )
                 IconButton(
                     onClick = topBarState.onCreatePage,
                     enabled = isEditingEnabled,
@@ -501,6 +528,51 @@ private fun NoteEditorTopBar(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+@Suppress("LongParameterList")
+private fun RowScope.NoteTitleEditor(
+    noteTitle: String,
+    titleDraft: String,
+    isEditing: Boolean,
+    isEditingEnabled: Boolean,
+    onTitleDraftChange: (String) -> Unit,
+    onStartEditing: () -> Unit,
+    onCommit: () -> Unit,
+) {
+    if (isEditing && isEditingEnabled) {
+        OutlinedTextField(
+            value = titleDraft,
+            onValueChange = onTitleDraftChange,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { onCommit() }),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .testTag(TITLE_INPUT_TEST_TAG)
+                    .semantics { contentDescription = "Note title input" },
+            textStyle = MaterialTheme.typography.titleSmall,
+        )
+    } else {
+        val displayTitle = noteTitle.ifBlank { "Untitled note" }
+        TextButton(
+            onClick = onStartEditing,
+            enabled = isEditingEnabled,
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .semantics { contentDescription = "Note title" },
+        ) {
+            Text(
+                text = displayTitle,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = if (isEditingEnabled) NOTEWISE_ICON else NOTEWISE_ICON_MUTED,
+            )
         }
     }
 }
@@ -714,7 +786,6 @@ private fun ToolSettingsDialog(
     onDismiss: () -> Unit,
     onBrushChange: (Brush) -> Unit,
 ) {
-    var eraserMode by rememberSaveable { mutableStateOf(EraserMode.SOFT) }
     val title =
         when (panelType) {
             ToolPanelType.PEN -> "Pen settings"
@@ -778,21 +849,12 @@ private fun ToolSettingsDialog(
                     )
                 }
                 ToolPanelType.ERASER -> {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(TOOLBAR_ITEM_SPACING_DP.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        TextButton(
-                            onClick = { eraserMode = EraserMode.SOFT },
-                        ) {
-                            Text(if (eraserMode == EraserMode.SOFT) "Soft eraser" else "Soft")
-                        }
-                        TextButton(
-                            onClick = { eraserMode = EraserMode.OBJECT },
-                        ) {
-                            Text(if (eraserMode == EraserMode.OBJECT) "Object eraser" else "Object")
-                        }
-                    }
+                    Text(text = "Stroke eraser", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = "Erases entire strokes until segment eraser support is added.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
 
@@ -965,6 +1027,7 @@ private fun NoteEditorContent(
                     brush = contentState.brush,
                     pageWidth = contentState.pageWidth,
                     pageHeight = contentState.pageHeight,
+                    allowEditing = !contentState.isReadOnly,
                 )
             val inkCanvasCallbacks =
                 InkCanvasCallbacks(
@@ -989,9 +1052,6 @@ private fun NoteEditorContent(
                 callbacks = inkCanvasCallbacks,
                 modifier = Modifier.fillMaxSize(),
             )
-        }
-        if (contentState.isReadOnly) {
-            ReadOnlyInputBlocker()
         }
     }
 }
@@ -1021,23 +1081,6 @@ private fun FixedPageBackground(contentState: NoteEditorContentState) {
             style = Stroke(width = 1.dp.toPx()),
         )
     }
-}
-
-@Composable
-private fun ReadOnlyInputBlocker() {
-    androidx.compose.ui.viewinterop.AndroidView(
-        factory = { context ->
-            android.view.View(context).apply {
-                setOnTouchListener { _, _ -> true }
-            }
-        },
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .semantics {
-                    contentDescription = "View mode active. Editing disabled."
-                },
-    )
 }
 
 private fun resolveStabilization(brush: Brush): Float {

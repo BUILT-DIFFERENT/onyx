@@ -464,6 +464,7 @@ private fun buildTopBarState(
         onNavigatePrevious = { viewModel.navigateBy(-1) },
         onNavigateNext = { viewModel.navigateBy(1) },
         onCreatePage = { viewModel.createNewPage() },
+        onUpdateTitle = viewModel::updateNoteTitle,
         onUndo = undoController::undo,
         onRedo = undoController::redo,
         onToggleReadOnly = {},

@@ -34,6 +34,7 @@ internal data class InkCanvasInteraction(
     val strokes: List<Stroke>,
     val pageWidth: Float,
     val pageHeight: Float,
+    val allowEditing: Boolean,
     val onStrokeFinished: (Stroke) -> Unit,
     val onStrokeErased: (Stroke) -> Unit,
     val onTransformGesture: (
@@ -208,6 +209,9 @@ private fun handlePointerDown(
         (isKnownDrawingTool || isUnknownTool) && contactSize <= PALM_CONTACT_SIZE_THRESHOLD
     if (!shouldHandle) {
         return false
+    }
+    if (!interaction.allowEditing) {
+        return true
     }
     val pointerMode = resolvePointerMode(event, actionIndex, interaction, runtime)
     runtime.activePointerModes[pointerId] = pointerMode

@@ -162,6 +162,102 @@ class InkCanvasTouchRoutingTest {
     }
 
     @Test
+    fun readOnlyMode_blocksStylusEditingButKeepsPanGestures() {
+        val view = InProgressStrokesView(context)
+        val runtime = createRuntime()
+        var strokeFinishedCount = 0
+        val transformCalls = mutableListOf<TransformCall>()
+        val readOnlyInteraction =
+            createInteraction(
+                allowEditing = false,
+                onStrokeFinished = { strokeFinishedCount += 1 },
+                onTransformGesture = { zoom, panX, panY, centroidX, centroidY ->
+                    transformCalls += TransformCall(zoom, panX, panY, centroidX, centroidY)
+                },
+            )
+
+        val downTime = 350L
+        val stylusDown =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 30f,
+                y = 30f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val stylusMove =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 366L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 40f,
+                y = 42f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val stylusUp =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 382L,
+                action = MotionEvent.ACTION_UP,
+                x = 40f,
+                y = 42f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val fingerDownTime = 500L
+        val fingerDown =
+            singlePointerEvent(
+                downTime = fingerDownTime,
+                eventTime = fingerDownTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 10f,
+                y = 20f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+        val fingerMove =
+            singlePointerEvent(
+                downTime = fingerDownTime,
+                eventTime = 516L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 22f,
+                y = 44f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+        val fingerUp =
+            singlePointerEvent(
+                downTime = fingerDownTime,
+                eventTime = 532L,
+                action = MotionEvent.ACTION_UP,
+                x = 22f,
+                y = 44f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, stylusDown, readOnlyInteraction, runtime))
+            assertFalse(runtime.activeStrokeIds.containsKey(DEFAULT_POINTER_ID))
+            assertFalse(handleTouchEvent(view, stylusMove, readOnlyInteraction, runtime))
+            assertFalse(handleTouchEvent(view, stylusUp, readOnlyInteraction, runtime))
+            assertTrue(handleTouchEvent(view, fingerDown, readOnlyInteraction, runtime))
+            assertTrue(handleTouchEvent(view, fingerMove, readOnlyInteraction, runtime))
+            assertTrue(handleTouchEvent(view, fingerUp, readOnlyInteraction, runtime))
+        } finally {
+            stylusDown.recycle()
+            stylusMove.recycle()
+            stylusUp.recycle()
+            fingerDown.recycle()
+            fingerMove.recycle()
+            fingerUp.recycle()
+        }
+
+        assertEquals(0, strokeFinishedCount)
+        assertFalse(transformCalls.isEmpty())
+    }
+
+    @Test
     fun cancelEvent_clearsFinishedStrokeBridgeState() {
         val view = InProgressStrokesView(context)
         val runtime = createRuntime()
@@ -660,6 +756,7 @@ private fun createInteraction(
     strokes: List<Stroke> = emptyList(),
     pageWidth: Float = 1000f,
     pageHeight: Float = 1000f,
+    allowEditing: Boolean = true,
     onStrokeFinished: (Stroke) -> Unit = {},
     onStrokeErased: (Stroke) -> Unit = {},
     onTransformGesture: (Float, Float, Float, Float, Float) -> Unit = { _, _, _, _, _ -> },
@@ -672,6 +769,7 @@ private fun createInteraction(
         strokes = strokes,
         pageWidth = pageWidth,
         pageHeight = pageHeight,
+        allowEditing = allowEditing,
         onStrokeFinished = onStrokeFinished,
         onStrokeErased = onStrokeErased,
         onTransformGesture = onTransformGesture,

@@ -183,6 +183,7 @@ private fun defaultTopBarState(): NoteEditorTopBarState =
         onNavigatePrevious = {},
         onNavigateNext = {},
         onCreatePage = {},
+        onUpdateTitle = {},
         onUndo = {},
         onRedo = {},
         onToggleReadOnly = {},

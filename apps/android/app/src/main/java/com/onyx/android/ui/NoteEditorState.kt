@@ -33,6 +33,7 @@ internal data class NoteEditorTopBarState(
     val onNavigatePrevious: () -> Unit,
     val onNavigateNext: () -> Unit,
     val onCreatePage: () -> Unit,
+    val onUpdateTitle: (String) -> Unit,
     val onUndo: () -> Unit,
     val onRedo: () -> Unit,
     val onToggleReadOnly: () -> Unit,

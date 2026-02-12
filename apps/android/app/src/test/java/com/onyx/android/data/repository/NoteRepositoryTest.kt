@@ -173,6 +173,20 @@ class NoteRepositoryTest {
         }
 
     @Test
+    fun `updateNoteTitle persists title with updated timestamp`() =
+        runTest {
+            repository.updateNoteTitle(noteId = "note-id", title = "Weekly Plan")
+
+            coVerify(exactly = 1) {
+                noteDao.updateTitle(
+                    noteId = "note-id",
+                    title = "Weekly Plan",
+                    updatedAt = any(),
+                )
+            }
+        }
+
+    @Test
     fun `createPageFromPdf sets kind pdf and correct dimensions`() =
         runTest {
             val pageSlot = slot<PageEntity>()

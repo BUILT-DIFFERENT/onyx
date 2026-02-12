@@ -67,6 +67,7 @@ data class InkCanvasState(
     val brush: Brush,
     val pageWidth: Float,
     val pageHeight: Float,
+    val allowEditing: Boolean = true,
 )
 
 data class InkCanvasCallbacks(
@@ -98,6 +99,7 @@ fun InkCanvas(
     val currentStrokes by rememberUpdatedState(state.strokes)
     val currentPageWidth by rememberUpdatedState(state.pageWidth)
     val currentPageHeight by rememberUpdatedState(state.pageHeight)
+    val currentAllowEditing by rememberUpdatedState(state.allowEditing)
     val currentCallbacks by rememberUpdatedState(callbacks)
     val hoverPreviewState = remember { HoverPreviewState() }
 
@@ -172,6 +174,7 @@ fun InkCanvas(
                                 strokes = currentStrokes,
                                 pageWidth = currentPageWidth,
                                 pageHeight = currentPageHeight,
+                                allowEditing = currentAllowEditing,
                                 onStrokeFinished = onFinished,
                                 onStrokeErased = onErased,
                                 onTransformGesture = currentCallbacks.onTransformGesture,
@@ -193,6 +196,7 @@ fun InkCanvas(
                                 strokes = currentStrokes,
                                 pageWidth = currentPageWidth,
                                 pageHeight = currentPageHeight,
+                                allowEditing = currentAllowEditing,
                                 onStrokeFinished = onFinished,
                                 onStrokeErased = onErased,
                                 onTransformGesture = currentCallbacks.onTransformGesture,

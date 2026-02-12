@@ -100,6 +100,21 @@ internal class NoteEditorViewModel(
         _errorMessage.value = null
     }
 
+    fun updateNoteTitle(title: String) {
+        val normalizedTitle = title.trim()
+        if (_noteTitle.value == normalizedTitle) {
+            return
+        }
+        viewModelScope.launch {
+            runCatching {
+                repository.updateNoteTitle(noteId, normalizedTitle)
+                _noteTitle.value = normalizedTitle
+            }.onFailure { throwable ->
+                reportError("Failed to update note title.", throwable)
+            }
+        }
+    }
+
     fun navigateBy(offset: Int) {
         if (_pages.value.isEmpty()) {
             return
