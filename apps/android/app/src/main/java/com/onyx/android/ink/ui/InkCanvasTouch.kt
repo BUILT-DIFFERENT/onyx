@@ -32,6 +32,10 @@ internal data class InkCanvasInteraction(
         centroidX: Float,
         centroidY: Float,
     ) -> Unit,
+    val onPanGestureEnd: (
+        velocityX: Float,
+        velocityY: Float,
+    ) -> Unit,
 )
 
 internal fun handleTouchEvent(
@@ -368,6 +372,8 @@ private fun handleCancel(
     runtime.finishedInProgressByStrokeId.clear()
     runtime.pendingCommittedStrokes.clear()
     runtime.pendingCommittedAtUptimeMs.clear()
+    runtime.panVelocityTracker?.recycle()
+    runtime.panVelocityTracker = null
     runtime.invalidateActiveStrokeRender()
     runtime.hoverPreviewState.hide()
     return true

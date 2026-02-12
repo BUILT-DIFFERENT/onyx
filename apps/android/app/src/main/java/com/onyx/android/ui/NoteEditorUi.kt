@@ -973,6 +973,7 @@ private fun NoteEditorContent(
                             contentState.onStrokeErased
                         },
                     onTransformGesture = contentState.onTransformGesture,
+                    onPanGestureEnd = contentState.onPanGestureEnd,
                 )
             InkCanvas(
                 state = inkCanvasState,

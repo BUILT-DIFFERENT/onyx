@@ -4,6 +4,7 @@ package com.onyx.android.ink.ui
 
 import android.os.SystemClock
 import android.view.MotionEvent
+import android.view.VelocityTracker
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -51,6 +52,7 @@ internal class InkCanvasRuntime(
     var singleFingerPanPointerId = MotionEvent.INVALID_POINTER_ID
     var previousSingleFingerPanX = 0f
     var previousSingleFingerPanY = 0f
+    var panVelocityTracker: VelocityTracker? = null
 
     fun invalidateActiveStrokeRender() {
         activeStrokeRenderVersion += 1
@@ -91,6 +93,10 @@ data class InkCanvasCallbacks(
         panChangeY: Float,
         centroidX: Float,
         centroidY: Float,
+    ) -> Unit,
+    val onPanGestureEnd: (
+        velocityX: Float,
+        velocityY: Float,
     ) -> Unit,
 )
 
@@ -191,6 +197,7 @@ fun InkCanvas(
                                     currentCallbacks.onStrokeErased(stroke)
                                 },
                                 onTransformGesture = currentCallbacks.onTransformGesture,
+                                onPanGestureEnd = currentCallbacks.onPanGestureEnd,
                             )
                         handleTouchEvent(
                             view = this@apply,

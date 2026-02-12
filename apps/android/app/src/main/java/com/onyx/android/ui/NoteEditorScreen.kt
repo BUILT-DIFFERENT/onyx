@@ -14,6 +14,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
@@ -49,8 +51,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.exp
+import kotlin.math.hypot
 
 private class NoteEditorViewModel(
     private val noteId: String,
@@ -396,6 +401,10 @@ internal data class NoteEditorContentState(
         centroidX: Float,
         centroidY: Float,
     ) -> Unit,
+    val onPanGestureEnd: (
+        velocityX: Float,
+        velocityY: Float,
+    ) -> Unit,
     val onViewportSizeChanged: (IntSize) -> Unit,
 )
 
@@ -541,6 +550,8 @@ private fun rememberNoteEditorUiState(
     var isReadOnly by rememberSaveable { mutableStateOf(false) }
     var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
+    var panFlingJob by remember { mutableStateOf<Job?>(null) }
+    val coroutineScope = rememberCoroutineScope()
     val pdfState =
         rememberPdfState(
             currentPage = pageState.currentPage,
@@ -557,6 +568,7 @@ private fun rememberNoteEditorUiState(
     val strokeCallbacks = buildStrokeCallbacks(undoController, pageState.currentPage)
     LaunchedEffect(pageState.currentPage?.pageId, viewportSize) {
         if (viewportSize.width > 0 && viewportSize.height > 0) {
+            panFlingJob?.cancel()
             viewTransform =
                 fitTransformToViewport(
                     pageWidth = pdfState.pageWidth,
@@ -584,7 +596,8 @@ private fun rememberNoteEditorUiState(
         )
     val onTransformGesture: (Float, Float, Float, Float, Float) -> Unit =
         { zoomChange, panChangeX, panChangeY, centroidX, centroidY ->
-            val transformed =
+            panFlingJob?.cancel()
+            viewTransform =
                 applyTransformGesture(
                     current = viewTransform,
                     gesture =
@@ -596,14 +609,43 @@ private fun rememberNoteEditorUiState(
                             centroidY,
                         ),
                 )
-            viewTransform =
-                constrainTransformToViewport(
-                    transform = transformed,
-                    pageWidth = pdfState.pageWidth,
-                    pageHeight = pdfState.pageHeight,
-                    viewportWidth = viewportSize.width.toFloat(),
-                    viewportHeight = viewportSize.height.toFloat(),
-                )
+        }
+    val onPanGestureEnd: (Float, Float) -> Unit =
+        { velocityX, velocityY ->
+            panFlingJob?.cancel()
+            panFlingJob =
+                coroutineScope.launch {
+                    var currentVelocityX = velocityX
+                    var currentVelocityY = velocityY
+                    var previousFrameNanos = 0L
+                    while (hypot(currentVelocityX.toDouble(), currentVelocityY.toDouble()) > 8.0) {
+                        val frameNanos = withFrameNanos { it }
+                        if (previousFrameNanos == 0L) {
+                            previousFrameNanos = frameNanos
+                            continue
+                        }
+                        val deltaSeconds = (frameNanos - previousFrameNanos) / 1_000_000_000f
+                        previousFrameNanos = frameNanos
+                        if (deltaSeconds <= 0f) {
+                            continue
+                        }
+                        viewTransform =
+                            applyTransformGesture(
+                                current = viewTransform,
+                                gesture =
+                                    TransformGesture(
+                                        zoomChange = 1f,
+                                        panChangeX = currentVelocityX * deltaSeconds,
+                                        panChangeY = currentVelocityY * deltaSeconds,
+                                        centroidX = 0f,
+                                        centroidY = 0f,
+                                    ),
+                            )
+                        val decayFactor = exp((-5f * deltaSeconds).toDouble()).toFloat()
+                        currentVelocityX *= decayFactor
+                        currentVelocityY *= decayFactor
+                    }
+                }
         }
     val contentState =
         NoteEditorContentState(
@@ -622,6 +664,7 @@ private fun rememberNoteEditorUiState(
             onStrokeFinished = strokeCallbacks.onStrokeFinished,
             onStrokeErased = strokeCallbacks.onStrokeErased,
             onTransformGesture = onTransformGesture,
+            onPanGestureEnd = onPanGestureEnd,
             onViewportSizeChanged = { viewportSize = it },
         )
 
@@ -631,6 +674,7 @@ private fun rememberNoteEditorUiState(
         contentState = contentState,
         transformState =
             rememberTransformState(viewTransform) { updatedTransform ->
+                panFlingJob?.cancel()
                 viewTransform = updatedTransform
             },
     )

@@ -110,6 +110,7 @@ private fun PdfPageLayers(
                 onStrokeFinished = contentState.onStrokeFinished,
                 onStrokeErased = contentState.onStrokeErased,
                 onTransformGesture = contentState.onTransformGesture,
+                onPanGestureEnd = contentState.onPanGestureEnd,
             )
         InkCanvas(
             state = inkCanvasState,
