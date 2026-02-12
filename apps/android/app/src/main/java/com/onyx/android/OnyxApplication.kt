@@ -35,19 +35,20 @@ class OnyxApplication : Application(), AppContainer {
             )
         Log.d("OnyxApp", "NoteRepository initialized")
 
-        // Initialize MyScript engine (singleton, lazily initialized on first use)
+        // Initialize MyScript engine asynchronously to avoid blocking app startup.
+        // Asset copying can take significant time on first launch.
         myScriptEngine = MyScriptEngine(applicationContext)
-        val initResult = myScriptEngine.initialize()
-        if (initResult.isFailure) {
-            Log.e(
-                "OnyxApp",
-                "MyScript initialization failed: ${initResult.exceptionOrNull()?.message}",
-            )
-            // App can still run but recognition features will be unavailable
-            // ViewModels should check isInitialized() before calling getEngine()
-        } else {
-            Log.i("OnyxApp", "MyScript engine initialized successfully")
-        }
+        Thread {
+            val initResult = myScriptEngine.initialize()
+            if (initResult.isFailure) {
+                Log.e(
+                    "OnyxApp",
+                    "MyScript initialization failed: ${initResult.exceptionOrNull()?.message}",
+                )
+            } else {
+                Log.i("OnyxApp", "MyScript engine initialized successfully")
+            }
+        }.start()
 
         Log.d("OnyxApp", "OnyxApplication initialization complete")
     }

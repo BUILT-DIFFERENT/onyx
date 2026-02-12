@@ -10,7 +10,10 @@ import kotlin.math.sqrt
 
 private const val ERASE_HIT_RADIUS_PX = 10f
 
-internal fun calculateBounds(points: List<StrokePoint>): StrokeBounds {
+internal fun calculateBounds(
+    points: List<StrokePoint>,
+    strokeWidthPadding: Float = 0f,
+): StrokeBounds {
     if (points.isEmpty()) {
         return StrokeBounds(x = 0f, y = 0f, w = 0f, h = 0f)
     }
@@ -24,10 +27,13 @@ internal fun calculateBounds(points: List<StrokePoint>): StrokeBounds {
         maxX = maxOf(maxX, point.x)
         maxY = maxOf(maxY, point.y)
     }
+    val halfPadding = strokeWidthPadding / 2f
     return StrokeBounds(
-        x = minX,
-        y = minY,
-        w = maxX - minX,
+        x = minX - halfPadding,
+        y = minY - halfPadding,
+        w = maxX - minX + strokeWidthPadding,
+        h = maxY - minY + strokeWidthPadding,
+    )
         h = maxY - minY,
     )
 }

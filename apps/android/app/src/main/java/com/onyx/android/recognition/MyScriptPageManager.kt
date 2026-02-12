@@ -220,12 +220,22 @@ class MyScriptPageManager(
     ) {
         val editor = offscreenEditor ?: return
 
-        editor.clear()
-        strokeIdsMapping.clear()
-        remainingStrokes.forEach { stroke: Stroke ->
-            addStroke(stroke)
+        // Try to find the MyScript stroke ID for direct erasure
+        val msStrokeId = strokeIdsMapping.entries.firstOrNull { it.value == erasedStrokeId }?.key
+        if (msStrokeId != null) {
+            runCatching {
+                editor.eraseStrokes(arrayOf(msStrokeId))
+                strokeIdsMapping.remove(msStrokeId)
+                Log.d("MyScript", "Stroke erased directly: $erasedStrokeId (ms=$msStrokeId)")
+            }.onFailure {
+                // Fallback: clear and re-feed all remaining strokes
+                Log.d("MyScript", "Direct erase failed, falling back to clear+re-feed: ${it.message}")
+                clearAndRefeed(remainingStrokes)
+            }
+        } else {
+            clearAndRefeed(remainingStrokes)
+            Log.d("MyScript", "Stroke erased via clear+re-feed: $erasedStrokeId, re-fed ${remainingStrokes.size}")
         }
-        Log.d("MyScript", "Stroke erased: $erasedStrokeId, re-fed ${remainingStrokes.size} strokes")
     }
 
     fun onUndo(currentStrokes: List<Stroke>) {
@@ -238,11 +248,7 @@ class MyScriptPageManager(
             return
         }
 
-        editor.clear()
-        strokeIdsMapping.clear()
-        currentStrokes.forEach { stroke: Stroke ->
-            addStroke(stroke)
-        }
+        clearAndRefeed(currentStrokes)
         Log.d("MyScript", "Undo via clear+re-feed: ${currentStrokes.size} strokes")
     }
 
@@ -256,12 +262,17 @@ class MyScriptPageManager(
             return
         }
 
+        clearAndRefeed(currentStrokes)
+        Log.d("MyScript", "Redo via clear+re-feed: ${currentStrokes.size} strokes")
+    }
+
+    private fun clearAndRefeed(strokes: List<Stroke>) {
+        val editor = offscreenEditor ?: return
         editor.clear()
         strokeIdsMapping.clear()
-        currentStrokes.forEach { stroke: Stroke ->
+        strokes.forEach { stroke: Stroke ->
             addStroke(stroke)
         }
-        Log.d("MyScript", "Redo via clear+re-feed: ${currentStrokes.size} strokes")
     }
 
     /**
