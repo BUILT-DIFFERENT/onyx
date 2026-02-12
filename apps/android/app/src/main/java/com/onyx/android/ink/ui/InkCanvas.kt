@@ -181,6 +181,21 @@ fun InkCanvas(
                     // Finished strokes are drawn in Compose using cached world-space paths.
                     alpha = 1f
                     eagerInit()
+                    val onFinished = { stroke: Stroke ->
+                        runtime.pendingCommittedStrokes[stroke.id] = stroke
+                        runtime.pendingCommittedAtUptimeMs[stroke.id] = SystemClock.uptimeMillis()
+                        currentCallbacks.onStrokeFinished(stroke)
+                    }
+                    val onErased = { stroke: Stroke ->
+                        val bridgeEntry = runtime.finishedInProgressByStrokeId.remove(stroke.id)
+                        if (bridgeEntry != null) {
+                            this@apply.removeFinishedStrokes(setOf(bridgeEntry.inProgressStrokeId))
+                        }
+                        runtime.pendingCommittedStrokes.remove(stroke.id)
+                        runtime.pendingCommittedAtUptimeMs.remove(stroke.id)
+                        runtime.finishedStrokePathCache.remove(stroke.id)
+                        currentCallbacks.onStrokeErased(stroke)
+                    }
                     setOnTouchListener { _, event ->
                         val interaction =
                             InkCanvasInteraction(
@@ -189,21 +204,8 @@ fun InkCanvas(
                                 strokes = currentStrokes,
                                 pageWidth = currentPageWidth,
                                 pageHeight = currentPageHeight,
-                                onStrokeFinished = { stroke ->
-                                    runtime.pendingCommittedStrokes[stroke.id] = stroke
-                                    runtime.pendingCommittedAtUptimeMs[stroke.id] = SystemClock.uptimeMillis()
-                                    currentCallbacks.onStrokeFinished(stroke)
-                                },
-                                onStrokeErased = { stroke ->
-                                    val bridgeEntry = runtime.finishedInProgressByStrokeId.remove(stroke.id)
-                                    if (bridgeEntry != null) {
-                                        this@apply.removeFinishedStrokes(setOf(bridgeEntry.inProgressStrokeId))
-                                    }
-                                    runtime.pendingCommittedStrokes.remove(stroke.id)
-                                    runtime.pendingCommittedAtUptimeMs.remove(stroke.id)
-                                    runtime.finishedStrokePathCache.remove(stroke.id)
-                                    currentCallbacks.onStrokeErased(stroke)
-                                },
+                                onStrokeFinished = onFinished,
+                                onStrokeErased = onErased,
                                 onTransformGesture = currentCallbacks.onTransformGesture,
                                 onPanGestureEnd = currentCallbacks.onPanGestureEnd,
                                 onStylusButtonEraserActiveChanged = currentCallbacks.onStylusButtonEraserActiveChanged,
@@ -223,21 +225,8 @@ fun InkCanvas(
                                 strokes = currentStrokes,
                                 pageWidth = currentPageWidth,
                                 pageHeight = currentPageHeight,
-                                onStrokeFinished = { stroke ->
-                                    runtime.pendingCommittedStrokes[stroke.id] = stroke
-                                    runtime.pendingCommittedAtUptimeMs[stroke.id] = SystemClock.uptimeMillis()
-                                    currentCallbacks.onStrokeFinished(stroke)
-                                },
-                                onStrokeErased = { stroke ->
-                                    val bridgeEntry = runtime.finishedInProgressByStrokeId.remove(stroke.id)
-                                    if (bridgeEntry != null) {
-                                        this@apply.removeFinishedStrokes(setOf(bridgeEntry.inProgressStrokeId))
-                                    }
-                                    runtime.pendingCommittedStrokes.remove(stroke.id)
-                                    runtime.pendingCommittedAtUptimeMs.remove(stroke.id)
-                                    runtime.finishedStrokePathCache.remove(stroke.id)
-                                    currentCallbacks.onStrokeErased(stroke)
-                                },
+                                onStrokeFinished = onFinished,
+                                onStrokeErased = onErased,
                                 onTransformGesture = currentCallbacks.onTransformGesture,
                                 onPanGestureEnd = currentCallbacks.onPanGestureEnd,
                                 onStylusButtonEraserActiveChanged = currentCallbacks.onStylusButtonEraserActiveChanged,
