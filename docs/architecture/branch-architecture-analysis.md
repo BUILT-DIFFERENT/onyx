@@ -225,3 +225,65 @@ Current setup direction is good (v4 certificate class, bundled assets, app-level
 ## 16) Final recommendation
 
 Do not rush new feature surface area yet. Prioritize a clean internal contract for stroke/render/op pipelines, plus PDF scalability architecture. That foundation will pay off across handwriting quality, realtime convergence, and long-document performance.
+
+
+## 17) Concrete implementation backlog (recommended)
+
+### Track A — Ink quality and feel (highest user impact)
+1. Implement adaptive smoothing pipeline (one-euro + Catmull-Rom fallback) behind a runtime flag.
+2. Rebind stabilization slider to smoothing strength/latency (not width variance).
+3. Add stroke-segment cache and frame-coalesced invalidation to reduce jank on fast stylus movement.
+4. Add telemetry counters: input-to-render latency p50/p95, dropped frame count, and active-stroke point counts.
+
+**Acceptance criteria**
+- Sustained drawing at 120Hz on target tablet without visible hitching in 5-minute stress run.
+- Stabilization slider produces measurable path smoothness change without changing static brush width.
+
+### Track B — PDF scale and reliability (300+ pages)
+1. Introduce tile pyramid cache keyed by `(docId, page, zoomBucket, tileRect)`.
+2. Add viewport-aware prefetch queue with cancellation when user scroll direction changes.
+3. Add memory pressure fallback ladder (tile size downshift, reduced prefetch window, cache shrink).
+4. Move text extraction/indexing to background workers with bounded queue and cancellation.
+
+**Acceptance criteria**
+- 300-page PDF opens under target startup budget and keeps scroll latency stable after 10 minutes.
+- No OOM in stress runs with repeated zoom/page jumps.
+
+### Track C — Data model for sync/collaboration
+1. Add local op envelope table with `(deviceId, lamport, opId, pageId, type, payload, committedAt)`.
+2. Make snapshot+compaction job deterministic and idempotent.
+3. Add replay verifier tests: same op sequence always yields identical page state hash.
+4. Add conflict fixtures for interleaved erase/add/update operations.
+
+**Acceptance criteria**
+- Reconnect replay convergence test passes for randomized op order permutations.
+- Duplicate op delivery is safely ignored (idempotence proof by test).
+
+### Track D — Sharing + realtime UX foundations
+1. Implement ACL model (`owner/editor/viewer`) and revocable public links with expiry.
+2. Add presence stream (cursor/tool/page focus) separate from content ops.
+3. Add reconnect flow: snapshot cursor + backfill + live tail subscription.
+4. Add user-facing share management panel with explicit role labels.
+
+**Acceptance criteria**
+- Permission checks enforced on all read/write paths.
+- Multi-user session converges under packet delay and reconnect simulation.
+
+### Track E — Editor UX structure
+1. Split `NoteEditorUi` into bounded modules (toolbar, page nav, tool panels, canvas scene).
+2. Add focus mode and reduce persistent chrome noise.
+3. Add page overview grid + jump-to-page for long documents.
+4. Keep all unimplemented controls hidden (no dead buttons).
+
+**Acceptance criteria**
+- Reduced editor file/module complexity and faster feature-level test cycles.
+- Usability pass confirms primary actions are reachable in <=2 taps.
+
+## 18) Suggested sequencing and ownership
+
+- **Sprint 1**: Track A + E structural split (foundation for quality and velocity).
+- **Sprint 2**: Track B PDF scale path + perf instrumentation.
+- **Sprint 3**: Track C sync data contracts and deterministic replay suite.
+- **Sprint 4**: Track D sharing/realtime MVP with guarded rollout flags.
+
+This ordering prioritizes drawing feel and performance first, then introduces distributed-state complexity after local determinism is solid.
