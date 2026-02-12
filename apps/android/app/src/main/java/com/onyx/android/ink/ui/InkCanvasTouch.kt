@@ -212,7 +212,7 @@ private fun handlePointerDown(
     runtime.activePointerModes[pointerId] = pointerMode
     if (pointerMode == PointerMode.ERASE) {
         runtime.hoverPreviewState.hide()
-        return handleEraserAtPointer(event, actionIndex, interaction)
+        return handleEraserAtPointer(event, actionIndex, interaction, runtime)
     }
     val (downPageX, downPageY) =
         interaction.viewTransform.screenToPage(
@@ -226,7 +226,6 @@ private fun handlePointerDown(
     if (isStylusToolType(actionToolType)) {
         view.requestUnbufferedDispatch(event)
     }
-    releaseFinishedStrokeBridges(view, runtime)
     runtime.hoverPreviewState.hide()
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
     runtime.motionPredictionAdapter?.record(event)
@@ -259,21 +258,6 @@ private fun handlePointerDown(
     return true
 }
 
-private fun releaseFinishedStrokeBridges(
-    view: InProgressStrokesView,
-    runtime: InkCanvasRuntime,
-) {
-    if (runtime.finishedInProgressByStrokeId.isEmpty()) {
-        return
-    }
-    view.removeFinishedStrokes(
-        runtime.finishedInProgressByStrokeId.values
-            .map { entry -> entry.inProgressStrokeId }
-            .toSet(),
-    )
-    runtime.finishedInProgressByStrokeId.clear()
-}
-
 private fun handlePointerMove(
     view: InProgressStrokesView,
     event: MotionEvent,
@@ -294,7 +278,7 @@ private fun handlePointerMove(
         val movePointerId = event.getPointerId(index)
         when (runtime.activePointerModes[movePointerId]) {
             PointerMode.ERASE -> {
-                handleEraserAtPointer(event, index, interaction)
+                handleEraserAtPointer(event, index, interaction, runtime)
                 handled = true
             }
 
@@ -340,12 +324,14 @@ private fun handleEraserAtPointer(
     event: MotionEvent,
     pointerIndex: Int,
     interaction: InkCanvasInteraction,
+    runtime: InkCanvasRuntime,
 ): Boolean {
+    val allStrokes = interaction.strokes + runtime.pendingCommittedStrokes.values
     val erasedStroke =
         findStrokeToErase(
             screenX = event.getX(pointerIndex),
             screenY = event.getY(pointerIndex),
-            strokes = interaction.strokes,
+            strokes = allStrokes,
             viewTransform = interaction.viewTransform,
         )
     if (erasedStroke != null) {
@@ -555,8 +541,6 @@ private fun handleCancel(
     runtime.activeStrokePoints.clear()
     runtime.activeStrokeStartTimes.clear()
     runtime.finishedInProgressByStrokeId.clear()
-    runtime.pendingCommittedStrokes.clear()
-    runtime.pendingCommittedAtUptimeMs.clear()
     runtime.panVelocityTracker?.recycle()
     runtime.panVelocityTracker = null
     runtime.invalidateActiveStrokeRender()
