@@ -86,6 +86,7 @@ dependencies {
 
     // kotlinx.serialization for JSON
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.6.2")
 
     // Core Android
     implementation("androidx.core:core-ktx:1.12.0")

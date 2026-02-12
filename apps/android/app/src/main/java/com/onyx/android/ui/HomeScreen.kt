@@ -45,11 +45,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artifex.mupdf.fitz.Document
-import com.onyx.android.OnyxApplication
 import com.onyx.android.data.entity.NoteEntity
 import com.onyx.android.data.repository.NoteRepository
 import com.onyx.android.data.repository.SearchResultItem
 import com.onyx.android.pdf.PdfAssetStorage
+import com.onyx.android.requireAppContainer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -97,9 +97,10 @@ private data class HomeScreenActions(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(onNavigateToEditor: (String, String?) -> Unit) {
-    val app = LocalContext.current.applicationContext as OnyxApplication
-    val repository = app.noteRepository
-    val pdfAssetStorage = remember { PdfAssetStorage(app) }
+    val appContext = LocalContext.current.applicationContext
+    val appContainer = appContext.requireAppContainer()
+    val repository = appContainer.noteRepository
+    val pdfAssetStorage = remember { PdfAssetStorage(appContext) }
     val viewModel: HomeScreenViewModel =
         viewModel(
             key = "HomeScreenViewModel",

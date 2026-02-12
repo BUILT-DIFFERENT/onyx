@@ -1,12 +1,11 @@
 package com.onyx.android.data
 
 import android.content.Context
-import android.util.Base64
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverter
-import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.onyx.android.data.dao.NoteDao
 import com.onyx.android.data.dao.PageDao
 import com.onyx.android.data.dao.RecognitionDao
@@ -25,10 +24,9 @@ import com.onyx.android.data.entity.StrokeEntity
         RecognitionIndexEntity::class,
         RecognitionFtsEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
-@TypeConverters(Converters::class)
 abstract class OnyxDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
 
@@ -41,18 +39,18 @@ abstract class OnyxDatabase : RoomDatabase() {
     companion object {
         const val DATABASE_NAME = "onyx_notes.db"
 
+        val MIGRATION_1_2 =
+            object : Migration(1, 2) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    // No schema change in v2. We switched stroke payload encoding to protobuf.
+                    // Existing dev data compatibility is intentionally not guaranteed in this phase.
+                }
+            }
+
         fun build(context: Context): OnyxDatabase =
             Room
                 .databaseBuilder(context, OnyxDatabase::class.java, DATABASE_NAME)
-                .fallbackToDestructiveMigration()
+                .addMigrations(MIGRATION_1_2)
                 .build()
     }
-}
-
-class Converters {
-    @TypeConverter
-    fun byteArrayToString(bytes: ByteArray): String = Base64.encodeToString(bytes, Base64.DEFAULT)
-
-    @TypeConverter
-    fun stringToByteArray(str: String): ByteArray = Base64.decode(str, Base64.DEFAULT)
 }
