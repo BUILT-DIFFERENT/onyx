@@ -75,6 +75,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -94,6 +95,8 @@ private const val HEX_COLOR_LENGTH_RGB = 7
 private const val MIN_COLOR_CHANNEL = 0
 private const val MAX_COLOR_CHANNEL = 255
 private const val COLOR_ALPHA_MAX_FLOAT = 255f
+private const val DEFAULT_HIGHLIGHTER_OPACITY = 0.35f
+private const val DEFAULT_HIGHLIGHTER_BASE_WIDTH = 6.5f
 private val HEX_COLOR_REGEX = Regex("^#([0-9A-F]{6}|[0-9A-F]{8})$")
 private val NOTEWISE_CHROME = Color(0xFF20263A)
 private val NOTEWISE_PILL = Color(0xFF2B3144)
@@ -297,7 +300,10 @@ private fun NoteEditorTopBar(
                         onToggle = {
                             activeToolPanel = null
                             toolbarState.onBrushChange(
-                                brush.copy(tool = Tool.PEN, color = normalizeHexColor(brush.color)),
+                                brush.copy(
+                                    tool = Tool.PEN,
+                                    color = stripAlpha(normalizeHexColor(brush.color)),
+                                ),
                             )
                         },
                         onLongPress = {
@@ -327,10 +333,17 @@ private fun NoteEditorTopBar(
                         onToggle = {
                             activeToolPanel = null
                             val normalized = normalizeHexColor(brush.color)
+                            val targetOpacity =
+                                if (brush.tool == Tool.HIGHLIGHTER) {
+                                    resolveOpacity(brush)
+                                } else {
+                                    DEFAULT_HIGHLIGHTER_OPACITY
+                                }
                             toolbarState.onBrushChange(
                                 brush.copy(
                                     tool = Tool.HIGHLIGHTER,
-                                    color = applyOpacity(normalized, resolveOpacity(brush)),
+                                    color = applyOpacity(normalized, targetOpacity),
+                                    baseWidth = maxOf(brush.baseWidth, DEFAULT_HIGHLIGHTER_BASE_WIDTH),
                                 ),
                             )
                         },
@@ -941,6 +954,9 @@ private fun NoteEditorContent(
         Box(
             modifier =
                 pageModifier
+                    .onSizeChanged { size ->
+                        contentState.onViewportSizeChanged(size)
+                    }
                     .padding(vertical = if (isPortrait) 0.dp else 12.dp)
                     .clip(RoundedCornerShape(if (isPortrait) 0.dp else 4.dp))
                     .background(if (isPortrait) Color.Transparent else NOTEWISE_PAGE)
@@ -1096,6 +1112,15 @@ private fun normalizeHexColor(rawColor: String): String {
             "#${prefixed[1]}${prefixed[1]}${prefixed[2]}${prefixed[2]}${prefixed[3]}${prefixed[3]}${prefixed[4]}${prefixed[4]}"
         }
         else -> "#000000"
+    }
+}
+
+private fun stripAlpha(colorHex: String): String {
+    val normalized = normalizeHexColor(colorHex)
+    return if (normalized.length == 9) {
+        "#${normalized.takeLast(6)}"
+    } else {
+        normalized
     }
 }
 

@@ -6,13 +6,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.ink.brush.StockBrushes
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Stroke
+import com.onyx.android.ink.model.StrokePoint
+import com.onyx.android.ink.model.StrokeStyle
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import androidx.compose.ui.graphics.drawscope.Stroke as ComposeStroke
@@ -30,6 +30,8 @@ private const val ALPHA_SHIFT_BITS = 24
 private const val ALPHA_MASK = 0xFF
 private const val RGB_MASK = 0x00FFFFFF
 private const val MAX_ALPHA = 255
+private const val PRESSURE_FALLBACK = 0.5f
+private const val MIN_STROKE_POINTS = 2
 
 internal class HoverPreviewState {
     var isVisible by mutableStateOf(false)
@@ -81,26 +83,86 @@ internal fun DrawScope.drawStroke(
     stroke: Stroke,
     transform: ViewTransform,
 ) {
-    if (stroke.points.size < 2) return
-    val path = Path()
-    val firstPoint = stroke.points.first()
-    val (startX, startY) = transform.pageToScreen(firstPoint.x, firstPoint.y)
-    path.moveTo(startX, startY)
-    for (index in 1 until stroke.points.size) {
-        val point = stroke.points[index]
-        val (x, y) = transform.pageToScreen(point.x, point.y)
-        path.lineTo(x, y)
+    drawStrokePoints(points = stroke.points, style = stroke.style, transform = transform)
+}
+
+internal fun DrawScope.drawStrokePoints(
+    points: List<StrokePoint>,
+    style: StrokeStyle,
+    transform: ViewTransform,
+) {
+    if (points.size < MIN_STROKE_POINTS) return
+    val samples = smoothStrokePoints(points)
+    if (samples.size < MIN_STROKE_POINTS) return
+
+    val color = Color(parseColor(style.color))
+    for (index in 1 until samples.size) {
+        val previousPoint = samples[index - 1]
+        val currentPoint = samples[index]
+        val (startX, startY) = transform.pageToScreen(previousPoint.x, previousPoint.y)
+        val (endX, endY) = transform.pageToScreen(currentPoint.x, currentPoint.y)
+        val segmentWidth =
+            transform.pageWidthToScreen(
+                pressureWidth(
+                    baseWidth = style.baseWidth,
+                    minWidthFactor = style.minWidthFactor,
+                    maxWidthFactor = style.maxWidthFactor,
+                    pressure = currentPoint.pressure,
+                ),
+            ).coerceAtLeast(MIN_INK_BRUSH_SIZE)
+        drawLine(
+            color = color,
+            start = Offset(startX, startY),
+            end = Offset(endX, endY),
+            strokeWidth = segmentWidth,
+            cap = StrokeCap.Round,
+        )
     }
-    drawPath(
-        path = path,
-        color = Color(parseColor(stroke.style.color)),
-        style =
-            ComposeStroke(
-                width = transform.pageWidthToScreen(stroke.style.baseWidth),
-                cap = StrokeCap.Round,
-                join = StrokeJoin.Round,
-            ),
-    )
+}
+
+private data class StrokeRenderPoint(
+    val x: Float,
+    val y: Float,
+    val pressure: Float?,
+)
+
+private fun smoothStrokePoints(points: List<StrokePoint>): List<StrokeRenderPoint> {
+    if (points.size <= MIN_STROKE_POINTS) {
+        return points.map { point -> StrokeRenderPoint(point.x, point.y, point.p) }
+    }
+
+    val smoothed = ArrayList<StrokeRenderPoint>(points.size)
+    val first = points.first()
+    smoothed += StrokeRenderPoint(first.x, first.y, first.p)
+    for (index in 1 until points.lastIndex) {
+        val previous = points[index - 1]
+        val current = points[index]
+        val next = points[index + 1]
+        val previousPressure = previous.p ?: PRESSURE_FALLBACK
+        val currentPressure = current.p ?: PRESSURE_FALLBACK
+        val nextPressure = next.p ?: PRESSURE_FALLBACK
+        smoothed +=
+            StrokeRenderPoint(
+                x = (previous.x + current.x + next.x) / 3f,
+                y = (previous.y + current.y + next.y) / 3f,
+                pressure = (previousPressure + currentPressure + nextPressure) / 3f,
+            )
+    }
+    val last = points.last()
+    smoothed += StrokeRenderPoint(last.x, last.y, last.p)
+    return smoothed
+}
+
+internal fun pressureWidth(
+    baseWidth: Float,
+    minWidthFactor: Float,
+    maxWidthFactor: Float,
+    pressure: Float?,
+    pressureFallback: Float = PRESSURE_FALLBACK,
+): Float {
+    val resolvedPressure = (pressure ?: pressureFallback).coerceIn(0f, 1f)
+    val factor = minWidthFactor + (maxWidthFactor - minWidthFactor) * resolvedPressure
+    return baseWidth * factor
 }
 
 internal fun Brush.toInkBrush(

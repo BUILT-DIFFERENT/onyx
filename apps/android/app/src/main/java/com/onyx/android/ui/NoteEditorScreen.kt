@@ -14,6 +14,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntSize
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -356,6 +357,8 @@ internal data class NoteEditorContentState(
     val viewTransform: ViewTransform,
     val pageWidthDp: androidx.compose.ui.unit.Dp,
     val pageHeightDp: androidx.compose.ui.unit.Dp,
+    val pageWidth: Float,
+    val pageHeight: Float,
     val strokes: List<Stroke>,
     val brush: Brush,
     val onStrokeFinished: (Stroke) -> Unit,
@@ -367,6 +370,7 @@ internal data class NoteEditorContentState(
         centroidX: Float,
         centroidY: Float,
     ) -> Unit,
+    val onViewportSizeChanged: (IntSize) -> Unit,
 )
 
 private data class NoteEditorPageState(
@@ -383,6 +387,8 @@ private data class NoteEditorPdfState(
     val pdfBitmap: android.graphics.Bitmap?,
     val pageWidthDp: androidx.compose.ui.unit.Dp,
     val pageHeightDp: androidx.compose.ui.unit.Dp,
+    val pageWidth: Float,
+    val pageHeight: Float,
 )
 
 private data class NoteEditorUiState(
@@ -484,7 +490,8 @@ private fun rememberNoteEditorUiState(
     val undoController = remember(viewModel) { UndoController(viewModel, MAX_UNDO_ACTIONS) }
     var isReadOnly by rememberSaveable { mutableStateOf(false) }
     var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
-    val pdfState = rememberPdfState(pageState.currentPage, pdfAssetStorage, viewTransform)
+    var viewportSize by remember { mutableStateOf(IntSize.Zero) }
+    val pdfState = rememberPdfState(pageState.currentPage, pdfAssetStorage)
     DisposePdfRenderer(pdfState.pdfRenderer)
     ObserveNoteEditorLifecycle(
         noteId = noteId,
@@ -493,6 +500,17 @@ private fun rememberNoteEditorUiState(
         undoController = undoController,
     )
     val strokeCallbacks = buildStrokeCallbacks(undoController, pageState.currentPage)
+    LaunchedEffect(pageState.currentPage?.pageId, viewportSize) {
+        if (viewportSize.width > 0 && viewportSize.height > 0) {
+            viewTransform =
+                fitTransformToViewport(
+                    pageWidth = pdfState.pageWidth,
+                    pageHeight = pdfState.pageHeight,
+                    viewportWidth = viewportSize.width.toFloat(),
+                    viewportHeight = viewportSize.height.toFloat(),
+                )
+        }
+    }
     val topBarState =
         buildTopBarState(
             pageState,
@@ -511,7 +529,7 @@ private fun rememberNoteEditorUiState(
         )
     val onTransformGesture: (Float, Float, Float, Float, Float) -> Unit =
         { zoomChange, panChangeX, panChangeY, centroidX, centroidY ->
-            viewTransform =
+            val transformed =
                 applyTransformGesture(
                     current = viewTransform,
                     gesture =
@@ -522,6 +540,14 @@ private fun rememberNoteEditorUiState(
                             centroidX,
                             centroidY,
                         ),
+                )
+            viewTransform =
+                constrainTransformToViewport(
+                    transform = transformed,
+                    pageWidth = pdfState.pageWidth,
+                    pageHeight = pdfState.pageHeight,
+                    viewportWidth = viewportSize.width.toFloat(),
+                    viewportHeight = viewportSize.height.toFloat(),
                 )
         }
     val contentState =
@@ -534,11 +560,14 @@ private fun rememberNoteEditorUiState(
             viewTransform = viewTransform,
             pageWidthDp = pdfState.pageWidthDp,
             pageHeightDp = pdfState.pageHeightDp,
+            pageWidth = pdfState.pageWidth,
+            pageHeight = pdfState.pageHeight,
             strokes = pageState.strokes,
             brush = brushState.brush,
             onStrokeFinished = strokeCallbacks.onStrokeFinished,
             onStrokeErased = strokeCallbacks.onStrokeErased,
             onTransformGesture = onTransformGesture,
+            onViewportSizeChanged = { viewportSize = it },
         )
 
     return NoteEditorUiState(
@@ -616,7 +645,6 @@ private fun rememberPageState(viewModel: NoteEditorViewModel): NoteEditorPageSta
 private fun rememberPdfState(
     currentPage: PageEntity?,
     pdfAssetStorage: PdfAssetStorage,
-    viewTransform: ViewTransform,
 ): NoteEditorPdfState {
     val isPdfPage = currentPage?.kind == "pdf" || currentPage?.kind == "mixed"
     val pdfRenderer =
@@ -625,7 +653,7 @@ private fun rememberPdfState(
                 PdfRenderer(pdfAssetStorage.getFileForAsset(assetId))
             }
         }
-    val pdfBitmap = rememberPdfBitmap(isPdfPage, currentPage, pdfRenderer, viewTransform)
+    val pdfBitmap = rememberPdfBitmap(isPdfPage, currentPage, pdfRenderer)
     val pageWidth = currentPage?.width ?: 0f
     val pageHeight = currentPage?.height ?: 0f
     val pageWidthDp = with(LocalDensity.current) { pageWidth.toDp() }
@@ -636,6 +664,8 @@ private fun rememberPdfState(
         pdfBitmap = pdfBitmap,
         pageWidthDp = pageWidthDp,
         pageHeightDp = pageHeightDp,
+        pageWidth = pageWidth,
+        pageHeight = pageHeight,
     )
 }
 

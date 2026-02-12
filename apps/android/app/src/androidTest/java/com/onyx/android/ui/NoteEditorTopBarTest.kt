@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.onyx.android.ink.model.Brush
@@ -156,9 +157,12 @@ private fun defaultContentState(): NoteEditorContentState =
         viewTransform = ViewTransform.DEFAULT,
         pageWidthDp = 0.dp,
         pageHeightDp = 0.dp,
+        pageWidth = 0f,
+        pageHeight = 0f,
         strokes = emptyList(),
         brush = Brush(),
         onStrokeFinished = {},
         onStrokeErased = {},
         onTransformGesture = { _, _, _, _, _ -> },
+        onViewportSizeChanged = { _: IntSize -> },
     )

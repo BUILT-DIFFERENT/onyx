@@ -45,6 +45,13 @@ Android:
 - `bun run ktlint`
 - `bun run detekt`
 
+## Environment variables and Turborepo
+- Any new environment variable used by scripts/apps must be declared in `turbo.json` so cache hashing stays correct.
+- Use `globalEnv` for variables that affect many tasks, and task-level `env` for task-specific variables.
+- Keep `envMode` as `strict` and treat missing env failures as configuration bugs to fix in `turbo.json`.
+- Ensure `.env` changes are hashed by including `.env*` in relevant task `inputs` (for example, `build`, `test`, `e2e`).
+- Update `.env.example` whenever adding or renaming environment variables.
+
 ## Java setup for Android builds
 - Android builds require a JDK (17+ recommended) and `JAVA_HOME` set to that JDK root.
 - The Android build wrapper now auto-detects Java from `JAVA_HOME` first, then common installs (`Microsoft JDK`, `Eclipse Adoptium`, `Android Studio JBR`) on Windows.

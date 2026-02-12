@@ -1,5 +1,8 @@
+@file:Suppress("TooManyFunctions")
+
 package com.onyx.android.ink.ui
 
+import android.os.SystemClock
 import android.view.MotionEvent
 import androidx.ink.authoring.InProgressStrokesView
 import androidx.ink.strokes.StrokeInput
@@ -10,7 +13,11 @@ import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 
 private const val PALM_CONTACT_SIZE_THRESHOLD = 1.0f
-private const val PREDICTED_STROKE_ALPHA = 0.35f
+private const val PREDICTED_STROKE_ALPHA = 0.2f
+private const val IN_PROGRESS_STROKE_ALPHA = 0f
+
+// Disabled while pen-up handoff is stabilized; prediction introduces visible divergence.
+private const val ENABLE_PREDICTED_STROKES = false
 
 internal data class InkCanvasInteraction(
     val brush: Brush,
@@ -122,6 +129,7 @@ private fun handlePointerDown(
     if (isStylusToolType(actionToolType)) {
         view.requestUnbufferedDispatch(event)
     }
+    releaseFinishedStrokeBridges(view, runtime)
     runtime.hoverPreviewState.hide()
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
     runtime.motionPredictionAdapter?.record(event)
@@ -129,12 +137,36 @@ private fun handlePointerDown(
     runtime.activeStrokeStartTimes[pointerId] = startTime
     val strokeInput = createStrokeInput(event, actionIndex, startTime)
     val effectiveBrush = interaction.brush.withToolType(actionToolType)
-    val strokeId = view.startStroke(strokeInput, effectiveBrush.toInkBrush(interaction.viewTransform))
+    val strokeId =
+        view.startStroke(
+            strokeInput,
+            effectiveBrush.toInkBrush(
+                interaction.viewTransform,
+                alphaMultiplier = IN_PROGRESS_STROKE_ALPHA,
+            ),
+        )
     runtime.activeStrokeIds[pointerId] = strokeId
+    runtime.activeStrokeBrushes[pointerId] = effectiveBrush
     val points = mutableListOf<StrokePoint>()
     points.add(createStrokePoint(event, actionIndex, interaction.viewTransform))
     runtime.activeStrokePoints[pointerId] = points
+    runtime.invalidateActiveStrokeRender()
     return true
+}
+
+private fun releaseFinishedStrokeBridges(
+    view: InProgressStrokesView,
+    runtime: InkCanvasRuntime,
+) {
+    if (runtime.finishedInProgressByStrokeId.isEmpty()) {
+        return
+    }
+    view.removeFinishedStrokes(
+        runtime.finishedInProgressByStrokeId.values
+            .map { entry -> entry.inProgressStrokeId }
+            .toSet(),
+    )
+    runtime.finishedInProgressByStrokeId.clear()
 }
 
 private fun handlePointerMove(
@@ -157,12 +189,21 @@ private fun handlePointerMove(
         val strokeId = runtime.activeStrokeIds[movePointerId]
         if (strokeId != null) {
             view.addToStroke(event, movePointerId, strokeId)
-            runtime.activeStrokePoints[movePointerId]?.add(
-                createStrokePoint(event, index, interaction.viewTransform),
-            )
+            runtime.activeStrokePoints[movePointerId]?.let { points ->
+                appendHistoricalStrokePoints(
+                    event = event,
+                    pointerIndex = index,
+                    viewTransform = interaction.viewTransform,
+                    outPoints = points,
+                )
+                points.add(createStrokePoint(event, index, interaction.viewTransform))
+                runtime.invalidateActiveStrokeRender()
+            }
         }
     }
-    handlePredictedStrokes(view, event, interaction, runtime)
+    if (ENABLE_PREDICTED_STROKES) {
+        handlePredictedStrokes(view, event, interaction, runtime)
+    }
     return true
 }
 
@@ -179,15 +220,16 @@ private fun handlePredictedStrokes(
         val predictedPointerId = predictedEvent.getPointerId(index)
         val isActive = runtime.activeStrokeIds.containsKey(predictedPointerId)
         if (isActive) {
-            val startTime =
-                runtime.activeStrokeStartTimes[predictedPointerId] ?: predictedEvent.eventTime
             val startIndex = event.findPointerIndex(predictedPointerId)
+            if (startIndex < 0) {
+                continue
+            }
             val startInput =
-                if (startIndex >= 0) {
-                    createStrokeInput(event, startIndex, startTime)
-                } else {
-                    createStrokeInput(predictedEvent, index, startTime)
-                }
+                createStrokeInput(
+                    event = event,
+                    pointerIndex = startIndex,
+                    startTime = event.eventTime,
+                )
             val effectiveBrush =
                 if (toolType == MotionEvent.TOOL_TYPE_UNKNOWN) {
                     interaction.brush
@@ -231,17 +273,52 @@ private fun handlePointerUp(
             runtime.motionPredictionAdapter?.record(event)
             view.finishStroke(strokeInput, strokeId)
             val points = runtime.activeStrokePoints[pointerId].orEmpty().toMutableList()
+            appendHistoricalStrokePoints(
+                event = event,
+                pointerIndex = actionIndex,
+                viewTransform = interaction.viewTransform,
+                outPoints = points,
+            )
             points.add(createStrokePoint(event, actionIndex, interaction.viewTransform))
             val finishedStroke = buildStroke(points, effectiveBrush)
+            runtime.finishedInProgressByStrokeId[finishedStroke.id] =
+                FinishedStrokeBridgeEntry(
+                    inProgressStrokeId = strokeId,
+                    completedAtUptimeMs = SystemClock.uptimeMillis(),
+                )
             interaction.onStrokeFinished(finishedStroke)
             runtime.activeStrokeIds.remove(pointerId)
+            runtime.activeStrokeBrushes.remove(pointerId)
             runtime.activeStrokePoints.remove(pointerId)
             runtime.activeStrokeStartTimes.remove(pointerId)
+            runtime.invalidateActiveStrokeRender()
             runtime.hoverPreviewState.hide()
             handled = true
         }
     }
     return handled
+}
+
+private fun appendHistoricalStrokePoints(
+    event: MotionEvent,
+    pointerIndex: Int,
+    viewTransform: ViewTransform,
+    outPoints: MutableList<StrokePoint>,
+) {
+    val historySize = event.historySize
+    if (historySize <= 0) {
+        return
+    }
+    for (historyIndex in 0 until historySize) {
+        outPoints.add(
+            createHistoricalStrokePoint(
+                event = event,
+                pointerIndex = pointerIndex,
+                historyIndex = historyIndex,
+                viewTransform = viewTransform,
+            ),
+        )
+    }
 }
 
 private fun handleHover(
@@ -273,13 +350,25 @@ private fun handleCancel(
     event: MotionEvent,
     runtime: InkCanvasRuntime,
 ): Boolean {
+    if (runtime.finishedInProgressByStrokeId.isNotEmpty()) {
+        view.removeFinishedStrokes(
+            runtime.finishedInProgressByStrokeId.values
+                .map { entry -> entry.inProgressStrokeId }
+                .toSet(),
+        )
+    }
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
     runtime.activeStrokeIds.values.forEach { strokeId ->
         view.cancelStroke(strokeId, event)
     }
     runtime.activeStrokeIds.clear()
+    runtime.activeStrokeBrushes.clear()
     runtime.activeStrokePoints.clear()
     runtime.activeStrokeStartTimes.clear()
+    runtime.finishedInProgressByStrokeId.clear()
+    runtime.pendingCommittedStrokes.clear()
+    runtime.pendingCommittedAtUptimeMs.clear()
+    runtime.invalidateActiveStrokeRender()
     runtime.hoverPreviewState.hide()
     return true
 }
@@ -324,6 +413,33 @@ private fun createStrokePoint(
         x = pageX,
         y = pageY,
         t = event.eventTime,
+        p = pressure,
+        tx = tiltX,
+        ty = tiltY,
+        r = orientation,
+    )
+}
+
+private fun createHistoricalStrokePoint(
+    event: MotionEvent,
+    pointerIndex: Int,
+    historyIndex: Int,
+    viewTransform: ViewTransform,
+): StrokePoint {
+    val (pageX, pageY) =
+        viewTransform.screenToPage(
+            screenX = event.getHistoricalX(pointerIndex, historyIndex),
+            screenY = event.getHistoricalY(pointerIndex, historyIndex),
+        )
+    val pressure = event.getHistoricalPressure(pointerIndex, historyIndex).coerceIn(0f, 1f)
+    val tilt = event.getHistoricalAxisValue(MotionEvent.AXIS_TILT, pointerIndex, historyIndex)
+    val orientation = event.getHistoricalOrientation(pointerIndex, historyIndex)
+    val tiltX = tilt * kotlin.math.cos(orientation)
+    val tiltY = tilt * kotlin.math.sin(orientation)
+    return StrokePoint(
+        x = pageX,
+        y = pageY,
+        t = event.getHistoricalEventTime(historyIndex),
         p = pressure,
         tx = tiltX,
         ty = tiltY,

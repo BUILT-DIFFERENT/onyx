@@ -11,6 +11,7 @@ import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -93,10 +94,14 @@ class InkCanvasTouchRoutingTest {
         val view = InProgressStrokesView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
+        var finishedStrokeId: String? = null
         val transformCalls = mutableListOf<TransformCall>()
         val interaction =
             createInteraction(
-                onStrokeFinished = { strokeFinishedCount += 1 },
+                onStrokeFinished = { stroke ->
+                    strokeFinishedCount += 1
+                    finishedStrokeId = stroke.id
+                },
                 onTransformGesture = { zoom, panX, panY, centroidX, centroidY ->
                     transformCalls += TransformCall(zoom, panX, panY, centroidX, centroidY)
                 },
@@ -146,6 +151,128 @@ class InkCanvasTouchRoutingTest {
         assertTrue(transformCalls.isEmpty())
         assertFalse(runtime.isSingleFingerPanning)
         assertFalse(runtime.activeStrokeIds.containsKey(DEFAULT_POINTER_ID))
+        assertNotNull(finishedStrokeId)
+        assertTrue(runtime.finishedInProgressByStrokeId.containsKey(finishedStrokeId))
+    }
+
+    @Test
+    fun finishedStrokeBridge_waitsForPersistAndHoldWindow() {
+        val view = InProgressStrokesView(context)
+        val runtime = createRuntime()
+        var finishedStrokeId: String? = null
+        val interaction =
+            createInteraction(
+                onStrokeFinished = { stroke ->
+                    finishedStrokeId = stroke.id
+                },
+            )
+
+        val downTime = 700L
+        val down =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 12f,
+                y = 14f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+            )
+        val move =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 716L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 20f,
+                y = 24f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+            )
+        val up =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 732L,
+                action = MotionEvent.ACTION_UP,
+                x = 20f,
+                y = 24f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, down, interaction, runtime))
+            assertTrue(handleTouchEvent(view, move, interaction, runtime))
+            assertTrue(handleTouchEvent(view, up, interaction, runtime))
+        } finally {
+            down.recycle()
+            move.recycle()
+            up.recycle()
+        }
+
+        val strokeId = requireNotNull(finishedStrokeId)
+        val bridgeEntry = requireNotNull(runtime.finishedInProgressByStrokeId[strokeId])
+        val beforeHoldRemoval =
+            pressureBridgeStrokeIdsToRemove(
+                nowUptimeMs = bridgeEntry.completedAtUptimeMs + FINISH_BRIDGE_HOLD_MS - 1,
+                persistedStrokeIds = setOf(strokeId),
+                finishedInProgressByStrokeId = runtime.finishedInProgressByStrokeId,
+            )
+        val atHoldRemoval =
+            pressureBridgeStrokeIdsToRemove(
+                nowUptimeMs = bridgeEntry.completedAtUptimeMs + FINISH_BRIDGE_HOLD_MS,
+                persistedStrokeIds = setOf(strokeId),
+                finishedInProgressByStrokeId = runtime.finishedInProgressByStrokeId,
+            )
+
+        assertTrue(beforeHoldRemoval.isEmpty())
+        assertEquals(setOf(strokeId), atHoldRemoval)
+    }
+
+    @Test
+    fun cancelEvent_clearsFinishedStrokeBridgeState() {
+        val view = InProgressStrokesView(context)
+        val runtime = createRuntime()
+        val interaction = createInteraction()
+
+        val downTime = 900L
+        val down =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 16f,
+                y = 16f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+            )
+        val up =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 916L,
+                action = MotionEvent.ACTION_UP,
+                x = 30f,
+                y = 30f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+            )
+        val cancel =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 932L,
+                action = MotionEvent.ACTION_CANCEL,
+                x = 30f,
+                y = 30f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, down, interaction, runtime))
+            assertTrue(handleTouchEvent(view, up, interaction, runtime))
+            assertTrue(runtime.finishedInProgressByStrokeId.isNotEmpty())
+            assertTrue(handleTouchEvent(view, cancel, interaction, runtime))
+        } finally {
+            down.recycle()
+            up.recycle()
+            cancel.recycle()
+        }
+
+        assertTrue(runtime.finishedInProgressByStrokeId.isEmpty())
+        assertTrue(runtime.pendingCommittedStrokes.isEmpty())
     }
 
     @Test
@@ -242,8 +369,12 @@ private fun createRuntime(): InkCanvasRuntime =
     InkCanvasRuntime(
         activeStrokeIds = mutableMapOf(),
         activeStrokePoints = mutableMapOf(),
+        activeStrokeBrushes = mutableMapOf(),
         activeStrokeStartTimes = mutableMapOf(),
         predictedStrokeIds = mutableMapOf(),
+        pendingCommittedStrokes = mutableMapOf(),
+        pendingCommittedAtUptimeMs = mutableMapOf(),
+        finishedInProgressByStrokeId = mutableMapOf(),
         hoverPreviewState = HoverPreviewState(),
     )
 

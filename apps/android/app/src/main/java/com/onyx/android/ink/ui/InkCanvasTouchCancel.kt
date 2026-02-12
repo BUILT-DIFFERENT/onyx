@@ -14,8 +14,10 @@ internal fun cancelActiveStroke(
     val strokeId = runtime.activeStrokeIds[pointerId] ?: return
     view.cancelStroke(strokeId, event)
     runtime.activeStrokeIds.remove(pointerId)
+    runtime.activeStrokeBrushes.remove(pointerId)
     runtime.activeStrokePoints.remove(pointerId)
     runtime.activeStrokeStartTimes.remove(pointerId)
+    runtime.invalidateActiveStrokeRender()
 }
 
 internal fun cancelActiveStrokes(
@@ -27,8 +29,10 @@ internal fun cancelActiveStrokes(
         view.cancelStroke(strokeId, event)
     }
     runtime.activeStrokeIds.clear()
+    runtime.activeStrokeBrushes.clear()
     runtime.activeStrokePoints.clear()
     runtime.activeStrokeStartTimes.clear()
+    runtime.invalidateActiveStrokeRender()
 }
 
 internal fun cancelPredictedStroke(

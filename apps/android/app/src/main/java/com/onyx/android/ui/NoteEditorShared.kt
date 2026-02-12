@@ -16,6 +16,7 @@ import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.pdf.PdfRenderer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.math.min
 
 @Composable
 internal fun DisposePdfRenderer(pdfRenderer: PdfRenderer?) {
@@ -76,25 +77,80 @@ internal fun applyTransformGesture(
     )
 }
 
+internal fun fitTransformToViewport(
+    pageWidth: Float,
+    pageHeight: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
+): ViewTransform {
+    if (!hasValidDimensions(pageWidth, pageHeight, viewportWidth, viewportHeight)) {
+        return ViewTransform.DEFAULT
+    }
+    val fitZoom =
+        min(viewportWidth / pageWidth, viewportHeight / pageHeight)
+            .coerceIn(ViewTransform.MIN_ZOOM, ViewTransform.MAX_ZOOM)
+    val contentWidth = pageWidth * fitZoom
+    val contentHeight = pageHeight * fitZoom
+    return ViewTransform(
+        zoom = fitZoom,
+        panX = (viewportWidth - contentWidth) / 2f,
+        panY = (viewportHeight - contentHeight) / 2f,
+    )
+}
+
+internal fun constrainTransformToViewport(
+    transform: ViewTransform,
+    pageWidth: Float,
+    pageHeight: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
+): ViewTransform {
+    if (!hasValidDimensions(pageWidth, pageHeight, viewportWidth, viewportHeight)) {
+        return transform
+    }
+    val contentWidth = pageWidth * transform.zoom
+    val contentHeight = pageHeight * transform.zoom
+
+    val constrainedPanX =
+        if (contentWidth <= viewportWidth) {
+            (viewportWidth - contentWidth) / 2f
+        } else {
+            transform.panX.coerceIn(viewportWidth - contentWidth, 0f)
+        }
+    val constrainedPanY =
+        if (contentHeight <= viewportHeight) {
+            (viewportHeight - contentHeight) / 2f
+        } else {
+            transform.panY.coerceIn(viewportHeight - contentHeight, 0f)
+        }
+
+    return transform.copy(panX = constrainedPanX, panY = constrainedPanY)
+}
+
+private fun hasValidDimensions(
+    pageWidth: Float,
+    pageHeight: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
+): Boolean = pageWidth > 0f && pageHeight > 0f && viewportWidth > 0f && viewportHeight > 0f
+
 @Composable
 internal fun rememberPdfBitmap(
     isPdfPage: Boolean,
     currentPage: PageEntity?,
     pdfRenderer: PdfRenderer?,
-    viewTransform: ViewTransform,
 ): android.graphics.Bitmap? {
     var pdfBitmap by remember(currentPage?.pageId) { mutableStateOf<android.graphics.Bitmap?>(null) }
-    LaunchedEffect(currentPage?.pageId, viewTransform.zoom, isPdfPage, pdfRenderer) {
+    LaunchedEffect(currentPage?.pageId, isPdfPage, pdfRenderer) {
         if (!isPdfPage) {
             pdfBitmap = null
             return@LaunchedEffect
         }
         val renderer = pdfRenderer ?: return@LaunchedEffect
         val pageIndex = currentPage?.pdfPageNo ?: return@LaunchedEffect
-        val zoom = viewTransform.zoom
         pdfBitmap =
             withContext(Dispatchers.Default) {
-                renderer.renderPage(pageIndex, zoom)
+                renderer.renderPage(pageIndex, 1f)
             }
     }
     return pdfBitmap
