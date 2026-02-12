@@ -1,8 +1,10 @@
 package com.onyx.android.ui
 
 import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -138,6 +140,51 @@ class NoteEditorTopBarTest {
         composeRule.onNodeWithContentDescription("Page 3 of 12").assertIsDisplayed()
     }
 
+    @Test
+    fun overflowMenu_exposesWorkingActions_andRemovesLegacyPlaceholder() {
+        var modeToggleClicks = 0
+        setEditorScaffold(
+            topBarState =
+                defaultTopBarState().copy(
+                    onToggleReadOnly = { modeToggleClicks += 1 },
+                ),
+        )
+
+        composeRule.onNodeWithContentDescription(MORE_ACTIONS).performClick()
+        composeRule.onNodeWithText("Rename note").assertIsDisplayed()
+        composeRule.onNodeWithText(LEGACY_OVERFLOW_COPY).assertDoesNotExist()
+        composeRule.onNodeWithText("Rename note").performClick()
+        composeRule.onNodeWithTag(TITLE_INPUT_TEST_TAG).assertIsDisplayed()
+
+        composeRule.onNodeWithContentDescription(MORE_ACTIONS).performClick()
+        composeRule.onNodeWithText("Switch to view mode").assertIsDisplayed().performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(1, modeToggleClicks)
+        }
+    }
+
+    @Test
+    fun topBar_disablesUnavailableActions() {
+        setEditorScaffold(
+            topBarState =
+                defaultTopBarState().copy(
+                    isReadOnly = true,
+                    canNavigatePrevious = false,
+                    canNavigateNext = false,
+                    canUndo = false,
+                    canRedo = false,
+                ),
+        )
+
+        composeRule.onNodeWithContentDescription(PREVIOUS_PAGE).assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription(NEXT_PAGE).assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription(NEW_PAGE).assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription(UNDO).assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription(REDO).assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription("Note title").assertIsNotEnabled()
+    }
+
     private fun setEditorScaffold(topBarState: NoteEditorTopBarState) {
         composeRule.setContent {
             MaterialTheme {
@@ -161,6 +208,8 @@ private const val REDO = "Redo"
 private const val VIEW_MODE = "View mode"
 private const val ERASER = "Eraser"
 private const val TITLE_INPUT_TEST_TAG = "note-title-input"
+private const val MORE_ACTIONS = "More actions"
+private const val LEGACY_OVERFLOW_COPY = "Grid, search, and inbox are coming soon"
 
 private fun defaultTopBarState(): NoteEditorTopBarState =
     NoteEditorTopBarState(

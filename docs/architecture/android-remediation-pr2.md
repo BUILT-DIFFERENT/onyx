@@ -48,3 +48,31 @@ Execute PR2 from the Android remediation plan so UX gaps can be compared directl
     - `C:/onyx/apps/android/app/src/androidTest/java/com/onyx/android/ui/NoteEditorReadOnlyModeTest.kt`
   - Ink touch routing read-only stylus blocking:
     - `C:/onyx/apps/android/app/src/androidTest/java/com/onyx/android/ink/ui/InkCanvasTouchRoutingTest.kt`
+
+## PR2 Closeout Delta
+- Overflow menu no longer contains placeholder text. It now exposes implemented actions:
+  - Rename note (opens inline title editing).
+  - Switch mode (view/edit toggle) using existing screen callback.
+- Added PR2 dead-control guardrails in UI tests:
+  - `C:/onyx/apps/android/app/src/androidTest/java/com/onyx/android/ui/NoteEditorTopBarTest.kt`
+    - Verifies overflow actions are functional.
+    - Verifies legacy Grid/Search/Inbox placeholder copy is absent.
+    - Verifies unavailable top-bar actions are disabled.
+
+## Previous-Phase Completion Audit
+- PR1 architecture/data work remains intact:
+  - ViewModel/state/controller extraction is preserved.
+  - Protobuf stroke point serialization remains active.
+  - App container dependency access remains active.
+  - Room destructive fallback remains removed.
+- Added remaining PR1-style validation coverage:
+  - `C:/onyx/apps/android/app/src/test/java/com/onyx/android/data/OnyxDatabaseTest.kt`
+    - Migration executes without schema mutation SQL.
+  - `C:/onyx/apps/android/app/src/test/java/com/onyx/android/ui/NoteEditorViewModelTest.kt`
+    - Error state emission on load-note failure.
+    - Error state emission on create-page failure.
+    - Stroke write queue retry failure reporting.
+
+## Final Status For This Remediation Track
+- [x] PR1 (Architecture + Data Layer Hardening) complete.
+- [x] PR2 (UX Gaps: title/delete/page counter/read-only/eraser/no-dead-controls) complete.

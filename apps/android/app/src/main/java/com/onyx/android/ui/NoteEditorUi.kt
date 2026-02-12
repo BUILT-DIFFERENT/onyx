@@ -270,8 +270,29 @@ private fun NoteEditorTopBar(
                         onDismissRequest = { isOverflowMenuExpanded = false },
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Grid, search, and inbox are coming soon") },
-                            onClick = { isOverflowMenuExpanded = false },
+                            text = { Text("Rename note") },
+                            enabled = isEditingEnabled,
+                            onClick = {
+                                isOverflowMenuExpanded = false
+                                if (isEditingEnabled) {
+                                    isTitleEditing = true
+                                }
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    if (topBarState.isReadOnly) {
+                                        "Switch to edit mode"
+                                    } else {
+                                        "Switch to view mode"
+                                    },
+                                )
+                            },
+                            onClick = {
+                                isOverflowMenuExpanded = false
+                                topBarState.onToggleReadOnly()
+                            },
                         )
                     }
                 }
