@@ -55,6 +55,9 @@ class MyScriptPageManager(
     // Map MyScript stroke IDs to our stroke UUIDs
     private val strokeIdsMapping = mutableMapOf<String, String>()
 
+    // Reverse map: our stroke UUIDs to MyScript stroke IDs for O(1) lookup on erase
+    private val reverseStrokeMapping = mutableMapOf<String, String>()
+
     // Callback for recognition updates (set by ViewModel/Repository)
     var onRecognitionUpdated: ((pageId: String, text: String) -> Unit)? = null
 
@@ -68,7 +71,7 @@ class MyScriptPageManager(
     companion object {
         private const val MM_PER_INCH = 25.4f
         private const val POINTS_PER_INCH = 72f
-        private const val MM_PER_POINT = MM_PER_INCH / POINTS_PER_INCH
+        internal const val MM_PER_POINT = MM_PER_INCH / POINTS_PER_INCH
         private const val DEFAULT_PRESSURE = 0.5f
     }
 
@@ -101,6 +104,7 @@ class MyScriptPageManager(
             itemIdHelper = null
         }
         strokeIdsMapping.clear()
+        reverseStrokeMapping.clear()
 
         Log.d("MyScript", "Page entered: $pageId (recognitionReady=${offscreenEditor != null})")
     }
@@ -171,6 +175,7 @@ class MyScriptPageManager(
         currentPackage = null
         currentPageId = null
         strokeIdsMapping.clear()
+        reverseStrokeMapping.clear()
 
         Log.d("MyScript", "Page closed: $pageId")
     }
@@ -210,6 +215,7 @@ class MyScriptPageManager(
         val myScriptStrokeIds = editor.addStrokes(pointerEvents, true)
         return myScriptStrokeIds?.firstOrNull()?.also { msStrokeId ->
             strokeIdsMapping[msStrokeId] = stroke.id
+            reverseStrokeMapping[stroke.id] = msStrokeId
             Log.d("MyScript", "Stroke added: ${stroke.id} → MyScript ID: $msStrokeId")
         }
     }
@@ -220,12 +226,13 @@ class MyScriptPageManager(
     ) {
         val editor = offscreenEditor ?: return
 
-        // Try to find the MyScript stroke ID for direct erasure
-        val msStrokeId = strokeIdsMapping.entries.firstOrNull { it.value == erasedStrokeId }?.key
+        // Try to find the MyScript stroke ID for direct erasure (O(1) via reverse map)
+        val msStrokeId = reverseStrokeMapping[erasedStrokeId]
         if (msStrokeId != null) {
             runCatching {
                 editor.eraseStrokes(arrayOf(msStrokeId))
                 strokeIdsMapping.remove(msStrokeId)
+                reverseStrokeMapping.remove(erasedStrokeId)
                 Log.d("MyScript", "Stroke erased directly: $erasedStrokeId (ms=$msStrokeId)")
             }.onFailure {
                 // Fallback: clear and re-feed all remaining strokes
@@ -270,6 +277,7 @@ class MyScriptPageManager(
         val editor = offscreenEditor ?: return
         editor.clear()
         strokeIdsMapping.clear()
+        reverseStrokeMapping.clear()
         strokes.forEach { stroke: Stroke ->
             addStroke(stroke)
         }

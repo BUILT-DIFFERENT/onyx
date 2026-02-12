@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -43,6 +44,7 @@ private const val TAPER_POINT_COUNT = 5
 private const val TAPER_MIN_FACTOR = 0.15f
 private const val PATH_CACHE_MAX_ENTRIES = 500
 private const val MIN_WIDTH_FOR_OUTLINE = 0.01f
+private const val HIGHLIGHTER_STROKE_ALPHA = 0.35f
 
 /**
  * Thread-safe LRU-bounded color cache to avoid per-frame Color.parseColor() calls.
@@ -134,11 +136,20 @@ internal fun DrawScope.drawStrokesInWorldSpace(
             val cacheEntry = pathCache.getOrPut(stroke.id) {
                 buildStrokePathCacheEntry(stroke.points, stroke.style)
             }
-            val color = Color(ColorCache.resolve(stroke.style.color))
-            drawPath(
-                path = cacheEntry.path,
-                color = color,
-            )
+            val baseColor = Color(ColorCache.resolve(stroke.style.color))
+            if (stroke.style.tool == Tool.HIGHLIGHTER) {
+                drawPath(
+                    path = cacheEntry.path,
+                    color = baseColor,
+                    alpha = HIGHLIGHTER_STROKE_ALPHA,
+                    blendMode = BlendMode.Multiply,
+                )
+            } else {
+                drawPath(
+                    path = cacheEntry.path,
+                    color = baseColor,
+                )
+            }
         }
     }
 }
