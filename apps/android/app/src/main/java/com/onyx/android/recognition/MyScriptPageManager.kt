@@ -234,7 +234,7 @@ class MyScriptPageManager(
             }
         } else {
             clearAndRefeed(remainingStrokes)
-            Log.d("MyScript", "Stroke erased via clear+re-feed: $erasedStrokeId, re-fed ${remainingStrokes.size}")
+            Log.d("MyScript", "Stroke $erasedStrokeId not in mapping, clear+re-feed ${remainingStrokes.size}")
         }
     }
 

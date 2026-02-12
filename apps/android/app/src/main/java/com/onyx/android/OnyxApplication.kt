@@ -37,6 +37,7 @@ class OnyxApplication : Application(), AppContainer {
 
         // Initialize MyScript engine asynchronously to avoid blocking app startup.
         // Asset copying can take significant time on first launch.
+        // Using a simple thread since this is a one-shot init with no cancellation needed.
         myScriptEngine = MyScriptEngine(applicationContext)
         Thread {
             val initResult = myScriptEngine.initialize()

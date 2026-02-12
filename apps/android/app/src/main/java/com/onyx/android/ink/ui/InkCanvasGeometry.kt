@@ -34,8 +34,6 @@ internal fun calculateBounds(
         w = maxX - minX + strokeWidthPadding,
         h = maxY - minY + strokeWidthPadding,
     )
-        h = maxY - minY,
-    )
 }
 
 internal fun findStrokeToErase(

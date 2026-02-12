@@ -214,19 +214,31 @@ internal fun buildVariableWidthOutline(
         rightY[i] = samples[i].y - ny * halfW
     }
 
-    // Start cap: semicircle at the first point
-    val startHalfW = (widths[0] / 2f).coerceAtLeast(MIN_WIDTH_FOR_OUTLINE)
-    path.moveTo(leftX[0], leftY[0])
-    path.addRoundCap(samples[0].x, samples[0].y, leftX[0], leftY[0], rightX[0], rightY[0], startHalfW)
+    // Build the outline as a single closed contour:
+    // 1. Start at right edge of first point
+    // 2. Start cap (semicircle from right[0] → left[0])
+    // 3. Forward along left edge to last point
+    // 4. End cap (semicircle from left[last] → right[last])
+    // 5. Backward along right edge to first point
+    // 6. Close
 
-    // Right edge: backward from first to last (bottom of outline)
     path.moveTo(rightX[0], rightY[0])
+
+    // Start cap: semicircle from right to left at first point
+    val startHalfW = (widths[0] / 2f).coerceAtLeast(MIN_WIDTH_FOR_OUTLINE)
+    path.addRoundCap(
+        samples[0].x, samples[0].y,
+        rightX[0], rightY[0],
+        leftX[0], leftY[0],
+        startHalfW,
+    )
+
     // Forward along left edge
-    for (i in 0 until count) {
+    for (i in 1 until count) {
         path.lineTo(leftX[i], leftY[i])
     }
 
-    // End cap: semicircle at the last point
+    // End cap: semicircle from left to right at last point
     val lastIdx = count - 1
     val endHalfW = (widths[lastIdx] / 2f).coerceAtLeast(MIN_WIDTH_FOR_OUTLINE)
     path.addRoundCap(
@@ -237,7 +249,7 @@ internal fun buildVariableWidthOutline(
     )
 
     // Backward along right edge
-    for (i in lastIdx downTo 0) {
+    for (i in lastIdx - 1 downTo 0) {
         path.lineTo(rightX[i], rightY[i])
     }
 
