@@ -259,6 +259,8 @@ internal fun buildVariableWidthOutline(
 
 /**
  * Adds a semicircular end cap by drawing a quadratic Bézier arc from one side to the other.
+ * The control point is offset perpendicular to the chord (from → to) by the radius,
+ * creating an arc that approximates a semicircle.
  */
 private fun Path.addRoundCap(
     cx: Float,
@@ -269,7 +271,7 @@ private fun Path.addRoundCap(
     toY: Float,
     radius: Float,
 ) {
-    // Control point is at the center offset by radius in the stroke direction
+    // Control point perpendicular to chord (from → to), offset by radius
     val dx = toX - fromX
     val dy = toY - fromY
     val perpX = -dy
