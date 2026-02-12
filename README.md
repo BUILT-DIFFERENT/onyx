@@ -20,9 +20,25 @@ v0 focuses on an offline-first Android authoring client and a view-only web clie
 - Observability: BetterStack; correlation IDs passed from clients to Convex logs.
 
 ## Status
-This repo is a structural scaffold for the rewrite. No production code yet.
+This repo now contains an implemented Android offline authoring baseline plus early web/Convex scaffolding.
 
-## Tooling (planned)
+- Android: active implementation with Room persistence, ink rendering, PDF support, and MyScript integration in progress.
+- Web: early viewer scaffold.
+- Convex/backend: schema and functions are still in scaffold phase in this branch.
+
+For current architecture review and recommended next changes, see:
+- `docs/architecture/branch-architecture-analysis.md`
+
+**Milestone A (Android offline editor + MyScript recognition)** — Code-complete. Three remediation PRs shipped (architecture hardening, UX gaps, rendering/performance). 52 tests across 15 files. 8 tasks pending physical device verification.
+
+- Android authoring app: functional offline editor with digital ink, PDF annotations, handwriting recognition, protobuf stroke serialization, and LRU-cached PDF rendering
+- Convex backend: schema and function scaffolds in place, implementation pending (Milestone B)
+- Web app: TanStack Start scaffold configured, no routes/components yet (Milestone B)
+- Shared packages: scaffolded (`contracts`, `validation`, `shared`, `ui`, `config`), implementation pending
+
+See `docs/architecture/full-project-analysis.md` for the complete project analysis and prioritised change list.
+
+## Tooling
 - Turborepo + Bun workspaces
 - TypeScript, zod, TanStack Start, shadcn/ui
 - Playwright E2E
