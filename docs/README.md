@@ -36,6 +36,10 @@ Architecture and runbooks for Onyx v0.
 - [`android-remediation-pr2.md`](architecture/android-remediation-pr2.md) — PR2: UX gaps (title editing, deletion, page counter, read-only mode)
 - [`android-remediation-pr3.md`](architecture/android-remediation-pr3.md) — PR3: Rendering and performance (PDF caching, hot-path allocations, retry logging)
 
+## Rendering Analysis
+
+- [`rendering-discrepancies.md`](architecture/rendering-discrepancies.md) — Detailed gap analysis: Onyx vs Notewise (stroke rendering, performance, visual artifacts, document handling, UI)
+
 ## Other
 
 - [`schema-audit.md`](schema-audit.md) — Android Room ↔ V0 API sync compatibility audit
