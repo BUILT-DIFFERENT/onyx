@@ -3,11 +3,14 @@
 package com.onyx.android.ink.ui
 
 import android.view.MotionEvent
+import android.view.VelocityTracker
 import androidx.ink.authoring.InProgressStrokesView
 import kotlin.math.hypot
 
 private const val MIN_ZOOM_CHANGE = 0.5f
 private const val MAX_ZOOM_CHANGE = 2.0f
+private const val PAN_FLING_MIN_VELOCITY_PX_PER_SECOND = 250f
+private const val PAN_VELOCITY_UNITS_PER_SECOND = 1000
 
 private data class TwoPointerTransform(
     val centroidX: Float,
@@ -45,7 +48,7 @@ internal fun handleSingleFingerPanGesture(
 
         MotionEvent.ACTION_POINTER_DOWN -> {
             if (runtime.isSingleFingerPanning && event.pointerCount >= 2) {
-                endSingleFingerPanGesture(runtime)
+                endSingleFingerPanGesture(interaction, runtime, fling = false)
                 startTransformGesture(view, event, runtime)
                 true
             } else {
@@ -56,7 +59,7 @@ internal fun handleSingleFingerPanGesture(
         MotionEvent.ACTION_POINTER_UP -> {
             val pointerId = event.getPointerId(event.actionIndex)
             if (runtime.isSingleFingerPanning && pointerId == runtime.singleFingerPanPointerId) {
-                endSingleFingerPanGesture(runtime)
+                endSingleFingerPanGesture(interaction, runtime, fling = true)
                 true
             } else {
                 runtime.isSingleFingerPanning
@@ -66,7 +69,11 @@ internal fun handleSingleFingerPanGesture(
         MotionEvent.ACTION_UP,
         MotionEvent.ACTION_CANCEL,
         -> {
-            endSingleFingerPanGesture(runtime)
+            endSingleFingerPanGesture(
+                interaction = interaction,
+                runtime = runtime,
+                fling = event.actionMasked == MotionEvent.ACTION_UP,
+            )
             true
         }
 
@@ -101,7 +108,7 @@ internal fun handleTransformGesture(
         MotionEvent.ACTION_POINTER_UP -> {
             val remainingPointers = event.pointerCount - 1
             if (remainingPointers < 2) {
-                endTransformGesture(runtime)
+                endTransformGesture(interaction, runtime, fling = true)
             } else {
                 setTransformBaseline(event, runtime)
             }
@@ -111,7 +118,11 @@ internal fun handleTransformGesture(
         MotionEvent.ACTION_UP,
         MotionEvent.ACTION_CANCEL,
         -> {
-            endTransformGesture(runtime)
+            endTransformGesture(
+                interaction = interaction,
+                runtime = runtime,
+                fling = event.actionMasked == MotionEvent.ACTION_UP,
+            )
             true
         }
 
@@ -123,12 +134,13 @@ private fun startTransformGesture(
     event: MotionEvent,
     runtime: InkCanvasRuntime,
 ) {
-    endSingleFingerPanGesture(runtime)
+    endSingleFingerPanGesture(interaction = null, runtime = runtime, fling = false)
     cancelActiveStrokes(view, event, runtime)
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
     runtime.hoverPreviewState.hide()
     runtime.isTransforming = true
     setTransformBaseline(event, runtime)
+    startPanVelocityTracking(event, runtime)
 }
 
 private fun updateTransformGesture(
@@ -154,6 +166,7 @@ private fun updateTransformGesture(
             transform.centroidY,
         )
     }
+    addCentroidMovementToVelocityTracker(transform, event.eventTime, runtime)
     runtime.previousTransformDistance = transform.distance
     runtime.previousTransformCentroidX = transform.centroidX
     runtime.previousTransformCentroidY = transform.centroidY
@@ -169,19 +182,16 @@ private fun setTransformBaseline(
     runtime.previousTransformCentroidY = transform.centroidY
 }
 
-private fun endTransformGesture(runtime: InkCanvasRuntime) {
-    runtime.isTransforming = false
-    runtime.previousTransformDistance = 0f
-    runtime.previousTransformCentroidX = 0f
-    runtime.previousTransformCentroidY = 0f
-}
-
 private fun startSingleFingerPanGesture(
     view: InProgressStrokesView,
     event: MotionEvent,
     runtime: InkCanvasRuntime,
 ) {
-    endTransformGesture(runtime)
+    endTransformGesture(
+        interaction = null,
+        runtime = runtime,
+        fling = false,
+    )
     cancelActiveStrokes(view, event, runtime)
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
     runtime.hoverPreviewState.hide()
@@ -190,6 +200,7 @@ private fun startSingleFingerPanGesture(
     runtime.singleFingerPanPointerId = event.getPointerId(actionIndex)
     runtime.previousSingleFingerPanX = event.getX(actionIndex)
     runtime.previousSingleFingerPanY = event.getY(actionIndex)
+    startPanVelocityTracking(event, runtime)
 }
 
 private fun updateSingleFingerPanGesture(
@@ -200,7 +211,7 @@ private fun updateSingleFingerPanGesture(
     val panPointerId = runtime.singleFingerPanPointerId
     val pointerIndex = event.findPointerIndex(panPointerId)
     if (pointerIndex < 0) {
-        endSingleFingerPanGesture(runtime)
+        endSingleFingerPanGesture(interaction, runtime, fling = false)
         return false
     }
     val x = event.getX(pointerIndex)
@@ -216,14 +227,87 @@ private fun updateSingleFingerPanGesture(
     )
     runtime.previousSingleFingerPanX = x
     runtime.previousSingleFingerPanY = y
+    runtime.panVelocityTracker?.addMovement(event)
     return true
 }
 
-private fun endSingleFingerPanGesture(runtime: InkCanvasRuntime) {
+private fun endSingleFingerPanGesture(
+    interaction: InkCanvasInteraction?,
+    runtime: InkCanvasRuntime,
+    fling: Boolean,
+) {
     runtime.isSingleFingerPanning = false
     runtime.singleFingerPanPointerId = MotionEvent.INVALID_POINTER_ID
     runtime.previousSingleFingerPanX = 0f
     runtime.previousSingleFingerPanY = 0f
+    if (interaction != null) {
+        endPanVelocityTracking(interaction, runtime, fling)
+    } else {
+        runtime.panVelocityTracker?.recycle()
+        runtime.panVelocityTracker = null
+    }
+}
+
+private fun startPanVelocityTracking(
+    event: MotionEvent,
+    runtime: InkCanvasRuntime,
+) {
+    runtime.panVelocityTracker?.recycle()
+    runtime.panVelocityTracker = VelocityTracker.obtain().apply { addMovement(event) }
+}
+
+private fun addCentroidMovementToVelocityTracker(
+    transform: TwoPointerTransform,
+    eventTime: Long,
+    runtime: InkCanvasRuntime,
+) {
+    val tracker = runtime.panVelocityTracker ?: return
+    val syntheticEvent =
+        MotionEvent.obtain(
+            eventTime,
+            eventTime,
+            MotionEvent.ACTION_MOVE,
+            transform.centroidX,
+            transform.centroidY,
+            0,
+        )
+    tracker.addMovement(syntheticEvent)
+    syntheticEvent.recycle()
+}
+
+private fun endPanVelocityTracking(
+    interaction: InkCanvasInteraction,
+    runtime: InkCanvasRuntime,
+    fling: Boolean,
+) {
+    val tracker = runtime.panVelocityTracker
+    if (tracker != null && fling) {
+        tracker.computeCurrentVelocity(PAN_VELOCITY_UNITS_PER_SECOND)
+        val velocityX = tracker.xVelocity
+        val velocityY = tracker.yVelocity
+        if (hypot(velocityX.toDouble(), velocityY.toDouble()) >= PAN_FLING_MIN_VELOCITY_PX_PER_SECOND) {
+            interaction.onPanGestureEnd(velocityX, velocityY)
+        }
+    }
+    tracker?.recycle()
+    runtime.panVelocityTracker = null
+}
+
+private fun endTransformGesture(
+    interaction: InkCanvasInteraction?,
+    runtime: InkCanvasRuntime,
+    fling: Boolean,
+) {
+    runtime.isTransforming = false
+    runtime.previousTransformDistance = 0f
+    runtime.previousTransformCentroidX = 0f
+    runtime.previousTransformCentroidY = 0f
+    if (interaction != null) {
+        endPanVelocityTracking(interaction, runtime, fling)
+    } else {
+        runtime.panVelocityTracker?.recycle()
+        runtime.panVelocityTracker = null
+    }
 }
 
 private fun readTwoPointerTransform(event: MotionEvent): TwoPointerTransform? {

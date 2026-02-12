@@ -1,4 +1,4 @@
-@file:Suppress("FunctionName")
+@file:Suppress("FunctionName", "LongParameterList")
 
 package com.onyx.android.ui
 
@@ -24,6 +24,9 @@ private const val PDF_RENDER_BUCKET_MID = 1.5f
 private const val PDF_RENDER_BUCKET_HIGH = 2f
 private const val PDF_RENDER_BUCKET_HIGHER = 3f
 private const val PDF_RENDER_BUCKET_MAX = 4f
+private const val MIN_ZOOM_FACTOR_OF_FIT = 0.75f
+private const val MAX_ZOOM_FACTOR_OF_FIT = 6f
+private const val DEFAULT_FIT_ZOOM = 1f
 private val PDF_RENDER_SCALE_BUCKETS =
     floatArrayOf(
         PDF_RENDER_BUCKET_BASE,
@@ -34,6 +37,34 @@ private val PDF_RENDER_SCALE_BUCKETS =
     )
 private const val PDF_RENDER_MAX_PIXELS = 16_000_000f
 private const val PDF_RENDER_MIN_SCALE = 0.5f
+
+internal data class ZoomLimits(
+    val minZoom: Float,
+    val maxZoom: Float,
+    val fitZoom: Float,
+)
+
+internal fun computeZoomLimits(
+    pageWidth: Float,
+    pageHeight: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
+): ZoomLimits {
+    if (!hasValidDimensions(pageWidth, pageHeight, viewportWidth, viewportHeight)) {
+        val fallbackFitZoom = DEFAULT_FIT_ZOOM
+        return ZoomLimits(
+            minZoom = fallbackFitZoom * MIN_ZOOM_FACTOR_OF_FIT,
+            maxZoom = fallbackFitZoom * MAX_ZOOM_FACTOR_OF_FIT,
+            fitZoom = fallbackFitZoom,
+        )
+    }
+    val fitZoom = min(viewportWidth / pageWidth, viewportHeight / pageHeight)
+    return ZoomLimits(
+        minZoom = fitZoom * MIN_ZOOM_FACTOR_OF_FIT,
+        maxZoom = fitZoom * MAX_ZOOM_FACTOR_OF_FIT,
+        fitZoom = fitZoom,
+    )
+}
 
 @Composable
 internal fun DisposePdfRenderer(pdfRenderer: PdfRenderer?) {
@@ -47,16 +78,27 @@ internal fun DisposePdfRenderer(pdfRenderer: PdfRenderer?) {
 @Composable
 internal fun rememberTransformState(
     viewTransform: ViewTransform,
+    zoomLimits: ZoomLimits,
+    pageWidth: Float,
+    pageHeight: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
     onTransformChange: (ViewTransform) -> Unit,
 ): TransformableState =
     rememberTransformableState { zoomChange, panChange, _ ->
-        onTransformChange(
+        val transformed =
             viewTransform.copy(
-                zoom =
-                    (viewTransform.zoom * zoomChange)
-                        .coerceIn(ViewTransform.MIN_ZOOM, ViewTransform.MAX_ZOOM),
+                zoom = (viewTransform.zoom * zoomChange).coerceIn(zoomLimits.minZoom, zoomLimits.maxZoom),
                 panX = viewTransform.panX + panChange.x,
                 panY = viewTransform.panY + panChange.y,
+            )
+        onTransformChange(
+            constrainTransformToViewport(
+                transform = transformed,
+                pageWidth = pageWidth,
+                pageHeight = pageHeight,
+                viewportWidth = viewportWidth,
+                viewportHeight = viewportHeight,
             ),
         )
     }
@@ -72,13 +114,14 @@ internal data class TransformGesture(
 internal fun applyTransformGesture(
     current: ViewTransform,
     gesture: TransformGesture,
+    zoomLimits: ZoomLimits,
+    pageWidth: Float,
+    pageHeight: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
 ): ViewTransform {
     val currentZoom = current.zoom
-    val targetZoom =
-        (currentZoom * gesture.zoomChange).coerceIn(
-            ViewTransform.MIN_ZOOM,
-            ViewTransform.MAX_ZOOM,
-        )
+    val targetZoom = (currentZoom * gesture.zoomChange).coerceIn(zoomLimits.minZoom, zoomLimits.maxZoom)
     val appliedZoomChange =
         if (currentZoom > 0f) {
             targetZoom / currentZoom
@@ -87,10 +130,18 @@ internal fun applyTransformGesture(
         }
     val anchoredPanX = gesture.centroidX - (gesture.centroidX - current.panX) * appliedZoomChange
     val anchoredPanY = gesture.centroidY - (gesture.centroidY - current.panY) * appliedZoomChange
-    return current.copy(
-        zoom = targetZoom,
-        panX = anchoredPanX + gesture.panChangeX,
-        panY = anchoredPanY + gesture.panChangeY,
+    val transformed =
+        current.copy(
+            zoom = targetZoom,
+            panX = anchoredPanX + gesture.panChangeX,
+            panY = anchoredPanY + gesture.panChangeY,
+        )
+    return constrainTransformToViewport(
+        transform = transformed,
+        pageWidth = pageWidth,
+        pageHeight = pageHeight,
+        viewportWidth = viewportWidth,
+        viewportHeight = viewportHeight,
     )
 }
 
@@ -99,13 +150,12 @@ internal fun fitTransformToViewport(
     pageHeight: Float,
     viewportWidth: Float,
     viewportHeight: Float,
+    zoomLimits: ZoomLimits = computeZoomLimits(pageWidth, pageHeight, viewportWidth, viewportHeight),
 ): ViewTransform {
     if (!hasValidDimensions(pageWidth, pageHeight, viewportWidth, viewportHeight)) {
         return ViewTransform.DEFAULT
     }
-    val fitZoom =
-        min(viewportWidth / pageWidth, viewportHeight / pageHeight)
-            .coerceIn(ViewTransform.MIN_ZOOM, ViewTransform.MAX_ZOOM)
+    val fitZoom = zoomLimits.fitZoom.coerceIn(zoomLimits.minZoom, zoomLimits.maxZoom)
     val contentWidth = pageWidth * fitZoom
     val contentHeight = pageHeight * fitZoom
     return ViewTransform(

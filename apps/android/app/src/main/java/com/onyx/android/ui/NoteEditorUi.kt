@@ -159,6 +159,12 @@ private fun NoteEditorTopBar(
     var isColorPickerVisible by rememberSaveable { mutableStateOf(false) }
     var colorPickerInput by rememberSaveable { mutableStateOf(toolbarState.brush.color) }
     val brush = toolbarState.brush
+    val selectedTool =
+        if (toolbarState.isStylusButtonEraserActive) {
+            Tool.ERASER
+        } else {
+            brush.tool
+        }
     val isEditingEnabled = !topBarState.isReadOnly
     val onColorSelected: (String) -> Unit = { selectedColor ->
         val targetTool =
@@ -295,7 +301,7 @@ private fun NoteEditorTopBar(
                 Box {
                     ToolToggleButton(
                         visuals = penVisuals,
-                        isSelected = brush.tool == Tool.PEN,
+                        isSelected = selectedTool == Tool.PEN,
                         enabled = isEditingEnabled,
                         onToggle = {
                             activeToolPanel = null
@@ -328,7 +334,7 @@ private fun NoteEditorTopBar(
                 Box {
                     ToolToggleButton(
                         visuals = highlighterVisuals,
-                        isSelected = brush.tool == Tool.HIGHLIGHTER,
+                        isSelected = selectedTool == Tool.HIGHLIGHTER,
                         enabled = isEditingEnabled,
                         onToggle = {
                             activeToolPanel = null
@@ -368,7 +374,7 @@ private fun NoteEditorTopBar(
                 }
                 Box {
                     EraserToggleButton(
-                        isSelected = brush.tool == Tool.ERASER,
+                        isSelected = selectedTool == Tool.ERASER,
                         enabled = isEditingEnabled,
                         onToggle = {
                             activeToolPanel = null
@@ -957,6 +963,8 @@ private fun NoteEditorContent(
                     strokes = contentState.strokes,
                     viewTransform = contentState.viewTransform,
                     brush = contentState.brush,
+                    pageWidth = contentState.pageWidth,
+                    pageHeight = contentState.pageHeight,
                 )
             val inkCanvasCallbacks =
                 InkCanvasCallbacks(
@@ -973,6 +981,8 @@ private fun NoteEditorContent(
                             contentState.onStrokeErased
                         },
                     onTransformGesture = contentState.onTransformGesture,
+                    onPanGestureEnd = contentState.onPanGestureEnd,
+                    onStylusButtonEraserActiveChanged = contentState.onStylusButtonEraserActiveChanged,
                 )
             InkCanvas(
                 state = inkCanvasState,

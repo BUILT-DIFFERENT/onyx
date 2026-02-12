@@ -145,6 +145,7 @@ private fun defaultToolbarState(
     NoteEditorToolbarState(
         brush = brush,
         lastNonEraserTool = Tool.PEN,
+        isStylusButtonEraserActive = false,
         onBrushChange = onBrushChange,
     )
 
@@ -162,8 +163,11 @@ private fun defaultContentState(): NoteEditorContentState =
         pageHeight = 0f,
         strokes = emptyList(),
         brush = Brush(),
+        isStylusButtonEraserActive = false,
         onStrokeFinished = {},
         onStrokeErased = {},
+        onStylusButtonEraserActiveChanged = {},
         onTransformGesture = { _, _, _, _, _ -> },
+        onPanGestureEnd = { _, _ -> },
         onViewportSizeChanged = { _: IntSize -> },
     )

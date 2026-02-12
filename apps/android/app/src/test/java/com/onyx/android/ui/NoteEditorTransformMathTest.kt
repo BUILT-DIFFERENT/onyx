@@ -6,6 +6,21 @@ import org.junit.jupiter.api.Test
 
 class NoteEditorTransformMathTest {
     @Test
+    fun `compute zoom limits uses fit-relative min and max`() {
+        val limits =
+            computeZoomLimits(
+                pageWidth = 1000f,
+                pageHeight = 2000f,
+                viewportWidth = 2000f,
+                viewportHeight = 2000f,
+            )
+
+        assertEquals(1f, limits.fitZoom, DELTA)
+        assertEquals(0.75f, limits.minZoom, DELTA)
+        assertEquals(6f, limits.maxZoom, DELTA)
+    }
+
+    @Test
     fun `fit transform centers page in viewport`() {
         val transform =
             fitTransformToViewport(
@@ -48,6 +63,54 @@ class NoteEditorTransformMathTest {
 
         assertEquals(350f, constrained.panX, DELTA)
         assertEquals(450f, constrained.panY, DELTA)
+    }
+
+    @Test
+    fun `apply transform gesture clamps zoom to dynamic limits`() {
+        val limits =
+            computeZoomLimits(
+                pageWidth = 1000f,
+                pageHeight = 1000f,
+                viewportWidth = 1000f,
+                viewportHeight = 1000f,
+            )
+        val zoomedOut =
+            applyTransformGesture(
+                current = ViewTransform.DEFAULT,
+                gesture =
+                    TransformGesture(
+                        zoomChange = 0.05f,
+                        panChangeX = 0f,
+                        panChangeY = 0f,
+                        centroidX = 500f,
+                        centroidY = 500f,
+                    ),
+                zoomLimits = limits,
+                pageWidth = 1000f,
+                pageHeight = 1000f,
+                viewportWidth = 1000f,
+                viewportHeight = 1000f,
+            )
+        val zoomedIn =
+            applyTransformGesture(
+                current = ViewTransform.DEFAULT,
+                gesture =
+                    TransformGesture(
+                        zoomChange = 100f,
+                        panChangeX = 0f,
+                        panChangeY = 0f,
+                        centroidX = 500f,
+                        centroidY = 500f,
+                    ),
+                zoomLimits = limits,
+                pageWidth = 1000f,
+                pageHeight = 1000f,
+                viewportWidth = 1000f,
+                viewportHeight = 1000f,
+            )
+
+        assertEquals(limits.minZoom, zoomedOut.zoom, DELTA)
+        assertEquals(limits.maxZoom, zoomedIn.zoom, DELTA)
     }
 
     @Test

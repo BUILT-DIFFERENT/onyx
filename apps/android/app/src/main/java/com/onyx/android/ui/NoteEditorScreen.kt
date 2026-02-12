@@ -14,8 +14,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -44,6 +46,7 @@ import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfRenderer
 import com.onyx.android.recognition.MyScriptPageManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,6 +54,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.exp
+import kotlin.math.hypot
+
+private const val MIN_PAN_FLING_SPEED_PX_PER_SECOND = 8.0
+private const val NANOS_PER_SECOND = 1_000_000_000f
+private const val PAN_FLING_DECAY_RATE = -5f
 
 private class NoteEditorViewModel(
     private val noteId: String,
@@ -371,6 +380,7 @@ internal data class NoteEditorTopBarState(
 internal data class NoteEditorToolbarState(
     val brush: Brush,
     val lastNonEraserTool: Tool,
+    val isStylusButtonEraserActive: Boolean,
     val onBrushChange: (Brush) -> Unit,
 )
 
@@ -387,14 +397,20 @@ internal data class NoteEditorContentState(
     val pageHeight: Float,
     val strokes: List<Stroke>,
     val brush: Brush,
+    val isStylusButtonEraserActive: Boolean,
     val onStrokeFinished: (Stroke) -> Unit,
     val onStrokeErased: (Stroke) -> Unit,
+    val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
     val onTransformGesture: (
         zoomChange: Float,
         panChangeX: Float,
         panChangeY: Float,
         centroidX: Float,
         centroidY: Float,
+    ) -> Unit,
+    val onPanGestureEnd: (
+        velocityX: Float,
+        velocityY: Float,
     ) -> Unit,
     val onViewportSizeChanged: (IntSize) -> Unit,
 )
@@ -541,12 +557,26 @@ private fun rememberNoteEditorUiState(
     var isReadOnly by rememberSaveable { mutableStateOf(false) }
     var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
+    var isStylusButtonEraserActive by remember { mutableStateOf(false) }
+    var panFlingJob by remember { mutableStateOf<Job?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+    val viewportWidth = viewportSize.width.toFloat()
+    val viewportHeight = viewportSize.height.toFloat()
     val pdfState =
         rememberPdfState(
             currentPage = pageState.currentPage,
             pdfAssetStorage = pdfAssetStorage,
             viewZoom = viewTransform.zoom,
         )
+    val zoomLimits =
+        remember(pdfState.pageWidth, pdfState.pageHeight, viewportSize) {
+            computeZoomLimits(
+                pageWidth = pdfState.pageWidth,
+                pageHeight = pdfState.pageHeight,
+                viewportWidth = viewportWidth,
+                viewportHeight = viewportHeight,
+            )
+        }
     DisposePdfRenderer(pdfState.pdfRenderer)
     ObserveNoteEditorLifecycle(
         noteId = noteId,
@@ -557,14 +587,19 @@ private fun rememberNoteEditorUiState(
     val strokeCallbacks = buildStrokeCallbacks(undoController, pageState.currentPage)
     LaunchedEffect(pageState.currentPage?.pageId, viewportSize) {
         if (viewportSize.width > 0 && viewportSize.height > 0) {
+            panFlingJob?.cancel()
             viewTransform =
                 fitTransformToViewport(
                     pageWidth = pdfState.pageWidth,
                     pageHeight = pdfState.pageHeight,
-                    viewportWidth = viewportSize.width.toFloat(),
-                    viewportHeight = viewportSize.height.toFloat(),
+                    viewportWidth = viewportWidth,
+                    viewportHeight = viewportHeight,
+                    zoomLimits = zoomLimits,
                 )
         }
+    }
+    LaunchedEffect(pageState.currentPage?.pageId) {
+        isStylusButtonEraserActive = false
     }
     val topBarState =
         buildTopBarState(
@@ -580,13 +615,20 @@ private fun rememberNoteEditorUiState(
         buildToolbarState(
             brushState.brush,
             brushState.lastNonEraserTool,
+            isStylusButtonEraserActive,
             brushState.onBrushChange,
         )
     val onTransformGesture: (Float, Float, Float, Float, Float) -> Unit =
         { zoomChange, panChangeX, panChangeY, centroidX, centroidY ->
-            val transformed =
+            panFlingJob?.cancel()
+            viewTransform =
                 applyTransformGesture(
                     current = viewTransform,
+                    zoomLimits = zoomLimits,
+                    pageWidth = pdfState.pageWidth,
+                    pageHeight = pdfState.pageHeight,
+                    viewportWidth = viewportWidth,
+                    viewportHeight = viewportHeight,
                     gesture =
                         TransformGesture(
                             zoomChange,
@@ -596,14 +638,49 @@ private fun rememberNoteEditorUiState(
                             centroidY,
                         ),
                 )
-            viewTransform =
-                constrainTransformToViewport(
-                    transform = transformed,
-                    pageWidth = pdfState.pageWidth,
-                    pageHeight = pdfState.pageHeight,
-                    viewportWidth = viewportSize.width.toFloat(),
-                    viewportHeight = viewportSize.height.toFloat(),
-                )
+        }
+    val onPanGestureEnd: (Float, Float) -> Unit =
+        { velocityX, velocityY ->
+            panFlingJob?.cancel()
+            panFlingJob =
+                coroutineScope.launch {
+                    var currentVelocityX = velocityX
+                    var currentVelocityY = velocityY
+                    var previousFrameNanos = 0L
+                    var velocityMagnitude = hypot(currentVelocityX.toDouble(), currentVelocityY.toDouble())
+                    while (velocityMagnitude > MIN_PAN_FLING_SPEED_PX_PER_SECOND) {
+                        val frameNanos = withFrameNanos { it }
+                        if (previousFrameNanos == 0L) {
+                            previousFrameNanos = frameNanos
+                            continue
+                        }
+                        val deltaSeconds = (frameNanos - previousFrameNanos) / NANOS_PER_SECOND
+                        previousFrameNanos = frameNanos
+                        if (deltaSeconds > 0f) {
+                            viewTransform =
+                                applyTransformGesture(
+                                    current = viewTransform,
+                                    zoomLimits = zoomLimits,
+                                    pageWidth = pdfState.pageWidth,
+                                    pageHeight = pdfState.pageHeight,
+                                    viewportWidth = viewportWidth,
+                                    viewportHeight = viewportHeight,
+                                    gesture =
+                                        TransformGesture(
+                                            zoomChange = 1f,
+                                            panChangeX = currentVelocityX * deltaSeconds,
+                                            panChangeY = currentVelocityY * deltaSeconds,
+                                            centroidX = 0f,
+                                            centroidY = 0f,
+                                        ),
+                                )
+                            val decayFactor = exp((PAN_FLING_DECAY_RATE * deltaSeconds).toDouble()).toFloat()
+                            currentVelocityX *= decayFactor
+                            currentVelocityY *= decayFactor
+                        }
+                        velocityMagnitude = hypot(currentVelocityX.toDouble(), currentVelocityY.toDouble())
+                    }
+                }
         }
     val contentState =
         NoteEditorContentState(
@@ -619,9 +696,12 @@ private fun rememberNoteEditorUiState(
             pageHeight = pdfState.pageHeight,
             strokes = pageState.strokes,
             brush = brushState.brush,
+            isStylusButtonEraserActive = isStylusButtonEraserActive,
             onStrokeFinished = strokeCallbacks.onStrokeFinished,
             onStrokeErased = strokeCallbacks.onStrokeErased,
+            onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
             onTransformGesture = onTransformGesture,
+            onPanGestureEnd = onPanGestureEnd,
             onViewportSizeChanged = { viewportSize = it },
         )
 
@@ -630,7 +710,15 @@ private fun rememberNoteEditorUiState(
         toolbarState = toolbarState,
         contentState = contentState,
         transformState =
-            rememberTransformState(viewTransform) { updatedTransform ->
+            rememberTransformState(
+                viewTransform = viewTransform,
+                zoomLimits = zoomLimits,
+                pageWidth = pdfState.pageWidth,
+                pageHeight = pdfState.pageHeight,
+                viewportWidth = viewportWidth,
+                viewportHeight = viewportHeight,
+            ) { updatedTransform ->
+                panFlingJob?.cancel()
                 viewTransform = updatedTransform
             },
     )
@@ -765,10 +853,12 @@ private fun buildTopBarState(
 private fun buildToolbarState(
     brush: Brush,
     lastNonEraserTool: Tool,
+    isStylusButtonEraserActive: Boolean,
     onBrushChange: (Brush) -> Unit,
 ): NoteEditorToolbarState =
     NoteEditorToolbarState(
         brush = brush,
         lastNonEraserTool = lastNonEraserTool,
+        isStylusButtonEraserActive = isStylusButtonEraserActive,
         onBrushChange = onBrushChange,
     )

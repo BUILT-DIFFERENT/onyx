@@ -7,6 +7,10 @@ import androidx.ink.authoring.InProgressStrokesView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.onyx.android.ink.model.Brush
+import com.onyx.android.ink.model.Stroke
+import com.onyx.android.ink.model.StrokeBounds
+import com.onyx.android.ink.model.StrokePoint
+import com.onyx.android.ink.model.StrokeStyle
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import org.junit.Assert.assertEquals
@@ -116,6 +120,7 @@ class InkCanvasTouchRoutingTest {
                 x = 30f,
                 y = 30f,
                 toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
             )
         val move =
             singlePointerEvent(
@@ -125,6 +130,7 @@ class InkCanvasTouchRoutingTest {
                 x = 40f,
                 y = 42f,
                 toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
             )
         val up =
             singlePointerEvent(
@@ -134,6 +140,7 @@ class InkCanvasTouchRoutingTest {
                 x = 40f,
                 y = 42f,
                 toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
             )
 
         try {
@@ -176,6 +183,7 @@ class InkCanvasTouchRoutingTest {
                 x = 12f,
                 y = 14f,
                 toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
             )
         val move =
             singlePointerEvent(
@@ -185,6 +193,7 @@ class InkCanvasTouchRoutingTest {
                 x = 20f,
                 y = 24f,
                 toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
             )
         val up =
             singlePointerEvent(
@@ -194,6 +203,7 @@ class InkCanvasTouchRoutingTest {
                 x = 20f,
                 y = 24f,
                 toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
             )
 
         try {
@@ -240,6 +250,7 @@ class InkCanvasTouchRoutingTest {
                 x = 16f,
                 y = 16f,
                 toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
             )
         val up =
             singlePointerEvent(
@@ -249,6 +260,7 @@ class InkCanvasTouchRoutingTest {
                 x = 30f,
                 y = 30f,
                 toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
             )
         val cancel =
             singlePointerEvent(
@@ -258,6 +270,7 @@ class InkCanvasTouchRoutingTest {
                 x = 30f,
                 y = 30f,
                 toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
             )
 
         try {
@@ -355,6 +368,241 @@ class InkCanvasTouchRoutingTest {
         assertTrue(transformCalls.size >= 2)
         assertTrue(transformCalls.any { it.zoomChange > 1.0f + DELTA })
     }
+
+    @Test
+    fun stylusButtonEraser_latchesForCurrentPointerUntilLift() {
+        val view = InProgressStrokesView(context)
+        val runtime = createRuntime()
+        val erased = mutableListOf<Stroke>()
+        val stylusButtonStates = mutableListOf<Boolean>()
+        val interaction =
+            createInteraction(
+                strokes = listOf(sampleStroke()),
+                onStrokeErased = { stroke -> erased += stroke },
+                onStylusButtonEraserActiveChanged = { isActive -> stylusButtonStates += isActive },
+            )
+
+        val downTime = 1200L
+        val down =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 50f,
+                y = 50f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                buttonState = MotionEvent.BUTTON_STYLUS_PRIMARY,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val moveButtonReleased =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 1216L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 52f,
+                y = 52f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                buttonState = 0,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val up =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 1232L,
+                action = MotionEvent.ACTION_UP,
+                x = 52f,
+                y = 52f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                buttonState = 0,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, down, interaction, runtime))
+            assertEquals(PointerMode.ERASE, runtime.activePointerModes[DEFAULT_POINTER_ID])
+            assertTrue(handleTouchEvent(view, moveButtonReleased, interaction, runtime))
+            assertEquals(PointerMode.ERASE, runtime.activePointerModes[DEFAULT_POINTER_ID])
+            assertTrue(handleTouchEvent(view, up, interaction, runtime))
+        } finally {
+            down.recycle()
+            moveButtonReleased.recycle()
+            up.recycle()
+        }
+
+        assertTrue(erased.isNotEmpty())
+        assertTrue(stylusButtonStates.contains(true))
+        assertTrue(stylusButtonStates.contains(false))
+        assertTrue(runtime.activePointerModes.isEmpty())
+        assertTrue(runtime.activeStrokeIds.isEmpty())
+    }
+
+    @Test
+    fun offPageStrokeStart_isIgnored() {
+        val view = InProgressStrokesView(context)
+        val runtime = createRuntime()
+        var strokeFinishedCount = 0
+        val interaction =
+            createInteraction(
+                pageWidth = 100f,
+                pageHeight = 100f,
+                onStrokeFinished = { strokeFinishedCount += 1 },
+            )
+
+        val downTime = 1600L
+        val downOutside =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 150f,
+                y = 150f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val moveInside =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 1616L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 50f,
+                y = 50f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val upInside =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 1632L,
+                action = MotionEvent.ACTION_UP,
+                x = 50f,
+                y = 50f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, downOutside, interaction, runtime))
+            assertFalse(runtime.activeStrokeIds.containsKey(DEFAULT_POINTER_ID))
+            assertFalse(runtime.activePointerModes.containsKey(DEFAULT_POINTER_ID))
+            assertFalse(handleTouchEvent(view, moveInside, interaction, runtime))
+            assertFalse(handleTouchEvent(view, upInside, interaction, runtime))
+        } finally {
+            downOutside.recycle()
+            moveInside.recycle()
+            upInside.recycle()
+        }
+
+        assertEquals(0, strokeFinishedCount)
+    }
+
+    @Test
+    fun strokePoints_areClampedToPageBounds() {
+        val view = InProgressStrokesView(context)
+        val runtime = createRuntime()
+        val finishedStrokes = mutableListOf<Stroke>()
+        val interaction =
+            createInteraction(
+                pageWidth = 100f,
+                pageHeight = 100f,
+                onStrokeFinished = { stroke -> finishedStrokes += stroke },
+            )
+
+        val downTime = 1900L
+        val down =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 95f,
+                y = 95f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val moveOutside =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 1916L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 140f,
+                y = 160f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val upOutside =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 1932L,
+                action = MotionEvent.ACTION_UP,
+                x = 160f,
+                y = 180f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, down, interaction, runtime))
+            assertTrue(handleTouchEvent(view, moveOutside, interaction, runtime))
+            assertTrue(handleTouchEvent(view, upOutside, interaction, runtime))
+        } finally {
+            down.recycle()
+            moveOutside.recycle()
+            upOutside.recycle()
+        }
+
+        val stroke = finishedStrokes.single()
+        assertTrue(stroke.points.all { point -> point.x in 0f..100f })
+        assertTrue(stroke.points.all { point -> point.y in 0f..100f })
+        val lastPoint = stroke.points.last()
+        assertEquals(100f, lastPoint.x, DELTA)
+        assertEquals(100f, lastPoint.y, DELTA)
+    }
+
+    @Test
+    fun stylusHoverButton_updatesTransientEraserState() {
+        val runtime = createRuntime()
+        val stylusButtonStates = mutableListOf<Boolean>()
+        val interaction =
+            createInteraction(
+                onStylusButtonEraserActiveChanged = { isActive ->
+                    stylusButtonStates += isActive
+                },
+            )
+        val hoverDown =
+            singlePointerEvent(
+                downTime = 2100L,
+                eventTime = 2100L,
+                action = MotionEvent.ACTION_HOVER_MOVE,
+                x = 32f,
+                y = 32f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                buttonState = MotionEvent.BUTTON_STYLUS_PRIMARY,
+                source = InputDevice.SOURCE_STYLUS,
+                distance = 1f,
+            )
+        val hoverUp =
+            singlePointerEvent(
+                downTime = 2100L,
+                eventTime = 2116L,
+                action = MotionEvent.ACTION_HOVER_MOVE,
+                x = 34f,
+                y = 34f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                buttonState = 0,
+                source = InputDevice.SOURCE_STYLUS,
+                distance = 1f,
+            )
+
+        try {
+            assertTrue(handleGenericMotionEvent(hoverDown, interaction, runtime))
+            assertTrue(handleGenericMotionEvent(hoverUp, interaction, runtime))
+        } finally {
+            hoverDown.recycle()
+            hoverUp.recycle()
+        }
+
+        assertTrue(stylusButtonStates.contains(true))
+        assertTrue(stylusButtonStates.contains(false))
+    }
 }
 
 private data class TransformCall(
@@ -368,6 +616,7 @@ private data class TransformCall(
 private fun createRuntime(): InkCanvasRuntime =
     InkCanvasRuntime(
         activeStrokeIds = mutableMapOf(),
+        activePointerModes = mutableMapOf(),
         activeStrokePoints = mutableMapOf(),
         activeStrokeBrushes = mutableMapOf(),
         activeStrokeStartTimes = mutableMapOf(),
@@ -376,20 +625,30 @@ private fun createRuntime(): InkCanvasRuntime =
         pendingCommittedAtUptimeMs = mutableMapOf(),
         finishedInProgressByStrokeId = mutableMapOf(),
         hoverPreviewState = HoverPreviewState(),
+        finishedStrokePathCache = mutableMapOf(),
     )
 
 private fun createInteraction(
-    onStrokeFinished: (com.onyx.android.ink.model.Stroke) -> Unit = {},
-    onStrokeErased: (com.onyx.android.ink.model.Stroke) -> Unit = {},
+    strokes: List<Stroke> = emptyList(),
+    pageWidth: Float = 1000f,
+    pageHeight: Float = 1000f,
+    onStrokeFinished: (Stroke) -> Unit = {},
+    onStrokeErased: (Stroke) -> Unit = {},
     onTransformGesture: (Float, Float, Float, Float, Float) -> Unit = { _, _, _, _, _ -> },
+    onPanGestureEnd: (Float, Float) -> Unit = { _, _ -> },
+    onStylusButtonEraserActiveChanged: (Boolean) -> Unit = {},
 ): InkCanvasInteraction =
     InkCanvasInteraction(
         brush = Brush(tool = Tool.PEN),
         viewTransform = ViewTransform.DEFAULT,
-        strokes = emptyList(),
+        strokes = strokes,
+        pageWidth = pageWidth,
+        pageHeight = pageHeight,
         onStrokeFinished = onStrokeFinished,
         onStrokeErased = onStrokeErased,
         onTransformGesture = onTransformGesture,
+        onPanGestureEnd = onPanGestureEnd,
+        onStylusButtonEraserActiveChanged = onStylusButtonEraserActiveChanged,
     )
 
 private fun singlePointerEvent(
@@ -399,6 +658,9 @@ private fun singlePointerEvent(
     x: Float,
     y: Float,
     toolType: Int,
+    buttonState: Int = DEFAULT_BUTTON_STATE,
+    source: Int = InputDevice.SOURCE_TOUCHSCREEN,
+    distance: Float = 0f,
 ): MotionEvent {
     val properties =
         MotionEvent.PointerProperties().apply {
@@ -411,6 +673,7 @@ private fun singlePointerEvent(
             this.y = y
             pressure = DEFAULT_PRESSURE
             size = DEFAULT_SIZE
+            setAxisValue(MotionEvent.AXIS_DISTANCE, distance)
         }
     return MotionEvent.obtain(
         downTime,
@@ -420,12 +683,12 @@ private fun singlePointerEvent(
         arrayOf(properties),
         arrayOf(coordinates),
         DEFAULT_META_STATE,
-        DEFAULT_BUTTON_STATE,
+        buttonState,
         DEFAULT_X_PRECISION,
         DEFAULT_Y_PRECISION,
         DEFAULT_DEVICE_ID,
         DEFAULT_EDGE_FLAGS,
-        InputDevice.SOURCE_TOUCHSCREEN,
+        source,
         DEFAULT_FLAGS,
     )
 }
@@ -484,6 +747,19 @@ private fun twoPointerEvent(
         DEFAULT_FLAGS,
     )
 }
+
+private fun sampleStroke(): Stroke =
+    Stroke(
+        id = "sample-stroke",
+        points =
+            listOf(
+                StrokePoint(x = 48f, y = 48f, t = 1L),
+                StrokePoint(x = 52f, y = 52f, t = 2L),
+            ),
+        style = StrokeStyle(tool = Tool.PEN, baseWidth = 2f),
+        bounds = StrokeBounds(x = 48f, y = 48f, w = 4f, h = 4f),
+        createdAt = 2L,
+    )
 
 private const val DEFAULT_POINTER_ID = 0
 private const val DEFAULT_META_STATE = 0

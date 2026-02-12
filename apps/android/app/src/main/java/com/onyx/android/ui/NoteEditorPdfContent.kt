@@ -104,12 +104,16 @@ private fun PdfPageLayers(
                 strokes = contentState.strokes,
                 viewTransform = contentState.viewTransform,
                 brush = contentState.brush,
+                pageWidth = contentState.pageWidth,
+                pageHeight = contentState.pageHeight,
             )
         val inkCanvasCallbacks =
             InkCanvasCallbacks(
                 onStrokeFinished = contentState.onStrokeFinished,
                 onStrokeErased = contentState.onStrokeErased,
                 onTransformGesture = contentState.onTransformGesture,
+                onPanGestureEnd = contentState.onPanGestureEnd,
+                onStylusButtonEraserActiveChanged = contentState.onStylusButtonEraserActiveChanged,
             )
         InkCanvas(
             state = inkCanvasState,

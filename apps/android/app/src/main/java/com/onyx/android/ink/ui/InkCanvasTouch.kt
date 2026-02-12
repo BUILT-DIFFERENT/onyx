@@ -1,4 +1,10 @@
-@file:Suppress("TooManyFunctions")
+@file:Suppress(
+    "TooManyFunctions",
+    "LongParameterList",
+    "LongMethod",
+    "NestedBlockDepth",
+    "ReturnCount",
+)
 
 package com.onyx.android.ink.ui
 
@@ -14,7 +20,9 @@ import com.onyx.android.ink.model.ViewTransform
 
 private const val PALM_CONTACT_SIZE_THRESHOLD = 1.0f
 private const val PREDICTED_STROKE_ALPHA = 0.2f
-private const val IN_PROGRESS_STROKE_ALPHA = 0f
+private const val IN_PROGRESS_STROKE_ALPHA = 1f
+private const val STYLUS_BUTTON_MASK =
+    MotionEvent.BUTTON_STYLUS_PRIMARY or MotionEvent.BUTTON_STYLUS_SECONDARY
 
 // Disabled while pen-up handoff is stabilized; prediction introduces visible divergence.
 private const val ENABLE_PREDICTED_STROKES = false
@@ -23,6 +31,8 @@ internal data class InkCanvasInteraction(
     val brush: Brush,
     val viewTransform: ViewTransform,
     val strokes: List<Stroke>,
+    val pageWidth: Float,
+    val pageHeight: Float,
     val onStrokeFinished: (Stroke) -> Unit,
     val onStrokeErased: (Stroke) -> Unit,
     val onTransformGesture: (
@@ -32,6 +42,11 @@ internal data class InkCanvasInteraction(
         centroidX: Float,
         centroidY: Float,
     ) -> Unit,
+    val onPanGestureEnd: (
+        velocityX: Float,
+        velocityY: Float,
+    ) -> Unit,
+    val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
 )
 
 internal fun handleTouchEvent(
@@ -40,73 +55,140 @@ internal fun handleTouchEvent(
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
 ): Boolean {
-    val handled =
-        when {
-            runtime.isTransforming || shouldStartTransformGesture(event) -> {
-                handleTransformGesture(view, event, interaction, runtime)
-            }
-
-            runtime.isSingleFingerPanning || shouldStartSingleFingerPanGesture(event) -> {
-                handleSingleFingerPanGesture(view, event, interaction, runtime)
-            }
-
-            interaction.brush.tool == Tool.ERASER -> {
-                handleEraserInput(event, interaction, runtime)
-            }
-
-            else ->
-                when (event.actionMasked) {
-                    MotionEvent.ACTION_DOWN,
-                    MotionEvent.ACTION_POINTER_DOWN,
-                    -> handlePointerDown(view, event, interaction, runtime)
-
-                    MotionEvent.ACTION_MOVE -> handlePointerMove(view, event, interaction, runtime)
-
-                    MotionEvent.ACTION_UP,
-                    MotionEvent.ACTION_POINTER_UP,
-                    -> handlePointerUp(view, event, interaction, runtime)
-
-                    MotionEvent.ACTION_HOVER_ENTER,
-                    MotionEvent.ACTION_HOVER_MOVE,
-                    -> handleHover(event, interaction, runtime)
-
-                    MotionEvent.ACTION_HOVER_EXIT -> {
-                        runtime.hoverPreviewState.hide()
-                        true
-                    }
-
-                    MotionEvent.ACTION_CANCEL -> handleCancel(view, event, runtime)
-
-                    else -> false
-                }
+    syncStylusButtonEraserState(event, interaction, runtime)
+    return when {
+        runtime.isTransforming || shouldStartTransformGesture(event) -> {
+            handleTransformGesture(view, event, interaction, runtime)
         }
-    return handled
+
+        runtime.isSingleFingerPanning || shouldStartSingleFingerPanGesture(event) -> {
+            handleSingleFingerPanGesture(view, event, interaction, runtime)
+        }
+
+        else ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN,
+                MotionEvent.ACTION_POINTER_DOWN,
+                -> handlePointerDown(view, event, interaction, runtime)
+
+                MotionEvent.ACTION_MOVE -> handlePointerMove(view, event, interaction, runtime)
+
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_POINTER_UP,
+                -> handlePointerUp(view, event, interaction, runtime)
+
+                MotionEvent.ACTION_HOVER_ENTER,
+                MotionEvent.ACTION_HOVER_MOVE,
+                -> handleHover(event, interaction, runtime)
+
+                MotionEvent.ACTION_HOVER_EXIT -> {
+                    runtime.hoverPreviewState.hide()
+                    updateStylusButtonEraserState(false, interaction, runtime)
+                    true
+                }
+
+                MotionEvent.ACTION_CANCEL -> handleCancel(view, event, interaction, runtime)
+
+                else -> false
+            }
+    }
 }
 
-private fun handleEraserInput(
+internal fun handleGenericMotionEvent(
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
 ): Boolean {
-    when (event.actionMasked) {
-        MotionEvent.ACTION_DOWN,
-        MotionEvent.ACTION_MOVE,
+    syncStylusButtonEraserState(event, interaction, runtime)
+    return when (event.actionMasked) {
+        MotionEvent.ACTION_HOVER_ENTER,
+        MotionEvent.ACTION_HOVER_MOVE,
+        -> handleHover(event, interaction, runtime)
+
+        MotionEvent.ACTION_HOVER_EXIT -> {
+            runtime.hoverPreviewState.hide()
+            updateStylusButtonEraserState(false, interaction, runtime)
+            true
+        }
+
+        MotionEvent.ACTION_BUTTON_PRESS,
+        MotionEvent.ACTION_BUTTON_RELEASE,
         -> {
-            val erasedStroke =
-                findStrokeToErase(
-                    screenX = event.getX(event.actionIndex),
-                    screenY = event.getY(event.actionIndex),
-                    strokes = interaction.strokes,
-                    viewTransform = interaction.viewTransform,
-                )
-            if (erasedStroke != null) {
-                interaction.onStrokeErased(erasedStroke)
+            if (eventHasStylusPointer(event)) {
+                handleHover(event, interaction, runtime)
+            } else {
+                false
             }
+        }
+
+        else -> false
+    }
+}
+
+private fun syncStylusButtonEraserState(
+    event: MotionEvent,
+    interaction: InkCanvasInteraction,
+    runtime: InkCanvasRuntime,
+) {
+    val shouldUpdate =
+        when (event.actionMasked) {
+            MotionEvent.ACTION_CANCEL,
+            MotionEvent.ACTION_HOVER_EXIT,
+            -> true
+
+            else -> eventHasStylusPointer(event)
+        }
+    if (!shouldUpdate) {
+        return
+    }
+    val isActive =
+        when (event.actionMasked) {
+            MotionEvent.ACTION_CANCEL,
+            MotionEvent.ACTION_HOVER_EXIT,
+            -> false
+
+            else -> isStylusButtonPressed(event)
+        }
+    updateStylusButtonEraserState(isActive, interaction, runtime)
+}
+
+private fun updateStylusButtonEraserState(
+    isActive: Boolean,
+    interaction: InkCanvasInteraction,
+    runtime: InkCanvasRuntime,
+) {
+    if (runtime.isStylusButtonEraserActive == isActive) {
+        return
+    }
+    runtime.isStylusButtonEraserActive = isActive
+    interaction.onStylusButtonEraserActiveChanged(isActive)
+}
+
+private fun eventHasStylusPointer(event: MotionEvent): Boolean {
+    for (index in 0 until event.pointerCount) {
+        if (isStylusToolType(event.getToolType(index))) {
             return true
         }
     }
-    runtime.hoverPreviewState.hide()
-    return true
+    return false
+}
+
+private fun isStylusButtonPressed(event: MotionEvent): Boolean = (event.buttonState and STYLUS_BUTTON_MASK) != 0
+
+private fun resolvePointerMode(
+    event: MotionEvent,
+    pointerIndex: Int,
+    interaction: InkCanvasInteraction,
+    runtime: InkCanvasRuntime,
+): PointerMode {
+    val toolType = event.getToolType(pointerIndex)
+    if (toolType == MotionEvent.TOOL_TYPE_ERASER || interaction.brush.tool == Tool.ERASER) {
+        return PointerMode.ERASE
+    }
+    if (isStylusToolType(toolType) && (runtime.isStylusButtonEraserActive || isStylusButtonPressed(event))) {
+        return PointerMode.ERASE
+    }
+    return PointerMode.DRAW
 }
 
 private fun handlePointerDown(
@@ -125,6 +207,21 @@ private fun handlePointerDown(
         (isKnownDrawingTool || isUnknownTool) && contactSize <= PALM_CONTACT_SIZE_THRESHOLD
     if (!shouldHandle) {
         return false
+    }
+    val pointerMode = resolvePointerMode(event, actionIndex, interaction, runtime)
+    runtime.activePointerModes[pointerId] = pointerMode
+    if (pointerMode == PointerMode.ERASE) {
+        runtime.hoverPreviewState.hide()
+        return handleEraserAtPointer(event, actionIndex, interaction)
+    }
+    val (downPageX, downPageY) =
+        interaction.viewTransform.screenToPage(
+            screenX = event.getX(actionIndex),
+            screenY = event.getY(actionIndex),
+        )
+    if (!isInsidePage(downPageX, downPageY, interaction.pageWidth, interaction.pageHeight)) {
+        runtime.activePointerModes.remove(pointerId)
+        return true
     }
     if (isStylusToolType(actionToolType)) {
         view.requestUnbufferedDispatch(event)
@@ -148,7 +245,15 @@ private fun handlePointerDown(
     runtime.activeStrokeIds[pointerId] = strokeId
     runtime.activeStrokeBrushes[pointerId] = effectiveBrush
     val points = mutableListOf<StrokePoint>()
-    points.add(createStrokePoint(event, actionIndex, interaction.viewTransform))
+    points.add(
+        createStrokePoint(
+            event = event,
+            pointerIndex = actionIndex,
+            viewTransform = interaction.viewTransform,
+            pageWidth = interaction.pageWidth,
+            pageHeight = interaction.pageHeight,
+        ),
+    )
     runtime.activeStrokePoints[pointerId] = points
     runtime.invalidateActiveStrokeRender()
     return true
@@ -184,25 +289,67 @@ private fun handlePointerMove(
     runtime.motionPredictionAdapter?.record(event)
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
     val pointerCount = event.pointerCount
+    var handled = false
     for (index in 0 until pointerCount) {
         val movePointerId = event.getPointerId(index)
-        val strokeId = runtime.activeStrokeIds[movePointerId]
-        if (strokeId != null) {
-            view.addToStroke(event, movePointerId, strokeId)
-            runtime.activeStrokePoints[movePointerId]?.let { points ->
-                appendHistoricalStrokePoints(
-                    event = event,
-                    pointerIndex = index,
-                    viewTransform = interaction.viewTransform,
-                    outPoints = points,
-                )
-                points.add(createStrokePoint(event, index, interaction.viewTransform))
-                runtime.invalidateActiveStrokeRender()
+        when (runtime.activePointerModes[movePointerId]) {
+            PointerMode.ERASE -> {
+                handleEraserAtPointer(event, index, interaction)
+                handled = true
             }
+
+            PointerMode.DRAW -> {
+                val strokeId = runtime.activeStrokeIds[movePointerId]
+                if (strokeId != null) {
+                    view.addToStroke(event, movePointerId, strokeId)
+                    runtime.activeStrokePoints[movePointerId]?.let { points ->
+                        appendHistoricalStrokePoints(
+                            event = event,
+                            pointerIndex = index,
+                            viewTransform = interaction.viewTransform,
+                            pageWidth = interaction.pageWidth,
+                            pageHeight = interaction.pageHeight,
+                            outPoints = points,
+                        )
+                        addPointDeduped(
+                            outPoints = points,
+                            point =
+                                createStrokePoint(
+                                    event = event,
+                                    pointerIndex = index,
+                                    viewTransform = interaction.viewTransform,
+                                    pageWidth = interaction.pageWidth,
+                                    pageHeight = interaction.pageHeight,
+                                ),
+                        )
+                    }
+                    handled = true
+                }
+            }
+
+            null -> Unit
         }
     }
     if (ENABLE_PREDICTED_STROKES) {
         handlePredictedStrokes(view, event, interaction, runtime)
+    }
+    return handled
+}
+
+private fun handleEraserAtPointer(
+    event: MotionEvent,
+    pointerIndex: Int,
+    interaction: InkCanvasInteraction,
+): Boolean {
+    val erasedStroke =
+        findStrokeToErase(
+            screenX = event.getX(pointerIndex),
+            screenY = event.getY(pointerIndex),
+            strokes = interaction.strokes,
+            viewTransform = interaction.viewTransform,
+        )
+    if (erasedStroke != null) {
+        interaction.onStrokeErased(erasedStroke)
     }
     return true
 }
@@ -257,10 +404,14 @@ private fun handlePointerUp(
     val actionIndex = event.actionIndex
     val pointerId = event.getPointerId(actionIndex)
     val actionToolType = event.getToolType(actionIndex)
+    val pointerMode = runtime.activePointerModes.remove(pointerId)
     var handled = false
     if (event.isCanceledEvent()) {
         cancelActiveStroke(view, event, pointerId, runtime)
         cancelPredictedStroke(view, event, pointerId, runtime.predictedStrokeIds)
+        runtime.hoverPreviewState.hide()
+        handled = true
+    } else if (pointerMode == PointerMode.ERASE) {
         runtime.hoverPreviewState.hide()
         handled = true
     } else {
@@ -268,7 +419,8 @@ private fun handlePointerUp(
         if (strokeId != null) {
             val startTime = runtime.activeStrokeStartTimes[pointerId] ?: event.eventTime
             val strokeInput = createStrokeInput(event, actionIndex, startTime)
-            val effectiveBrush = interaction.brush.withToolType(actionToolType)
+            val effectiveBrush =
+                runtime.activeStrokeBrushes[pointerId] ?: interaction.brush.withToolType(actionToolType)
             cancelPredictedStroke(view, event, pointerId, runtime.predictedStrokeIds)
             runtime.motionPredictionAdapter?.record(event)
             view.finishStroke(strokeInput, strokeId)
@@ -277,9 +429,21 @@ private fun handlePointerUp(
                 event = event,
                 pointerIndex = actionIndex,
                 viewTransform = interaction.viewTransform,
+                pageWidth = interaction.pageWidth,
+                pageHeight = interaction.pageHeight,
                 outPoints = points,
             )
-            points.add(createStrokePoint(event, actionIndex, interaction.viewTransform))
+            addPointDeduped(
+                outPoints = points,
+                point =
+                    createStrokePoint(
+                        event = event,
+                        pointerIndex = actionIndex,
+                        viewTransform = interaction.viewTransform,
+                        pageWidth = interaction.pageWidth,
+                        pageHeight = interaction.pageHeight,
+                    ),
+            )
             val finishedStroke = buildStroke(points, effectiveBrush)
             runtime.finishedInProgressByStrokeId[finishedStroke.id] =
                 FinishedStrokeBridgeEntry(
@@ -303,6 +467,8 @@ private fun appendHistoricalStrokePoints(
     event: MotionEvent,
     pointerIndex: Int,
     viewTransform: ViewTransform,
+    pageWidth: Float,
+    pageHeight: Float,
     outPoints: MutableList<StrokePoint>,
 ) {
     val historySize = event.historySize
@@ -310,15 +476,30 @@ private fun appendHistoricalStrokePoints(
         return
     }
     for (historyIndex in 0 until historySize) {
-        outPoints.add(
-            createHistoricalStrokePoint(
-                event = event,
-                pointerIndex = pointerIndex,
-                historyIndex = historyIndex,
-                viewTransform = viewTransform,
-            ),
+        addPointDeduped(
+            outPoints = outPoints,
+            point =
+                createHistoricalStrokePoint(
+                    event = event,
+                    pointerIndex = pointerIndex,
+                    historyIndex = historyIndex,
+                    viewTransform = viewTransform,
+                    pageWidth = pageWidth,
+                    pageHeight = pageHeight,
+                ),
         )
     }
+}
+
+private fun addPointDeduped(
+    outPoints: MutableList<StrokePoint>,
+    point: StrokePoint,
+) {
+    val lastPoint = outPoints.lastOrNull()
+    if (lastPoint != null && lastPoint.x == point.x && lastPoint.y == point.y) {
+        return
+    }
+    outPoints.add(point)
 }
 
 private fun handleHover(
@@ -334,10 +515,16 @@ private fun handleHover(
     }
     val distance = event.getAxisValue(MotionEvent.AXIS_DISTANCE, actionIndex)
     if (distance > 0f) {
+        val hoverTool =
+            if (runtime.isStylusButtonEraserActive) {
+                Tool.ERASER
+            } else {
+                toolTypeToTool(actionToolType, interaction.brush)
+            }
         runtime.hoverPreviewState.show(
             x = event.getX(actionIndex),
             y = event.getY(actionIndex),
-            tool = toolTypeToTool(actionToolType, interaction.brush),
+            tool = hoverTool,
         )
     } else {
         runtime.hoverPreviewState.hide()
@@ -348,6 +535,7 @@ private fun handleHover(
 private fun handleCancel(
     view: InProgressStrokesView,
     event: MotionEvent,
+    interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
 ): Boolean {
     if (runtime.finishedInProgressByStrokeId.isNotEmpty()) {
@@ -362,14 +550,18 @@ private fun handleCancel(
         view.cancelStroke(strokeId, event)
     }
     runtime.activeStrokeIds.clear()
+    runtime.activePointerModes.clear()
     runtime.activeStrokeBrushes.clear()
     runtime.activeStrokePoints.clear()
     runtime.activeStrokeStartTimes.clear()
     runtime.finishedInProgressByStrokeId.clear()
     runtime.pendingCommittedStrokes.clear()
     runtime.pendingCommittedAtUptimeMs.clear()
+    runtime.panVelocityTracker?.recycle()
+    runtime.panVelocityTracker = null
     runtime.invalidateActiveStrokeRender()
     runtime.hoverPreviewState.hide()
+    updateStylusButtonEraserState(false, interaction, runtime)
     return true
 }
 
@@ -398,12 +590,15 @@ private fun createStrokePoint(
     event: MotionEvent,
     pointerIndex: Int,
     viewTransform: ViewTransform,
+    pageWidth: Float,
+    pageHeight: Float,
 ): StrokePoint {
-    val (pageX, pageY) =
+    val (rawPageX, rawPageY) =
         viewTransform.screenToPage(
             screenX = event.getX(pointerIndex),
             screenY = event.getY(pointerIndex),
         )
+    val (pageX, pageY) = clampToPage(rawPageX, rawPageY, pageWidth, pageHeight)
     val pressure = event.getPressure(pointerIndex).coerceIn(0f, 1f)
     val tilt = event.getAxisValue(MotionEvent.AXIS_TILT, pointerIndex)
     val orientation = event.getOrientation(pointerIndex)
@@ -425,12 +620,15 @@ private fun createHistoricalStrokePoint(
     pointerIndex: Int,
     historyIndex: Int,
     viewTransform: ViewTransform,
+    pageWidth: Float,
+    pageHeight: Float,
 ): StrokePoint {
-    val (pageX, pageY) =
+    val (rawPageX, rawPageY) =
         viewTransform.screenToPage(
             screenX = event.getHistoricalX(pointerIndex, historyIndex),
             screenY = event.getHistoricalY(pointerIndex, historyIndex),
         )
+    val (pageX, pageY) = clampToPage(rawPageX, rawPageY, pageWidth, pageHeight)
     val pressure = event.getHistoricalPressure(pointerIndex, historyIndex).coerceIn(0f, 1f)
     val tilt = event.getHistoricalAxisValue(MotionEvent.AXIS_TILT, pointerIndex, historyIndex)
     val orientation = event.getHistoricalOrientation(pointerIndex, historyIndex)
@@ -445,4 +643,28 @@ private fun createHistoricalStrokePoint(
         ty = tiltY,
         r = orientation,
     )
+}
+
+private fun isInsidePage(
+    pageX: Float,
+    pageY: Float,
+    pageWidth: Float,
+    pageHeight: Float,
+): Boolean {
+    if (pageWidth <= 0f || pageHeight <= 0f) {
+        return true
+    }
+    return pageX in 0f..pageWidth && pageY in 0f..pageHeight
+}
+
+private fun clampToPage(
+    pageX: Float,
+    pageY: Float,
+    pageWidth: Float,
+    pageHeight: Float,
+): Pair<Float, Float> {
+    if (pageWidth <= 0f || pageHeight <= 0f) {
+        return pageX to pageY
+    }
+    return pageX.coerceIn(0f, pageWidth) to pageY.coerceIn(0f, pageHeight)
 }

@@ -38,6 +38,7 @@ class NoteEditorToolbarTest {
                 NoteEditorToolbarState(
                     brush = Brush(tool = Tool.PEN),
                     lastNonEraserTool = Tool.HIGHLIGHTER,
+                    isStylusButtonEraserActive = false,
                     onBrushChange = { brush -> updatedBrush = brush },
                 ),
         )
@@ -54,6 +55,7 @@ class NoteEditorToolbarTest {
                 NoteEditorToolbarState(
                     brush = Brush(tool = Tool.ERASER),
                     lastNonEraserTool = Tool.HIGHLIGHTER,
+                    isStylusButtonEraserActive = false,
                     onBrushChange = { brush -> updatedBrush = brush },
                 ),
         )
@@ -72,6 +74,7 @@ class NoteEditorToolbarTest {
                 NoteEditorToolbarState(
                     brush = Brush(tool = Tool.ERASER),
                     lastNonEraserTool = Tool.PEN,
+                    isStylusButtonEraserActive = false,
                     onBrushChange = { brush -> updatedBrush = brush },
                 ),
         )
@@ -94,6 +97,7 @@ class NoteEditorToolbarTest {
                 NoteEditorToolbarState(
                     brush = Brush(tool = Tool.PEN),
                     lastNonEraserTool = Tool.PEN,
+                    isStylusButtonEraserActive = false,
                     onBrushChange = {},
                 ),
         )
@@ -114,6 +118,7 @@ class NoteEditorToolbarTest {
                 NoteEditorToolbarState(
                     brush = Brush(tool = Tool.PEN, color = "#111111"),
                     lastNonEraserTool = Tool.PEN,
+                    isStylusButtonEraserActive = false,
                     onBrushChange = {},
                 ),
         )
@@ -135,6 +140,7 @@ class NoteEditorToolbarTest {
                 NoteEditorToolbarState(
                     brush = Brush(tool = Tool.ERASER, color = "#111111"),
                     lastNonEraserTool = Tool.PEN,
+                    isStylusButtonEraserActive = false,
                     onBrushChange = { brush -> updatedBrush = brush },
                 ),
         )
@@ -196,8 +202,11 @@ private fun defaultContentState(): NoteEditorContentState =
         pageHeight = 0f,
         strokes = emptyList(),
         brush = Brush(),
+        isStylusButtonEraserActive = false,
         onStrokeFinished = {},
         onStrokeErased = {},
+        onStylusButtonEraserActiveChanged = {},
         onTransformGesture = { _, _, _, _, _ -> },
+        onPanGestureEnd = { _, _ -> },
         onViewportSizeChanged = { _: IntSize -> },
     )
