@@ -5,9 +5,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.ink.brush.StockBrushes
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Stroke
@@ -23,6 +27,7 @@ private const val MIN_INK_BRUSH_EPSILON = 0.1f
 private const val INK_BRUSH_EPSILON_SCALE = 0.15f
 private const val PREVIEW_STROKE_WIDTH_SCALE = 0.12f
 private const val MIN_PREVIEW_STROKE_WIDTH = 1f
+private const val MIN_SCREEN_STROKE_WIDTH_PX = 1f
 private const val ERASER_PREVIEW_ALPHA = 0.6f
 private const val PEN_PREVIEW_ALPHA = 0.35f
 private const val ERASER_PREVIEW_COLOR: Long = 0xFF6B6B6B
@@ -32,6 +37,11 @@ private const val RGB_MASK = 0x00FFFFFF
 private const val MAX_ALPHA = 255
 private const val PRESSURE_FALLBACK = 0.5f
 private const val MIN_STROKE_POINTS = 2
+
+internal data class StrokePathCacheEntry(
+    val path: Path,
+    val averagePressure: Float,
+)
 
 internal class HoverPreviewState {
     var isVisible by mutableStateOf(false)
@@ -79,45 +89,101 @@ internal fun DrawScope.drawHoverPreview(
     )
 }
 
-internal fun DrawScope.drawStroke(
-    stroke: Stroke,
+internal fun DrawScope.drawStrokesInWorldSpace(
+    strokes: List<Stroke>,
     transform: ViewTransform,
+    pathCache: MutableMap<String, StrokePathCacheEntry>,
 ) {
-    drawStrokePoints(points = stroke.points, style = stroke.style, transform = transform)
+    val viewportRect = transform.viewportPageRect(size.width, size.height)
+    withTransform({
+        translate(left = transform.panX, top = transform.panY)
+        scale(scaleX = transform.zoom, scaleY = transform.zoom, pivot = Offset.Zero)
+    }) {
+        strokes.forEach { stroke ->
+            if (!stroke.isVisibleIn(viewportRect)) {
+                return@forEach
+            }
+            val cacheEntry = pathCache.getOrPut(stroke.id) { buildStrokePathCacheEntry(stroke.points) }
+            drawPath(
+                path = cacheEntry.path,
+                color = Color(parseColor(stroke.style.color)),
+                style =
+                    ComposeStroke(
+                        width = strokeWorldWidth(
+                            style = stroke.style,
+                            averagePressure = cacheEntry.averagePressure,
+                            transform = transform,
+                        ),
+                        cap = StrokeCap.Round,
+                        join = StrokeJoin.Round,
+                    ),
+            )
+        }
+    }
 }
 
-internal fun DrawScope.drawStrokePoints(
-    points: List<StrokePoint>,
+private fun strokeWorldWidth(
     style: StrokeStyle,
+    averagePressure: Float,
     transform: ViewTransform,
-) {
-    if (points.size < MIN_STROKE_POINTS) return
-    val samples = smoothStrokePoints(points)
-    if (samples.size < MIN_STROKE_POINTS) return
-
-    val color = Color(parseColor(style.color))
-    for (index in 1 until samples.size) {
-        val previousPoint = samples[index - 1]
-        val currentPoint = samples[index]
-        val (startX, startY) = transform.pageToScreen(previousPoint.x, previousPoint.y)
-        val (endX, endY) = transform.pageToScreen(currentPoint.x, currentPoint.y)
-        val segmentWidth =
-            transform.pageWidthToScreen(
-                pressureWidth(
-                    baseWidth = style.baseWidth,
-                    minWidthFactor = style.minWidthFactor,
-                    maxWidthFactor = style.maxWidthFactor,
-                    pressure = currentPoint.pressure,
-                ),
-            ).coerceAtLeast(MIN_INK_BRUSH_SIZE)
-        drawLine(
-            color = color,
-            start = Offset(startX, startY),
-            end = Offset(endX, endY),
-            strokeWidth = segmentWidth,
-            cap = StrokeCap.Round,
+): Float {
+    val pressureAdjusted =
+        pressureWidth(
+            baseWidth = style.baseWidth,
+            minWidthFactor = style.minWidthFactor,
+            maxWidthFactor = style.maxWidthFactor,
+            pressure = averagePressure,
         )
+    val minimumWorldWidth = MIN_SCREEN_STROKE_WIDTH_PX / transform.zoom.coerceAtLeast(0.001f)
+    return pressureAdjusted.coerceAtLeast(minimumWorldWidth)
+}
+
+private fun buildStrokePathCacheEntry(points: List<StrokePoint>): StrokePathCacheEntry {
+    val samples = smoothStrokePoints(points)
+    val path = Path()
+    if (samples.isNotEmpty()) {
+        path.moveTo(samples.first().x, samples.first().y)
     }
+    if (samples.size == MIN_STROKE_POINTS) {
+        path.lineTo(samples.last().x, samples.last().y)
+    } else if (samples.size > MIN_STROKE_POINTS) {
+        for (index in 1 until samples.lastIndex) {
+            val current = samples[index]
+            val next = samples[index + 1]
+            val midX = (current.x + next.x) * 0.5f
+            val midY = (current.y + next.y) * 0.5f
+            path.quadraticBezierTo(current.x, current.y, midX, midY)
+        }
+        val last = samples.last()
+        path.lineTo(last.x, last.y)
+    }
+    val averagePressure = samples.mapNotNull { it.pressure }.average().toFloat().coerceIn(0f, 1f)
+    return StrokePathCacheEntry(path = path, averagePressure = averagePressure)
+}
+
+private fun ViewTransform.viewportPageRect(
+    viewportWidth: Float,
+    viewportHeight: Float,
+): Rect {
+    val (left, top) = screenToPage(0f, 0f)
+    val (right, bottom) = screenToPage(viewportWidth, viewportHeight)
+    return Rect(
+        left = minOf(left, right),
+        top = minOf(top, bottom),
+        right = maxOf(left, right),
+        bottom = maxOf(top, bottom),
+    )
+}
+
+private fun Stroke.isVisibleIn(viewportRect: Rect): Boolean {
+    val strokeRect =
+        Rect(
+            left = bounds.x,
+            top = bounds.y,
+            right = bounds.x + bounds.w,
+            bottom = bounds.y + bounds.h,
+        )
+    return strokeRect.overlaps(viewportRect)
 }
 
 private data class StrokeRenderPoint(

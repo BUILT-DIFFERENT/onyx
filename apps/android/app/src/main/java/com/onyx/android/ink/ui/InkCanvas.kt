@@ -41,6 +41,7 @@ internal class InkCanvasRuntime(
     val pendingCommittedAtUptimeMs: MutableMap<String, Long>,
     val finishedInProgressByStrokeId: MutableMap<String, FinishedStrokeBridgeEntry>,
     val hoverPreviewState: HoverPreviewState,
+    val finishedStrokePathCache: MutableMap<String, StrokePathCacheEntry>,
 ) {
     var activeStrokeRenderVersion by mutableIntStateOf(0)
     var motionPredictionAdapter: MotionPredictionAdapter? = null
@@ -125,6 +126,7 @@ fun InkCanvas(
                 pendingCommittedAtUptimeMs = mutableMapOf(),
                 finishedInProgressByStrokeId = mutableMapOf(),
                 hoverPreviewState = hoverPreviewState,
+                finishedStrokePathCache = mutableMapOf(),
             )
         }
 
@@ -146,17 +148,12 @@ fun InkCanvas(
             if (activeStrokeRenderVersion < 0) {
                 return@Canvas
             }
-            mergedStrokes.forEach { stroke ->
-                drawStroke(stroke, currentTransform)
-            }
-            runtime.activeStrokePoints.forEach { (pointerId, points) ->
-                val brush = runtime.activeStrokeBrushes[pointerId] ?: return@forEach
-                drawStrokePoints(
-                    points = points,
-                    style = brush.toStrokeStyle(),
-                    transform = currentTransform,
-                )
-            }
+            runtime.finishedStrokePathCache.keys.retainAll(mergedStrokes.mapTo(mutableSetOf()) { it.id })
+            drawStrokesInWorldSpace(
+                strokes = mergedStrokes,
+                transform = currentTransform,
+                pathCache = runtime.finishedStrokePathCache,
+            )
         }
 
         AndroidView(
@@ -168,9 +165,9 @@ fun InkCanvas(
                         null
                     }
                 InProgressStrokesView(context).apply {
-                    // Keep this view for input event handling, but render strokes via Compose
-                    // so in-progress and committed strokes share the exact same draw pipeline.
-                    alpha = 0f
+                    // Keep this view for low-latency in-progress stroke rendering and touch input handling.
+                    // Finished strokes are drawn in Compose using cached world-space paths.
+                    alpha = 1f
                     eagerInit()
                     addFinishedStrokesListener(
                         object : InProgressStrokesFinishedListener {
