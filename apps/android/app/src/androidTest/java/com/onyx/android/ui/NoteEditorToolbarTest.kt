@@ -25,6 +25,11 @@ class NoteEditorToolbarTest {
     val composeRule = createComposeRule()
 
     @Test
+    fun toolbar_usesBalancedCompactHeight() {
+        assertEquals(48, TOOLBAR_ROW_HEIGHT_DP)
+    }
+
+    @Test
     fun eraserAction_isVisible_andTogglesToolThroughCallback() {
         var updatedBrush: Brush? = null
 

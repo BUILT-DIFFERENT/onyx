@@ -1,9 +1,13 @@
-@file:Suppress("FunctionName")
+@file:Suppress("FunctionName", "TooManyFunctions")
 
 package com.onyx.android.ui
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -14,7 +18,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.IntSize
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -146,20 +154,38 @@ private class NoteEditorViewModel(
 
     fun upgradePageToMixed(pageId: String) {
         viewModelScope.launch {
+            val existingPage = _pages.value.firstOrNull { it.pageId == pageId } ?: return@launch
+            if (existingPage.kind != "pdf") {
+                return@launch
+            }
+            val locallyMixedPage =
+                existingPage.copy(
+                    kind = "mixed",
+                    updatedAt = System.currentTimeMillis(),
+                )
+            replacePageInState(locallyMixedPage)
+            if (currentPageId == pageId) {
+                _currentPage.value = locallyMixedPage
+                myScriptPageManager?.onPageEnter(pageId)
+            }
             repository.upgradePageToMixed(pageId)
             val updatedPage = pageDao.getById(pageId)
             if (updatedPage != null) {
-                val currentPages = _pages.value.toMutableList()
-                val pageIndex = currentPages.indexOfFirst { it.pageId == pageId }
-                if (pageIndex >= 0) {
-                    currentPages[pageIndex] = updatedPage
-                    _pages.value = currentPages
-                    if (_currentPageIndex.value == pageIndex) {
-                        setCurrentPage(updatedPage)
-                    }
+                replacePageInState(updatedPage)
+                if (currentPageId == pageId) {
+                    _currentPage.value = updatedPage
                 }
             }
             android.util.Log.d("PageKind", "Updated page kind to mixed for pageId=$pageId")
+        }
+    }
+
+    private fun replacePageInState(updatedPage: PageEntity) {
+        val currentPages = _pages.value.toMutableList()
+        val pageIndex = currentPages.indexOfFirst { it.pageId == updatedPage.pageId }
+        if (pageIndex >= 0) {
+            currentPages[pageIndex] = updatedPage
+            _pages.value = currentPages
         }
     }
 
@@ -416,6 +442,7 @@ fun NoteEditorScreen(
     initialPageId: String? = null,
     onNavigateBack: () -> Unit,
 ) {
+    NoteEditorStatusBarEffect()
     val app = LocalContext.current.applicationContext as OnyxApplication
     val repository = app.noteRepository
     val noteDao = app.database.noteDao()
@@ -456,6 +483,29 @@ fun NoteEditorScreen(
 }
 
 @Composable
+private fun NoteEditorStatusBarEffect() {
+    val context = LocalContext.current
+    val view = LocalView.current
+
+    DisposableEffect(context, view) {
+        val activity = context.findActivity()
+        val window = activity?.window
+        if (window == null) {
+            return@DisposableEffect onDispose {}
+        }
+        val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+        val previousSystemBarsBehavior = insetsController.systemBarsBehavior
+        insetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        insetsController.hide(WindowInsetsCompat.Type.statusBars())
+        onDispose {
+            insetsController.show(WindowInsetsCompat.Type.statusBars())
+            insetsController.systemBarsBehavior = previousSystemBarsBehavior
+        }
+    }
+}
+
+@Composable
 private fun NoteEditorScreenContent(
     noteId: String,
     viewModel: NoteEditorViewModel,
@@ -491,7 +541,12 @@ private fun rememberNoteEditorUiState(
     var isReadOnly by rememberSaveable { mutableStateOf(false) }
     var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
-    val pdfState = rememberPdfState(pageState.currentPage, pdfAssetStorage)
+    val pdfState =
+        rememberPdfState(
+            currentPage = pageState.currentPage,
+            pdfAssetStorage = pdfAssetStorage,
+            viewZoom = viewTransform.zoom,
+        )
     DisposePdfRenderer(pdfState.pdfRenderer)
     ObserveNoteEditorLifecycle(
         noteId = noteId,
@@ -645,17 +700,24 @@ private fun rememberPageState(viewModel: NoteEditorViewModel): NoteEditorPageSta
 private fun rememberPdfState(
     currentPage: PageEntity?,
     pdfAssetStorage: PdfAssetStorage,
+    viewZoom: Float,
 ): NoteEditorPdfState {
     val isPdfPage = currentPage?.kind == "pdf" || currentPage?.kind == "mixed"
+    val pageWidth = currentPage?.width ?: 0f
+    val pageHeight = currentPage?.height ?: 0f
     val pdfRenderer =
         remember(currentPage?.pdfAssetId) {
             currentPage?.pdfAssetId?.let { assetId ->
                 PdfRenderer(pdfAssetStorage.getFileForAsset(assetId))
             }
         }
-    val pdfBitmap = rememberPdfBitmap(isPdfPage, currentPage, pdfRenderer)
-    val pageWidth = currentPage?.width ?: 0f
-    val pageHeight = currentPage?.height ?: 0f
+    val pdfBitmap =
+        rememberPdfBitmap(
+            isPdfPage = isPdfPage,
+            currentPage = currentPage,
+            pdfRenderer = pdfRenderer,
+            viewZoom = viewZoom,
+        )
     val pageWidthDp = with(LocalDensity.current) { pageWidth.toDp() }
     val pageHeightDp = with(LocalDensity.current) { pageHeight.toDp() }
     return NoteEditorPdfState(
@@ -668,6 +730,13 @@ private fun rememberPdfState(
         pageHeight = pageHeight,
     )
 }
+
+private tailrec fun Context.findActivity(): Activity? =
+    when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
+    }
 
 private fun buildTopBarState(
     pageState: NoteEditorPageState,

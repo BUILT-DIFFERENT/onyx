@@ -3,11 +3,9 @@
 package com.onyx.android.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -17,11 +15,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
@@ -32,6 +32,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 
 @Composable
 internal fun PdfPageContent(contentState: NoteEditorContentState) {
@@ -65,8 +66,8 @@ private fun PdfPageLayers(
 ) {
     val bitmap = contentState.pdfBitmap
     val viewTransform = contentState.viewTransform
-    val pageWidthDp = contentState.pageWidthDp
-    val pageHeightDp = contentState.pageHeightDp
+    val pageWidth = contentState.pageWidth
+    val pageHeight = contentState.pageHeight
 
     Box(
         modifier =
@@ -75,19 +76,24 @@ private fun PdfPageLayers(
                 .pdfSelectionInput(selectionState),
     ) {
         if (bitmap != null) {
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "PDF page",
-                modifier =
-                    Modifier
-                        .graphicsLayer(
-                            scaleX = viewTransform.zoom,
-                            scaleY = viewTransform.zoom,
-                            translationX = viewTransform.panX,
-                            translationY = viewTransform.panY,
-                        )
-                        .size(pageWidthDp, pageHeightDp),
-            )
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val destinationWidthPx =
+                    (pageWidth * viewTransform.zoom).roundToInt().coerceAtLeast(1)
+                val destinationHeightPx =
+                    (pageHeight * viewTransform.zoom).roundToInt().coerceAtLeast(1)
+                drawImage(
+                    image = bitmap.asImageBitmap(),
+                    srcOffset = IntOffset.Zero,
+                    srcSize = IntSize(bitmap.width, bitmap.height),
+                    dstOffset =
+                        IntOffset(
+                            viewTransform.panX.roundToInt(),
+                            viewTransform.panY.roundToInt(),
+                        ),
+                    dstSize = IntSize(destinationWidthPx, destinationHeightPx),
+                    filterQuality = FilterQuality.High,
+                )
+            }
         }
         PdfSelectionOverlay(
             selection = selectionState.selection,

@@ -10,28 +10,24 @@
 package com.onyx.android.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.TransformableState
-import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
@@ -73,9 +69,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -104,9 +104,11 @@ private val NOTEWISE_ICON = Color(0xFFF2F5FF)
 private val NOTEWISE_ICON_MUTED = Color(0xFFA9B0C5)
 private val NOTEWISE_SELECTED = Color(0xFF136CC5)
 private val NOTEWISE_STROKE = Color(0xFF3B435B)
-private val NOTEWISE_PAGE = Color(0xFF34363D)
+private val NOTE_PAPER = Color(0xFFFDFDFD)
+private val NOTE_PAPER_STROKE = Color(0xFFCBCED6)
 private const val NOTEWISE_LEFT_GROUP_WIDTH_DP = 320
 private const val NOTEWISE_RIGHT_GROUP_WIDTH_DP = 82
+private const val EDITOR_VIEWPORT_TEST_TAG = "note-editor-viewport"
 
 enum class ToolPanelType {
     PEN,
@@ -133,7 +135,6 @@ internal fun NoteEditorScaffold(
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets.statusBars,
         topBar = {
             NoteEditorTopBar(
                 topBarState = topBarState,
@@ -190,7 +191,6 @@ private fun NoteEditorTopBar(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding()
                     .height((TOOLBAR_ROW_HEIGHT_DP + TOOLBAR_VERTICAL_PADDING_DP * 2).dp)
                     .padding(horizontal = TOOLBAR_HORIZONTAL_PADDING_DP.dp)
                     .padding(top = TOOLBAR_VERTICAL_PADDING_DP.dp, bottom = TOOLBAR_VERTICAL_PADDING_DP.dp),
@@ -928,88 +928,88 @@ private fun ColorPickerDialog(
 }
 
 @Composable
+@Suppress("UNUSED_PARAMETER")
 private fun NoteEditorContent(
     contentState: NoteEditorContentState,
     transformState: TransformableState,
-    paddingValues: androidx.compose.foundation.layout.PaddingValues,
+    paddingValues: PaddingValues,
 ) {
-    BoxWithConstraints(
+    Box(
         modifier =
             Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background),
+                .background(MaterialTheme.colorScheme.background)
+                .onSizeChanged { size ->
+                    contentState.onViewportSizeChanged(size)
+                }
+                .testTag(EDITOR_VIEWPORT_TEST_TAG)
+                .semantics { contentDescription = "Editor viewport" },
     ) {
-        val isPortrait = maxHeight > maxWidth
-        val pageModifier =
-            if (isPortrait) {
-                Modifier.fillMaxSize()
-            } else {
-                Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(0.68f)
-                    .align(Alignment.Center)
-            }
-
-        Box(
-            modifier =
-                pageModifier
-                    .onSizeChanged { size ->
-                        contentState.onViewportSizeChanged(size)
-                    }
-                    .padding(vertical = if (isPortrait) 0.dp else 12.dp)
-                    .clip(RoundedCornerShape(if (isPortrait) 0.dp else 4.dp))
-                    .background(if (isPortrait) Color.Transparent else NOTEWISE_PAGE)
-                    .border(
-                        width = if (isPortrait) 0.dp else 1.dp,
-                        color = NOTEWISE_STROKE.copy(alpha = 0.6f),
-                        shape = RoundedCornerShape(if (isPortrait) 0.dp else 4.dp),
-                    )
-                    .transformable(
-                        state = transformState,
-                        enabled = false,
-                    ),
-        ) {
-            if (contentState.isPdfPage) {
-                PdfPageContent(contentState)
-            } else {
-                val inkCanvasState =
-                    InkCanvasState(
-                        strokes = contentState.strokes,
-                        viewTransform = contentState.viewTransform,
-                        brush = contentState.brush,
-                    )
-                val inkCanvasCallbacks =
-                    InkCanvasCallbacks(
-                        onStrokeFinished =
-                            if (contentState.isReadOnly) {
-                                {}
-                            } else {
-                                contentState.onStrokeFinished
-                            },
-                        onStrokeErased =
-                            if (contentState.isReadOnly) {
-                                {}
-                            } else {
-                                contentState.onStrokeErased
-                            },
-                        onTransformGesture =
-                            if (isPortrait) {
-                                { _, _, _, _, _ -> }
-                            } else {
-                                contentState.onTransformGesture
-                            },
-                    )
-                InkCanvas(
-                    state = inkCanvasState,
-                    callbacks = inkCanvasCallbacks,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
-            if (contentState.isReadOnly) {
-                ReadOnlyInputBlocker()
-            }
+        if (!contentState.isPdfPage) {
+            FixedPageBackground(contentState = contentState)
         }
+        if (contentState.isPdfPage) {
+            PdfPageContent(contentState)
+        } else {
+            val inkCanvasState =
+                InkCanvasState(
+                    strokes = contentState.strokes,
+                    viewTransform = contentState.viewTransform,
+                    brush = contentState.brush,
+                )
+            val inkCanvasCallbacks =
+                InkCanvasCallbacks(
+                    onStrokeFinished =
+                        if (contentState.isReadOnly) {
+                            {}
+                        } else {
+                            contentState.onStrokeFinished
+                        },
+                    onStrokeErased =
+                        if (contentState.isReadOnly) {
+                            {}
+                        } else {
+                            contentState.onStrokeErased
+                        },
+                    onTransformGesture = contentState.onTransformGesture,
+                )
+            InkCanvas(
+                state = inkCanvasState,
+                callbacks = inkCanvasCallbacks,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        if (contentState.isReadOnly) {
+            ReadOnlyInputBlocker()
+        }
+    }
+}
+
+@Composable
+private fun FixedPageBackground(contentState: NoteEditorContentState) {
+    val pageWidth = contentState.pageWidth
+    val pageHeight = contentState.pageHeight
+    val transform = contentState.viewTransform
+
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        if (pageWidth <= 0f || pageHeight <= 0f) {
+            return@Canvas
+        }
+        val (left, top) = transform.pageToScreen(0f, 0f)
+        val pageWidthPx = transform.pageWidthToScreen(pageWidth)
+        val pageHeightPx = transform.pageWidthToScreen(pageHeight)
+        drawRect(
+            color = NOTE_PAPER,
+            topLeft = Offset(left, top),
+            size = Size(pageWidthPx, pageHeightPx),
+        )
+        drawRect(
+            color = NOTE_PAPER_STROKE,
+            topLeft = Offset(left, top),
+            size = Size(pageWidthPx, pageHeightPx),
+            style = Stroke(width = 1.dp.toPx()),
+        )
     }
 }
 

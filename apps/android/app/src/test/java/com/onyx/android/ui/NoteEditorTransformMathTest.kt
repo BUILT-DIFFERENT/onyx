@@ -49,6 +49,28 @@ class NoteEditorTransformMathTest {
         assertEquals(350f, constrained.panX, DELTA)
         assertEquals(450f, constrained.panY, DELTA)
     }
+
+    @Test
+    fun `zoom bucket steps up with zoom level`() {
+        assertEquals(1f, zoomToRenderScaleBucket(0.6f), DELTA)
+        assertEquals(1f, zoomToRenderScaleBucket(1f), DELTA)
+        assertEquals(1.5f, zoomToRenderScaleBucket(1.1f), DELTA)
+        assertEquals(2f, zoomToRenderScaleBucket(1.7f), DELTA)
+        assertEquals(3f, zoomToRenderScaleBucket(2.8f), DELTA)
+        assertEquals(4f, zoomToRenderScaleBucket(4f), DELTA)
+    }
+
+    @Test
+    fun `render scale is clamped for very large pages`() {
+        val renderScale =
+            resolvePdfRenderScale(
+                viewZoom = 4f,
+                pageWidth = 5000f,
+                pageHeight = 5000f,
+            )
+
+        assertEquals(0.8f, renderScale, DELTA)
+    }
 }
 
 private const val DELTA = 0.0001f

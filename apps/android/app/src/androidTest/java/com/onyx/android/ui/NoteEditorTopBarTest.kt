@@ -47,6 +47,7 @@ class NoteEditorTopBarTest {
         composeRule.onNodeWithContentDescription("Pen").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Highlighter").assertIsDisplayed()
         composeRule.onNodeWithContentDescription(ERASER).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Editor viewport").assertIsDisplayed()
     }
 
     @Test

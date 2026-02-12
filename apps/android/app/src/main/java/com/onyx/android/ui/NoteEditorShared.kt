@@ -17,6 +17,23 @@ import com.onyx.android.pdf.PdfRenderer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.min
+import kotlin.math.sqrt
+
+private const val PDF_RENDER_BUCKET_BASE = 1f
+private const val PDF_RENDER_BUCKET_MID = 1.5f
+private const val PDF_RENDER_BUCKET_HIGH = 2f
+private const val PDF_RENDER_BUCKET_HIGHER = 3f
+private const val PDF_RENDER_BUCKET_MAX = 4f
+private val PDF_RENDER_SCALE_BUCKETS =
+    floatArrayOf(
+        PDF_RENDER_BUCKET_BASE,
+        PDF_RENDER_BUCKET_MID,
+        PDF_RENDER_BUCKET_HIGH,
+        PDF_RENDER_BUCKET_HIGHER,
+        PDF_RENDER_BUCKET_MAX,
+    )
+private const val PDF_RENDER_MAX_PIXELS = 16_000_000f
+private const val PDF_RENDER_MIN_SCALE = 0.5f
 
 @Composable
 internal fun DisposePdfRenderer(pdfRenderer: PdfRenderer?) {
@@ -139,9 +156,13 @@ internal fun rememberPdfBitmap(
     isPdfPage: Boolean,
     currentPage: PageEntity?,
     pdfRenderer: PdfRenderer?,
+    viewZoom: Float,
 ): android.graphics.Bitmap? {
     var pdfBitmap by remember(currentPage?.pageId) { mutableStateOf<android.graphics.Bitmap?>(null) }
-    LaunchedEffect(currentPage?.pageId, isPdfPage, pdfRenderer) {
+    val pageWidth = currentPage?.width ?: 0f
+    val pageHeight = currentPage?.height ?: 0f
+    val renderScale = resolvePdfRenderScale(viewZoom, pageWidth, pageHeight)
+    LaunchedEffect(currentPage?.pageId, isPdfPage, pdfRenderer, renderScale) {
         if (!isPdfPage) {
             pdfBitmap = null
             return@LaunchedEffect
@@ -150,8 +171,29 @@ internal fun rememberPdfBitmap(
         val pageIndex = currentPage?.pdfPageNo ?: return@LaunchedEffect
         pdfBitmap =
             withContext(Dispatchers.Default) {
-                renderer.renderPage(pageIndex, 1f)
+                renderer.renderPage(pageIndex, renderScale)
             }
     }
     return pdfBitmap
+}
+
+internal fun resolvePdfRenderScale(
+    viewZoom: Float,
+    pageWidth: Float,
+    pageHeight: Float,
+): Float {
+    val bucketedScale = zoomToRenderScaleBucket(viewZoom)
+    if (pageWidth <= 0f || pageHeight <= 0f) {
+        return bucketedScale
+    }
+    val maxScaleForPage =
+        sqrt(PDF_RENDER_MAX_PIXELS / (pageWidth * pageHeight))
+            .coerceAtLeast(PDF_RENDER_MIN_SCALE)
+    return bucketedScale.coerceAtMost(maxScaleForPage)
+}
+
+internal fun zoomToRenderScaleBucket(zoom: Float): Float {
+    val clampedZoom = zoom.coerceIn(ViewTransform.MIN_ZOOM, ViewTransform.MAX_ZOOM)
+    return PDF_RENDER_SCALE_BUCKETS.firstOrNull { bucket -> clampedZoom <= bucket }
+        ?: PDF_RENDER_SCALE_BUCKETS.last()
 }
