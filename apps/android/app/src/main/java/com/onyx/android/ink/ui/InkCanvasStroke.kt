@@ -8,11 +8,12 @@ internal fun buildStroke(
     points: List<StrokePoint>,
     brush: Brush,
 ): Stroke {
-    val bounds = calculateBounds(points)
+    val style = brush.toStrokeStyle()
+    val bounds = calculateBounds(points, style.baseWidth * style.maxWidthFactor)
     return Stroke(
         id = java.util.UUID.randomUUID().toString(),
         points = points,
-        style = brush.toStrokeStyle(),
+        style = style,
         bounds = bounds,
         createdAt = points.minOfOrNull { it.t } ?: System.currentTimeMillis(),
     )

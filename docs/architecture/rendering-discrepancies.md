@@ -48,12 +48,7 @@ This approach:
 
 **Symptom:** Strokes in Onyx have a uniform, static pixel width regardless of input speed or pressure. Notewise displays variable stroke width with tapering at endpoints, mimicking real ink.
 
-**Root Cause (pre-fix):** Although pressure data was captured from the stylus/touch input (`event.getPressure()`), the rendering pipeline used only the **average pressure across all points** in a stroke to compute a single uniform width:
-```kotlin
-// OLD: Single average pressure → single width for entire stroke
-val averagePressure = samples.mapNotNull { it.pressure }.average().toFloat()
-```
-Additionally, the pressure-to-width mapping was **linear** (`factor = min + (max - min) * pressure`), which provides poor responsiveness at light pressure — the usable width range is compressed into a narrow band.
+**Root Cause (pre-fix):** Although pressure data was captured from the stylus/touch input (`event.getPressure()`), the rendering pipeline used only the **average pressure across all points** in a stroke to compute a single uniform width. Even after per-point width computation was added, the path was still drawn with `drawPath(Stroke(width = averageWidth))` — a single uniform stroke width — so per-point widths were computed but never visually applied.
 
 **Fixes Applied:**
 
@@ -62,16 +57,24 @@ Additionally, the pressure-to-width mapping was **linear** (`factor = min + (max
    - Makes light pressure more responsive — the first 30% of pressure range maps to more width variation
    - Result: more natural "ink-like" feel where gentle strokes are thin and heavy strokes are thick
 
-2. **Per-point width computation:**
-   - Width is now calculated for each interpolated point individually based on its pressure
-   - Stored in `StrokePathCacheEntry.perPointWidths` list
+2. **Variable-width filled outline rendering** (`buildVariableWidthOutline()`):
+   - Replaced `drawPath(Stroke(width))` with a filled outline path
+   - For each sample point, compute the perpendicular normal using central/forward/backward differences
+   - Offset left and right edges by half the per-point width along normals
+   - Walk forward along left edge, add semicircular end cap, backward along right edge, close
+   - Drawn with `drawPath(Fill)` — no stroke width parameter needed
+   - Per-point widths are now truly reflected in the rendered output
 
 3. **Start/end tapering** (`computeTaperFactor()`):
    - First and last 5 points fade width from 15% of full width to 100%
    - Creates natural pen-down and pen-lift taper like real handwriting
    - Taper length adapts to stroke length (short strokes taper less to remain visible)
 
-**Status:** ✅ Fixed — `InkCanvasDrawing.kt`
+4. **Stroke bounds include width padding:**
+   - `calculateBounds()` now expands by half the maximum stroke width
+   - Prevents viewport culling from clipping wide strokes at page edges
+
+**Status:** ✅ Fixed — `InkCanvasDrawing.kt`, `InkCanvasGeometry.kt`, `InkCanvasStroke.kt`
 
 ---
 
@@ -186,7 +189,7 @@ The deduplication logic (`LinkedHashMap` merge of persisted + pending strokes) p
 | 2 | Sort strokes: highlighters first, then pens | Consistent z-order | P3 |
 | 3 | Render highlighter strokes to a separate layer | Eliminates alpha stacking | P3 |
 
-**Status:** ❌ Not Yet Fixed — Requires blend mode changes in `drawStrokesInWorldSpace()`
+**Status:** ✅ Fixed — `BlendMode.Multiply` + `0.35f` alpha applied for highlighter strokes in `drawStrokesInWorldSpace()`
 
 ---
 
@@ -311,9 +314,19 @@ When the user zooms in:
 | 1 | Polygonal/jagged lines | Catmull-Rom spline interpolation (C¹ continuous) | `InkCanvasDrawing.kt` |
 | 2 | No pressure sensitivity | Per-point width with gamma curve (γ=0.6) | `InkCanvasDrawing.kt` |
 | 3 | No stroke tapering | Start/end taper over first/last 5 points | `InkCanvasDrawing.kt` |
-| 4 | Color parsing per frame | LRU `ColorCache` (64 entries, thread-safe) | `InkCanvasDrawing.kt` |
-| 5 | Unbounded path cache | Capped at 500 entries with LRU eviction | `InkCanvasDrawing.kt` |
-| 6 | Tests | 18 unit tests for smoothing + tapering | `CatmullRomSmoothTest.kt`, `StrokeTaperingTest.kt` |
+| 4 | Uniform stroke width rendering | Variable-width filled outline path (replaces stroked center line) | `InkCanvasDrawing.kt` |
+| 5 | Color parsing per frame | LRU `ColorCache` (64 entries, thread-safe) | `InkCanvasDrawing.kt` |
+| 6 | Unbounded path cache | Capped at 500 entries with iterator-based eviction (no allocation) | `InkCanvasDrawing.kt` |
+| 7 | Stroke bounds miss width | `calculateBounds()` pads by max stroke width | `InkCanvasGeometry.kt`, `InkCanvasStroke.kt` |
+| 8 | MyScript erase is O(n) | Direct `eraseStrokes()` with fallback to clear+re-feed | `MyScriptPageManager.kt` |
+| 9 | MyScript init blocks startup | Async initialization on background thread; `@Volatile engine` field | `OnyxApplication.kt`, `MyScriptEngine.kt` |
+| 10 | Tests | 30+ unit tests for smoothing, tapering, outline, pipeline | `CatmullRomSmoothTest.kt`, `StrokeTaperingTest.kt`, `VariableWidthOutlineTest.kt` |
+| 11 | Highlighter blending | `BlendMode.Multiply` + alpha for highlighter strokes | `InkCanvasDrawing.kt` |
+| 12 | MyScript erase O(n) lookup | Reverse mapping for O(1) stroke ID lookup on erase | `MyScriptPageManager.kt` |
+| 13 | Single-point strokes unerasable | `findStrokeToErase` now checks single-point proximity | `InkCanvasGeometry.kt` |
+| 14 | Pressure lost on dedup | `addPointDeduped` updates pressure when position unchanged | `InkCanvasTouch.kt` |
+| 15 | Outline size mismatch | `buildVariableWidthOutline` validates widths/samples size | `InkCanvasDrawing.kt` |
+| 16 | Additional tests | 37+ more tests for bounds, eraser, color, transforms, coordinates | Multiple test files |
 
 ### Remaining Work (By Priority)
 
@@ -324,7 +337,6 @@ When the user zooms in:
 | P1 | Toolbar occlusion | Add content padding for toolbar height |
 | P2 | PDF zoom clarity | Tile-based PDF rendering with async pipeline |
 | P2 | Pan/zoom stutter | Async PDF re-render, keep previous bitmap visible |
-| P2 | Highlighter blending | Use `BlendMode.Multiply` for overlapping strokes |
 | P2 | Single page lock | Continuous vertical scroll with `LazyColumn` |
 | P2 | Page boundary indicators | Draw visible page border and edge glow |
 | P3 | Canvas flashing | Hold previous frame, dirty-flag mask path |
