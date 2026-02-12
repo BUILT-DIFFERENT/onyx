@@ -8,7 +8,6 @@
 
 package com.onyx.android.ink.ui
 
-import android.os.SystemClock
 import android.view.MotionEvent
 import androidx.ink.authoring.InProgressStrokesView
 import androidx.ink.strokes.StrokeInput
@@ -23,6 +22,8 @@ private const val PREDICTED_STROKE_ALPHA = 0.2f
 private const val IN_PROGRESS_STROKE_ALPHA = 1f
 private const val STYLUS_BUTTON_MASK =
     MotionEvent.BUTTON_STYLUS_PRIMARY or MotionEvent.BUTTON_STYLUS_SECONDARY
+private const val EDGE_TOLERANCE_PX = 12f
+private const val MIN_TOLERANCE_ZOOM = 0.001f
 
 // Disabled while pen-up handoff is stabilized; prediction introduces visible divergence.
 private const val ENABLE_PREDICTED_STROKES = false
@@ -210,21 +211,25 @@ private fun handlePointerDown(
     }
     val pointerMode = resolvePointerMode(event, actionIndex, interaction, runtime)
     runtime.activePointerModes[pointerId] = pointerMode
+    if (isStylusToolType(actionToolType)) {
+        view.requestUnbufferedDispatch(event)
+    }
     if (pointerMode == PointerMode.ERASE) {
         runtime.hoverPreviewState.hide()
-        return handleEraserAtPointer(event, actionIndex, interaction, runtime)
+        handleEraserAtPointer(event, actionIndex, interaction, runtime)
+        return true
     }
     val (downPageX, downPageY) =
         interaction.viewTransform.screenToPage(
             screenX = event.getX(actionIndex),
             screenY = event.getY(actionIndex),
         )
-    if (!isInsidePage(downPageX, downPageY, interaction.pageWidth, interaction.pageHeight)) {
+    val tolerance =
+        EDGE_TOLERANCE_PX /
+            interaction.viewTransform.zoom.coerceAtLeast(MIN_TOLERANCE_ZOOM)
+    if (!isInsidePageWithTolerance(downPageX, downPageY, interaction.pageWidth, interaction.pageHeight, tolerance)) {
         runtime.activePointerModes.remove(pointerId)
         return true
-    }
-    if (isStylusToolType(actionToolType)) {
-        view.requestUnbufferedDispatch(event)
     }
     runtime.hoverPreviewState.hide()
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
@@ -327,11 +332,15 @@ private fun handleEraserAtPointer(
     runtime: InkCanvasRuntime,
 ): Boolean {
     val allStrokes = interaction.strokes + runtime.pendingCommittedStrokes.values
+    val dedupedStrokes =
+        LinkedHashMap<String, Stroke>(allStrokes.size).apply {
+            allStrokes.forEach { stroke -> put(stroke.id, stroke) }
+        }.values.toList()
     val erasedStroke =
         findStrokeToErase(
             screenX = event.getX(pointerIndex),
             screenY = event.getY(pointerIndex),
-            strokes = allStrokes,
+            strokes = dedupedStrokes,
             viewTransform = interaction.viewTransform,
         )
     if (erasedStroke != null) {
@@ -431,12 +440,8 @@ private fun handlePointerUp(
                     ),
             )
             val finishedStroke = buildStroke(points, effectiveBrush)
-            runtime.finishedInProgressByStrokeId[finishedStroke.id] =
-                FinishedStrokeBridgeEntry(
-                    inProgressStrokeId = strokeId,
-                    completedAtUptimeMs = SystemClock.uptimeMillis(),
-                )
             interaction.onStrokeFinished(finishedStroke)
+            view.removeFinishedStrokes(setOf(strokeId))
             runtime.activeStrokeIds.remove(pointerId)
             runtime.activeStrokeBrushes.remove(pointerId)
             runtime.activeStrokePoints.remove(pointerId)
@@ -524,13 +529,6 @@ private fun handleCancel(
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
 ): Boolean {
-    if (runtime.finishedInProgressByStrokeId.isNotEmpty()) {
-        view.removeFinishedStrokes(
-            runtime.finishedInProgressByStrokeId.values
-                .map { entry -> entry.inProgressStrokeId }
-                .toSet(),
-        )
-    }
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
     runtime.activeStrokeIds.values.forEach { strokeId ->
         view.cancelStroke(strokeId, event)
@@ -540,7 +538,6 @@ private fun handleCancel(
     runtime.activeStrokeBrushes.clear()
     runtime.activeStrokePoints.clear()
     runtime.activeStrokeStartTimes.clear()
-    runtime.finishedInProgressByStrokeId.clear()
     runtime.panVelocityTracker?.recycle()
     runtime.panVelocityTracker = null
     runtime.invalidateActiveStrokeRender()
@@ -629,16 +626,18 @@ private fun createHistoricalStrokePoint(
     )
 }
 
-private fun isInsidePage(
+private fun isInsidePageWithTolerance(
     pageX: Float,
     pageY: Float,
     pageWidth: Float,
     pageHeight: Float,
+    tolerance: Float,
 ): Boolean {
     if (pageWidth <= 0f || pageHeight <= 0f) {
         return true
     }
-    return pageX in 0f..pageWidth && pageY in 0f..pageHeight
+    return pageX in -tolerance..(pageWidth + tolerance) &&
+        pageY in -tolerance..(pageHeight + tolerance)
 }
 
 private fun clampToPage(

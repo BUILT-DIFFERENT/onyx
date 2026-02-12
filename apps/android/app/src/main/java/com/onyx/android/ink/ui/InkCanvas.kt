@@ -2,7 +2,6 @@
 
 package com.onyx.android.ink.ui
 
-import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.VelocityTracker
 import androidx.compose.foundation.Canvas
@@ -24,11 +23,6 @@ import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.ViewTransform
 import android.graphics.Path as AndroidPath
 
-internal data class FinishedStrokeBridgeEntry(
-    val inProgressStrokeId: InProgressStrokeId,
-    val completedAtUptimeMs: Long,
-)
-
 internal enum class PointerMode {
     DRAW,
     ERASE,
@@ -43,8 +37,6 @@ internal class InkCanvasRuntime(
     val activeStrokeStartTimes: MutableMap<Int, Long>,
     val predictedStrokeIds: MutableMap<Int, InProgressStrokeId>,
     val pendingCommittedStrokes: MutableMap<String, Stroke>,
-    val pendingCommittedAtUptimeMs: MutableMap<String, Long>,
-    val finishedInProgressByStrokeId: MutableMap<String, FinishedStrokeBridgeEntry>,
     val hoverPreviewState: HoverPreviewState,
     val finishedStrokePathCache: MutableMap<String, StrokePathCacheEntry>,
 ) {
@@ -68,25 +60,6 @@ internal class InkCanvasRuntime(
 
 // Disabled while pen-up handoff is stabilized; prediction introduces visible divergence.
 private const val ENABLE_MOTION_PREDICTION = false
-internal const val FINISH_BRIDGE_HOLD_MS = 48L
-internal const val FINISH_BRIDGE_STALE_MS = 1_200L
-
-internal fun pressureBridgeStrokeIdsToRemove(
-    nowUptimeMs: Long,
-    persistedStrokeIds: Set<String>,
-    finishedInProgressByStrokeId: Map<String, FinishedStrokeBridgeEntry>,
-    holdMs: Long = FINISH_BRIDGE_HOLD_MS,
-    staleMs: Long = FINISH_BRIDGE_STALE_MS,
-): Set<String> =
-    finishedInProgressByStrokeId.entries
-        .filter { (strokeId, bridgeEntry) ->
-            val ageMs = nowUptimeMs - bridgeEntry.completedAtUptimeMs
-            (strokeId in persistedStrokeIds && ageMs >= holdMs) || ageMs >= staleMs
-        }
-        .mapTo(mutableSetOf()) { it.key }
-
-internal fun bridgedStrokeIds(finishedInProgressByStrokeId: Map<String, FinishedStrokeBridgeEntry>): Set<String> =
-    finishedInProgressByStrokeId.keys.toSet()
 
 data class InkCanvasState(
     val strokes: List<Stroke>,
@@ -138,21 +111,22 @@ fun InkCanvas(
                 activeStrokeStartTimes = mutableMapOf(),
                 predictedStrokeIds = mutableMapOf(),
                 pendingCommittedStrokes = mutableMapOf(),
-                pendingCommittedAtUptimeMs = mutableMapOf(),
-                finishedInProgressByStrokeId = mutableMapOf(),
                 hoverPreviewState = hoverPreviewState,
                 finishedStrokePathCache = mutableMapOf(),
             )
         }
 
-    val bridgedStrokeIds = bridgedStrokeIds(runtime.finishedInProgressByStrokeId)
     val persistedStrokeIds = currentStrokes.asSequence().map { it.id }.toHashSet()
-    val persistedStrokes = currentStrokes.filterNot { stroke -> stroke.id in bridgedStrokeIds }
+    val persistedStrokes = currentStrokes
     val pendingStrokes =
         runtime.pendingCommittedStrokes.values.filter { pending ->
-            pending.id !in persistedStrokeIds && pending.id !in bridgedStrokeIds
+            pending.id !in persistedStrokeIds
         }
-    val mergedStrokes = persistedStrokes + pendingStrokes
+    val mergedStrokes =
+        LinkedHashMap<String, Stroke>(persistedStrokes.size + pendingStrokes.size).apply {
+            persistedStrokes.forEach { stroke -> put(stroke.id, stroke) }
+            pendingStrokes.forEach { stroke -> put(stroke.id, stroke) }
+        }.values.toList()
     val activeStrokeRenderVersion = runtime.activeStrokeRenderVersion
 
     Box(modifier = modifier) {
@@ -183,16 +157,10 @@ fun InkCanvas(
                     eagerInit()
                     val onFinished = { stroke: Stroke ->
                         runtime.pendingCommittedStrokes[stroke.id] = stroke
-                        runtime.pendingCommittedAtUptimeMs[stroke.id] = SystemClock.uptimeMillis()
                         currentCallbacks.onStrokeFinished(stroke)
                     }
                     val onErased = { stroke: Stroke ->
-                        val bridgeEntry = runtime.finishedInProgressByStrokeId.remove(stroke.id)
-                        if (bridgeEntry != null) {
-                            this@apply.removeFinishedStrokes(setOf(bridgeEntry.inProgressStrokeId))
-                        }
                         runtime.pendingCommittedStrokes.remove(stroke.id)
-                        runtime.pendingCommittedAtUptimeMs.remove(stroke.id)
                         runtime.finishedStrokePathCache.remove(stroke.id)
                         currentCallbacks.onStrokeErased(stroke)
                     }
@@ -236,42 +204,18 @@ fun InkCanvas(
                 }
             },
             update = { inProgressView ->
-                val nowUptimeMs = SystemClock.uptimeMillis()
-                val persistedStrokeIds = currentStrokes.asSequence().map { it.id }.toHashSet()
+                val persistedIds = currentStrokes.asSequence().map { it.id }.toHashSet()
                 inProgressView.maskPath =
-                    buildPageMaskPath(
+                    buildOutsidePageMaskPath(
+                        viewWidth = inProgressView.width.toFloat(),
+                        viewHeight = inProgressView.height.toFloat(),
                         pageWidth = currentPageWidth,
                         pageHeight = currentPageHeight,
                         transform = currentTransform,
                     )
 
                 if (runtime.pendingCommittedStrokes.isNotEmpty()) {
-                    val stalePendingStrokeIds =
-                        runtime.pendingCommittedAtUptimeMs
-                            .filterValues { committedAt -> nowUptimeMs - committedAt >= FINISH_BRIDGE_STALE_MS }
-                            .keys
-                    val pendingStrokeIdsToRemove = persistedStrokeIds + stalePendingStrokeIds
-                    runtime.pendingCommittedStrokes.keys.removeAll(pendingStrokeIdsToRemove)
-                    runtime.pendingCommittedAtUptimeMs.keys.removeAll(pendingStrokeIdsToRemove)
-                }
-
-                val bridgeStrokeIdsToRemove =
-                    pressureBridgeStrokeIdsToRemove(
-                        nowUptimeMs = nowUptimeMs,
-                        persistedStrokeIds = persistedStrokeIds,
-                        finishedInProgressByStrokeId = runtime.finishedInProgressByStrokeId,
-                    )
-                if (bridgeStrokeIdsToRemove.isNotEmpty()) {
-                    val inProgressIdsToRemove =
-                        bridgeStrokeIdsToRemove
-                            .mapNotNull { strokeId ->
-                                runtime.finishedInProgressByStrokeId[strokeId]?.inProgressStrokeId
-                            }
-                            .toSet()
-                    if (inProgressIdsToRemove.isNotEmpty()) {
-                        inProgressView.removeFinishedStrokes(inProgressIdsToRemove)
-                    }
-                    runtime.finishedInProgressByStrokeId.keys.removeAll(bridgeStrokeIdsToRemove)
+                    runtime.pendingCommittedStrokes.keys.removeAll(persistedIds)
                 }
             },
             modifier = Modifier.fillMaxSize(),
@@ -283,18 +227,28 @@ fun InkCanvas(
     }
 }
 
-private fun buildPageMaskPath(
+private fun buildOutsidePageMaskPath(
+    viewWidth: Float,
+    viewHeight: Float,
     pageWidth: Float,
     pageHeight: Float,
     transform: ViewTransform,
 ): AndroidPath? {
-    if (pageWidth <= 0f || pageHeight <= 0f) {
+    if (!hasValidMaskDimensions(viewWidth, viewHeight, pageWidth, pageHeight)) {
         return null
     }
     val (left, top) = transform.pageToScreen(0f, 0f)
     val width = transform.pageWidthToScreen(pageWidth)
     val height = transform.pageWidthToScreen(pageHeight)
-    val maskPath = AndroidPath()
+    val maskPath = AndroidPath().apply { fillType = AndroidPath.FillType.EVEN_ODD }
+    maskPath.addRect(0f, 0f, viewWidth, viewHeight, AndroidPath.Direction.CW)
     maskPath.addRect(left, top, left + width, top + height, AndroidPath.Direction.CW)
     return maskPath
 }
+
+private fun hasValidMaskDimensions(
+    viewWidth: Float,
+    viewHeight: Float,
+    pageWidth: Float,
+    pageHeight: Float,
+): Boolean = pageWidth > 0f && pageHeight > 0f && viewWidth > 0f && viewHeight > 0f

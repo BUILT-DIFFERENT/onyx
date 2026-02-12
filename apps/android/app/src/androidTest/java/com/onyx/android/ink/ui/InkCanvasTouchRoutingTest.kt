@@ -159,87 +159,16 @@ class InkCanvasTouchRoutingTest {
         assertFalse(runtime.isSingleFingerPanning)
         assertFalse(runtime.activeStrokeIds.containsKey(DEFAULT_POINTER_ID))
         assertNotNull(finishedStrokeId)
-        assertTrue(runtime.finishedInProgressByStrokeId.containsKey(finishedStrokeId))
-    }
-
-    @Test
-    fun finishedStrokeBridge_waitsForPersistAndHoldWindow() {
-        val view = InProgressStrokesView(context)
-        val runtime = createRuntime()
-        var finishedStrokeId: String? = null
-        val interaction =
-            createInteraction(
-                onStrokeFinished = { stroke ->
-                    finishedStrokeId = stroke.id
-                },
-            )
-
-        val downTime = 700L
-        val down =
-            singlePointerEvent(
-                downTime = downTime,
-                eventTime = downTime,
-                action = MotionEvent.ACTION_DOWN,
-                x = 12f,
-                y = 14f,
-                toolType = MotionEvent.TOOL_TYPE_STYLUS,
-                source = InputDevice.SOURCE_STYLUS,
-            )
-        val move =
-            singlePointerEvent(
-                downTime = downTime,
-                eventTime = 716L,
-                action = MotionEvent.ACTION_MOVE,
-                x = 20f,
-                y = 24f,
-                toolType = MotionEvent.TOOL_TYPE_STYLUS,
-                source = InputDevice.SOURCE_STYLUS,
-            )
-        val up =
-            singlePointerEvent(
-                downTime = downTime,
-                eventTime = 732L,
-                action = MotionEvent.ACTION_UP,
-                x = 20f,
-                y = 24f,
-                toolType = MotionEvent.TOOL_TYPE_STYLUS,
-                source = InputDevice.SOURCE_STYLUS,
-            )
-
-        try {
-            assertTrue(handleTouchEvent(view, down, interaction, runtime))
-            assertTrue(handleTouchEvent(view, move, interaction, runtime))
-            assertTrue(handleTouchEvent(view, up, interaction, runtime))
-        } finally {
-            down.recycle()
-            move.recycle()
-            up.recycle()
-        }
-
-        val strokeId = requireNotNull(finishedStrokeId)
-        val bridgeEntry = requireNotNull(runtime.finishedInProgressByStrokeId[strokeId])
-        val beforeHoldRemoval =
-            pressureBridgeStrokeIdsToRemove(
-                nowUptimeMs = bridgeEntry.completedAtUptimeMs + FINISH_BRIDGE_HOLD_MS - 1,
-                persistedStrokeIds = setOf(strokeId),
-                finishedInProgressByStrokeId = runtime.finishedInProgressByStrokeId,
-            )
-        val atHoldRemoval =
-            pressureBridgeStrokeIdsToRemove(
-                nowUptimeMs = bridgeEntry.completedAtUptimeMs + FINISH_BRIDGE_HOLD_MS,
-                persistedStrokeIds = setOf(strokeId),
-                finishedInProgressByStrokeId = runtime.finishedInProgressByStrokeId,
-            )
-
-        assertTrue(beforeHoldRemoval.isEmpty())
-        assertEquals(setOf(strokeId), atHoldRemoval)
     }
 
     @Test
     fun cancelEvent_clearsFinishedStrokeBridgeState() {
         val view = InProgressStrokesView(context)
         val runtime = createRuntime()
-        val interaction = createInteraction()
+        val interaction =
+            createInteraction(
+                onStrokeFinished = { stroke -> runtime.pendingCommittedStrokes[stroke.id] = stroke },
+            )
 
         val downTime = 900L
         val down =
@@ -276,7 +205,6 @@ class InkCanvasTouchRoutingTest {
         try {
             assertTrue(handleTouchEvent(view, down, interaction, runtime))
             assertTrue(handleTouchEvent(view, up, interaction, runtime))
-            assertTrue(runtime.finishedInProgressByStrokeId.isNotEmpty())
             assertTrue(handleTouchEvent(view, cancel, interaction, runtime))
         } finally {
             down.recycle()
@@ -284,7 +212,6 @@ class InkCanvasTouchRoutingTest {
             cancel.recycle()
         }
 
-        assertTrue(runtime.finishedInProgressByStrokeId.isEmpty())
         assertTrue(runtime.pendingCommittedStrokes.isNotEmpty())
     }
 
@@ -437,6 +364,52 @@ class InkCanvasTouchRoutingTest {
     }
 
     @Test
+    fun eraserErasesOnDown() {
+        val view = InProgressStrokesView(context)
+        val runtime = createRuntime()
+        val erased = mutableListOf<Stroke>()
+        val interaction =
+            createInteraction(
+                strokes = listOf(sampleStroke()),
+                onStrokeErased = { stroke -> erased += stroke },
+            )
+
+        val downTime = 1350L
+        val down =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 50f,
+                y = 50f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                buttonState = MotionEvent.BUTTON_STYLUS_PRIMARY,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val move =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 1366L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 52f,
+                y = 52f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                buttonState = MotionEvent.BUTTON_STYLUS_PRIMARY,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, down, interaction, runtime))
+            assertTrue(handleTouchEvent(view, move, interaction, runtime))
+        } finally {
+            down.recycle()
+            move.recycle()
+        }
+
+        assertTrue(erased.isNotEmpty())
+    }
+
+    @Test
     fun offPageStrokeStart_isIgnored() {
         val view = InProgressStrokesView(context)
         val runtime = createRuntime()
@@ -493,6 +466,63 @@ class InkCanvasTouchRoutingTest {
         }
 
         assertEquals(0, strokeFinishedCount)
+    }
+
+    @Test
+    fun nearEdgeStrokeStart_isAccepted() {
+        val view = InProgressStrokesView(context)
+        val runtime = createRuntime()
+        var strokeFinishedCount = 0
+        val interaction =
+            createInteraction(
+                pageWidth = 100f,
+                pageHeight = 100f,
+                onStrokeFinished = { strokeFinishedCount += 1 },
+            )
+
+        val downTime = 1750L
+        val downNearEdge =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 101f,
+                y = 50f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val moveInside =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 1766L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 98f,
+                y = 50f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val upInside =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 1782L,
+                action = MotionEvent.ACTION_UP,
+                x = 98f,
+                y = 50f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, downNearEdge, interaction, runtime))
+            assertTrue(handleTouchEvent(view, moveInside, interaction, runtime))
+            assertTrue(handleTouchEvent(view, upInside, interaction, runtime))
+        } finally {
+            downNearEdge.recycle()
+            moveInside.recycle()
+            upInside.recycle()
+        }
+
+        assertEquals(1, strokeFinishedCount)
     }
 
     @Test
@@ -622,8 +652,6 @@ private fun createRuntime(): InkCanvasRuntime =
         activeStrokeStartTimes = mutableMapOf(),
         predictedStrokeIds = mutableMapOf(),
         pendingCommittedStrokes = mutableMapOf(),
-        pendingCommittedAtUptimeMs = mutableMapOf(),
-        finishedInProgressByStrokeId = mutableMapOf(),
         hoverPreviewState = HoverPreviewState(),
         finishedStrokePathCache = mutableMapOf(),
     )

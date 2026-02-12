@@ -19,7 +19,9 @@ private data class TwoPointerTransform(
 )
 
 internal fun shouldStartTransformGesture(event: MotionEvent): Boolean =
-    event.actionMasked == MotionEvent.ACTION_POINTER_DOWN && event.pointerCount >= 2
+    event.actionMasked == MotionEvent.ACTION_POINTER_DOWN &&
+        event.pointerCount >= 2 &&
+        isFingerOnlyGesture(event)
 
 internal fun shouldStartSingleFingerPanGesture(event: MotionEvent): Boolean =
     event.actionMasked == MotionEvent.ACTION_DOWN &&
@@ -48,9 +50,14 @@ internal fun handleSingleFingerPanGesture(
 
         MotionEvent.ACTION_POINTER_DOWN -> {
             if (runtime.isSingleFingerPanning && event.pointerCount >= 2) {
-                endSingleFingerPanGesture(interaction, runtime, fling = false)
-                startTransformGesture(view, event, runtime)
-                true
+                if (isFingerOnlyGesture(event)) {
+                    endSingleFingerPanGesture(interaction, runtime, fling = false)
+                    startTransformGesture(view, event, runtime)
+                    true
+                } else {
+                    endSingleFingerPanGesture(interaction, runtime, fling = false)
+                    false
+                }
             } else {
                 false
             }
@@ -88,7 +95,7 @@ internal fun handleTransformGesture(
 ): Boolean =
     when (event.actionMasked) {
         MotionEvent.ACTION_POINTER_DOWN -> {
-            if (event.pointerCount >= 2) {
+            if (event.pointerCount >= 2 && isFingerOnlyGesture(event)) {
                 startTransformGesture(view, event, runtime)
                 true
             } else {
@@ -97,7 +104,10 @@ internal fun handleTransformGesture(
         }
 
         MotionEvent.ACTION_MOVE -> {
-            if (runtime.isTransforming && event.pointerCount >= 2) {
+            if (runtime.isTransforming && !isFingerOnlyGesture(event)) {
+                endTransformGesture(interaction, runtime, fling = false)
+                false
+            } else if (runtime.isTransforming && event.pointerCount >= 2) {
                 updateTransformGesture(event, interaction, runtime)
                 true
             } else {
@@ -322,4 +332,13 @@ private fun readTwoPointerTransform(event: MotionEvent): TwoPointerTransform? {
     val centroidY = (y0 + y1) / 2f
     val distance = hypot((x1 - x0).toDouble(), (y1 - y0).toDouble()).toFloat()
     return TwoPointerTransform(centroidX, centroidY, distance)
+}
+
+private fun isFingerOnlyGesture(event: MotionEvent): Boolean {
+    for (index in 0 until event.pointerCount) {
+        if (event.getToolType(index) != MotionEvent.TOOL_TYPE_FINGER) {
+            return false
+        }
+    }
+    return true
 }
