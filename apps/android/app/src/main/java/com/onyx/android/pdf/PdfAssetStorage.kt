@@ -41,7 +41,7 @@ class PdfAssetStorage(
 
     /**
      * Get the File for a given asset ID.
-     * Use this with MuPDF Document.openDocument().
+     * Use this with the active PDF renderer implementation.
      */
     fun getFileForAsset(assetId: String): File = File(pdfDir, "$assetId.pdf")
 

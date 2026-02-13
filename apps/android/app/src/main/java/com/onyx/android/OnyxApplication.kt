@@ -6,12 +6,14 @@ import com.onyx.android.data.OnyxDatabase
 import com.onyx.android.data.repository.NoteRepository
 import com.onyx.android.data.serialization.StrokeSerializer
 import com.onyx.android.device.DeviceIdentity
+import com.onyx.android.pdf.PdfPasswordStore
 import com.onyx.android.recognition.MyScriptEngine
 
 class OnyxApplication : Application(), AppContainer {
     override lateinit var database: OnyxDatabase
     override lateinit var noteRepository: NoteRepository
     override lateinit var deviceIdentity: DeviceIdentity
+    override lateinit var pdfPasswordStore: PdfPasswordStore
     override lateinit var myScriptEngine: MyScriptEngine
 
     override fun onCreate() {
@@ -23,6 +25,9 @@ class OnyxApplication : Application(), AppContainer {
 
         deviceIdentity = DeviceIdentity(applicationContext)
         Log.d("OnyxApp", "DeviceIdentity initialized: ${deviceIdentity.getDeviceId()}")
+
+        pdfPasswordStore = PdfPasswordStore()
+        Log.d("OnyxApp", "PdfPasswordStore initialized")
 
         noteRepository =
             NoteRepository(
