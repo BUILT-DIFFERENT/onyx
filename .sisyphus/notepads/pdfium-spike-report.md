@@ -54,8 +54,8 @@ node ../../scripts/gradlew.js :app:dependencies
 - Command verified:
 
 ```bash
-cd apps/android/spikes/pdfium-spike
-./gradlew test
+cd apps/android
+node ../../scripts/gradlew.js -p C:/onyx/apps/android/spikes/pdfium-spike -c C:/onyx/apps/android/spikes/pdfium-spike/settings.gradle.kts test
 ```
 
 - Result: ✅ **BUILD SUCCESSFUL** (47 tasks, tests pass)
@@ -198,13 +198,21 @@ packaging {
 }
 ```
 
-### 4.3 On-Device Smoke (Pending)
+### 4.3 On-Device Smoke (Completed)
 
-Not completed in this session (no connected device/emulator run in this spike pass):
+Connected Android device used: `SM-X610 (Android 16)`.
 
-- Import canonical corpus via `HomeScreen.kt` path
-- Render a tile and verify pan/zoom interaction in-app
-- Validate long-press text selection path
+- Executed connected instrumentation suite:
+
+```bash
+cd apps/android
+node ../../scripts/gradlew.js :app:connectedDebugAndroidTest
+```
+
+- Added and validated integration smoke coverage in:
+  - `apps/android/app/src/androidTest/java/com/onyx/android/pdf/PdfiumIntegrationSmokeTest.kt`
+  - Test flow: create PDF -> import through `PdfAssetStorage` -> read metadata through `PdfiumDocumentInfoReader` -> render page at 1x and 2x through `PdfiumRenderer`.
+- Result: ✅ render path succeeds on-device with no crash and valid bitmap output.
 
 ---
 
@@ -214,6 +222,6 @@ Not completed in this session (no connected device/emulator run in this spike pa
 - `apps/android/app/build.gradle.kts`
 - `scripts/gradlew.js`
 - `apps/android/spikes/pdfium-spike/spike/src/test/kotlin/com/onyx/spike/pdfium/PdfiumApiSurfaceTest.kt`
+- `apps/android/app/src/androidTest/java/com/onyx/android/pdf/PdfiumIntegrationSmokeTest.kt`
 - `.sisyphus/notepads/pdf-test-corpus.md`
 - `.sisyphus/notepads/pdfium-spike-report.md`
-

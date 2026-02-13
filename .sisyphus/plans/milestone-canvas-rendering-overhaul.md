@@ -428,7 +428,7 @@ Phase 4 (Home UX) ◀── Phase 3 ──────┘
 **Duration:** 1 week  
 **Goal:** Verify PdfiumAndroid can replace MuPDF without feature regression
 
-### [ ] P0.0 Pre-Gate: Fork Viability (FIRST — before any spike work)
+### [x] P0.0 Pre-Gate: Fork Viability (FIRST — before any spike work)
 
 **This gate must pass before starting P0.1 spike tasks.**
 
@@ -444,7 +444,7 @@ Phase 4 (Home UX) ◀── Phase 3 ──────┘
 
 **If P0.0 fails:** Escalate immediately. Do NOT proceed to P0.1 until a resolvable fork is identified. Phase 2 is blocked; Phase 1 may proceed in parallel. Adjust timeline by +1–3 weeks depending on resolution.
 
-### [ ] P0.1 Tasks
+### [x] P0.1 Tasks
 
 - [ ] **Create test project** with `Zoltaneusz/PdfiumAndroid` (tag `v1.10.0`). **Location:** `apps/android/spikes/pdfium-spike/` (standalone Gradle project with its own `settings.gradle.kts` + wrapper; NOT included in `apps/android/settings.gradle.kts`).
   - **Run:** `cd apps/android/spikes/pdfium-spike && ./gradlew test` (or a minimal `./gradlew run` task) and capture output in the spike report.
@@ -468,7 +468,7 @@ Phase 4 (Home UX) ◀── Phase 3 ──────┘
   - [ ] Confirm Apache 2.0 / BSD-3 license
   - [ ] Document attribution requirements
 
-### [ ] P0.2 Go/No-Go Decision
+### [x] P0.2 Go/No-Go Decision
 
 **Note on documentation:** No Context7/official docs exist for `Zoltaneusz/PdfiumAndroid`. The spike must rely on the fork's README, source code, and Javadoc/KDoc in the repository itself. Inspect the `PdfiumCore` class directly for available methods.
 
@@ -478,7 +478,7 @@ Phase 4 (Home UX) ◀── Phase 3 ──────┘
 | Text selection missing   | Build JNI bridge on locked fork (or wrapper on locked fork)   |
 | Critical incompatibility | Escalate - consider commercial license or alternative library |
 
-### [ ] P0.2.5 Dependency Viability Check (BEFORE P0.3)
+### [x] P0.2.5 Dependency Viability Check (BEFORE P0.3)
 
 **BLOCKING CHECK:** Verify `Zoltaneusz/PdfiumAndroid` can be consumed with app `minSdk = 28`:
 
@@ -490,7 +490,7 @@ Phase 4 (Home UX) ◀── Phase 3 ──────┘
   3. **Option C:** Vendor the locked fork as source module and adjust minSdk/build if JitPack artifact is incompatible
 - **Decision gate:** If Option B is required, get explicit approval before proceeding. Do NOT silently bump minSdk.
 
-### [ ] P0.3 Exit Artifacts (MANDATORY before Phase 2 starts)
+### [x] P0.3 Exit Artifacts (MANDATORY before Phase 2 starts)
 
 **FORK LOCK (DECIDED):** The Pdfium fork is locked to `Zoltaneusz/PdfiumAndroid`:
 
@@ -538,7 +538,7 @@ Without these snippets, Phase 2 cannot start — selection parity is the biggest
 
 This report prevents re-litigation of spike findings during Phase 2 implementation.
 
-### [ ] P0.4 App Integration Smoke (BEFORE Phase 2 starts)
+### [x] P0.4 App Integration Smoke (BEFORE Phase 2 starts)
 
 - **Goal:** Prove Pdfium can render inside the app context (not just the spike project)
 - **Actions:**
@@ -557,7 +557,7 @@ This report prevents re-litigation of spike findings during Phase 2 implementati
 
 ### 5.1 Tasks
 
-#### [ ] P1.1: Re-enable Motion Prediction (Week 1-2)
+#### [x] P1.1: Re-enable Motion Prediction (Week 1-2)
 
 - **Files:** TWO flags must be toggled:
   - `InkCanvasTouch.kt` line 29: `ENABLE_PREDICTED_STROKES = true`
@@ -578,7 +578,7 @@ This report prevents re-litigation of spike findings during Phase 2 implementati
 
 - **Test:** Visual inspection on physical device - no "snap back" on pen lift
 
-#### [ ] P1.2: Align In-Progress vs Finished Stroke Styles (Week 1-2)
+#### [x] P1.2: Align In-Progress vs Finished Stroke Styles (Week 1-2)
 
 - **Files (exact call sites):**
   - `apps/android/app/src/main/java/com/onyx/android/ink/ui/InkCanvasDrawing.kt`:
@@ -597,7 +597,7 @@ This report prevents re-litigation of spike findings during Phase 2 implementati
 - **Alternative:** Render in-progress strokes in Compose as well (may add latency)
 - **Verification path:** instrument debug logging for pressure in `[0.2, 0.5, 0.8]` and compare in-progress stroke width vs committed stroke width on same brush config (target <=10% width delta at each sample point)
 
-#### [ ] P1.3: Front-Buffered Rendering Investigation (Week 2)
+#### [x] P1.3: Front-Buffered Rendering Investigation (Week 2)
 
 - **Goal:** Determine if `GLFrontBufferedRenderer` can reduce latency further
 - **Constraint:** Jetpack Ink's `InProgressStrokesView` may already use front-buffering internally
@@ -605,7 +605,7 @@ This report prevents re-litigation of spike findings during Phase 2 implementati
 - **Decision gate (binary):** If P95 latency improvement vs baseline is <5ms OR GL front-buffering requires `SurfaceView` that breaks Compose layering, skip custom GL implementation. If improvement ≥5ms AND no layering regressions on Tab S9, proceed with GLFrontBufferedRenderer spike.
 - **Record:** Save trace + decision in `.sisyphus/notepads/ink-latency-investigation.md`
 
-#### [ ] P1.4: Tile-Based Stroke Caching (Week 3-4)
+#### [x] P1.4: Tile-Based Stroke Caching (Week 3-4)
 
 - **File:** New `apps/android/app/src/main/java/com/onyx/android/ink/cache/StrokeTileCache.kt`
 - **Design:**

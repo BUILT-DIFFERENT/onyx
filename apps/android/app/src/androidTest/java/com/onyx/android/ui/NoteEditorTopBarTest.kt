@@ -2,10 +2,11 @@ package com.onyx.android.ui
 
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.test.assertDoesNotExist
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -152,7 +153,7 @@ class NoteEditorTopBarTest {
 
         composeRule.onNodeWithContentDescription(MORE_ACTIONS).performClick()
         composeRule.onNodeWithText("Rename note").assertIsDisplayed()
-        composeRule.onNodeWithText(LEGACY_OVERFLOW_COPY).assertDoesNotExist()
+        composeRule.onAllNodesWithText(LEGACY_OVERFLOW_COPY).assertCountEquals(0)
         composeRule.onNodeWithText("Rename note").performClick()
         composeRule.onNodeWithTag(TITLE_INPUT_TEST_TAG).assertIsDisplayed()
 
