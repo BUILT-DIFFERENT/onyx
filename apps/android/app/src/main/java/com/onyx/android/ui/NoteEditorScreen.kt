@@ -5,6 +5,7 @@ package com.onyx.android.ui
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.util.Log
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,7 +34,7 @@ import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.pdf.PdfAssetStorage
-import com.onyx.android.pdf.PdfRenderer
+import com.onyx.android.pdf.PdfiumRenderer
 import com.onyx.android.recognition.MyScriptPageManager
 import com.onyx.android.requireAppContainer
 import kotlinx.coroutines.Job
@@ -44,6 +45,7 @@ import kotlin.math.hypot
 private const val MIN_PAN_FLING_SPEED_PX_PER_SECOND = 8.0
 private const val NANOS_PER_SECOND = 1_000_000_000f
 private const val PAN_FLING_DECAY_RATE = -5f
+private const val NOTE_EDITOR_LOG_TAG = "NoteEditorScreen"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -170,6 +172,7 @@ private fun rememberNoteEditorUiState(
     pdfAssetStorage: PdfAssetStorage,
     onNavigateBack: () -> Unit,
 ): NoteEditorUiState {
+    val appContext = LocalContext.current.applicationContext
     val brushState = rememberBrushState()
     val pageState = rememberPageState(viewModel)
     val undoController = remember(viewModel) { UndoController(viewModel, MAX_UNDO_ACTIONS) }
@@ -183,6 +186,7 @@ private fun rememberNoteEditorUiState(
     val viewportHeight = viewportSize.height.toFloat()
     val pdfState =
         rememberPdfState(
+            appContext = appContext,
             currentPage = pageState.currentPage,
             pdfAssetStorage = pdfAssetStorage,
             viewZoom = viewTransform.zoom,
@@ -405,6 +409,7 @@ private fun rememberPageState(viewModel: NoteEditorViewModel): NoteEditorPageSta
 
 @Composable
 private fun rememberPdfState(
+    appContext: Context,
     currentPage: PageEntity?,
     pdfAssetStorage: PdfAssetStorage,
     viewZoom: Float,
@@ -415,7 +420,14 @@ private fun rememberPdfState(
     val pdfRenderer =
         remember(currentPage?.pdfAssetId) {
             currentPage?.pdfAssetId?.let { assetId ->
-                PdfRenderer(pdfAssetStorage.getFileForAsset(assetId))
+                runCatching {
+                    PdfiumRenderer(
+                        context = appContext,
+                        pdfFile = pdfAssetStorage.getFileForAsset(assetId),
+                    )
+                }.onFailure { error ->
+                    Log.e(NOTE_EDITOR_LOG_TAG, "Failed to open PDF asset $assetId", error)
+                }.getOrNull()
             }
         }
     val pdfBitmap =

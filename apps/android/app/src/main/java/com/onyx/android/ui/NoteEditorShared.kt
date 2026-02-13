@@ -14,7 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.ViewTransform
-import com.onyx.android.pdf.PdfRenderer
+import com.onyx.android.pdf.PdfDocumentRenderer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.min
@@ -66,7 +66,7 @@ internal fun computeZoomLimits(
 }
 
 @Composable
-internal fun DisposePdfRenderer(pdfRenderer: PdfRenderer?) {
+internal fun DisposePdfRenderer(pdfRenderer: PdfDocumentRenderer?) {
     DisposableEffect(pdfRenderer) {
         onDispose {
             pdfRenderer?.close()
@@ -204,7 +204,7 @@ private fun hasValidDimensions(
 internal fun rememberPdfBitmap(
     isPdfPage: Boolean,
     currentPage: PageEntity?,
-    pdfRenderer: PdfRenderer?,
+    pdfRenderer: PdfDocumentRenderer?,
     viewZoom: Float,
 ): android.graphics.Bitmap? {
     var pdfBitmap by remember(currentPage?.pageId) { mutableStateOf<android.graphics.Bitmap?>(null) }

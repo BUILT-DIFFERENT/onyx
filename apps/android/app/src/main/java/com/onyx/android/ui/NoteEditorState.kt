@@ -3,22 +3,28 @@ package com.onyx.android.ui
 import androidx.compose.foundation.gestures.TransformableState
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
-import com.artifex.mupdf.fitz.Quad
-import com.artifex.mupdf.fitz.StructuredText
-import com.artifex.mupdf.fitz.StructuredText.TextChar
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
-import com.onyx.android.pdf.PdfRenderer
+import com.onyx.android.pdf.PdfDocumentRenderer
+import com.onyx.android.pdf.PdfTextChar
+import com.onyx.android.pdf.PdfTextSelection
 
 internal data class TextSelection(
-    val structuredText: StructuredText,
-    val startChar: TextChar,
-    val endChar: TextChar,
-    val quads: List<Quad>,
-)
+    val pageIndex: Int,
+    val pageCharacters: List<PdfTextChar>,
+    val startCharIndex: Int,
+    val endCharIndex: Int,
+    val selection: PdfTextSelection,
+) {
+    val quads: List<com.onyx.android.pdf.PdfTextQuad>
+        get() = selection.chars.map { char -> char.quad }
+
+    val text: String
+        get() = selection.text
+}
 
 internal data class NoteEditorTopBarState(
     val noteTitle: String,
@@ -50,7 +56,7 @@ internal data class NoteEditorContentState(
     val isPdfPage: Boolean,
     val isReadOnly: Boolean,
     val pdfBitmap: android.graphics.Bitmap?,
-    val pdfRenderer: PdfRenderer?,
+    val pdfRenderer: PdfDocumentRenderer?,
     val currentPage: PageEntity?,
     val viewTransform: ViewTransform,
     val pageWidthDp: Dp,
@@ -87,7 +93,7 @@ internal data class NoteEditorPageState(
 
 internal data class NoteEditorPdfState(
     val isPdfPage: Boolean,
-    val pdfRenderer: PdfRenderer?,
+    val pdfRenderer: PdfDocumentRenderer?,
     val pdfBitmap: android.graphics.Bitmap?,
     val pageWidthDp: Dp,
     val pageHeightDp: Dp,

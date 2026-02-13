@@ -27,11 +27,11 @@ import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
 import com.onyx.android.ink.ui.InkCanvasCallbacks
 import com.onyx.android.ink.ui.InkCanvasState
-import com.onyx.android.pdf.PdfRenderer
+import com.onyx.android.pdf.PdfTextExtractor
+import com.onyx.android.pdf.buildPdfTextSelection
+import com.onyx.android.pdf.findPdfTextCharIndexAtPagePoint
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 @Composable
@@ -50,7 +50,7 @@ private fun rememberPdfSelectionState(contentState: NoteEditorContentState): Pdf
     }
 
     return PdfSelectionState(
-        renderer = contentState.pdfRenderer,
+        textExtractor = contentState.pdfRenderer,
         currentPage = contentState.currentPage,
         viewTransform = contentState.viewTransform,
         selection = textSelection,
@@ -124,7 +124,7 @@ private fun PdfPageLayers(
 }
 
 private data class PdfSelectionState(
-    val renderer: PdfRenderer?,
+    val textExtractor: PdfTextExtractor?,
     val currentPage: PageEntity?,
     val viewTransform: ViewTransform,
     val selection: TextSelection?,
@@ -152,24 +152,32 @@ private fun handlePdfDragStart(
     state: PdfSelectionState,
     offset: androidx.compose.ui.geometry.Offset,
 ) {
-    val renderer = state.renderer ?: return
+    val extractor = state.textExtractor ?: return
     val pageIndex = state.currentPage?.pdfPageNo ?: return
     val pageX = state.viewTransform.screenToPageX(offset.x)
     val pageY = state.viewTransform.screenToPageY(offset.y)
     state.coroutineScope.launch {
-        val structuredText =
-            withContext(Dispatchers.Default) {
-                renderer.extractTextStructure(pageIndex)
-            }
-        val startChar = renderer.findCharAtPagePoint(structuredText, pageX, pageY)
-        if (startChar != null) {
-            val quads = renderer.getSelectionQuads(structuredText, startChar, startChar)
+        val pageCharacters = extractor.getCharacters(pageIndex)
+        val startCharIndex =
+            findPdfTextCharIndexAtPagePoint(
+                characters = pageCharacters,
+                pageX = pageX,
+                pageY = pageY,
+            )
+        if (startCharIndex != null) {
+            val selection =
+                buildPdfTextSelection(
+                    characters = pageCharacters,
+                    startIndex = startCharIndex,
+                    endIndex = startCharIndex,
+                )
             state.onSelectionChange(
                 TextSelection(
-                    structuredText = structuredText,
-                    startChar = startChar,
-                    endChar = startChar,
-                    quads = quads,
+                    pageIndex = pageIndex,
+                    pageCharacters = pageCharacters,
+                    startCharIndex = startCharIndex,
+                    endCharIndex = startCharIndex,
+                    selection = selection,
                 ),
             )
         } else {
@@ -182,23 +190,27 @@ private fun handlePdfDragMove(
     state: PdfSelectionState,
     change: PointerInputChange,
 ) {
-    val renderer = state.renderer
     val selection = state.selection
-    if (renderer != null && selection != null) {
+    if (selection != null) {
         val pageX = state.viewTransform.screenToPageX(change.position.x)
         val pageY = state.viewTransform.screenToPageY(change.position.y)
-        val endChar = renderer.findCharAtPagePoint(selection.structuredText, pageX, pageY)
-        if (endChar != null) {
-            val quads =
-                renderer.getSelectionQuads(
-                    selection.structuredText,
-                    selection.startChar,
-                    endChar,
+        val endCharIndex =
+            findPdfTextCharIndexAtPagePoint(
+                characters = selection.pageCharacters,
+                pageX = pageX,
+                pageY = pageY,
+            )
+        if (endCharIndex != null) {
+            val updatedSelection =
+                buildPdfTextSelection(
+                    characters = selection.pageCharacters,
+                    startIndex = selection.startCharIndex,
+                    endIndex = endCharIndex,
                 )
             state.onSelectionChange(
                 selection.copy(
-                    endChar = endChar,
-                    quads = quads,
+                    endCharIndex = endCharIndex,
+                    selection = updatedSelection,
                 ),
             )
             change.consume()
@@ -207,14 +219,8 @@ private fun handlePdfDragMove(
 }
 
 private fun handlePdfDragEnd(state: PdfSelectionState) {
-    val renderer = state.renderer ?: return
     val selection = state.selection ?: return
-    val selectedText =
-        renderer.extractSelectedText(
-            selection.structuredText,
-            selection.startChar,
-            selection.endChar,
-        )
+    val selectedText = selection.text
     android.util.Log.d("PdfSelection", "Selected text: $selectedText")
 }
 
@@ -227,20 +233,20 @@ private fun PdfSelectionOverlay(
     val highlightColor = Color(PDF_SELECTION_HIGHLIGHT_COLOR)
     Canvas(modifier = Modifier.fillMaxSize()) {
         selection.quads.forEach { quad ->
-            val ulX = viewTransform.pageToScreenX(quad.ul_x)
-            val ulY = viewTransform.pageToScreenY(quad.ul_y)
-            val urX = viewTransform.pageToScreenX(quad.ur_x)
-            val urY = viewTransform.pageToScreenY(quad.ur_y)
-            val lrX = viewTransform.pageToScreenX(quad.lr_x)
-            val lrY = viewTransform.pageToScreenY(quad.lr_y)
-            val llX = viewTransform.pageToScreenX(quad.ll_x)
-            val llY = viewTransform.pageToScreenY(quad.ll_y)
+            val p1X = viewTransform.pageToScreenX(quad.p1.x)
+            val p1Y = viewTransform.pageToScreenY(quad.p1.y)
+            val p2X = viewTransform.pageToScreenX(quad.p2.x)
+            val p2Y = viewTransform.pageToScreenY(quad.p2.y)
+            val p3X = viewTransform.pageToScreenX(quad.p3.x)
+            val p3Y = viewTransform.pageToScreenY(quad.p3.y)
+            val p4X = viewTransform.pageToScreenX(quad.p4.x)
+            val p4Y = viewTransform.pageToScreenY(quad.p4.y)
             val path =
                 Path().apply {
-                    moveTo(ulX, ulY)
-                    lineTo(urX, urY)
-                    lineTo(lrX, lrY)
-                    lineTo(llX, llY)
+                    moveTo(p1X, p1Y)
+                    lineTo(p2X, p2Y)
+                    lineTo(p3X, p3Y)
+                    lineTo(p4X, p4Y)
                     close()
                 }
             drawPath(path, color = highlightColor)
