@@ -1,4 +1,4 @@
-const { spawn } = require("node:child_process");
+const { spawn, spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -71,6 +71,60 @@ function resolveWindowsJava() {
   };
 }
 
+function detectJavaMajorVersion(javaExe) {
+  try {
+    const result = spawnSync(javaExe, ["-version"], {
+      encoding: "utf8",
+    });
+    const versionOutput = `${result.stderr || ""}\n${result.stdout || ""}`;
+    const match = versionOutput.match(/version "(\d+)(?:\.[^"]*)?"/);
+    if (!match) return null;
+    const major = Number.parseInt(match[1], 10);
+    return Number.isNaN(major) ? null : major;
+  } catch {
+    return null;
+  }
+}
+
+function resolvePosixJava() {
+  const candidates = [];
+  const sanitizedJavaHome = sanitizeJavaHome(process.env.JAVA_HOME);
+  if (sanitizedJavaHome) {
+    candidates.push(path.join(sanitizedJavaHome, "bin", "java"));
+  }
+
+  // Prefer stable JDK 17 installations on Linux environments.
+  candidates.push(
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+    "/usr/lib/jvm/java-17-openjdk/bin/java",
+    "/usr/lib/jvm/java-1.17.0-openjdk-amd64/bin/java",
+  );
+
+  const uniqueCandidates = [...new Set(candidates)].filter(pathExists);
+  if (uniqueCandidates.length === 0) return null;
+
+  const java17 = uniqueCandidates.find(
+    (javaExe) => detectJavaMajorVersion(javaExe) === 17,
+  );
+  if (java17) {
+    return {
+      javaExe: java17,
+      javaHome: path.dirname(path.dirname(java17)),
+    };
+  }
+
+  const supported = uniqueCandidates.find((javaExe) => {
+    const major = detectJavaMajorVersion(javaExe);
+    return major !== null && major >= 17 && major < 25;
+  });
+  if (!supported) return null;
+
+  return {
+    javaExe: supported,
+    javaHome: path.dirname(path.dirname(supported)),
+  };
+}
+
 function resolveWindowsAndroidSdk() {
   const rawAndroidHome = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
   const sanitizedAndroidHome = sanitizeJavaHome(rawAndroidHome);
@@ -108,6 +162,13 @@ if (isWindows) {
   if (sdkHome) {
     env.ANDROID_HOME = sdkHome;
     env.ANDROID_SDK_ROOT = sdkHome;
+  }
+} else {
+  const resolved = resolvePosixJava();
+  if (resolved) {
+    env.JAVA_HOME = resolved.javaHome;
+    const basePath = env.PATH || "/usr/bin:/bin";
+    env.PATH = `${path.dirname(resolved.javaExe)}:${basePath}`;
   }
 }
 

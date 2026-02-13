@@ -27,11 +27,12 @@ class CatmullRomSmoothTest {
 
     @Test
     fun `catmullRomSmooth passes through original points for 3 input points`() {
-        val points = listOf(
-            StrokePoint(x = 0f, y = 0f, t = 0L, p = 0.5f),
-            StrokePoint(x = 10f, y = 10f, t = 1L, p = 0.5f),
-            StrokePoint(x = 20f, y = 0f, t = 2L, p = 0.5f),
-        )
+        val points =
+            listOf(
+                StrokePoint(x = 0f, y = 0f, t = 0L, p = 0.5f),
+                StrokePoint(x = 10f, y = 10f, t = 1L, p = 0.5f),
+                StrokePoint(x = 20f, y = 0f, t = 2L, p = 0.5f),
+            )
         val result = catmullRomSmooth(points)
 
         // First point should match exactly
@@ -45,11 +46,12 @@ class CatmullRomSmoothTest {
 
     @Test
     fun `catmullRomSmooth produces more points than input`() {
-        val points = listOf(
-            StrokePoint(x = 0f, y = 0f, t = 0L, p = 0.5f),
-            StrokePoint(x = 10f, y = 10f, t = 1L, p = 0.5f),
-            StrokePoint(x = 20f, y = 0f, t = 2L, p = 0.5f),
-        )
+        val points =
+            listOf(
+                StrokePoint(x = 0f, y = 0f, t = 0L, p = 0.5f),
+                StrokePoint(x = 10f, y = 10f, t = 1L, p = 0.5f),
+                StrokePoint(x = 20f, y = 0f, t = 2L, p = 0.5f),
+            )
         val result = catmullRomSmooth(points)
         // Should produce 1 (first) + 2 segments × 8 subdivisions = 17 points
         assertTrue(result.size > points.size, "Smoothed should have more points than input")
@@ -58,10 +60,11 @@ class CatmullRomSmoothTest {
 
     @Test
     fun `catmullRomSmooth returns input unchanged for 2 or fewer points`() {
-        val twoPoints = listOf(
-            StrokePoint(x = 0f, y = 0f, t = 0L, p = 0.5f),
-            StrokePoint(x = 10f, y = 10f, t = 1L, p = 0.5f),
-        )
+        val twoPoints =
+            listOf(
+                StrokePoint(x = 0f, y = 0f, t = 0L, p = 0.5f),
+                StrokePoint(x = 10f, y = 10f, t = 1L, p = 0.5f),
+            )
         val result = catmullRomSmooth(twoPoints)
         assertEquals(2, result.size)
         assertEquals(0f, result[0].x, 0.0001f)
@@ -84,11 +87,12 @@ class CatmullRomSmoothTest {
 
     @Test
     fun `catmullRomSmooth interpolates pressure along with position`() {
-        val points = listOf(
-            StrokePoint(x = 0f, y = 0f, t = 0L, p = 0.2f),
-            StrokePoint(x = 10f, y = 0f, t = 1L, p = 0.8f),
-            StrokePoint(x = 20f, y = 0f, t = 2L, p = 0.3f),
-        )
+        val points =
+            listOf(
+                StrokePoint(x = 0f, y = 0f, t = 0L, p = 0.2f),
+                StrokePoint(x = 10f, y = 0f, t = 1L, p = 0.8f),
+                StrokePoint(x = 20f, y = 0f, t = 2L, p = 0.3f),
+            )
         val result = catmullRomSmooth(points)
         // All pressures should be clamped to [0, 1]
         result.forEach { point ->
@@ -99,11 +103,12 @@ class CatmullRomSmoothTest {
 
     @Test
     fun `catmullRomSmooth handles null pressure with fallback`() {
-        val points = listOf(
-            StrokePoint(x = 0f, y = 0f, t = 0L, p = null),
-            StrokePoint(x = 10f, y = 0f, t = 1L, p = null),
-            StrokePoint(x = 20f, y = 0f, t = 2L, p = null),
-        )
+        val points =
+            listOf(
+                StrokePoint(x = 0f, y = 0f, t = 0L, p = null),
+                StrokePoint(x = 10f, y = 0f, t = 1L, p = null),
+                StrokePoint(x = 20f, y = 0f, t = 2L, p = null),
+            )
         val result = catmullRomSmooth(points)
         // With null pressure, all should use fallback (0.5)
         result.drop(1).forEach { point ->
@@ -115,12 +120,13 @@ class CatmullRomSmoothTest {
     @Test
     fun `catmullRomSmooth produces smooth curve for curved input`() {
         // Create an S-curve shape
-        val points = listOf(
-            StrokePoint(x = 0f, y = 0f, t = 0L, p = 0.5f),
-            StrokePoint(x = 5f, y = 10f, t = 1L, p = 0.5f),
-            StrokePoint(x = 15f, y = -10f, t = 2L, p = 0.5f),
-            StrokePoint(x = 20f, y = 0f, t = 3L, p = 0.5f),
-        )
+        val points =
+            listOf(
+                StrokePoint(x = 0f, y = 0f, t = 0L, p = 0.5f),
+                StrokePoint(x = 5f, y = 10f, t = 1L, p = 0.5f),
+                StrokePoint(x = 15f, y = -10f, t = 2L, p = 0.5f),
+                StrokePoint(x = 20f, y = 0f, t = 3L, p = 0.5f),
+            )
         val result = catmullRomSmooth(points)
         // Expect 1 + 3*8 = 25 interpolated points
         assertEquals(25, result.size)

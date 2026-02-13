@@ -25,10 +25,11 @@ class VariableWidthOutlineTest {
 
     @Test
     fun `two-point stroke produces closed outline`() {
-        val samples = listOf(
-            StrokeRenderPoint(0f, 0f, 0.5f),
-            StrokeRenderPoint(100f, 0f, 0.5f),
-        )
+        val samples =
+            listOf(
+                StrokeRenderPoint(0f, 0f, 0.5f),
+                StrokeRenderPoint(100f, 0f, 0.5f),
+            )
         val widths = listOf(4f, 4f)
         val path = buildVariableWidthOutline(samples, widths)
         assertFalse(path.isEmpty, "Two-point stroke should produce a non-empty path")
@@ -61,10 +62,11 @@ class VariableWidthOutlineTest {
 
     @Test
     fun `very small widths still produce valid path`() {
-        val samples = listOf(
-            StrokeRenderPoint(0f, 0f, 0.5f),
-            StrokeRenderPoint(10f, 0f, 0.5f),
-        )
+        val samples =
+            listOf(
+                StrokeRenderPoint(0f, 0f, 0.5f),
+                StrokeRenderPoint(10f, 0f, 0.5f),
+            )
         val widths = listOf(0.001f, 0.001f)
         val path = buildVariableWidthOutline(samples, widths)
         // Should not crash or produce NaN values
@@ -73,11 +75,12 @@ class VariableWidthOutlineTest {
 
     @Test
     fun `diagonal stroke produces valid outline`() {
-        val samples = listOf(
-            StrokeRenderPoint(0f, 0f, 0.5f),
-            StrokeRenderPoint(50f, 50f, 0.5f),
-            StrokeRenderPoint(100f, 100f, 0.5f),
-        )
+        val samples =
+            listOf(
+                StrokeRenderPoint(0f, 0f, 0.5f),
+                StrokeRenderPoint(50f, 50f, 0.5f),
+                StrokeRenderPoint(100f, 100f, 0.5f),
+            )
         val widths = listOf(4f, 4f, 4f)
         val path = buildVariableWidthOutline(samples, widths)
         assertFalse(path.isEmpty, "Diagonal stroke should produce a valid path")
@@ -85,12 +88,13 @@ class VariableWidthOutlineTest {
 
     @Test
     fun `curved stroke produces valid outline`() {
-        val samples = listOf(
-            StrokeRenderPoint(0f, 0f, 0.5f),
-            StrokeRenderPoint(25f, 50f, 0.5f),
-            StrokeRenderPoint(75f, -50f, 0.5f),
-            StrokeRenderPoint(100f, 0f, 0.5f),
-        )
+        val samples =
+            listOf(
+                StrokeRenderPoint(0f, 0f, 0.5f),
+                StrokeRenderPoint(25f, 50f, 0.5f),
+                StrokeRenderPoint(75f, -50f, 0.5f),
+                StrokeRenderPoint(100f, 0f, 0.5f),
+            )
         val widths = listOf(4f, 6f, 6f, 4f)
         val path = buildVariableWidthOutline(samples, widths)
         assertFalse(path.isEmpty, "Curved stroke should produce a valid path")
@@ -98,19 +102,21 @@ class VariableWidthOutlineTest {
 
     @Test
     fun `full pipeline - catmullRom + widths + outline`() {
-        val style = StrokeStyle(
-            tool = Tool.PEN,
-            baseWidth = 4f,
-            minWidthFactor = 0.5f,
-            maxWidthFactor = 1.5f,
-        )
-        val points = listOf(
-            StrokePoint(x = 0f, y = 0f, t = 0L, p = 0.3f),
-            StrokePoint(x = 20f, y = 10f, t = 1L, p = 0.6f),
-            StrokePoint(x = 40f, y = 5f, t = 2L, p = 0.8f),
-            StrokePoint(x = 60f, y = 15f, t = 3L, p = 0.4f),
-            StrokePoint(x = 80f, y = 0f, t = 4L, p = 0.2f),
-        )
+        val style =
+            StrokeStyle(
+                tool = Tool.PEN,
+                baseWidth = 4f,
+                minWidthFactor = 0.5f,
+                maxWidthFactor = 1.5f,
+            )
+        val points =
+            listOf(
+                StrokePoint(x = 0f, y = 0f, t = 0L, p = 0.3f),
+                StrokePoint(x = 20f, y = 10f, t = 1L, p = 0.6f),
+                StrokePoint(x = 40f, y = 5f, t = 2L, p = 0.8f),
+                StrokePoint(x = 60f, y = 15f, t = 3L, p = 0.4f),
+                StrokePoint(x = 80f, y = 0f, t = 4L, p = 0.2f),
+            )
         val samples = catmullRomSmooth(points)
         val widths = computePerPointWidths(samples, style)
         val path = buildVariableWidthOutline(samples, widths)
@@ -124,10 +130,11 @@ class VariableWidthOutlineTest {
     @Test
     fun `outline handles zero-length segment gracefully`() {
         // Two identical points — zero-length segment
-        val samples = listOf(
-            StrokeRenderPoint(50f, 50f, 0.5f),
-            StrokeRenderPoint(50f, 50f, 0.5f),
-        )
+        val samples =
+            listOf(
+                StrokeRenderPoint(50f, 50f, 0.5f),
+                StrokeRenderPoint(50f, 50f, 0.5f),
+            )
         val widths = listOf(4f, 4f)
         val path = buildVariableWidthOutline(samples, widths)
         // Should not crash or produce NaN
@@ -136,11 +143,12 @@ class VariableWidthOutlineTest {
 
     @Test
     fun `catmullRom subdivisions count is consistent`() {
-        val points = listOf(
-            StrokePoint(x = 0f, y = 0f, t = 0L, p = 0.5f),
-            StrokePoint(x = 10f, y = 10f, t = 1L, p = 0.5f),
-            StrokePoint(x = 20f, y = 0f, t = 2L, p = 0.5f),
-        )
+        val points =
+            listOf(
+                StrokePoint(x = 0f, y = 0f, t = 0L, p = 0.5f),
+                StrokePoint(x = 10f, y = 10f, t = 1L, p = 0.5f),
+                StrokePoint(x = 20f, y = 0f, t = 2L, p = 0.5f),
+            )
         val result = catmullRomSmooth(points)
         // 1 (first point) + 2 segments × CATMULL_ROM_SUBDIVISIONS = 1 + 2×8 = 17
         val expected = 1 + (points.size - 1) * CATMULL_ROM_SUBDIVISIONS

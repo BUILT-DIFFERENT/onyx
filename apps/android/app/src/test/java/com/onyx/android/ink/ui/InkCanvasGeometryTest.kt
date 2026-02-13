@@ -26,11 +26,12 @@ class InkCanvasGeometryTest {
 
     @Test
     fun `calculateBounds computes correct bounds for multiple points`() {
-        val points = listOf(
-            StrokePoint(x = 10f, y = 20f, t = 0L),
-            StrokePoint(x = 50f, y = 80f, t = 1L),
-            StrokePoint(x = 30f, y = 40f, t = 2L),
-        )
+        val points =
+            listOf(
+                StrokePoint(x = 10f, y = 20f, t = 0L),
+                StrokePoint(x = 50f, y = 80f, t = 1L),
+                StrokePoint(x = 30f, y = 40f, t = 2L),
+            )
         val bounds = calculateBounds(points)
         assertEquals(10f, bounds.x, DELTA)
         assertEquals(20f, bounds.y, DELTA)
@@ -40,10 +41,11 @@ class InkCanvasGeometryTest {
 
     @Test
     fun `calculateBounds with strokeWidthPadding expands bounds`() {
-        val points = listOf(
-            StrokePoint(x = 10f, y = 20f, t = 0L),
-            StrokePoint(x = 50f, y = 60f, t = 1L),
-        )
+        val points =
+            listOf(
+                StrokePoint(x = 10f, y = 20f, t = 0L),
+                StrokePoint(x = 50f, y = 60f, t = 1L),
+            )
         val bounds = calculateBounds(points, strokeWidthPadding = 4f)
         // halfPadding = 2f, so min shifts left by 2, max shifts right by 2
         assertEquals(8f, bounds.x, DELTA) // 10 - 2
@@ -54,10 +56,11 @@ class InkCanvasGeometryTest {
 
     @Test
     fun `calculateBounds with negative coordinates works correctly`() {
-        val points = listOf(
-            StrokePoint(x = -10f, y = -20f, t = 0L),
-            StrokePoint(x = 10f, y = 20f, t = 1L),
-        )
+        val points =
+            listOf(
+                StrokePoint(x = -10f, y = -20f, t = 0L),
+                StrokePoint(x = 10f, y = 20f, t = 1L),
+            )
         val bounds = calculateBounds(points)
         assertEquals(-10f, bounds.x, DELTA)
         assertEquals(-20f, bounds.y, DELTA)
@@ -67,10 +70,11 @@ class InkCanvasGeometryTest {
 
     @Test
     fun `calculateBounds with zero padding matches no-padding behavior`() {
-        val points = listOf(
-            StrokePoint(x = 10f, y = 10f, t = 0L),
-            StrokePoint(x = 20f, y = 20f, t = 1L),
-        )
+        val points =
+            listOf(
+                StrokePoint(x = 10f, y = 10f, t = 0L),
+                StrokePoint(x = 20f, y = 20f, t = 1L),
+            )
         val noPadding = calculateBounds(points)
         val zeroPadding = calculateBounds(points, strokeWidthPadding = 0f)
         assertEquals(noPadding.x, zeroPadding.x, DELTA)

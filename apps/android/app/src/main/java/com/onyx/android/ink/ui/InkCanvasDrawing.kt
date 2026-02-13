@@ -1,3 +1,5 @@
+@file:Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions")
+
 package com.onyx.android.ink.ui
 
 import android.graphics.Color.parseColor
@@ -51,10 +53,10 @@ private const val HIGHLIGHTER_STROKE_ALPHA = 0.35f
  */
 internal object ColorCache {
     private const val MAX_SIZE = 64
-    private val cache = object : LinkedHashMap<String, Int>(MAX_SIZE, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Int>?): Boolean =
-            size > MAX_SIZE
-    }
+    private val cache =
+        object : LinkedHashMap<String, Int>(MAX_SIZE, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Int>?): Boolean = size > MAX_SIZE
+        }
 
     @Synchronized
     fun resolve(hex: String): Int {
@@ -133,9 +135,10 @@ internal fun DrawScope.drawStrokesInWorldSpace(
             if (!stroke.isVisibleIn(viewportRect)) {
                 return@forEach
             }
-            val cacheEntry = pathCache.getOrPut(stroke.id) {
-                buildStrokePathCacheEntry(stroke.points, stroke.style)
-            }
+            val cacheEntry =
+                pathCache.getOrPut(stroke.id) {
+                    buildStrokePathCacheEntry(stroke.points, stroke.style)
+                }
             val baseColor = Color(ColorCache.resolve(stroke.style.color))
             if (stroke.style.tool == Tool.HIGHLIGHTER) {
                 drawPath(
@@ -241,9 +244,12 @@ internal fun buildVariableWidthOutline(
     // Start cap: semicircle from right to left at first point
     val startHalfW = (widths[0] / 2f).coerceAtLeast(MIN_WIDTH_FOR_OUTLINE)
     path.addRoundCap(
-        samples[0].x, samples[0].y,
-        rightX[0], rightY[0],
-        leftX[0], leftY[0],
+        samples[0].x,
+        samples[0].y,
+        rightX[0],
+        rightY[0],
+        leftX[0],
+        leftY[0],
         startHalfW,
     )
 
@@ -256,9 +262,12 @@ internal fun buildVariableWidthOutline(
     val lastIdx = count - 1
     val endHalfW = (widths[lastIdx] / 2f).coerceAtLeast(MIN_WIDTH_FOR_OUTLINE)
     path.addRoundCap(
-        samples[lastIdx].x, samples[lastIdx].y,
-        leftX[lastIdx], leftY[lastIdx],
-        rightX[lastIdx], rightY[lastIdx],
+        samples[lastIdx].x,
+        samples[lastIdx].y,
+        leftX[lastIdx],
+        leftY[lastIdx],
+        rightX[lastIdx],
+        rightY[lastIdx],
         endHalfW,
     )
 
@@ -423,7 +432,7 @@ internal fun catmullRomValue(
             (2f - 5f * t2 + 3f * t3) * v1 +
             (t + 4f * t2 - 3f * t3) * v2 +
             (-t2 + t3) * v3
-        )
+    )
 }
 
 /**
@@ -466,17 +475,19 @@ internal fun computeTaperFactor(
     val taperLength = TAPER_POINT_COUNT.coerceAtMost(totalPoints / 2)
     if (taperLength <= 0) return 1f
 
-    val startTaper = if (index < taperLength) {
-        TAPER_MIN_FACTOR + (1f - TAPER_MIN_FACTOR) * (index.toFloat() / taperLength)
-    } else {
-        1f
-    }
+    val startTaper =
+        if (index < taperLength) {
+            TAPER_MIN_FACTOR + (1f - TAPER_MIN_FACTOR) * (index.toFloat() / taperLength)
+        } else {
+            1f
+        }
     val distFromEnd = totalPoints - 1 - index
-    val endTaper = if (distFromEnd < taperLength) {
-        TAPER_MIN_FACTOR + (1f - TAPER_MIN_FACTOR) * (distFromEnd.toFloat() / taperLength)
-    } else {
-        1f
-    }
+    val endTaper =
+        if (distFromEnd < taperLength) {
+            TAPER_MIN_FACTOR + (1f - TAPER_MIN_FACTOR) * (distFromEnd.toFloat() / taperLength)
+        } else {
+            1f
+        }
     return minOf(startTaper, endTaper)
 }
 

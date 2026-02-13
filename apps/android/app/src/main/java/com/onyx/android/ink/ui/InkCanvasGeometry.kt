@@ -1,3 +1,5 @@
+@file:Suppress("LoopWithTooManyJumpStatements", "ReturnCount")
+
 package com.onyx.android.ink.ui
 
 import androidx.compose.ui.geometry.Offset

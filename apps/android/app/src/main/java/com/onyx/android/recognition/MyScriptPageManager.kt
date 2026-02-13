@@ -36,6 +36,7 @@ import java.io.File
  *
  * Reference: myscript-examples/samples/offscreen-interactivity/InkViewModel.kt
  */
+@Suppress("TooManyFunctions")
 class MyScriptPageManager(
     private val engine: Engine,
     private val context: Context,
@@ -230,7 +231,7 @@ class MyScriptPageManager(
         val msStrokeId = reverseStrokeMapping[erasedStrokeId]
         if (msStrokeId != null) {
             runCatching {
-                editor.eraseStrokes(arrayOf(msStrokeId))
+                editor.erase(arrayOf(msStrokeId))
                 strokeIdsMapping.remove(msStrokeId)
                 reverseStrokeMapping.remove(erasedStrokeId)
                 Log.d("MyScript", "Stroke erased directly: $erasedStrokeId (ms=$msStrokeId)")

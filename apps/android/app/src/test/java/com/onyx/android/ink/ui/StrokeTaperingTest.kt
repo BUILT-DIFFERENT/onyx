@@ -76,25 +76,27 @@ class StrokeTaperingTest {
 
     @Test
     fun `computePerPointWidths applies gamma curve`() {
-        val style = StrokeStyle(
-            tool = Tool.PEN,
-            baseWidth = 4f,
-            minWidthFactor = 0.5f,
-            maxWidthFactor = 1.5f,
-        )
-        val points = listOf(
-            StrokeRenderPoint(0f, 0f, 0.5f),
-            StrokeRenderPoint(10f, 0f, 0.5f),
-            StrokeRenderPoint(20f, 0f, 0.5f),
-            StrokeRenderPoint(30f, 0f, 0.5f),
-            StrokeRenderPoint(40f, 0f, 0.5f),
-            StrokeRenderPoint(50f, 0f, 0.5f),
-            StrokeRenderPoint(60f, 0f, 0.5f),
-            StrokeRenderPoint(70f, 0f, 0.5f),
-            StrokeRenderPoint(80f, 0f, 0.5f),
-            StrokeRenderPoint(90f, 0f, 0.5f),
-            StrokeRenderPoint(100f, 0f, 0.5f),
-        )
+        val style =
+            StrokeStyle(
+                tool = Tool.PEN,
+                baseWidth = 4f,
+                minWidthFactor = 0.5f,
+                maxWidthFactor = 1.5f,
+            )
+        val points =
+            listOf(
+                StrokeRenderPoint(0f, 0f, 0.5f),
+                StrokeRenderPoint(10f, 0f, 0.5f),
+                StrokeRenderPoint(20f, 0f, 0.5f),
+                StrokeRenderPoint(30f, 0f, 0.5f),
+                StrokeRenderPoint(40f, 0f, 0.5f),
+                StrokeRenderPoint(50f, 0f, 0.5f),
+                StrokeRenderPoint(60f, 0f, 0.5f),
+                StrokeRenderPoint(70f, 0f, 0.5f),
+                StrokeRenderPoint(80f, 0f, 0.5f),
+                StrokeRenderPoint(90f, 0f, 0.5f),
+                StrokeRenderPoint(100f, 0f, 0.5f),
+            )
         val widths = computePerPointWidths(points, style)
         assertEquals(11, widths.size)
 
@@ -111,12 +113,13 @@ class StrokeTaperingTest {
 
     @Test
     fun `computePerPointWidths varies with pressure`() {
-        val style = StrokeStyle(
-            tool = Tool.PEN,
-            baseWidth = 4f,
-            minWidthFactor = 0.5f,
-            maxWidthFactor = 1.5f,
-        )
+        val style =
+            StrokeStyle(
+                tool = Tool.PEN,
+                baseWidth = 4f,
+                minWidthFactor = 0.5f,
+                maxWidthFactor = 1.5f,
+            )
         // Enough points so middle points have no tapering
         val lowPressurePoints = (0..20).map { StrokeRenderPoint(it.toFloat(), 0f, 0.1f) }
         val highPressurePoints = (0..20).map { StrokeRenderPoint(it.toFloat(), 0f, 0.9f) }

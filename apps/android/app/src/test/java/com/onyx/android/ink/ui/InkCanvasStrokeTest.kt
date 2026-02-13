@@ -27,13 +27,14 @@ class InkCanvasStrokeTest {
 
     @Test
     fun `buildStroke sets style from brush`() {
-        val brush = Brush(
-            tool = Tool.PEN,
-            color = "#FF0000",
-            baseWidth = 3f,
-            minWidthFactor = 0.5f,
-            maxWidthFactor = 1.5f,
-        )
+        val brush =
+            Brush(
+                tool = Tool.PEN,
+                color = "#FF0000",
+                baseWidth = 3f,
+                minWidthFactor = 0.5f,
+                maxWidthFactor = 1.5f,
+            )
         val points = createTestPoints(3)
         val stroke = buildStroke(points, brush)
         assertEquals(Tool.PEN, stroke.style.tool)
@@ -45,15 +46,17 @@ class InkCanvasStrokeTest {
 
     @Test
     fun `buildStroke bounds include width padding`() {
-        val points = listOf(
-            com.onyx.android.ink.model.StrokePoint(x = 10f, y = 10f, t = 0L),
-            com.onyx.android.ink.model.StrokePoint(x = 100f, y = 100f, t = 1L),
-        )
-        val brush = Brush(
-            tool = Tool.PEN,
-            baseWidth = 4f,
-            maxWidthFactor = 1.5f,
-        )
+        val points =
+            listOf(
+                com.onyx.android.ink.model.StrokePoint(x = 10f, y = 10f, t = 0L),
+                com.onyx.android.ink.model.StrokePoint(x = 100f, y = 100f, t = 1L),
+            )
+        val brush =
+            Brush(
+                tool = Tool.PEN,
+                baseWidth = 4f,
+                maxWidthFactor = 1.5f,
+            )
         val stroke = buildStroke(points, brush)
 
         // Without padding, bounds would be (10, 10, 90, 90)
@@ -73,11 +76,12 @@ class InkCanvasStrokeTest {
 
     @Test
     fun `buildStroke uses earliest timestamp as createdAt`() {
-        val points = listOf(
-            com.onyx.android.ink.model.StrokePoint(x = 0f, y = 0f, t = 100L),
-            com.onyx.android.ink.model.StrokePoint(x = 10f, y = 10f, t = 200L),
-            com.onyx.android.ink.model.StrokePoint(x = 20f, y = 20f, t = 50L),
-        )
+        val points =
+            listOf(
+                com.onyx.android.ink.model.StrokePoint(x = 0f, y = 0f, t = 100L),
+                com.onyx.android.ink.model.StrokePoint(x = 10f, y = 10f, t = 200L),
+                com.onyx.android.ink.model.StrokePoint(x = 20f, y = 20f, t = 50L),
+            )
         val brush = Brush(tool = Tool.PEN, baseWidth = 2f)
         val stroke = buildStroke(points, brush)
         assertEquals(50L, stroke.createdAt)
