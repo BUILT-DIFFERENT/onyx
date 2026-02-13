@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.util.Log
 import android.util.LruCache
 import java.io.File
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 private const val PDFIUM_RENDERER_LOG_TAG = "PdfiumRenderer"
@@ -39,16 +40,17 @@ interface PdfDocumentRenderer : PdfTextExtractor {
 class PdfiumRenderer(
     context: Context,
     private val pdfFile: File,
+    password: String? = null,
 ) : PdfDocumentRenderer {
     private val lock = Any()
-    private val documentSession = PdfiumDocumentSession.open(context, pdfFile, password = null)
+    private val documentSession = PdfiumDocumentSession.open(context, pdfFile, password = password)
     private var muPdfTextExtractor: MuPdfTextExtractor? = null
     private val bitmapCache =
         object : LruCache<PdfBitmapCacheKey, Bitmap>(PDF_BITMAP_CACHE_MAX_SIZE_KIB) {
             override fun sizeOf(
                 key: PdfBitmapCacheKey,
                 value: Bitmap,
-            ): Int = value.byteCount / BYTES_PER_KIB
+            ): Int = max(1, value.byteCount / BYTES_PER_KIB)
 
             override fun entryRemoved(
                 evicted: Boolean,

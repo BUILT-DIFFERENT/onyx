@@ -9,13 +9,26 @@ import java.io.Closeable
 import java.io.File
 
 private const val PDF_TEXT_CACHE_MAX_ENTRIES = 12
+private const val REPLACEMENT_CHARACTER = "\uFFFD"
 
 internal class MuPdfTextExtractor(
     pdfFile: File,
 ) : PdfTextExtractor, Closeable {
     private val lock = Any()
     private val document: Document = Document.openDocument(pdfFile.absolutePath)
-    private val textCache = LruCache<Int, StructuredText>(PDF_TEXT_CACHE_MAX_ENTRIES)
+    private val textCache =
+        object : LruCache<Int, StructuredText>(PDF_TEXT_CACHE_MAX_ENTRIES) {
+            override fun entryRemoved(
+                evicted: Boolean,
+                key: Int,
+                oldValue: StructuredText?,
+                newValue: StructuredText?,
+            ) {
+                if (oldValue !== null && oldValue !== newValue) {
+                    oldValue.destroy()
+                }
+            }
+        }
     private val characterCache = LruCache<Int, List<PdfTextChar>>(PDF_TEXT_CACHE_MAX_ENTRIES)
 
     override suspend fun getCharacters(pageIndex: Int): List<PdfTextChar> {
@@ -29,7 +42,7 @@ internal class MuPdfTextExtractor(
                     .charSequence()
                     .map { char ->
                         PdfTextChar(
-                            char = char.c.toChar(),
+                            char = char.codePointToString(),
                             quad =
                                 PdfTextQuad(
                                     p1 = PointF(char.quad.ul_x, char.quad.ul_y),
@@ -72,3 +85,12 @@ private fun StructuredText.charSequence(): Sequence<TextChar> =
         .asSequence()
         .flatMap { block -> block.lines.asSequence() }
         .flatMap { line -> line.chars.asSequence() }
+
+private fun TextChar.codePointToString(): String {
+    val codePoint = c
+    return if (Character.isValidCodePoint(codePoint)) {
+        String(Character.toChars(codePoint))
+    } else {
+        REPLACEMENT_CHARACTER
+    }
+}

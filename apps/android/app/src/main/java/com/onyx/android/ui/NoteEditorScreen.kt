@@ -34,6 +34,7 @@ import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.pdf.PdfAssetStorage
+import com.onyx.android.pdf.PdfPasswordStore
 import com.onyx.android.pdf.PdfiumRenderer
 import com.onyx.android.recognition.MyScriptPageManager
 import com.onyx.android.requireAppContainer
@@ -60,6 +61,7 @@ fun NoteEditorScreen(
     val repository = appContainer.noteRepository
     val noteDao = appContainer.database.noteDao()
     val pageDao = appContainer.database.pageDao()
+    val pdfPasswordStore = appContainer.pdfPasswordStore
     val pdfAssetStorage = remember { PdfAssetStorage(appContext) }
 
     val myScriptPageManager =
@@ -91,6 +93,7 @@ fun NoteEditorScreen(
         noteId = noteId,
         viewModel = viewModel,
         pdfAssetStorage = pdfAssetStorage,
+        pdfPasswordStore = pdfPasswordStore,
         onNavigateBack = onNavigateBack,
     )
 }
@@ -123,6 +126,7 @@ private fun NoteEditorScreenContent(
     noteId: String,
     viewModel: NoteEditorViewModel,
     pdfAssetStorage: PdfAssetStorage,
+    pdfPasswordStore: PdfPasswordStore,
     onNavigateBack: () -> Unit,
 ) {
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -131,6 +135,7 @@ private fun NoteEditorScreenContent(
             noteId = noteId,
             viewModel = viewModel,
             pdfAssetStorage = pdfAssetStorage,
+            pdfPasswordStore = pdfPasswordStore,
             onNavigateBack = onNavigateBack,
         )
     NoteEditorScaffold(
@@ -170,6 +175,7 @@ private fun rememberNoteEditorUiState(
     noteId: String,
     viewModel: NoteEditorViewModel,
     pdfAssetStorage: PdfAssetStorage,
+    pdfPasswordStore: PdfPasswordStore,
     onNavigateBack: () -> Unit,
 ): NoteEditorUiState {
     val appContext = LocalContext.current.applicationContext
@@ -189,6 +195,7 @@ private fun rememberNoteEditorUiState(
             appContext = appContext,
             currentPage = pageState.currentPage,
             pdfAssetStorage = pdfAssetStorage,
+            pdfPasswordStore = pdfPasswordStore,
             viewZoom = viewTransform.zoom,
         )
     val zoomLimits =
@@ -412,6 +419,7 @@ private fun rememberPdfState(
     appContext: Context,
     currentPage: PageEntity?,
     pdfAssetStorage: PdfAssetStorage,
+    pdfPasswordStore: PdfPasswordStore,
     viewZoom: Float,
 ): NoteEditorPdfState {
     val isPdfPage = currentPage?.kind == "pdf" || currentPage?.kind == "mixed"
@@ -424,6 +432,7 @@ private fun rememberPdfState(
                     PdfiumRenderer(
                         context = appContext,
                         pdfFile = pdfAssetStorage.getFileForAsset(assetId),
+                        password = pdfPasswordStore.getPassword(assetId),
                     )
                 }.onFailure { error ->
                     Log.e(NOTE_EDITOR_LOG_TAG, "Failed to open PDF asset $assetId", error)

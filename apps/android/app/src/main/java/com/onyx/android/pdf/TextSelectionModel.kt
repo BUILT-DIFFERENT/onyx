@@ -17,7 +17,7 @@ data class PdfTextQuad(
 )
 
 data class PdfTextChar(
-    val char: Char,
+    val char: String,
     val quad: PdfTextQuad,
     val pageIndex: Int,
 )
@@ -58,7 +58,7 @@ internal fun buildPdfTextSelection(
     val selectedChars = characters.subList(firstIndex, lastIndex + INDEX_OFFSET)
     return PdfTextSelection(
         chars = selectedChars,
-        text = selectedChars.joinToString(separator = "") { it.char.toString() },
+        text = selectedChars.joinToString(separator = "") { it.char },
     )
 }
 

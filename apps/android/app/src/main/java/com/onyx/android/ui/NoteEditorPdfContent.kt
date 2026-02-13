@@ -31,7 +31,9 @@ import com.onyx.android.pdf.PdfTextExtractor
 import com.onyx.android.pdf.buildPdfTextSelection
 import com.onyx.android.pdf.findPdfTextCharIndexAtPagePoint
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 @Composable
@@ -134,16 +136,13 @@ private data class PdfSelectionState(
 
 @Composable
 private fun Modifier.pdfSelectionInput(state: PdfSelectionState): Modifier =
-    pointerInput(state.currentPage?.pageId, state.viewTransform) {
+    pointerInput(state.currentPage?.pageId, state.viewTransform, state.textExtractor) {
         detectDragGesturesAfterLongPress(
             onDragStart = { offset ->
                 handlePdfDragStart(state, offset)
             },
             onDrag = { change, _ ->
                 handlePdfDragMove(state, change)
-            },
-            onDragEnd = {
-                handlePdfDragEnd(state)
             },
         )
     }
@@ -157,7 +156,10 @@ private fun handlePdfDragStart(
     val pageX = state.viewTransform.screenToPageX(offset.x)
     val pageY = state.viewTransform.screenToPageY(offset.y)
     state.coroutineScope.launch {
-        val pageCharacters = extractor.getCharacters(pageIndex)
+        val pageCharacters =
+            withContext(Dispatchers.Default) {
+                extractor.getCharacters(pageIndex)
+            }
         val startCharIndex =
             findPdfTextCharIndexAtPagePoint(
                 characters = pageCharacters,
@@ -216,12 +218,6 @@ private fun handlePdfDragMove(
             change.consume()
         }
     }
-}
-
-private fun handlePdfDragEnd(state: PdfSelectionState) {
-    val selection = state.selection ?: return
-    val selectedText = selection.text
-    android.util.Log.d("PdfSelection", "Selected text: $selectedText")
 }
 
 @Composable

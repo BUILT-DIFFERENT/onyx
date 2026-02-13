@@ -58,6 +58,7 @@ import com.onyx.android.pdf.PdfDocumentInfoReader
 import com.onyx.android.pdf.PdfIncorrectPasswordException
 import com.onyx.android.pdf.PdfPageInfo
 import com.onyx.android.pdf.PdfPasswordRequiredException
+import com.onyx.android.pdf.PdfPasswordStore
 import com.onyx.android.pdf.PdfiumDocumentInfoReader
 import com.onyx.android.requireAppContainer
 import kotlinx.coroutines.CancellationException
@@ -131,6 +132,7 @@ fun HomeScreen(onNavigateToEditor: (String, String?) -> Unit) {
     val appContext = LocalContext.current.applicationContext
     val appContainer = appContext.requireAppContainer()
     val repository = appContainer.noteRepository
+    val pdfPasswordStore = appContainer.pdfPasswordStore
     val pdfAssetStorage = remember { PdfAssetStorage(appContext) }
     val pdfDocumentInfoReader = remember { PdfiumDocumentInfoReader(appContext) }
     val viewModel: HomeScreenViewModel =
@@ -141,6 +143,7 @@ fun HomeScreen(onNavigateToEditor: (String, String?) -> Unit) {
                     repository = repository,
                     pdfAssetStorage = pdfAssetStorage,
                     pdfDocumentInfoReader = pdfDocumentInfoReader,
+                    pdfPasswordStore = pdfPasswordStore,
                 ),
         )
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -618,6 +621,7 @@ private class HomeScreenViewModel(
     private val repository: NoteRepository,
     private val pdfAssetStorage: PdfAssetStorage,
     private val pdfDocumentInfoReader: PdfDocumentInfoReader,
+    private val pdfPasswordStore: PdfPasswordStore,
 ) : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -740,8 +744,10 @@ private class HomeScreenViewModel(
                 )
             }.getOrElse { error ->
                 pdfAssetStorage.deleteAsset(pdfAssetId)
+                repository.deleteNote(noteWithPage.note.noteId)
                 throw error
             }
+            pdfPasswordStore.rememberPassword(pdfAssetId, password)
             noteWithPage.note.noteId to warning
         }
 
@@ -779,10 +785,16 @@ private class HomeScreenViewModelFactory(
     private val repository: NoteRepository,
     private val pdfAssetStorage: PdfAssetStorage,
     private val pdfDocumentInfoReader: PdfDocumentInfoReader,
+    private val pdfPasswordStore: PdfPasswordStore,
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         require(modelClass.isAssignableFrom(HomeScreenViewModel::class.java))
-        return HomeScreenViewModel(repository, pdfAssetStorage, pdfDocumentInfoReader) as T
+        return HomeScreenViewModel(
+            repository = repository,
+            pdfAssetStorage = pdfAssetStorage,
+            pdfDocumentInfoReader = pdfDocumentInfoReader,
+            pdfPasswordStore = pdfPasswordStore,
+        ) as T
     }
 }

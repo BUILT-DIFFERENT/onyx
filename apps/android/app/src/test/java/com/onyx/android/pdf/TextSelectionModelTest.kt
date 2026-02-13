@@ -59,8 +59,8 @@ class TextSelectionModelTest {
 
         assertEquals("ABC", selection.text)
         assertEquals(3, selection.chars.size)
-        assertEquals('A', selection.chars.first().char)
-        assertEquals('C', selection.chars.last().char)
+        assertEquals("A", selection.chars.first().char)
+        assertEquals("C", selection.chars.last().char)
     }
 
     @Test
@@ -81,11 +81,50 @@ class TextSelectionModelTest {
         assertEquals("AB", selection.text)
         assertEquals(2, selection.chars.size)
     }
+
+    @Test
+    fun `buildPdfTextSelection preserves supplementary code points`() {
+        val chars =
+            listOf(
+                createTextChar("A", left = 0f, top = 0f, right = 10f, bottom = 10f, pageIndex = 0),
+                createTextChar("🙂", left = 10f, top = 0f, right = 20f, bottom = 10f, pageIndex = 0),
+                createTextChar("𠜎", left = 20f, top = 0f, right = 30f, bottom = 10f, pageIndex = 0),
+            )
+
+        val selection =
+            buildPdfTextSelection(
+                characters = chars,
+                startIndex = 0,
+                endIndex = 2,
+            )
+
+        assertEquals("A🙂𠜎", selection.text)
+        assertEquals("🙂", selection.chars[1].char)
+        assertEquals("𠜎", selection.chars[2].char)
+    }
 }
 
 @Suppress("LongParameterList")
 private fun createChar(
     value: Char,
+    left: Float,
+    top: Float,
+    right: Float,
+    bottom: Float,
+    pageIndex: Int,
+): PdfTextChar =
+    createTextChar(
+        value = value.toString(),
+        left = left,
+        top = top,
+        right = right,
+        bottom = bottom,
+        pageIndex = pageIndex,
+    )
+
+@Suppress("LongParameterList")
+private fun createTextChar(
+    value: String,
     left: Float,
     top: Float,
     right: Float,
