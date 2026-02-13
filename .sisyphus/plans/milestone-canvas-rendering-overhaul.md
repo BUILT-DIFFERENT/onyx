@@ -1,39 +1,41 @@
 # Milestone: Canvas, Rendering, Strokes & PDF Overhaul
 
-**Version:** 2.12  
+**Version:** 2.14  
 **Date:** 2026-02-13  
-**Status:** Draft - Ready for Momus Re-Review (Round 19)  
+**Status:** Draft - Ready for Momus Re-Review (Round 21)  
 **Supersedes:** Portions of `milestone-av2-advanced-features.md`, `milestone-ui-overhaul-samsung-notes.md`
 
 ---
 
 ## Revision History
 
-| Version | Date       | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.0     | 2026-02-13 | Initial draft                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| 1.1     | 2026-02-13 | Momus review corrections: fixed tile size (2024 not 2048), corrected database class (OnyxDatabase not AppDatabase - no destructive migration), identified both prediction flags, added PDF text selection parity requirements, extended timeline to 20 weeks, added Week 0 PdfiumAndroid spike, unified dependency coordinates                                                                                                                                                                                         |
-| 1.2     | 2026-02-13 | Fixed Phase 4 week numbers (15-17), expanded risk section (PDF regression, SurfaceView/Compose, gesture conflicts), added SLO observation windows and sample sizes, corrected Phase 5 database task to verify migrations not remove nonexistent destructive fallback, added Phase 5 final device validation task                                                                                                                                                                                                       |
-| 1.3     | 2026-02-13 | Rejection fixes: corrected PDF threading claim (`rememberPdfBitmap` uses `Dispatchers.Default`), added concrete PDF integration call sites (`NoteEditorScreen.kt`, `NoteEditorShared.kt`, `NoteEditorPdfContent.kt`, `NoteEditorState.kt`, `HomeScreen.kt`), defined multi-page recognition behavior using `MyScriptPageManager.kt`, and specified Room v2→v3 migration + DAO/repository updates                                                                                                                       |
-| 1.4     | 2026-02-13 | Explicitly switched Phase 0/2 PDF fork selection to `Zoltaneusz/PdfiumAndroid` (v1.10.0), updated dependency coordinates/source strategy, and removed outdated fork-selection note                                                                                                                                                                                                                                                                                                                                     |
-| 1.5     | 2026-02-13 | Momus review fixes: corrected tile cache sizing math (byte-bounded with `sizeOf` override), added PdfiumAndroid thread-safety/lifecycle rules, added async pipeline request coalescing/cancellation, defined draw/pan/scroll interaction mode architecture, added thumbnail regeneration on cache eviction, clarified Room testing artifact                                                                                                                                                                            |
-| 1.6     | 2026-02-13 | Momus round 2 fixes: Pdfium `renderPageBitmap` coordinate contract verification in spike, text selection native bridge fallback, LruCache Mutex guards, tile invalidation stroke-width expansion, per-page clipping in continuous scroll, dynamic cache sizing for budget devices, predicted-point buffer separation, PDF tile bitmap config (ARGB_8888 vs RGB_565), canonical document-space coordinate system, per-note thumbnail throttling flag, Room schema export for v3                                         |
-| 1.7     | 2026-02-13 | Momus round 3 fixes: tile bitmap ref-safety (in-use guard before recycle), Compose pointer API clarification (PointerType.Stylus + pointerInteropFilter fallback), PDF page rotation normalization, global memory budget envelope, concurrency Mutex for inFlight map, MuPDF selection contingency for internal builds, nested scroll interop fallback, thumbnail regeneration rate cap                                                                                                                                |
-| 1.8     | 2026-02-13 | Momus round 4 fixes: Phase 0 exit artifacts (mandatory parity report), decided bitmap ref-safety Strategy A (ImageBitmap conversion), in-flight bitmap memory cap (Semaphore(4)), LazyListState page tracking policy with anti-oscillation debounce, atomic thumbnail file write (temp+rename)                                                                                                                                                                                                                         |
-| 1.9     | 2026-02-13 | Momus round 5 fixes: corrected ImageBitmap lifecycle (cache stores Android Bitmap, `asImageBitmap()` at draw time only — wrapping without copy means immediate recycle invalidates ImageBitmap), added AndroidView clipping caveat for InProgressStrokesView (`View.setClipBounds`), added explicit Semaphore try/finally cancellation safety for async tile pipeline                                                                                                                                                  |
-| 2.0     | 2026-02-13 | Momus round 6 fixes: cancellation bitmap cleanup (recycle allocated bitmaps on coroutine cancel), Mutex lock scope guidance (keep short, never hold during render), definitive 512×512 tile size policy, stable `key(page.id)` for LazyColumn items, Room index/constraint specifications, Phase 0 rotation handling + RTL/ligature text selection validation, P5.8 low-RAM device pass + gesture conflict QA script + tile render time baseline                                                                       |
-| 2.1     | 2026-02-13 | Momus round 7 fixes: recalculated global memory budget table (25-35% of memoryClass target, added other-consumer overhead estimate), updated architecture diagram to 512×512, aligned PDF tile render P95 target to <100ms (SLO match), scale bucket policy clarified (3 buckets for both caches), Room FK constraints with ON DELETE actions, thumbnail file cleanup policy, LazyColumn contentType, bitmap.isRecycled draw guard, text selection scope (single-page only), renderPageBitmap negative offset fallback |
-| 2.2     | 2026-02-13 | Momus round 8 fixes: corrected memory budget table to actually fit 25-35% target (reduced all tier caps), single InProgressStrokesView overlay architecture, zoom-to-bucket hysteresis band, PdfiumCore singleton lifecycle ownership, uncommitted stroke buffer policy on page unload, aligned downstream cache size references to budget table                                                                                                                                                                       |
-| 2.3     | 2026-02-13 | Momus round 9 fixes: corrected scale bucket references in architecture (5→3 buckets), aligned P5.8 validation tile render baseline to use 3 scale buckets (1x/2x/4x), added explicit fork lock with repository URL (https://github.com/Zoltaneusz/PdfiumAndroid.git), clarified stale tile count math references                                                                                                                                                                                                       |
-| 2.4     | 2026-02-13 | Momus round 10 fixes: added PRE-TASK to reduce code from 5→3 zoom buckets before P1.4, added runtime downshift rule for budget tier memory exception (onTrimMemory eviction), added Phase 0 exit criterion requiring runnable spike snippets for coordinate offsets and text-geometry, added explicit P4 sequencing (schema before UI), strengthened Pdfium thread-safety default assumption                                                                                                                           |
-| 2.5     | 2026-02-13 | Momus round 11 fixes: added Pdfium API surface caveat (getPageText/getPageRotation/closePage may not exist), marked pseudocode as ILLUSTRATIVE pending spike, created P4.0 for DB schema work (moved from P5.7), P5.7 now verification-only, added Priority Missing Tests section (tile invalidation, async cancellation, multi-page coords, v2→v3 migration)                                                                                                                                                          |
-| 2.6     | 2026-02-13 | Momus round 12 fixes: added P0.2.5 dependency viability check (minSdk 28 vs fork minSdk 30), fixed Maven coordinate to JitPack path only, added text-selection BINARY GATE (Java API/JNI/Not Feasible), corrected LruCache thread-safety language (per-op safe, multi-step needs Mutex), fixed rollback contradiction (forward-only acceptable), added test scope to bucket pre-task                                                                                                                                   |
-| 2.7     | 2026-02-13 | Momus round 13 fixes: added P0.0 Pre-Gate for fork viability (Gradle resolve, CI artifact, minSdk), added P2.0 renderer-agnostic text model task (before P2.2), elevated HomeScreen PDF import to MUST-COMPLETE, added text-selection FALLBACK DECISION options, added BLOCKING emphasis to bucket pre-task test update                                                                                                                                                                                                |
-| 2.8     | 2026-02-13 | Added milestone exit gate + explicit non-goals, tightened phase exit gates/acceptance criteria, resolved folder/tag decisions, added missing file/test paths, added Phase 0 integration smoke + PDF corpus, clarified Pdfium dependency handling, fixed cache sizing diagram mismatch, strengthened release license and memory envelope checks                                                                                                                                                                         |
-| 2.9     | 2026-02-13 | Fixed Room v3 schema specs to match noteId-based schema, added DDL alignment checklist, clarified gesture routing integration, added explicit tile-range math contract, added task-level verification bullets, removed alternate-fork suggestions to honor locked Pdfium fork                                                                                                                                                                                                                                          |
-| 2.10    | 2026-02-13 | Aligned Gradle command paths and settings file location, clarified soft vs hard delete semantics for thumbnails/tags, tightened MuPDF release-build verification path, and updated Phase 4 acceptance for delete semantics                                                                                                                                                                                                                                                                                             |
-| 2.11    | 2026-02-13 | Fixed Room migration SQL feasibility (notes table recreation), defined selection geometry as quads in page points, added clipboard UX requirement, specified spike project execution, removed reliance on missing telemetry tools (local measurements), and updated SLO/acceptance accordingly                                                                                                                                                                                                                         |
-| 2.12    | 2026-02-13 | Corrected current-state PDF scale bucket count to 5 (pre-task reduces to 3), eliminating doc inconsistency                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Version | Date       | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1.0     | 2026-02-13 | Initial draft                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 1.1     | 2026-02-13 | Momus review corrections: fixed tile size (2024 not 2048), corrected database class (OnyxDatabase not AppDatabase - no destructive migration), identified both prediction flags, added PDF text selection parity requirements, extended timeline to 20 weeks, added Week 0 PdfiumAndroid spike, unified dependency coordinates                                                                                                                                                                                                             |
+| 1.2     | 2026-02-13 | Fixed Phase 4 week numbers (15-17), expanded risk section (PDF regression, SurfaceView/Compose, gesture conflicts), added SLO observation windows and sample sizes, corrected Phase 5 database task to verify migrations not remove nonexistent destructive fallback, added Phase 5 final device validation task                                                                                                                                                                                                                           |
+| 1.3     | 2026-02-13 | Rejection fixes: corrected PDF threading claim (`rememberPdfBitmap` uses `Dispatchers.Default`), added concrete PDF integration call sites (`NoteEditorScreen.kt`, `NoteEditorShared.kt`, `NoteEditorPdfContent.kt`, `NoteEditorState.kt`, `HomeScreen.kt`), defined multi-page recognition behavior using `MyScriptPageManager.kt`, and specified Room v2→v3 migration + DAO/repository updates                                                                                                                                           |
+| 1.4     | 2026-02-13 | Explicitly switched Phase 0/2 PDF fork selection to `Zoltaneusz/PdfiumAndroid` (v1.10.0), updated dependency coordinates/source strategy, and removed outdated fork-selection note                                                                                                                                                                                                                                                                                                                                                         |
+| 1.5     | 2026-02-13 | Momus review fixes: corrected tile cache sizing math (byte-bounded with `sizeOf` override), added PdfiumAndroid thread-safety/lifecycle rules, added async pipeline request coalescing/cancellation, defined draw/pan/scroll interaction mode architecture, added thumbnail regeneration on cache eviction, clarified Room testing artifact                                                                                                                                                                                                |
+| 1.6     | 2026-02-13 | Momus round 2 fixes: Pdfium `renderPageBitmap` coordinate contract verification in spike, text selection native bridge fallback, LruCache Mutex guards, tile invalidation stroke-width expansion, per-page clipping in continuous scroll, dynamic cache sizing for budget devices, predicted-point buffer separation, PDF tile bitmap config (ARGB_8888 vs RGB_565), canonical document-space coordinate system, per-note thumbnail throttling flag, Room schema export for v3                                                             |
+| 1.7     | 2026-02-13 | Momus round 3 fixes: tile bitmap ref-safety (in-use guard before recycle), Compose pointer API clarification (PointerType.Stylus + pointerInteropFilter fallback), PDF page rotation normalization, global memory budget envelope, concurrency Mutex for inFlight map, MuPDF selection contingency for internal builds, nested scroll interop fallback, thumbnail regeneration rate cap                                                                                                                                                    |
+| 1.8     | 2026-02-13 | Momus round 4 fixes: Phase 0 exit artifacts (mandatory parity report), decided bitmap ref-safety Strategy A (ImageBitmap conversion), in-flight bitmap memory cap (Semaphore(4)), LazyListState page tracking policy with anti-oscillation debounce, atomic thumbnail file write (temp+rename)                                                                                                                                                                                                                                             |
+| 1.9     | 2026-02-13 | Momus round 5 fixes: corrected ImageBitmap lifecycle (cache stores Android Bitmap, `asImageBitmap()` at draw time only — wrapping without copy means immediate recycle invalidates ImageBitmap), added AndroidView clipping caveat for InProgressStrokesView (`View.setClipBounds`), added explicit Semaphore try/finally cancellation safety for async tile pipeline                                                                                                                                                                      |
+| 2.0     | 2026-02-13 | Momus round 6 fixes: cancellation bitmap cleanup (recycle allocated bitmaps on coroutine cancel), Mutex lock scope guidance (keep short, never hold during render), definitive 512×512 tile size policy, stable `key(page.id)` for LazyColumn items, Room index/constraint specifications, Phase 0 rotation handling + RTL/ligature text selection validation, P5.8 low-RAM device pass + gesture conflict QA script + tile render time baseline                                                                                           |
+| 2.1     | 2026-02-13 | Momus round 7 fixes: recalculated global memory budget table (25-35% of memoryClass target, added other-consumer overhead estimate), updated architecture diagram to 512×512, aligned PDF tile render P95 target to <100ms (SLO match), scale bucket policy clarified (3 buckets for both caches), Room FK constraints with ON DELETE actions, thumbnail file cleanup policy, LazyColumn contentType, bitmap.isRecycled draw guard, text selection scope (single-page only), renderPageBitmap negative offset fallback                     |
+| 2.2     | 2026-02-13 | Momus round 8 fixes: corrected memory budget table to actually fit 25-35% target (reduced all tier caps), single InProgressStrokesView overlay architecture, zoom-to-bucket hysteresis band, PdfiumCore singleton lifecycle ownership, uncommitted stroke buffer policy on page unload, aligned downstream cache size references to budget table                                                                                                                                                                                           |
+| 2.3     | 2026-02-13 | Momus round 9 fixes: corrected scale bucket references in architecture (5→3 buckets), aligned P5.8 validation tile render baseline to use 3 scale buckets (1x/2x/4x), added explicit fork lock with repository URL (https://github.com/Zoltaneusz/PdfiumAndroid.git), clarified stale tile count math references                                                                                                                                                                                                                           |
+| 2.4     | 2026-02-13 | Momus round 10 fixes: added PRE-TASK to reduce code from 5→3 zoom buckets before P1.4, added runtime downshift rule for budget tier memory exception (onTrimMemory eviction), added Phase 0 exit criterion requiring runnable spike snippets for coordinate offsets and text-geometry, added explicit P4 sequencing (schema before UI), strengthened Pdfium thread-safety default assumption                                                                                                                                               |
+| 2.5     | 2026-02-13 | Momus round 11 fixes: added Pdfium API surface caveat (getPageText/getPageRotation/closePage may not exist), marked pseudocode as ILLUSTRATIVE pending spike, created P4.0 for DB schema work (moved from P5.7), P5.7 now verification-only, added Priority Missing Tests section (tile invalidation, async cancellation, multi-page coords, v2→v3 migration)                                                                                                                                                                              |
+| 2.6     | 2026-02-13 | Momus round 12 fixes: added P0.2.5 dependency viability check (minSdk 28 vs fork minSdk 30), fixed Maven coordinate to JitPack path only, added text-selection BINARY GATE (Java API/JNI/Not Feasible), corrected LruCache thread-safety language (per-op safe, multi-step needs Mutex), fixed rollback contradiction (forward-only acceptable), added test scope to bucket pre-task                                                                                                                                                       |
+| 2.7     | 2026-02-13 | Momus round 13 fixes: added P0.0 Pre-Gate for fork viability (Gradle resolve, CI artifact, minSdk), added P2.0 renderer-agnostic text model task (before P2.2), elevated HomeScreen PDF import to MUST-COMPLETE, added text-selection FALLBACK DECISION options, added BLOCKING emphasis to bucket pre-task test update                                                                                                                                                                                                                    |
+| 2.8     | 2026-02-13 | Added milestone exit gate + explicit non-goals, tightened phase exit gates/acceptance criteria, resolved folder/tag decisions, added missing file/test paths, added Phase 0 integration smoke + PDF corpus, clarified Pdfium dependency handling, fixed cache sizing diagram mismatch, strengthened release license and memory envelope checks                                                                                                                                                                                             |
+| 2.9     | 2026-02-13 | Fixed Room v3 schema specs to match noteId-based schema, added DDL alignment checklist, clarified gesture routing integration, added explicit tile-range math contract, added task-level verification bullets, removed alternate-fork suggestions to honor locked Pdfium fork                                                                                                                                                                                                                                                              |
+| 2.10    | 2026-02-13 | Aligned Gradle command paths and settings file location, clarified soft vs hard delete semantics for thumbnails/tags, tightened MuPDF release-build verification path, and updated Phase 4 acceptance for delete semantics                                                                                                                                                                                                                                                                                                                 |
+| 2.11    | 2026-02-13 | Fixed Room migration SQL feasibility (notes table recreation), defined selection geometry as quads in page points, added clipboard UX requirement, specified spike project execution, removed reliance on missing telemetry tools (local measurements), and updated SLO/acceptance accordingly                                                                                                                                                                                                                                             |
+| 2.12    | 2026-02-13 | Corrected current-state PDF scale bucket count to 5 (pre-task reduces to 3), eliminating doc inconsistency                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 2.13    | 2026-02-13 | Added Appendix D: Acknowledged Future Backlog — 9 gap items from source analysis docs explicitly tracked (unified search, sync-readiness, editor architecture debt, MyScript backlog, hierarchical folders, PDF annotation layer, PDF text spatial index, stylus advanced interactions, competitive editor tools). Updated non-goals to reference backlog.                                                                                                                                                                                 |
+| 2.14    | 2026-02-13 | Momus review fixes: replaced all hardcoded line references in Appendix D with stable task IDs and section names (B2, B3, B4, B5, B7, B8), corrected B4 scratch-out citation (`:628`→`:632`), annotated `gemini-deep-research.txt:1` citations as single-line document (B5, B8, B9), added priority justification to B6, added 4 new gap items (B10–B13: conversion UX, interactive ink reflow, template system/toolbar ergonomics, recognition overlay + lasso-convert). Expanded B11/B12 range citations to discrete `file:line` entries. |
 
 ---
 
@@ -68,6 +70,10 @@ Reference context: `docs/architecture/full-project-analysis.md` and `V0-api.md` 
 10. [Risk Assessment](#10-risk-assessment)
 11. [Success Metrics & SLOs](#11-success-metrics--slos)
 12. [Dependencies & Prerequisites](#12-dependencies--prerequisites)
+13. [Appendix A: File Change Summary](#appendix-a-file-change-summary)
+14. [Appendix B: Test Plan](#appendix-b-test-plan)
+15. [Appendix C: Rollback Plan](#appendix-c-rollback-plan)
+16. [Appendix D: Acknowledged Future Backlog](#appendix-d-acknowledged-future-backlog)
 
 ---
 
@@ -83,9 +89,21 @@ This milestone is not shippable until ALL of the following are true:
 
 ### Scope Boundaries (Explicit Non-Goals)
 
-- PDF text search UI is out of scope for this milestone (parity limited to text selection).
+- Unified search across handwritten content and PDF text is out of scope for this milestone (PDF parity is limited to text selection; no search indexing or search UI). See Appendix D, item B1.
 - Stroke compression for >1000 points is deferred (data architecture only; no implementation in this milestone).
 - Continuous scroll applies to PDF-backed notes only; blank/ink-only notes remain single-page for now.
+- Sync-readiness infrastructure (Lamport increment hardening, deviceId embedding, op log) is acknowledged but deferred. See Appendix D, item B2.
+- Editor architecture debt (NoteEditorUi.kt split, Home VM extraction, DI hardening) is deferred. See Appendix D, item B3.
+- MyScript advanced features (debounced recognition, recognizeAll, ContentPackage cleanup, configurable language, JIIX indexing, scratch-out) are deferred. See Appendix D, item B4.
+- Hierarchical folders, breadcrumbs, and drag-drop folder operations are deferred; this milestone ships flat folders only. See Appendix D, item B5.
+- PDF annotation persistence as a separate layer from normal ink is deferred. See Appendix D, item B6.
+- PDF text hit-testing spatial index optimization is deferred. See Appendix D, item B7.
+- Stylus advanced interactions (button quick-erase, hover cursor) and palm rejection implementation are deferred. See Appendix D, item B8.
+- Competitive editor tools (lasso transform, shape tool, tape tool, zoom box, segment eraser) are deferred. See Appendix D, item B9.
+- Handwriting-to-text conversion UX (select → convert → edit round-trip) is deferred; recognition is background-only for search. See Appendix D, item B10.
+- Interactive Ink features (ink reflow, math beautification, gesture-based editing) are deferred. See Appendix D, item B11.
+- Page template system (configurable grids, lines, dot patterns) and floating/dockable toolbar are deferred. See Appendix D, item B12.
+- Recognition overlay display and lasso-convert pipeline are deferred. See Appendix D, item B13.
 
 ## 1. Current State Analysis
 
@@ -1643,3 +1661,325 @@ object FeatureFlags {
 | 2.10    | 2026-02-13 | AI Assistant | Aligned Gradle command paths and settings file location, clarified soft vs hard delete semantics for thumbnails/tags, tightened MuPDF release-build verification path, and updated Phase 4 acceptance for delete semantics                                                                                                                     |
 | 2.11    | 2026-02-13 | AI Assistant | Fixed Room migration SQL feasibility (notes table recreation), defined selection geometry as quads in page points, added clipboard UX requirement, specified spike project execution, removed reliance on missing telemetry tools (local measurements), and updated SLO/acceptance accordingly                                                 |
 | 2.12    | 2026-02-13 | AI Assistant | Corrected current-state PDF scale bucket count to 5 (pre-task reduces to 3), eliminating doc inconsistency                                                                                                                                                                                                                                     |
+| 2.13    | 2026-02-13 | AI Assistant | Added Appendix D: Acknowledged Future Backlog — 9 gap items from source analysis docs explicitly tracked; updated non-goals to reference backlog                                                                                                                                                                                               |
+
+---
+
+## Appendix D: Acknowledged Future Backlog
+
+**Purpose:** This appendix captures known gaps identified in source analysis documents (`docs/context/chat-analysis.txt`, `docs/context/gemini-analysis.txt`, `docs/context/chat-plan-2.txt`, `docs/context/gemini-deep-research.txt`, `.sisyphus/notepads/android-architecture-review.md`, `docs/architecture/full-project-analysis.md`, `docs/architecture/branch-architecture-analysis.md`) that are **explicitly out of scope** for this milestone but must not be lost. Each item is tracked here with priority, evidence, and relationship to the current plan.
+
+These items should be promoted to concrete tasks in a subsequent milestone plan.
+
+### B1: Unified Search Across Handwritten + Typed PDF Content (CRITICAL)
+
+**Priority:** Critical  
+**Status:** Deferred (not scheduled in any milestone)
+
+**Gap:** Source docs identify unified search across handwritten content AND PDF text as a key competitive feature (MyScript Notes positions this as a "magic" differentiator). The current app has PDF text selection and FTS on recognized handwriting text (`HomeScreen.kt` search), but these are separate — there is no unified search experience that spans both. PDF text is not indexed into the global search.
+
+**Evidence:**
+
+- `docs/context/chat-analysis.txt:594` — "Global search across the library, including handwritten content and PDF annotations"
+- `docs/context/chat-analysis.txt:613` — "typed PDF text is not indexed into the same global search experience"
+- `docs/context/gemini-analysis.txt:90` — unified search across ink and PDF text identified as high-priority gap
+- `docs/context/chat-plan-2.txt:13` — search across all content types listed as a requirement
+
+**Relationship to this plan:** This plan explicitly excludes unified search and PDF text search UI (non-goals section). The current milestone builds the PDF text extraction layer (P2.0 `PdfTextExtractor`) and the MyScript recognized-text pipeline, which are prerequisites for a unified search index — but the indexing and search UI are not built here.
+
+**Recommended next steps:**
+
+1. Build a unified `SearchIndex` that ingests both MyScript JIIX output and `PdfTextExtractor` output per page
+2. Extend `NoteDao` FTS queries to include PDF text content
+3. Add search results UI that highlights matches in both ink recognition and PDF text
+4. Consider indexing at note-save time (background worker) for performance
+
+---
+
+### B2: Sync-Readiness Infrastructure (HIGH)
+
+**Priority:** High — sync is a prerequisite for multi-device usage, which is a core product requirement. Without hardened Lamport clocks, deviceId embedding, and an op log, any future sync implementation risks data loss or silent corruption.  
+**Status:** Deferred (not scheduled in any milestone)
+
+**Gap:** Source docs identify concrete sync infrastructure issues that must be resolved before multi-device sync can work correctly: Lamport clock increment hardening, embedding `deviceId` into stroke/op metadata, and creating an operation log for CRDT-based conflict resolution.
+
+**Evidence:**
+
+- `.sisyphus/notepads/android-architecture-review.md:78` — Lamport clock increment concerns, deviceId missing from stroke metadata
+- `docs/architecture/full-project-analysis.md:330` — sync architecture gaps (Lamport timestamps present but not hardened)
+- `docs/architecture/full-project-analysis.md:332` — deviceId not embedded in operations
+- `docs/architecture/full-project-analysis.md:340` — no op log for conflict resolution
+
+**Relationship to this plan:** This plan notes that Lamport timestamps exist and are used for CRDT ordering (§1.3 Stroke Data Model) and the data model is described as "solid" (§1.3 "What Works"). However, no tasks address the hardening work needed for actual sync. The v2→v3 Room migration (P4.0) does not add sync-related columns.
+
+**Recommended next steps:**
+
+1. Add `deviceId TEXT NOT NULL` column to `strokes` table (or a new `operations` table)
+2. Harden Lamport clock: ensure monotonic increment across app restarts (persist high-water mark)
+3. Design and implement an append-only operation log for stroke CRUD events
+4. Validate CRDT merge correctness with simulated multi-device scenarios
+
+---
+
+### B3: Editor Architecture Debt (HIGH)
+
+**Priority:** High  
+**Status:** Deferred (not scheduled in any milestone)
+
+**Gap:** `NoteEditorUi.kt` is a monolithic composable that handles too many concerns. `HomeViewModel` instantiation uses manual DI rather than Hilt injection. These architectural debts increase the cost and risk of future feature work.
+
+**Evidence:**
+
+- `.sisyphus/notepads/android-architecture-review.md:29` — NoteEditorUi.kt identified as needing split (routing, toolbar, content separation)
+- `docs/architecture/branch-architecture-analysis.md:42` — editor composable complexity flagged
+- `docs/architecture/full-project-analysis.md:140` — ViewModel DI issues (instantiated inside composables)
+- `docs/architecture/full-project-analysis.md:638` — architectural debt in editor file organization
+
+**Relationship to this plan:** This plan touches `NoteEditorUi.kt` only for toolbar padding fix (P5.3) and PDF mode routing (P3.1). No tasks decompose the file or address DI hardening.
+
+**Recommended next steps:**
+
+1. Split `NoteEditorUi.kt` into: `NoteEditorRouting.kt` (mode switching), `NoteEditorToolbar.kt` (tool selection), `NoteEditorContent.kt` (canvas/PDF host)
+2. Extract `HomeViewModel` creation into Hilt `@HiltViewModel` with proper `@Inject constructor`
+3. Audit all ViewModel instantiations inside composables and migrate to `hiltViewModel()` / `viewModel()` with factory
+
+---
+
+### B4: MyScript Backlog Items (HIGH)
+
+**Priority:** High  
+**Status:** Deferred (not scheduled in any milestone)
+
+**Gap:** Multiple MyScript integration improvements are identified in source docs but not covered by any tasks. The current plan limits MyScript scope to active-page routing under continuous scroll (P3.2).
+
+**Evidence:**
+
+- `docs/architecture/full-project-analysis.md:287` — debounced recognition (batch strokes before triggering recognition to reduce CPU churn)
+- `docs/architecture/full-project-analysis.md:299` — `recognizeAll` API for bulk re-recognition of existing pages
+- `docs/architecture/full-project-analysis.md:303` — ContentPackage file lifecycle cleanup (orphaned `.nebo` files)
+- `docs/architecture/full-project-analysis.md:305` — configurable recognition language (currently hardcoded)
+- `docs/architecture/full-project-analysis.md:312` — JIIX-driven indexing (parse JIIX output for structured search data)
+- `docs/architecture/full-project-analysis.md:632` — scratch-out gesture recognition (erase by scribbling over text)
+
+**Relationship to this plan:** Recognition scope is explicitly limited to "offscreen only" and "active-page routing" (P3.2). The plan does not add debouncing, language configuration, bulk recognition, or cleanup.
+
+**Recommended next steps:**
+
+1. Add stroke debounce timer (e.g., 300ms after last stroke) before triggering recognition
+2. Implement `recognizeAll()` for re-indexing existing notes after language change
+3. Add ContentPackage cleanup on note delete (purge orphaned `.nebo` files)
+4. Add language picker in settings (persist in `SharedPreferences`, pass to `MyScriptEngine`)
+5. Parse JIIX output for structured word/line/paragraph data usable by search index (ties into B1)
+6. Evaluate scratch-out gesture feasibility with MyScript's `InteractiveInk` API
+
+---
+
+### B5: Hierarchical Folder Model (MEDIUM)
+
+**Priority:** Medium  
+**Status:** Deferred — flat folders shipped in this milestone; hierarchy planned for future
+
+**Gap:** Source docs call for hierarchical folders with breadcrumb navigation and drag-drop reordering. This plan locks folders to flat-only for this milestone, with `parentId` reserved but unused.
+
+**Evidence:**
+
+- `docs/context/chat-plan-2.txt:11` — hierarchical folder structure with breadcrumbs requested
+- `docs/context/gemini-deep-research.txt:1` — folder hierarchy and drag-drop organization identified as competitive requirement (note: this file is a single-line document containing the full Gemini deep research report)
+
+**Relationship to this plan:** P4.2 implements flat folders with `parentId` column present but always `NULL`. The Scope Boundaries section explicitly states "no nesting UI or breadcrumbs in this milestone." The schema (P4.0) includes `folders.parentId` index for future use.
+
+**Recommended next steps:**
+
+1. Enable `parentId` writes in `FolderDao` and `FolderRepository`
+2. Build breadcrumb navigation UI in `HomeScreen.kt`
+3. Add drag-drop folder reordering (long-press drag on folder cards)
+4. Handle recursive delete semantics (cascade vs flatten children to parent)
+
+---
+
+### B6: PDF Annotation Persistence Separation (MEDIUM)
+
+**Priority:** Medium — annotation separation enables annotation-specific features (visibility toggle, export, re-import survivability) that are expected by users who annotate imported PDFs. Without separation, PDF re-import or re-render could lose annotation positioning context.  
+**Status:** Deferred (not scheduled in any milestone)
+
+**Gap:** PDF annotations (ink drawn on top of PDF pages) should be stored in a separate persistence layer from normal note ink, enabling annotation-specific features like annotation export, annotation visibility toggle, and PDF re-import without losing annotations.
+
+**Evidence:**
+
+- `.sisyphus/notepads/android-architecture-review.md:114` — annotation layer separation identified as needed for PDF ink persistence
+
+**Relationship to this plan:** This plan stores PDF-overlay strokes using the same `StrokeEntity`/`StrokeRepository` as normal ink strokes, associated by `pageId`. There is no `annotationType` field or separate annotation table. The plan does not distinguish between "ink on blank page" and "ink on PDF page" at the data level.
+
+**Recommended next steps:**
+
+1. Add `annotationType` enum to `StrokeEntity` (or a separate `AnnotationEntity` table)
+2. Support annotation visibility toggle (show/hide annotations on PDF pages)
+3. Support annotation export (extract annotations as a separate PDF overlay or XFDF)
+4. Ensure annotation strokes survive PDF re-import (match by page index + position)
+
+---
+
+### B7: PDF Text Hit-Testing Spatial Index (MEDIUM)
+
+**Priority:** Medium  
+**Status:** Deferred (not scheduled in any milestone)
+
+**Gap:** The current text selection hit-testing (`findCharAtPagePoint`) performs linear scan over characters. For dense PDFs with many characters per page, this becomes a performance bottleneck. A spatial index (e.g., R-tree or grid-based) for per-character bounding boxes would improve selection responsiveness.
+
+**Evidence:**
+
+- `.sisyphus/notepads/android-architecture-review.md:112` — linear scan for character hit-testing identified as performance concern
+- `.sisyphus/notepads/android-architecture-review.md:335` — spatial index recommended for text hit-testing
+
+**Relationship to this plan:** P2.2 defines text selection parity behavior and the `PdfTextChar` model with per-character quads, but does not specify an indexing data structure for hit-testing. The current linear scan is preserved.
+
+**Recommended next steps:**
+
+1. Build a grid-based spatial index (e.g., 50x50 grid cells per page) populated from `PdfTextChar` quads
+2. `findCharAtPagePoint()` queries the grid cell first, then linear-scans only chars in that cell
+3. Benchmark: expect O(1) grid lookup + O(k) local scan vs O(n) full scan; target <5ms for dense pages
+
+---
+
+### B8: Stylus Advanced Interactions (MEDIUM)
+
+**Priority:** Medium  
+**Status:** Deferred (not scheduled in any milestone)
+
+**Gap:** Competitors support stylus button quick-erase (press button while drawing to erase) and hover cursor (showing a dot/crosshair where the pen will land before touching). Palm rejection is mentioned in P5.8 but only as a QA validation check, not as an implementation task — if the OS/OEM palm rejection is insufficient, no custom implementation is planned.
+
+**Evidence:**
+
+- `docs/context/gemini-deep-research.txt:1` — stylus button interactions and hover cursor identified as competitive features (note: single-line document containing full Gemini deep research report)
+- `docs/context/chat-plan-2.txt:31` — stylus button erase and advanced pen interactions requested
+
+**Relationship to this plan:** P5.8 includes a palm rejection QA validation step ("palm resting on screen → stylus draw → verify no spurious ink") but treats palm rejection as an OS-provided feature to validate, not something to implement. Stylus button mapping and hover cursor are not mentioned anywhere in the plan.
+
+**Recommended next steps:**
+
+1. Map stylus button press to eraser tool toggle (`MotionEvent.BUTTON_STYLUS_PRIMARY`)
+2. Implement hover cursor: show a small circle at the pen's hover position using `MotionEvent.ACTION_HOVER_MOVE`
+3. If OS palm rejection is insufficient on target devices, implement custom palm rejection using touch area + pressure heuristics
+4. Test on S-Pen, USI, and Wacom EMR stylus types
+
+---
+
+### B9: Competitive Editor Tools (LOW)
+
+**Priority:** Low  
+**Status:** Deferred (not scheduled in any milestone)
+
+**Gap:** Competitor apps (Samsung Notes, GoodNotes, Notewise) offer advanced editor tools that are not planned in this or any other milestone: lasso selection with transform (move, resize, rotate selected strokes), shape recognition tool, tape/ruler tool, zoom-box for detail work, and segment eraser (erase parts of strokes at intersection points rather than whole strokes).
+
+**Evidence:**
+
+- `docs/context/chat-plan-2.txt:21` — lasso transform, shape tool listed as competitive requirements
+- `docs/context/chat-plan-2.txt:487` — tape/ruler tool and zoom box described
+- `docs/context/chat-plan-2.txt:509` — segment eraser described as competitive differentiator
+- `docs/context/gemini-deep-research.txt:1` — comprehensive editor tool comparison showing gaps (note: single-line document containing full Gemini deep research report)
+
+**Relationship to this plan:** The plan implements basic eraser and selection modes via `InteractionMode` enum (P3.1), but does not include lasso transform, shape recognition, tape tool, zoom box, or segment eraser. These require significant architectural additions (hit-testing infrastructure, transform matrices for stroke groups, shape recognition ML/heuristics).
+
+**Recommended next steps:**
+
+1. **Lasso selection + transform:** Add `SelectionRegion` model, hit-test strokes against lasso polygon, apply affine transform on drag/resize/rotate
+2. **Segment eraser:** Split strokes at eraser intersection points, creating new stroke segments — requires path intersection math
+3. **Shape recognition:** Use simple heuristics (line detection, circle fitting) or ML model to snap free-drawn shapes
+4. **Tape/ruler tool:** Render a straight-line guide overlay that constrains ink input to the line
+5. **Zoom box:** Render a magnified inset of a selected region for detail work
+
+---
+
+### B10: Conversion as a First-Class Interaction (MEDIUM)
+
+**Priority:** Medium — competitors (MyScript Notes, Notewise) make handwriting-to-text conversion feel like a natural extension of writing. Without a polished conversion UX, Onyx's recognition pipeline remains invisible plumbing rather than a user-facing feature.  
+**Status:** Deferred (not scheduled in any milestone)
+
+**Gap:** Source docs identify that while Onyx has recognition and search plumbing, the conversion _experience layer_ — discoverability, editing the converted result, round-tripping between ink and text, confidence display — is not yet a polished user feature.
+
+**Evidence:**
+
+- `docs/context/chat-analysis.txt:617` — "Conversion as a first-class interaction" — MyScript and Notewise make conversion feel like a natural extension of writing (select → convert → continue)
+- `docs/context/chat-analysis.txt:619` — Onyx has recognition + search plumbing but the conversion experience layer is not visible as a polished feature
+
+**Relationship to this plan:** This plan routes MyScript recognition per-page under continuous scroll (P3.2) but does not build any conversion UI. The recognized text is used only for background search indexing, not for user-facing convert-to-text workflows.
+
+**Recommended next steps:**
+
+1. Add "Convert to Text" action in lasso selection context menu
+2. Display recognized text overlay (toggle) with confidence indicators
+3. Support editing the converted result inline (round-trip: ink → text → editable text block)
+4. Show per-word confidence so users can correct low-confidence recognitions
+
+---
+
+### B11: Interactive Ink Reflow and Beautification (MEDIUM)
+
+**Priority:** Medium — MyScript's "active ink" (reflow, beautification, gesture-based editing) is a key differentiator that makes handwritten notes feel alive rather than static. Without it, Onyx treats ink as a static image overlay.  
+**Status:** Deferred (not scheduled in any milestone)
+
+**Gap:** MyScript SDK supports "Interactive Ink" features where ink is live: text reflows when content is inserted above, math equations snap from handwriting to typeset LaTeX, and gestures (scratch-out, insert space) edit content directly. Onyx currently treats handwriting as static pixels.
+
+**Evidence:**
+
+- `docs/context/gemini-analysis.txt:76` — "You are currently treating handwriting as a 'static image' overlay"
+- `docs/context/gemini-analysis.txt:82` — MyScript Notes ink is "alive" with reflow: "When text is inserted above, the ink moves down"
+- `docs/context/gemini-analysis.txt:83` — Math beautification: "the math equations snap instantly from messy handwriting to typeset LaTeX"
+- `docs/context/gemini-analysis.txt:84` — Interactive ink gestures: scratch-out to delete, vs Onyx's "clumsy Eraser Tool or Undo Button"
+
+**Relationship to this plan:** This plan uses MyScript SDK only for background recognition (P3.2) and does not implement any Interactive Ink features. The ink rendering pipeline (Phase 1) treats strokes as immutable path data after pen-up.
+
+**Recommended next steps:**
+
+1. Evaluate MyScript Interactive Ink SDK APIs for reflow and beautification callbacks
+2. Implement ink reflow: when content is inserted, shift strokes below the insertion point
+3. Add math beautification: detect math expressions and offer typeset rendering
+4. Implement Interactive Ink gestures (scratch-out to delete, caret-insert to add space)
+
+---
+
+### B12: Template System and UI Ergonomics (MEDIUM)
+
+**Priority:** Medium — competitors offer configurable page templates (grid spacing, line opacity, dot grids) and floating/dockable toolbars. These are table-stakes features for note-taking apps on tablets.  
+**Status:** Deferred (not scheduled in any milestone)
+
+**Gap:** Onyx has only a white background with no page template options. Competitors (Notewise) offer configurable grids, lines, dot patterns with adjustable spacing and opacity, drawn programmatically for zoom-invariance. Additionally, the toolbar is a fixed top bar requiring reach on large tablets, while competitors offer floating/dockable toolbars.
+
+**Evidence:**
+
+- `docs/context/gemini-analysis.txt:103` — "The Toolbar Gap": Onyx has a static top bar; Notewise has a floating, detachable, or side-docked toolbar
+- `docs/context/gemini-analysis.txt:108` — "Template Engine": Onyx has white background only
+- `docs/context/gemini-analysis.txt:110` — Notewise has "Page Settings" modal with fine-grained template controls
+- `docs/context/gemini-analysis.txt:112` — Template granularity: "Grid with 5mm spacing" or "Lines with 20% opacity"
+- `docs/context/gemini-analysis.txt:113` — Templates drawn programmatically (shaders) for perfect zoom scaling
+
+**Relationship to this plan:** This plan adjusts toolbar padding (P5.3) but does not redesign toolbar positioning or add page templates. The canvas rendering overhaul (Phase 1) does not include a background template rendering layer.
+
+**Recommended next steps:**
+
+1. Add page template engine: programmatically rendered grids (configurable spacing), lines, dot grids using Canvas draw commands
+2. Store template preference per-note in Room (new `templateType`/`templateConfig` columns)
+3. Implement floating/dockable toolbar with position persistence
+4. Ensure templates scale correctly with zoom (render in document space, not screen space)
+
+---
+
+### B13: Recognition Overlay and Lasso-Convert Pipeline (MEDIUM)
+
+**Priority:** Medium — combining recognition overlay with lasso selection for targeted conversion is a workflow that power users expect. Without it, recognition results are invisible.  
+**Status:** Deferred (not scheduled in any milestone)
+
+**Gap:** Source docs describe a pipeline where recognized text is shown as a toggleable overlay on top of ink, and lasso selection of a region triggers handwriting-to-text conversion for that specific area. This combines recognition display with spatial selection for targeted conversion.
+
+**Evidence:**
+
+- `docs/context/chat-plan-2.txt:509` — "Recognition overlay + lasso convert": overlay recognized text (toggle), lasso select region to convert handwriting to text block, batch recognition pipeline (throttled)
+
+**Relationship to this plan:** This plan does not implement recognition overlay display or lasso-based conversion. MyScript recognition (P3.2) runs in the background for search indexing only. Lasso selection is listed as a deferred competitive tool in B9.
+
+**Recommended next steps:**
+
+1. Add toggleable recognition text overlay (render recognized text semi-transparently above ink strokes)
+2. Implement lasso-select → convert workflow: select region, extract strokes, run recognition, replace with text block
+3. Add batch recognition pipeline with throttling for bulk re-recognition
+4. Connect overlay display to MyScript JIIX output (word/line bounding boxes)
