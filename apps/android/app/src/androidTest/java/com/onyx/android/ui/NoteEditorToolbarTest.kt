@@ -2,9 +2,14 @@ package com.onyx.android.ui
 
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.test.assertDoesNotExist
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -32,38 +37,41 @@ class NoteEditorToolbarTest {
 
     @Test
     fun eraserAction_isVisible_andTogglesToolThroughCallback() {
-        var updatedBrush: Brush? = null
+        var latestBrush: Brush? = null
 
-        setEditorScaffold(
-            toolbarState =
-                NoteEditorToolbarState(
-                    brush = Brush(tool = Tool.PEN),
-                    lastNonEraserTool = Tool.HIGHLIGHTER,
-                    isStylusButtonEraserActive = false,
-                    onBrushChange = { brush -> updatedBrush = brush },
-                ),
-        )
+        composeRule.setContent {
+            MaterialTheme {
+                var currentBrush by remember { mutableStateOf(Brush(tool = Tool.PEN)) }
+                var lastNonEraserTool by remember { mutableStateOf(Tool.HIGHLIGHTER) }
+                NoteEditorScaffold(
+                    topBarState = defaultTopBarState(),
+                    toolbarState =
+                        NoteEditorToolbarState(
+                            brush = currentBrush,
+                            lastNonEraserTool = lastNonEraserTool,
+                            isStylusButtonEraserActive = false,
+                            onBrushChange = { brush ->
+                                latestBrush = brush
+                                currentBrush = brush
+                                if (brush.tool != Tool.ERASER) {
+                                    lastNonEraserTool = brush.tool
+                                }
+                            },
+                        ),
+                    contentState = defaultContentState(),
+                    transformState = rememberTransformableState { _, _, _ -> },
+                )
+            }
+        }
 
         composeRule.onNodeWithContentDescription(ERASER).assertIsDisplayed().performClick()
         composeRule.runOnIdle {
-            assertEquals(Tool.ERASER, updatedBrush?.tool)
+            assertEquals(Tool.ERASER, latestBrush?.tool)
         }
-
-        updatedBrush = null
-
-        setEditorScaffold(
-            toolbarState =
-                NoteEditorToolbarState(
-                    brush = Brush(tool = Tool.ERASER),
-                    lastNonEraserTool = Tool.HIGHLIGHTER,
-                    isStylusButtonEraserActive = false,
-                    onBrushChange = { brush -> updatedBrush = brush },
-                ),
-        )
 
         composeRule.onNodeWithContentDescription(ERASER).performClick()
         composeRule.runOnIdle {
-            assertEquals(Tool.HIGHLIGHTER, updatedBrush?.tool)
+            assertEquals(Tool.HIGHLIGHTER, latestBrush?.tool)
         }
     }
 
@@ -173,7 +181,7 @@ class NoteEditorToolbarTest {
         }
         composeRule.onNodeWithText("Eraser options").assertIsDisplayed()
         composeRule.onNodeWithText("Stroke eraser").assertIsDisplayed()
-        composeRule.onNodeWithText("Brush size").assertDoesNotExist()
+        composeRule.onAllNodesWithText("Brush size").assertCountEquals(0)
     }
 
     private fun setEditorScaffold(toolbarState: NoteEditorToolbarState) {

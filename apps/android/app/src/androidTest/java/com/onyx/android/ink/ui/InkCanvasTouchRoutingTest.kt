@@ -19,6 +19,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.lang.reflect.Method
 
 @RunWith(AndroidJUnit4::class)
 class InkCanvasTouchRoutingTest {
@@ -729,6 +730,77 @@ class InkCanvasTouchRoutingTest {
         assertTrue(stylusButtonStates.contains(true))
         assertTrue(stylusButtonStates.contains(false))
     }
+
+    @Test
+    fun predictedPoints_doNotLeakIntoCommittedStroke() {
+        val view = InProgressStrokesView(context)
+        val runtime = createRuntime()
+        val finishedStrokes = mutableListOf<Stroke>()
+        val interaction =
+            createInteraction(
+                onStrokeFinished = { stroke -> finishedStrokes += stroke },
+            )
+        val downTime = 2400L
+        val predictedMoveEvent =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 2416L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 320f,
+                y = 340f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        runtime.motionPredictionAdapter = createMotionPredictionAdapter(predictedMoveEvent)
+
+        val down =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 30f,
+                y = 30f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val move =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 2416L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 40f,
+                y = 45f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val up =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 2432L,
+                action = MotionEvent.ACTION_UP,
+                x = 42f,
+                y = 48f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, down, interaction, runtime))
+            assertTrue(handleTouchEvent(view, move, interaction, runtime))
+            assertTrue(runtime.predictedStrokeIds.containsKey(DEFAULT_POINTER_ID))
+            assertTrue(handleTouchEvent(view, up, interaction, runtime))
+        } finally {
+            down.recycle()
+            move.recycle()
+            up.recycle()
+        }
+
+        assertTrue(runtime.predictedStrokeIds.isEmpty())
+        val stroke = finishedStrokes.single()
+        assertTrue(stroke.points.isNotEmpty())
+        // Predicted coordinates (320, 340) must never be committed to final stroke points.
+        assertTrue(stroke.points.none { point -> point.x > 200f || point.y > 200f })
+    }
 }
 
 private data class TransformCall(
@@ -898,3 +970,30 @@ private const val DEFAULT_Y_PRECISION = 1f
 private const val DEFAULT_PRESSURE = 0.5f
 private const val DEFAULT_SIZE = 0.1f
 private const val DELTA = 0.0001f
+
+private class FakeMotionPredictor(
+    private var nextPrediction: MotionEvent?,
+) {
+    fun record(
+        @Suppress("UNUSED_PARAMETER") event: MotionEvent,
+    ) {
+    }
+
+    fun predict(): MotionEvent? = nextPrediction.also { nextPrediction = null }
+}
+
+private fun createMotionPredictionAdapter(predictedEvent: MotionEvent): MotionPredictionAdapter {
+    val predictor = FakeMotionPredictor(predictedEvent)
+    val constructor =
+        MotionPredictionAdapter::class.java.getDeclaredConstructor(
+            Any::class.java,
+            Method::class.java,
+            Method::class.java,
+        )
+    constructor.isAccessible = true
+    return constructor.newInstance(
+        predictor,
+        FakeMotionPredictor::class.java.getDeclaredMethod("record", MotionEvent::class.java),
+        FakeMotionPredictor::class.java.getDeclaredMethod("predict"),
+    ) as MotionPredictionAdapter
+}
