@@ -2,31 +2,23 @@ package com.onyx.android
 
 import android.app.Application
 import android.util.Log
-import androidx.room.Room
 import com.onyx.android.data.OnyxDatabase
 import com.onyx.android.data.repository.NoteRepository
 import com.onyx.android.data.serialization.StrokeSerializer
 import com.onyx.android.device.DeviceIdentity
 import com.onyx.android.recognition.MyScriptEngine
 
-class OnyxApplication : Application() {
-    lateinit var database: OnyxDatabase
-    lateinit var noteRepository: NoteRepository
-    lateinit var deviceIdentity: DeviceIdentity
-    lateinit var myScriptEngine: MyScriptEngine
+class OnyxApplication : Application(), AppContainer {
+    override lateinit var database: OnyxDatabase
+    override lateinit var noteRepository: NoteRepository
+    override lateinit var deviceIdentity: DeviceIdentity
+    override lateinit var myScriptEngine: MyScriptEngine
 
     override fun onCreate() {
         super.onCreate()
         Log.d("OnyxApp", "Initializing OnyxApplication...")
 
-        database =
-            Room
-                .databaseBuilder(
-                    applicationContext,
-                    OnyxDatabase::class.java,
-                    OnyxDatabase.DATABASE_NAME,
-                ).fallbackToDestructiveMigration()
-                .build()
+        database = OnyxDatabase.build(applicationContext)
         Log.d("OnyxApp", "Database initialized")
 
         deviceIdentity = DeviceIdentity(applicationContext)
@@ -43,19 +35,21 @@ class OnyxApplication : Application() {
             )
         Log.d("OnyxApp", "NoteRepository initialized")
 
-        // Initialize MyScript engine (singleton, lazily initialized on first use)
+        // Initialize MyScript engine asynchronously to avoid blocking app startup.
+        // Asset copying can take significant time on first launch.
+        // Using a simple thread since this is a one-shot init with no cancellation needed.
         myScriptEngine = MyScriptEngine(applicationContext)
-        val initResult = myScriptEngine.initialize()
-        if (initResult.isFailure) {
-            Log.e(
-                "OnyxApp",
-                "MyScript initialization failed: ${initResult.exceptionOrNull()?.message}",
-            )
-            // App can still run but recognition features will be unavailable
-            // ViewModels should check isInitialized() before calling getEngine()
-        } else {
-            Log.i("OnyxApp", "MyScript engine initialized successfully")
-        }
+        Thread {
+            val initResult = myScriptEngine.initialize()
+            if (initResult.isFailure) {
+                Log.e(
+                    "OnyxApp",
+                    "MyScript initialization failed: ${initResult.exceptionOrNull()?.message}",
+                )
+            } else {
+                Log.i("OnyxApp", "MyScript engine initialized successfully")
+            }
+        }.start()
 
         Log.d("OnyxApp", "OnyxApplication initialization complete")
     }

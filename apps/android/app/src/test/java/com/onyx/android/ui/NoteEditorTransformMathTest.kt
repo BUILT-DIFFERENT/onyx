@@ -6,6 +6,21 @@ import org.junit.jupiter.api.Test
 
 class NoteEditorTransformMathTest {
     @Test
+    fun `compute zoom limits uses fit-relative min and max`() {
+        val limits =
+            computeZoomLimits(
+                pageWidth = 1000f,
+                pageHeight = 2000f,
+                viewportWidth = 2000f,
+                viewportHeight = 2000f,
+            )
+
+        assertEquals(1f, limits.fitZoom, DELTA)
+        assertEquals(0.75f, limits.minZoom, DELTA)
+        assertEquals(6f, limits.maxZoom, DELTA)
+    }
+
+    @Test
     fun `fit transform centers page in viewport`() {
         val transform =
             fitTransformToViewport(
@@ -51,12 +66,60 @@ class NoteEditorTransformMathTest {
     }
 
     @Test
+    fun `apply transform gesture clamps zoom to dynamic limits`() {
+        val limits =
+            computeZoomLimits(
+                pageWidth = 1000f,
+                pageHeight = 1000f,
+                viewportWidth = 1000f,
+                viewportHeight = 1000f,
+            )
+        val zoomedOut =
+            applyTransformGesture(
+                current = ViewTransform.DEFAULT,
+                gesture =
+                    TransformGesture(
+                        zoomChange = 0.05f,
+                        panChangeX = 0f,
+                        panChangeY = 0f,
+                        centroidX = 500f,
+                        centroidY = 500f,
+                    ),
+                zoomLimits = limits,
+                pageWidth = 1000f,
+                pageHeight = 1000f,
+                viewportWidth = 1000f,
+                viewportHeight = 1000f,
+            )
+        val zoomedIn =
+            applyTransformGesture(
+                current = ViewTransform.DEFAULT,
+                gesture =
+                    TransformGesture(
+                        zoomChange = 100f,
+                        panChangeX = 0f,
+                        panChangeY = 0f,
+                        centroidX = 500f,
+                        centroidY = 500f,
+                    ),
+                zoomLimits = limits,
+                pageWidth = 1000f,
+                pageHeight = 1000f,
+                viewportWidth = 1000f,
+                viewportHeight = 1000f,
+            )
+
+        assertEquals(limits.minZoom, zoomedOut.zoom, DELTA)
+        assertEquals(limits.maxZoom, zoomedIn.zoom, DELTA)
+    }
+
+    @Test
     fun `zoom bucket steps up with zoom level`() {
         assertEquals(1f, zoomToRenderScaleBucket(0.6f), DELTA)
         assertEquals(1f, zoomToRenderScaleBucket(1f), DELTA)
-        assertEquals(1.5f, zoomToRenderScaleBucket(1.1f), DELTA)
+        assertEquals(2f, zoomToRenderScaleBucket(1.1f), DELTA)
         assertEquals(2f, zoomToRenderScaleBucket(1.7f), DELTA)
-        assertEquals(3f, zoomToRenderScaleBucket(2.8f), DELTA)
+        assertEquals(4f, zoomToRenderScaleBucket(2.8f), DELTA)
         assertEquals(4f, zoomToRenderScaleBucket(4f), DELTA)
     }
 
@@ -64,12 +127,37 @@ class NoteEditorTransformMathTest {
     fun `render scale is clamped for very large pages`() {
         val renderScale =
             resolvePdfRenderScale(
-                viewZoom = 4f,
+                bucketedScale = 4f,
                 pageWidth = 5000f,
                 pageHeight = 5000f,
             )
 
         assertEquals(0.8f, renderScale, DELTA)
+    }
+
+    @Test
+    fun `axis-based transform helpers match pair conversion`() {
+        val transform = ViewTransform(zoom = 2.25f, panX = 120f, panY = -30f)
+        val pagePair = transform.pageToScreen(40f, 20f)
+        val screenPair = transform.screenToPage(300f, 90f)
+
+        assertEquals(pagePair.first, transform.pageToScreenX(40f), DELTA)
+        assertEquals(pagePair.second, transform.pageToScreenY(20f), DELTA)
+        assertEquals(screenPair.first, transform.screenToPageX(300f), DELTA)
+        assertEquals(screenPair.second, transform.screenToPageY(90f), DELTA)
+    }
+
+    @Test
+    fun `zoom bucket hysteresis prevents oscillation near boundary`() {
+        val stayedAtOne = zoomToRenderScaleBucket(zoom = 2.1f, previousBucket = 1f)
+        val switchedToTwo = zoomToRenderScaleBucket(zoom = 2.2f, previousBucket = 1f)
+        val stayedAtTwo = zoomToRenderScaleBucket(zoom = 1.8f, previousBucket = 2f)
+        val switchedBackToOne = zoomToRenderScaleBucket(zoom = 1.79f, previousBucket = 2f)
+
+        assertEquals(1f, stayedAtOne, DELTA)
+        assertEquals(2f, switchedToTwo, DELTA)
+        assertEquals(2f, stayedAtTwo, DELTA)
+        assertEquals(1f, switchedBackToOne, DELTA)
     }
 }
 

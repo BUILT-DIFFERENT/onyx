@@ -252,6 +252,14 @@ class NoteRepository(
         noteDao.softDelete(noteId, now)
     }
 
+    suspend fun updateNoteTitle(
+        noteId: String,
+        title: String,
+    ) {
+        val now = System.currentTimeMillis()
+        noteDao.updateTitle(noteId = noteId, title = title, updatedAt = now)
+    }
+
     fun searchNotes(query: String): Flow<List<SearchResultItem>> {
         return recognitionDao.search(query).map { recognitionHits ->
             recognitionHits

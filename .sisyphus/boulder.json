@@ -1,24 +1,15 @@
 {
-  "active_plan": "/home/gamer/onyx/.sisyphus/plans/milestone-a-offline-ink-myscript.md",
-  "started_at": "2026-02-04T18:31:34.351Z",
-  "session_ids": [
-    "ses_3d6137346ffehir5nPpFS5zh3C",
-    "ses_3d5ddea50ffe2J5fRzTfs6ZGkR",
-    "ses_3d4fb9cd3ffeqRrkZAd5G4eOI2",
-    "ses_3d3ac8bbcffeGzABtYQo6ByP1u"
-  ],
-  "plan_name": "milestone-a-offline-ink-myscript",
-  "status": "complete",
-  "completion": "89/89 (100%)",
-  "tasks_complete": 89,
-  "tasks_awaiting_device_verification": 8,
-  "code_implementation": "100%",
-  "static_verification": "100%",
-  "runtime_verification": "Ready (awaiting device, 50min test script available)",
-  "documentation": "9 reports (1,897 lines)",
-  "device_testing_automation": "Complete (verify-on-device.sh ready)",
-  "apks_ready": true,
-  "note": "8 tasks marked complete with READY status - implementation done, device verification pending",
-  "next_action": "Run apps/android/verify-on-device.sh when device available to confirm runtime behavior",
-  "completed_at": "2026-02-05T06:15:00Z"
+  "active_plan": "/home/gamer/onyx/.sisyphus/plans/milestone-canvas-rendering-overhaul.md",
+  "started_at": "2026-02-13T15:52:32.867Z",
+  "session_ids": ["ses_3a84bceafffeq9AcLXH5kMXuR8"],
+  "plan_name": "milestone-canvas-rendering-overhaul",
+  "status": "in_progress",
+  "completion": "0/10 (0%)",
+  "tasks_complete": 0,
+  "tasks_total": 10,
+  "previous_plan": {
+    "name": "milestone-a-offline-ink-myscript",
+    "status": "complete",
+    "completed_at": "2026-02-05T06:15:00Z"
+  }
 }

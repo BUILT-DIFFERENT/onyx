@@ -5,7 +5,6 @@ import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.StrokeStyle
 import com.onyx.android.ink.model.Tool
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -32,22 +31,19 @@ class StrokeSerializerTest {
     }
 
     @Test
-    fun `JSON contains required fields and omits nulls`() {
+    fun `point payload is protobuf bytes and deterministic for same input`() {
         val points =
             listOf(
                 StrokePoint(x = 1f, y = 2f, t = 123L, p = 0.5f, tx = null, ty = null, r = null),
             )
 
-        val json = String(StrokeSerializer.serializePoints(points), Charsets.UTF_8)
+        val payloadA = StrokeSerializer.serializePoints(points)
+        val payloadB = StrokeSerializer.serializePoints(points)
+        val payloadAsText = payloadA.toString(Charsets.UTF_8)
 
-        assertTrue(json.contains("\"x\":"))
-        assertTrue(json.contains("\"y\":"))
-        assertTrue(json.contains("\"t\":"))
-        assertTrue(json.contains("\"p\":"))
-        assertFalse(json.contains("\"tx\":"))
-        assertFalse(json.contains("\"ty\":"))
-        assertFalse(json.contains("\"r\":"))
-        assertFalse(json.contains("null"))
+        assertTrue(payloadA.isNotEmpty())
+        assertTrue(payloadA.contentEquals(payloadB))
+        assertTrue(!payloadAsText.trimStart().startsWith("["))
     }
 
     @Test

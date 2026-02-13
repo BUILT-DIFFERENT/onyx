@@ -6,6 +6,7 @@
 - Use context 7 to get relevant data.
 - Skills only provide generic advice, not real docs.
 - Environment variables must be declared in `turbo.json` (`env`/`globalEnv`) and relevant tasks must include `.env*` in `inputs` for correct cache invalidation.
+- Current Android dev phase policy: backward compatibility with older local app DB versions is not required.
 
 ## Context7 Library IDs (Project Stack)
 
@@ -26,3 +27,22 @@ Use these IDs directly with `mcp__context7__query-docs` to avoid repeated `resol
 - Turborepo: `/vercel/turborepo`
 - Convex backend: `/get-convex/convex-backend`
 - Convex LLM/docs mirror: `/llmstxt/convex_dev_llms_txt`
+
+## Repository Doc Map (Quick Lookup)
+
+- Primary docs index: `docs/README.md`
+- Plans: `.sisyphus/plans/`
+- Working notes and deep task logs: `.sisyphus/notepads/`
+- Architecture overview: `docs/architecture/system-overview.md`
+- Architecture deep dives (sync, storage, identity, data model, testing, CI/CD): `docs/architecture/`
+- Testing guidance: `docs/architecture/testing.md`
+- Contract test fixtures guidance: `tests/contracts/README.md`
+- Android setup/build prerequisites: `apps/android/README.md`
+- Android device testing and on-device verification flow: `apps/android/DEVICE-TESTING.md`
+- Android Gradle wrapper helper details: `scripts/README.md` and `scripts/gradlew.js`
+- Web app overview: `apps/web/README.md`
+- Convex backend overview: `convex/README.md`
+- Operational runbooks: `docs/runbooks/README.md`
+- Infra operation docs: `infra/backups/README.md`, `infra/observability/README.md`, `infra/storage/README.md`
+- Monorepo task commands and pipeline config: `package.json` (scripts) and `turbo.json` (tasks/cache/env)
+- Known device blocker context: `docs/device-blocker.md`

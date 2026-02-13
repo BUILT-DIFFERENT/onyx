@@ -2,6 +2,7 @@ package com.onyx.android.ui
 
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -38,6 +39,7 @@ class NoteEditorToolbarTest {
                 NoteEditorToolbarState(
                     brush = Brush(tool = Tool.PEN),
                     lastNonEraserTool = Tool.HIGHLIGHTER,
+                    isStylusButtonEraserActive = false,
                     onBrushChange = { brush -> updatedBrush = brush },
                 ),
         )
@@ -54,6 +56,7 @@ class NoteEditorToolbarTest {
                 NoteEditorToolbarState(
                     brush = Brush(tool = Tool.ERASER),
                     lastNonEraserTool = Tool.HIGHLIGHTER,
+                    isStylusButtonEraserActive = false,
                     onBrushChange = { brush -> updatedBrush = brush },
                 ),
         )
@@ -72,6 +75,7 @@ class NoteEditorToolbarTest {
                 NoteEditorToolbarState(
                     brush = Brush(tool = Tool.ERASER),
                     lastNonEraserTool = Tool.PEN,
+                    isStylusButtonEraserActive = false,
                     onBrushChange = { brush -> updatedBrush = brush },
                 ),
         )
@@ -94,6 +98,7 @@ class NoteEditorToolbarTest {
                 NoteEditorToolbarState(
                     brush = Brush(tool = Tool.PEN),
                     lastNonEraserTool = Tool.PEN,
+                    isStylusButtonEraserActive = false,
                     onBrushChange = {},
                 ),
         )
@@ -114,6 +119,7 @@ class NoteEditorToolbarTest {
                 NoteEditorToolbarState(
                     brush = Brush(tool = Tool.PEN, color = "#111111"),
                     lastNonEraserTool = Tool.PEN,
+                    isStylusButtonEraserActive = false,
                     onBrushChange = {},
                 ),
         )
@@ -135,6 +141,7 @@ class NoteEditorToolbarTest {
                 NoteEditorToolbarState(
                     brush = Brush(tool = Tool.ERASER, color = "#111111"),
                     lastNonEraserTool = Tool.PEN,
+                    isStylusButtonEraserActive = false,
                     onBrushChange = { brush -> updatedBrush = brush },
                 ),
         )
@@ -145,6 +152,28 @@ class NoteEditorToolbarTest {
             assertEquals(Tool.PEN, updatedBrush?.tool)
             assertEquals("#1E88E5", updatedBrush?.color)
         }
+    }
+
+    @Test
+    fun longPress_eraserButton_showsStrokeOnlyEraserSettings() {
+        setEditorScaffold(
+            toolbarState =
+                NoteEditorToolbarState(
+                    brush = Brush(tool = Tool.ERASER),
+                    lastNonEraserTool = Tool.PEN,
+                    isStylusButtonEraserActive = false,
+                    onBrushChange = {},
+                ),
+        )
+
+        composeRule.onNodeWithContentDescription(ERASER).performTouchInput {
+            down(center)
+            advanceEventTime(650)
+            up()
+        }
+        composeRule.onNodeWithText("Eraser options").assertIsDisplayed()
+        composeRule.onNodeWithText("Stroke eraser").assertIsDisplayed()
+        composeRule.onNodeWithText("Brush size").assertDoesNotExist()
     }
 
     private fun setEditorScaffold(toolbarState: NoteEditorToolbarState) {
@@ -177,6 +206,7 @@ private fun defaultTopBarState(): NoteEditorTopBarState =
         onNavigatePrevious = {},
         onNavigateNext = {},
         onCreatePage = {},
+        onUpdateTitle = {},
         onUndo = {},
         onRedo = {},
         onToggleReadOnly = {},
@@ -196,8 +226,11 @@ private fun defaultContentState(): NoteEditorContentState =
         pageHeight = 0f,
         strokes = emptyList(),
         brush = Brush(),
+        isStylusButtonEraserActive = false,
         onStrokeFinished = {},
         onStrokeErased = {},
+        onStylusButtonEraserActiveChanged = {},
         onTransformGesture = { _, _, _, _, _ -> },
+        onPanGestureEnd = { _, _ -> },
         onViewportSizeChanged = { _: IntSize -> },
     )

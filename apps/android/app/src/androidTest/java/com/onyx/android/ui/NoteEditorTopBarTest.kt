@@ -2,10 +2,17 @@ package com.onyx.android.ui
 
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performTextClearance
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -48,6 +55,8 @@ class NoteEditorTopBarTest {
         composeRule.onNodeWithContentDescription("Highlighter").assertIsDisplayed()
         composeRule.onNodeWithContentDescription(ERASER).assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Editor viewport").assertIsDisplayed()
+        composeRule.onNodeWithText("2/5").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Page 2 of 5").assertIsDisplayed()
     }
 
     @Test
@@ -96,6 +105,86 @@ class NoteEditorTopBarTest {
         }
     }
 
+    @Test
+    fun titleEdit_commitsUpdatedTitle() {
+        var committedTitle = ""
+        setEditorScaffold(
+            topBarState =
+                defaultTopBarState().copy(
+                    noteTitle = "Physics Notes",
+                    onUpdateTitle = { committedTitle = it },
+                ),
+        )
+
+        composeRule.onNodeWithContentDescription("Note title").performClick()
+        composeRule.onNodeWithTag(TITLE_INPUT_TEST_TAG).performTextClearance()
+        composeRule.onNodeWithTag(TITLE_INPUT_TEST_TAG).performTextInput("Linear Algebra")
+        composeRule.onNodeWithTag(TITLE_INPUT_TEST_TAG).performImeAction()
+
+        composeRule.runOnIdle {
+            assertEquals("Linear Algebra", committedTitle)
+        }
+    }
+
+    @Test
+    fun pageCounter_reflectsCurrentAndTotalPages() {
+        setEditorScaffold(
+            topBarState =
+                defaultTopBarState().copy(
+                    totalPages = 12,
+                    currentPageIndex = 2,
+                ),
+        )
+
+        composeRule.onNodeWithText("3/12").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Page 3 of 12").assertIsDisplayed()
+    }
+
+    @Test
+    fun overflowMenu_exposesWorkingActions_andRemovesLegacyPlaceholder() {
+        var modeToggleClicks = 0
+        setEditorScaffold(
+            topBarState =
+                defaultTopBarState().copy(
+                    onToggleReadOnly = { modeToggleClicks += 1 },
+                ),
+        )
+
+        composeRule.onNodeWithContentDescription(MORE_ACTIONS).performClick()
+        composeRule.onNodeWithText("Rename note").assertIsDisplayed()
+        composeRule.onNodeWithText(LEGACY_OVERFLOW_COPY).assertDoesNotExist()
+        composeRule.onNodeWithText("Rename note").performClick()
+        composeRule.onNodeWithTag(TITLE_INPUT_TEST_TAG).assertIsDisplayed()
+
+        composeRule.onNodeWithContentDescription(MORE_ACTIONS).performClick()
+        composeRule.onNodeWithText("Switch to view mode").assertIsDisplayed().performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(1, modeToggleClicks)
+        }
+    }
+
+    @Test
+    fun topBar_disablesUnavailableActions() {
+        setEditorScaffold(
+            topBarState =
+                defaultTopBarState().copy(
+                    isReadOnly = true,
+                    canNavigatePrevious = false,
+                    canNavigateNext = false,
+                    canUndo = false,
+                    canRedo = false,
+                ),
+        )
+
+        composeRule.onNodeWithContentDescription(PREVIOUS_PAGE).assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription(NEXT_PAGE).assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription(NEW_PAGE).assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription(UNDO).assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription(REDO).assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription("Note title").assertIsNotEnabled()
+    }
+
     private fun setEditorScaffold(topBarState: NoteEditorTopBarState) {
         composeRule.setContent {
             MaterialTheme {
@@ -118,6 +207,9 @@ private const val UNDO = "Undo"
 private const val REDO = "Redo"
 private const val VIEW_MODE = "View mode"
 private const val ERASER = "Eraser"
+private const val TITLE_INPUT_TEST_TAG = "note-title-input"
+private const val MORE_ACTIONS = "More actions"
+private const val LEGACY_OVERFLOW_COPY = "Grid, search, and inbox are coming soon"
 
 private fun defaultTopBarState(): NoteEditorTopBarState =
     NoteEditorTopBarState(
@@ -133,6 +225,7 @@ private fun defaultTopBarState(): NoteEditorTopBarState =
         onNavigatePrevious = {},
         onNavigateNext = {},
         onCreatePage = {},
+        onUpdateTitle = {},
         onUndo = {},
         onRedo = {},
         onToggleReadOnly = {},
@@ -145,6 +238,7 @@ private fun defaultToolbarState(
     NoteEditorToolbarState(
         brush = brush,
         lastNonEraserTool = Tool.PEN,
+        isStylusButtonEraserActive = false,
         onBrushChange = onBrushChange,
     )
 
@@ -162,8 +256,11 @@ private fun defaultContentState(): NoteEditorContentState =
         pageHeight = 0f,
         strokes = emptyList(),
         brush = Brush(),
+        isStylusButtonEraserActive = false,
         onStrokeFinished = {},
         onStrokeErased = {},
+        onStylusButtonEraserActiveChanged = {},
         onTransformGesture = { _, _, _, _, _ -> },
+        onPanGestureEnd = { _, _ -> },
         onViewportSizeChanged = { _: IntSize -> },
     )

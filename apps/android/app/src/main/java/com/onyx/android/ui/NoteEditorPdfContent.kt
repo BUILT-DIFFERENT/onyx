@@ -104,12 +104,16 @@ private fun PdfPageLayers(
                 strokes = contentState.strokes,
                 viewTransform = contentState.viewTransform,
                 brush = contentState.brush,
+                pageWidth = contentState.pageWidth,
+                pageHeight = contentState.pageHeight,
             )
         val inkCanvasCallbacks =
             InkCanvasCallbacks(
                 onStrokeFinished = contentState.onStrokeFinished,
                 onStrokeErased = contentState.onStrokeErased,
                 onTransformGesture = contentState.onTransformGesture,
+                onPanGestureEnd = contentState.onPanGestureEnd,
+                onStylusButtonEraserActiveChanged = contentState.onStylusButtonEraserActiveChanged,
             )
         InkCanvas(
             state = inkCanvasState,
@@ -150,7 +154,8 @@ private fun handlePdfDragStart(
 ) {
     val renderer = state.renderer ?: return
     val pageIndex = state.currentPage?.pdfPageNo ?: return
-    val (pageX, pageY) = state.viewTransform.screenToPage(offset.x, offset.y)
+    val pageX = state.viewTransform.screenToPageX(offset.x)
+    val pageY = state.viewTransform.screenToPageY(offset.y)
     state.coroutineScope.launch {
         val structuredText =
             withContext(Dispatchers.Default) {
@@ -180,11 +185,8 @@ private fun handlePdfDragMove(
     val renderer = state.renderer
     val selection = state.selection
     if (renderer != null && selection != null) {
-        val (pageX, pageY) =
-            state.viewTransform.screenToPage(
-                change.position.x,
-                change.position.y,
-            )
+        val pageX = state.viewTransform.screenToPageX(change.position.x)
+        val pageY = state.viewTransform.screenToPageY(change.position.y)
         val endChar = renderer.findCharAtPagePoint(selection.structuredText, pageX, pageY)
         if (endChar != null) {
             val quads =
@@ -225,10 +227,14 @@ private fun PdfSelectionOverlay(
     val highlightColor = Color(PDF_SELECTION_HIGHLIGHT_COLOR)
     Canvas(modifier = Modifier.fillMaxSize()) {
         selection.quads.forEach { quad ->
-            val (ulX, ulY) = viewTransform.pageToScreen(quad.ul_x, quad.ul_y)
-            val (urX, urY) = viewTransform.pageToScreen(quad.ur_x, quad.ur_y)
-            val (lrX, lrY) = viewTransform.pageToScreen(quad.lr_x, quad.lr_y)
-            val (llX, llY) = viewTransform.pageToScreen(quad.ll_x, quad.ll_y)
+            val ulX = viewTransform.pageToScreenX(quad.ul_x)
+            val ulY = viewTransform.pageToScreenY(quad.ul_y)
+            val urX = viewTransform.pageToScreenX(quad.ur_x)
+            val urY = viewTransform.pageToScreenY(quad.ur_y)
+            val lrX = viewTransform.pageToScreenX(quad.lr_x)
+            val lrY = viewTransform.pageToScreenY(quad.lr_y)
+            val llX = viewTransform.pageToScreenX(quad.ll_x)
+            val llY = viewTransform.pageToScreenY(quad.ll_y)
             val path =
                 Path().apply {
                     moveTo(ulX, ulY)

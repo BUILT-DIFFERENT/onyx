@@ -1,4 +1,4 @@
-@file:Suppress("FunctionName")
+@file:Suppress("FunctionName", "LongParameterList")
 
 package com.onyx.android.ui
 
@@ -7,6 +7,7 @@ import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,20 +21,49 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 private const val PDF_RENDER_BUCKET_BASE = 1f
-private const val PDF_RENDER_BUCKET_MID = 1.5f
 private const val PDF_RENDER_BUCKET_HIGH = 2f
-private const val PDF_RENDER_BUCKET_HIGHER = 3f
 private const val PDF_RENDER_BUCKET_MAX = 4f
+private const val MIN_ZOOM_FACTOR_OF_FIT = 0.75f
+private const val MAX_ZOOM_FACTOR_OF_FIT = 6f
+private const val DEFAULT_FIT_ZOOM = 1f
 private val PDF_RENDER_SCALE_BUCKETS =
     floatArrayOf(
         PDF_RENDER_BUCKET_BASE,
-        PDF_RENDER_BUCKET_MID,
         PDF_RENDER_BUCKET_HIGH,
-        PDF_RENDER_BUCKET_HIGHER,
         PDF_RENDER_BUCKET_MAX,
     )
 private const val PDF_RENDER_MAX_PIXELS = 16_000_000f
 private const val PDF_RENDER_MIN_SCALE = 0.5f
+private const val PDF_BUCKET_SWITCH_UP_MULTIPLIER = 1.1f
+private const val PDF_BUCKET_SWITCH_DOWN_MULTIPLIER = 0.9f
+
+internal data class ZoomLimits(
+    val minZoom: Float,
+    val maxZoom: Float,
+    val fitZoom: Float,
+)
+
+internal fun computeZoomLimits(
+    pageWidth: Float,
+    pageHeight: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
+): ZoomLimits {
+    if (!hasValidDimensions(pageWidth, pageHeight, viewportWidth, viewportHeight)) {
+        val fallbackFitZoom = DEFAULT_FIT_ZOOM
+        return ZoomLimits(
+            minZoom = fallbackFitZoom * MIN_ZOOM_FACTOR_OF_FIT,
+            maxZoom = fallbackFitZoom * MAX_ZOOM_FACTOR_OF_FIT,
+            fitZoom = fallbackFitZoom,
+        )
+    }
+    val fitZoom = min(viewportWidth / pageWidth, viewportHeight / pageHeight)
+    return ZoomLimits(
+        minZoom = fitZoom * MIN_ZOOM_FACTOR_OF_FIT,
+        maxZoom = fitZoom * MAX_ZOOM_FACTOR_OF_FIT,
+        fitZoom = fitZoom,
+    )
+}
 
 @Composable
 internal fun DisposePdfRenderer(pdfRenderer: PdfRenderer?) {
@@ -47,16 +77,27 @@ internal fun DisposePdfRenderer(pdfRenderer: PdfRenderer?) {
 @Composable
 internal fun rememberTransformState(
     viewTransform: ViewTransform,
+    zoomLimits: ZoomLimits,
+    pageWidth: Float,
+    pageHeight: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
     onTransformChange: (ViewTransform) -> Unit,
 ): TransformableState =
     rememberTransformableState { zoomChange, panChange, _ ->
-        onTransformChange(
+        val transformed =
             viewTransform.copy(
-                zoom =
-                    (viewTransform.zoom * zoomChange)
-                        .coerceIn(ViewTransform.MIN_ZOOM, ViewTransform.MAX_ZOOM),
+                zoom = (viewTransform.zoom * zoomChange).coerceIn(zoomLimits.minZoom, zoomLimits.maxZoom),
                 panX = viewTransform.panX + panChange.x,
                 panY = viewTransform.panY + panChange.y,
+            )
+        onTransformChange(
+            constrainTransformToViewport(
+                transform = transformed,
+                pageWidth = pageWidth,
+                pageHeight = pageHeight,
+                viewportWidth = viewportWidth,
+                viewportHeight = viewportHeight,
             ),
         )
     }
@@ -72,13 +113,14 @@ internal data class TransformGesture(
 internal fun applyTransformGesture(
     current: ViewTransform,
     gesture: TransformGesture,
+    zoomLimits: ZoomLimits,
+    pageWidth: Float,
+    pageHeight: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
 ): ViewTransform {
     val currentZoom = current.zoom
-    val targetZoom =
-        (currentZoom * gesture.zoomChange).coerceIn(
-            ViewTransform.MIN_ZOOM,
-            ViewTransform.MAX_ZOOM,
-        )
+    val targetZoom = (currentZoom * gesture.zoomChange).coerceIn(zoomLimits.minZoom, zoomLimits.maxZoom)
     val appliedZoomChange =
         if (currentZoom > 0f) {
             targetZoom / currentZoom
@@ -87,10 +129,18 @@ internal fun applyTransformGesture(
         }
     val anchoredPanX = gesture.centroidX - (gesture.centroidX - current.panX) * appliedZoomChange
     val anchoredPanY = gesture.centroidY - (gesture.centroidY - current.panY) * appliedZoomChange
-    return current.copy(
-        zoom = targetZoom,
-        panX = anchoredPanX + gesture.panChangeX,
-        panY = anchoredPanY + gesture.panChangeY,
+    val transformed =
+        current.copy(
+            zoom = targetZoom,
+            panX = anchoredPanX + gesture.panChangeX,
+            panY = anchoredPanY + gesture.panChangeY,
+        )
+    return constrainTransformToViewport(
+        transform = transformed,
+        pageWidth = pageWidth,
+        pageHeight = pageHeight,
+        viewportWidth = viewportWidth,
+        viewportHeight = viewportHeight,
     )
 }
 
@@ -99,13 +149,12 @@ internal fun fitTransformToViewport(
     pageHeight: Float,
     viewportWidth: Float,
     viewportHeight: Float,
+    zoomLimits: ZoomLimits = computeZoomLimits(pageWidth, pageHeight, viewportWidth, viewportHeight),
 ): ViewTransform {
     if (!hasValidDimensions(pageWidth, pageHeight, viewportWidth, viewportHeight)) {
         return ViewTransform.DEFAULT
     }
-    val fitZoom =
-        min(viewportWidth / pageWidth, viewportHeight / pageHeight)
-            .coerceIn(ViewTransform.MIN_ZOOM, ViewTransform.MAX_ZOOM)
+    val fitZoom = zoomLimits.fitZoom.coerceIn(zoomLimits.minZoom, zoomLimits.maxZoom)
     val contentWidth = pageWidth * fitZoom
     val contentHeight = pageHeight * fitZoom
     return ViewTransform(
@@ -159,9 +208,14 @@ internal fun rememberPdfBitmap(
     viewZoom: Float,
 ): android.graphics.Bitmap? {
     var pdfBitmap by remember(currentPage?.pageId) { mutableStateOf<android.graphics.Bitmap?>(null) }
+    var previousScaleBucket by remember(currentPage?.pageId) { mutableStateOf<Float?>(null) }
     val pageWidth = currentPage?.width ?: 0f
     val pageHeight = currentPage?.height ?: 0f
-    val renderScale = resolvePdfRenderScale(viewZoom, pageWidth, pageHeight)
+    val scaleBucket = zoomToRenderScaleBucket(viewZoom, previousScaleBucket)
+    SideEffect {
+        previousScaleBucket = scaleBucket
+    }
+    val renderScale = resolvePdfRenderScale(scaleBucket, pageWidth, pageHeight)
     LaunchedEffect(currentPage?.pageId, isPdfPage, pdfRenderer, renderScale) {
         if (!isPdfPage) {
             pdfBitmap = null
@@ -178,11 +232,10 @@ internal fun rememberPdfBitmap(
 }
 
 internal fun resolvePdfRenderScale(
-    viewZoom: Float,
+    bucketedScale: Float,
     pageWidth: Float,
     pageHeight: Float,
 ): Float {
-    val bucketedScale = zoomToRenderScaleBucket(viewZoom)
     if (pageWidth <= 0f || pageHeight <= 0f) {
         return bucketedScale
     }
@@ -192,8 +245,38 @@ internal fun resolvePdfRenderScale(
     return bucketedScale.coerceAtMost(maxScaleForPage)
 }
 
-internal fun zoomToRenderScaleBucket(zoom: Float): Float {
+internal fun zoomToRenderScaleBucket(
+    zoom: Float,
+    previousBucket: Float? = null,
+): Float {
     val clampedZoom = zoom.coerceIn(ViewTransform.MIN_ZOOM, ViewTransform.MAX_ZOOM)
-    return PDF_RENDER_SCALE_BUCKETS.firstOrNull { bucket -> clampedZoom <= bucket }
-        ?: PDF_RENDER_SCALE_BUCKETS.last()
+    val previousIndex =
+        previousBucket?.let { bucket ->
+            val exactIndex = PDF_RENDER_SCALE_BUCKETS.indexOfFirst { value -> value == bucket }
+            if (exactIndex >= 0) {
+                exactIndex
+            } else {
+                val firstAtOrAbove = PDF_RENDER_SCALE_BUCKETS.indexOfFirst { value -> bucket <= value }
+                if (firstAtOrAbove >= 0) firstAtOrAbove else PDF_RENDER_SCALE_BUCKETS.lastIndex
+            }
+        }
+    if (previousIndex == null) {
+        return PDF_RENDER_SCALE_BUCKETS.firstOrNull { bucket -> clampedZoom <= bucket }
+            ?: PDF_RENDER_SCALE_BUCKETS.last()
+    }
+
+    var selectedIndex = previousIndex
+    while (
+        selectedIndex < PDF_RENDER_SCALE_BUCKETS.lastIndex &&
+        clampedZoom >= PDF_RENDER_SCALE_BUCKETS[selectedIndex + 1] * PDF_BUCKET_SWITCH_UP_MULTIPLIER
+    ) {
+        selectedIndex++
+    }
+    while (
+        selectedIndex > 0 &&
+        clampedZoom < PDF_RENDER_SCALE_BUCKETS[selectedIndex] * PDF_BUCKET_SWITCH_DOWN_MULTIPLIER
+    ) {
+        selectedIndex--
+    }
+    return PDF_RENDER_SCALE_BUCKETS[selectedIndex]
 }

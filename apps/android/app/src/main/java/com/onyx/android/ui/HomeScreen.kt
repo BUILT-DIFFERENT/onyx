@@ -7,6 +7,8 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +22,8 @@ import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -38,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -45,11 +50,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.artifex.mupdf.fitz.Document
-import com.onyx.android.OnyxApplication
 import com.onyx.android.data.entity.NoteEntity
 import com.onyx.android.data.repository.NoteRepository
 import com.onyx.android.data.repository.SearchResultItem
 import com.onyx.android.pdf.PdfAssetStorage
+import com.onyx.android.requireAppContainer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -81,6 +86,7 @@ private data class HomeScreenState(
     val searchQuery: String,
     val searchResults: List<SearchResultItem>,
     val notes: List<NoteEntity>,
+    val notePendingDelete: NoteEntity?,
     val warningMessage: String?,
     val errorMessage: String?,
 )
@@ -91,15 +97,20 @@ private data class HomeScreenActions(
     val onSearchQueryChange: (String) -> Unit,
     val onImportPdf: () -> Unit,
     val onCreateNote: () -> Unit,
+    val onRequestDeleteNote: (NoteEntity) -> Unit,
+    val onConfirmDeleteNote: (String) -> Unit,
+    val onDismissDeleteNote: () -> Unit,
     val onNavigateToEditor: (String, String?) -> Unit,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+@Suppress("LongMethod")
 fun HomeScreen(onNavigateToEditor: (String, String?) -> Unit) {
-    val app = LocalContext.current.applicationContext as OnyxApplication
-    val repository = app.noteRepository
-    val pdfAssetStorage = remember { PdfAssetStorage(app) }
+    val appContext = LocalContext.current.applicationContext
+    val appContainer = appContext.requireAppContainer()
+    val repository = appContainer.noteRepository
+    val pdfAssetStorage = remember { PdfAssetStorage(appContext) }
     val viewModel: HomeScreenViewModel =
         viewModel(
             key = "HomeScreenViewModel",
@@ -108,6 +119,7 @@ fun HomeScreen(onNavigateToEditor: (String, String?) -> Unit) {
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
     val notes by viewModel.notes.collectAsState()
+    var notePendingDelete by remember { mutableStateOf<NoteEntity?>(null) }
     var warningMessage by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val openPdfLauncher =
@@ -127,6 +139,7 @@ fun HomeScreen(onNavigateToEditor: (String, String?) -> Unit) {
             searchQuery = searchQuery,
             searchResults = searchResults,
             notes = notes,
+            notePendingDelete = notePendingDelete,
             warningMessage = warningMessage,
             errorMessage = errorMessage,
         )
@@ -142,6 +155,15 @@ fun HomeScreen(onNavigateToEditor: (String, String?) -> Unit) {
                     onError = { message -> errorMessage = message },
                 )
             },
+            onRequestDeleteNote = { note -> notePendingDelete = note },
+            onConfirmDeleteNote = { noteId ->
+                notePendingDelete = null
+                viewModel.deleteNote(
+                    noteId = noteId,
+                    onError = { message -> errorMessage = message },
+                )
+            },
+            onDismissDeleteNote = { notePendingDelete = null },
             onNavigateToEditor = onNavigateToEditor,
         )
     HomeScreenContent(
@@ -214,6 +236,27 @@ private fun HomeDialogs(
             },
         )
     }
+    if (state.notePendingDelete != null) {
+        val note = state.notePendingDelete
+        AlertDialog(
+            onDismissRequest = actions.onDismissDeleteNote,
+            title = { Text(text = "Delete note") },
+            text = {
+                val title = note.title.ifBlank { "Untitled Note" }
+                Text(text = "Delete \"$title\"? This removes it from your note list.")
+            },
+            dismissButton = {
+                Button(onClick = actions.onDismissDeleteNote) {
+                    Text(text = "Cancel")
+                }
+            },
+            confirmButton = {
+                Button(onClick = { actions.onConfirmDeleteNote(note.noteId) }) {
+                    Text(text = "Delete")
+                }
+            },
+        )
+    }
 }
 
 @Composable
@@ -242,6 +285,7 @@ private fun HomeContentBody(
         HomeListContent(
             state = state,
             onNavigateToEditor = actions.onNavigateToEditor,
+            onRequestDeleteNote = actions.onRequestDeleteNote,
             modifier = Modifier.weight(1f),
         )
     }
@@ -251,6 +295,7 @@ private fun HomeContentBody(
 private fun HomeListContent(
     state: HomeScreenState,
     onNavigateToEditor: (String, String?) -> Unit,
+    onRequestDeleteNote: (NoteEntity) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when {
@@ -266,6 +311,7 @@ private fun HomeListContent(
             NotesListContent(
                 notes = state.notes,
                 onNavigateToEditor = onNavigateToEditor,
+                onRequestDeleteNote = onRequestDeleteNote,
                 modifier = modifier,
             )
         }
@@ -313,11 +359,13 @@ private fun SearchResultsContent(
 }
 
 @Composable
-private fun NotesListContent(
+internal fun NotesListContent(
     notes: List<NoteEntity>,
     onNavigateToEditor: (String, String?) -> Unit,
+    onRequestDeleteNote: (NoteEntity) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var activeContextMenuNoteId by remember { mutableStateOf<String?>(null) }
     LazyColumn(
         modifier =
             modifier.fillMaxWidth(),
@@ -333,35 +381,63 @@ private fun NotesListContent(
             NoteRow(
                 note = note,
                 onClick = { onNavigateToEditor(note.noteId, null) },
+                onLongPress = { activeContextMenuNoteId = note.noteId },
+                isContextMenuExpanded = activeContextMenuNoteId == note.noteId,
+                onDismissContextMenu = { activeContextMenuNoteId = null },
+                onDelete = {
+                    activeContextMenuNoteId = null
+                    onRequestDeleteNote(note)
+                },
             )
         }
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
+@Suppress("LongParameterList")
 private fun NoteRow(
     note: NoteEntity,
     onClick: () -> Unit,
+    onLongPress: () -> Unit,
+    isContextMenuExpanded: Boolean,
+    onDismissContextMenu: () -> Unit,
+    onDelete: () -> Unit,
 ) {
-    Surface(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)
-                .clickable(onClick = onClick),
-        tonalElevation = 1.dp,
-        shape = MaterialTheme.shapes.medium,
-    ) {
-        val updatedLabel = remember(note.updatedAt) { formatTimestamp(note.updatedAt) }
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = note.title.ifEmpty { "Untitled Note" },
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = "Updated $updatedLabel",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Surface(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .combinedClickable(
+                        role = Role.Button,
+                        onClick = onClick,
+                        onLongClick = onLongPress,
+                    ),
+            tonalElevation = 1.dp,
+            shape = MaterialTheme.shapes.medium,
+        ) {
+            val updatedLabel = remember(note.updatedAt) { formatTimestamp(note.updatedAt) }
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = note.title.ifEmpty { "Untitled Note" },
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = "Updated $updatedLabel",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        DropdownMenu(
+            expanded = isContextMenuExpanded,
+            onDismissRequest = onDismissContextMenu,
+        ) {
+            DropdownMenuItem(
+                text = { Text("Delete note") },
+                onClick = onDelete,
             )
         }
     }
@@ -454,6 +530,23 @@ private class HomeScreenViewModel(
                     Log.e(HOME_LOG_TAG, "Create note failed", throwable)
                     onError("Unable to create note. Please try again.")
                 }
+        }
+    }
+
+    fun deleteNote(
+        noteId: String,
+        onError: (String) -> Unit,
+    ) {
+        viewModelScope.launch {
+            runCatching {
+                repository.deleteNote(noteId)
+            }.onFailure { throwable ->
+                if (throwable is CancellationException) {
+                    throw throwable
+                }
+                Log.e(HOME_LOG_TAG, "Delete note failed", throwable)
+                onError("Unable to delete note. Please try again.")
+            }
         }
     }
 

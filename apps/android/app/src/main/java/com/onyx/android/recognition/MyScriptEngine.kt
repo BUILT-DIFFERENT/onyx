@@ -27,6 +27,7 @@ import java.io.File
 class MyScriptEngine(
     private val context: Context,
 ) {
+    @Volatile
     private var engine: Engine? = null
 
     /**

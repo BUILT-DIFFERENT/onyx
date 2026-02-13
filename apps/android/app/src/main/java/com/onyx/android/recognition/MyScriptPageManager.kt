@@ -36,6 +36,7 @@ import java.io.File
  *
  * Reference: myscript-examples/samples/offscreen-interactivity/InkViewModel.kt
  */
+@Suppress("TooManyFunctions")
 class MyScriptPageManager(
     private val engine: Engine,
     private val context: Context,
@@ -55,6 +56,9 @@ class MyScriptPageManager(
     // Map MyScript stroke IDs to our stroke UUIDs
     private val strokeIdsMapping = mutableMapOf<String, String>()
 
+    // Reverse map: our stroke UUIDs to MyScript stroke IDs for O(1) lookup on erase
+    private val reverseStrokeMapping = mutableMapOf<String, String>()
+
     // Callback for recognition updates (set by ViewModel/Repository)
     var onRecognitionUpdated: ((pageId: String, text: String) -> Unit)? = null
 
@@ -68,7 +72,7 @@ class MyScriptPageManager(
     companion object {
         private const val MM_PER_INCH = 25.4f
         private const val POINTS_PER_INCH = 72f
-        private const val MM_PER_POINT = MM_PER_INCH / POINTS_PER_INCH
+        internal const val MM_PER_POINT = MM_PER_INCH / POINTS_PER_INCH
         private const val DEFAULT_PRESSURE = 0.5f
     }
 
@@ -101,6 +105,7 @@ class MyScriptPageManager(
             itemIdHelper = null
         }
         strokeIdsMapping.clear()
+        reverseStrokeMapping.clear()
 
         Log.d("MyScript", "Page entered: $pageId (recognitionReady=${offscreenEditor != null})")
     }
@@ -171,6 +176,7 @@ class MyScriptPageManager(
         currentPackage = null
         currentPageId = null
         strokeIdsMapping.clear()
+        reverseStrokeMapping.clear()
 
         Log.d("MyScript", "Page closed: $pageId")
     }
@@ -210,6 +216,7 @@ class MyScriptPageManager(
         val myScriptStrokeIds = editor.addStrokes(pointerEvents, true)
         return myScriptStrokeIds?.firstOrNull()?.also { msStrokeId ->
             strokeIdsMapping[msStrokeId] = stroke.id
+            reverseStrokeMapping[stroke.id] = msStrokeId
             Log.d("MyScript", "Stroke added: ${stroke.id} → MyScript ID: $msStrokeId")
         }
     }
@@ -220,12 +227,23 @@ class MyScriptPageManager(
     ) {
         val editor = offscreenEditor ?: return
 
-        editor.clear()
-        strokeIdsMapping.clear()
-        remainingStrokes.forEach { stroke: Stroke ->
-            addStroke(stroke)
+        // Try to find the MyScript stroke ID for direct erasure (O(1) via reverse map)
+        val msStrokeId = reverseStrokeMapping[erasedStrokeId]
+        if (msStrokeId != null) {
+            runCatching {
+                editor.erase(arrayOf(msStrokeId))
+                strokeIdsMapping.remove(msStrokeId)
+                reverseStrokeMapping.remove(erasedStrokeId)
+                Log.d("MyScript", "Stroke erased directly: $erasedStrokeId (ms=$msStrokeId)")
+            }.onFailure {
+                // Fallback: clear and re-feed all remaining strokes
+                Log.d("MyScript", "Direct erase failed, falling back to clear+re-feed: ${it.message}")
+                clearAndRefeed(remainingStrokes)
+            }
+        } else {
+            clearAndRefeed(remainingStrokes)
+            Log.d("MyScript", "Stroke $erasedStrokeId not in mapping, clear+re-feed ${remainingStrokes.size}")
         }
-        Log.d("MyScript", "Stroke erased: $erasedStrokeId, re-fed ${remainingStrokes.size} strokes")
     }
 
     fun onUndo(currentStrokes: List<Stroke>) {
@@ -238,11 +256,7 @@ class MyScriptPageManager(
             return
         }
 
-        editor.clear()
-        strokeIdsMapping.clear()
-        currentStrokes.forEach { stroke: Stroke ->
-            addStroke(stroke)
-        }
+        clearAndRefeed(currentStrokes)
         Log.d("MyScript", "Undo via clear+re-feed: ${currentStrokes.size} strokes")
     }
 
@@ -256,12 +270,18 @@ class MyScriptPageManager(
             return
         }
 
+        clearAndRefeed(currentStrokes)
+        Log.d("MyScript", "Redo via clear+re-feed: ${currentStrokes.size} strokes")
+    }
+
+    private fun clearAndRefeed(strokes: List<Stroke>) {
+        val editor = offscreenEditor ?: return
         editor.clear()
         strokeIdsMapping.clear()
-        currentStrokes.forEach { stroke: Stroke ->
+        reverseStrokeMapping.clear()
+        strokes.forEach { stroke: Stroke ->
             addStroke(stroke)
         }
-        Log.d("MyScript", "Redo via clear+re-feed: ${currentStrokes.size} strokes")
     }
 
     /**
