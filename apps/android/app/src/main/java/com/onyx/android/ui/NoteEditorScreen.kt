@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -24,6 +25,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.IntSize
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -34,6 +36,8 @@ import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.pdf.PdfAssetStorage
+import com.onyx.android.pdf.PdfIncorrectPasswordException
+import com.onyx.android.pdf.PdfPasswordRequiredException
 import com.onyx.android.pdf.PdfPasswordStore
 import com.onyx.android.pdf.PdfiumRenderer
 import com.onyx.android.recognition.MyScriptPageManager
@@ -47,6 +51,33 @@ private const val MIN_PAN_FLING_SPEED_PX_PER_SECOND = 8.0
 private const val NANOS_PER_SECOND = 1_000_000_000f
 private const val PAN_FLING_DECAY_RATE = -5f
 private const val NOTE_EDITOR_LOG_TAG = "NoteEditorScreen"
+private const val PDF_OPEN_FAILED_MESSAGE = "Unable to open this PDF."
+private const val PDF_PASSWORD_INCORRECT_MESSAGE = "Incorrect PDF password. Please try again."
+
+internal sealed interface PdfOpenFailureUiAction {
+    data class PromptForPassword(
+        val isIncorrectPassword: Boolean,
+    ) : PdfOpenFailureUiAction
+
+    data class ShowOpenError(
+        val message: String,
+    ) : PdfOpenFailureUiAction
+}
+
+private data class EditorPdfPasswordPromptState(
+    val assetId: String,
+    val showIncorrectMessage: Boolean = false,
+)
+
+internal fun mapPdfOpenFailureToUiAction(error: Throwable): PdfOpenFailureUiAction =
+    when (error) {
+        is PdfPasswordRequiredException -> PdfOpenFailureUiAction.PromptForPassword(false)
+        is PdfIncorrectPasswordException -> PdfOpenFailureUiAction.PromptForPassword(true)
+        else -> {
+            val message = error.message?.takeIf { it.isNotBlank() } ?: PDF_OPEN_FAILED_MESSAGE
+            PdfOpenFailureUiAction.ShowOpenError(message)
+        }
+    }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,6 +153,7 @@ private fun NoteEditorStatusBarEffect() {
 }
 
 @Composable
+@Suppress("LongMethod")
 private fun NoteEditorScreenContent(
     noteId: String,
     viewModel: NoteEditorViewModel,
@@ -130,12 +162,28 @@ private fun NoteEditorScreenContent(
     onNavigateBack: () -> Unit,
 ) {
     val errorMessage by viewModel.errorMessage.collectAsState()
+    var pdfPasswordPrompt by remember { mutableStateOf<EditorPdfPasswordPromptState?>(null) }
+    var pdfPasswordInput by rememberSaveable { mutableStateOf("") }
+    var pdfOpenErrorMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var pdfOpenRetryNonce by rememberSaveable { mutableStateOf(0) }
     val uiState =
         rememberNoteEditorUiState(
             noteId = noteId,
             viewModel = viewModel,
             pdfAssetStorage = pdfAssetStorage,
             pdfPasswordStore = pdfPasswordStore,
+            pdfOpenRetryNonce = pdfOpenRetryNonce,
+            onPdfPasswordRequired = { assetId, isIncorrectPassword ->
+                pdfPasswordPrompt =
+                    EditorPdfPasswordPromptState(
+                        assetId = assetId,
+                        showIncorrectMessage = isIncorrectPassword,
+                    )
+                pdfPasswordInput = ""
+            },
+            onPdfOpenError = { message ->
+                pdfOpenErrorMessage = message
+            },
             onNavigateBack = onNavigateBack,
         )
     NoteEditorScaffold(
@@ -144,12 +192,72 @@ private fun NoteEditorScreenContent(
         contentState = uiState.contentState,
         transformState = uiState.transformState,
     )
+    if (pdfPasswordPrompt != null) {
+        NoteEditorPdfPasswordDialog(
+            password = pdfPasswordInput,
+            showIncorrectMessage = pdfPasswordPrompt?.showIncorrectMessage == true,
+            onPasswordChange = { value -> pdfPasswordInput = value },
+            onConfirm = {
+                val prompt = pdfPasswordPrompt ?: return@NoteEditorPdfPasswordDialog
+                pdfPasswordStore.rememberPassword(prompt.assetId, pdfPasswordInput)
+                pdfPasswordPrompt = null
+                pdfOpenRetryNonce += 1
+            },
+            onDismiss = {
+                pdfPasswordPrompt = null
+            },
+        )
+    }
+    if (pdfOpenErrorMessage != null) {
+        NoteEditorErrorDialog(
+            message = pdfOpenErrorMessage.orEmpty(),
+            onDismiss = { pdfOpenErrorMessage = null },
+        )
+    }
     if (errorMessage != null) {
         NoteEditorErrorDialog(
             message = errorMessage.orEmpty(),
             onDismiss = viewModel::clearError,
         )
     }
+}
+
+@Composable
+private fun NoteEditorPdfPasswordDialog(
+    password: String,
+    showIncorrectMessage: Boolean,
+    onPasswordChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("PDF password required") },
+        text = {
+            androidx.compose.foundation.layout.Column {
+                if (showIncorrectMessage) {
+                    Text(PDF_PASSWORD_INCORRECT_MESSAGE)
+                }
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = onPasswordChange,
+                    label = { Text("Password") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                )
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text("Open")
+            }
+        },
+    )
 }
 
 @Composable
@@ -170,12 +278,15 @@ private fun NoteEditorErrorDialog(
 }
 
 @Composable
-@Suppress("LongMethod")
+@Suppress("LongMethod", "LongParameterList")
 private fun rememberNoteEditorUiState(
     noteId: String,
     viewModel: NoteEditorViewModel,
     pdfAssetStorage: PdfAssetStorage,
     pdfPasswordStore: PdfPasswordStore,
+    pdfOpenRetryNonce: Int,
+    onPdfPasswordRequired: (assetId: String, isIncorrectPassword: Boolean) -> Unit,
+    onPdfOpenError: (String) -> Unit,
     onNavigateBack: () -> Unit,
 ): NoteEditorUiState {
     val appContext = LocalContext.current.applicationContext
@@ -196,6 +307,9 @@ private fun rememberNoteEditorUiState(
             currentPage = pageState.currentPage,
             pdfAssetStorage = pdfAssetStorage,
             pdfPasswordStore = pdfPasswordStore,
+            pdfOpenRetryNonce = pdfOpenRetryNonce,
+            onPdfPasswordRequired = onPdfPasswordRequired,
+            onPdfOpenError = onPdfOpenError,
             viewZoom = viewTransform.zoom,
         )
     val zoomLimits =
@@ -415,30 +529,44 @@ private fun rememberPageState(viewModel: NoteEditorViewModel): NoteEditorPageSta
 }
 
 @Composable
+@Suppress("LongParameterList")
 private fun rememberPdfState(
     appContext: Context,
     currentPage: PageEntity?,
     pdfAssetStorage: PdfAssetStorage,
     pdfPasswordStore: PdfPasswordStore,
+    pdfOpenRetryNonce: Int,
+    onPdfPasswordRequired: (assetId: String, isIncorrectPassword: Boolean) -> Unit,
+    onPdfOpenError: (String) -> Unit,
     viewZoom: Float,
 ): NoteEditorPdfState {
     val isPdfPage = currentPage?.kind == "pdf" || currentPage?.kind == "mixed"
     val pageWidth = currentPage?.width ?: 0f
     val pageHeight = currentPage?.height ?: 0f
-    val pdfRenderer =
-        remember(currentPage?.pdfAssetId) {
-            currentPage?.pdfAssetId?.let { assetId ->
+    val pdfAssetId = currentPage?.pdfAssetId
+    val rendererResult =
+        remember(pdfAssetId, pdfOpenRetryNonce) {
+            pdfAssetId?.let { assetId ->
                 runCatching {
                     PdfiumRenderer(
                         context = appContext,
                         pdfFile = pdfAssetStorage.getFileForAsset(assetId),
                         password = pdfPasswordStore.getPassword(assetId),
                     )
-                }.onFailure { error ->
-                    Log.e(NOTE_EDITOR_LOG_TAG, "Failed to open PDF asset $assetId", error)
-                }.getOrNull()
+                }
             }
         }
+    val pdfRenderer = rendererResult?.getOrNull()
+    LaunchedEffect(pdfAssetId, rendererResult?.exceptionOrNull()) {
+        val assetId = pdfAssetId ?: return@LaunchedEffect
+        val error = rendererResult?.exceptionOrNull() ?: return@LaunchedEffect
+        Log.e(NOTE_EDITOR_LOG_TAG, "Failed to open PDF asset $assetId", error)
+        when (val action = mapPdfOpenFailureToUiAction(error)) {
+            is PdfOpenFailureUiAction.PromptForPassword ->
+                onPdfPasswordRequired(assetId, action.isIncorrectPassword)
+            is PdfOpenFailureUiAction.ShowOpenError -> onPdfOpenError(action.message)
+        }
+    }
     val pdfBitmap =
         rememberPdfBitmap(
             isPdfPage = isPdfPage,
