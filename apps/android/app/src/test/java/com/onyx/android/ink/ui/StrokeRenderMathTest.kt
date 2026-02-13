@@ -5,6 +5,20 @@ import org.junit.jupiter.api.Test
 
 class StrokeRenderMathTest {
     @Test
+    fun `pressure gamma clamps and preserves endpoints`() {
+        assertEquals(0f, applyPressureGamma(-1f), 0.0001f)
+        assertEquals(0f, applyPressureGamma(0f), 0.0001f)
+        assertEquals(1f, applyPressureGamma(1f), 0.0001f)
+        assertEquals(1f, applyPressureGamma(2f), 0.0001f)
+    }
+
+    @Test
+    fun `pressure gamma boosts mid-range pressure`() {
+        val gammaMid = applyPressureGamma(0.5f)
+        assertEquals(0.6597539f, gammaMid, 0.0001f)
+    }
+
+    @Test
     fun `pressure width uses min factor at zero pressure`() {
         val width =
             pressureWidth(

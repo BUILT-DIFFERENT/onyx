@@ -117,9 +117,9 @@ class NoteEditorTransformMathTest {
     fun `zoom bucket steps up with zoom level`() {
         assertEquals(1f, zoomToRenderScaleBucket(0.6f), DELTA)
         assertEquals(1f, zoomToRenderScaleBucket(1f), DELTA)
-        assertEquals(1.5f, zoomToRenderScaleBucket(1.1f), DELTA)
+        assertEquals(2f, zoomToRenderScaleBucket(1.1f), DELTA)
         assertEquals(2f, zoomToRenderScaleBucket(1.7f), DELTA)
-        assertEquals(3f, zoomToRenderScaleBucket(2.8f), DELTA)
+        assertEquals(4f, zoomToRenderScaleBucket(2.8f), DELTA)
         assertEquals(4f, zoomToRenderScaleBucket(4f), DELTA)
     }
 

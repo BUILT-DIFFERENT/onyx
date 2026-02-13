@@ -58,8 +58,7 @@ internal class InkCanvasRuntime(
     }
 }
 
-// Disabled while pen-up handoff is stabilized; prediction introduces visible divergence.
-private const val ENABLE_MOTION_PREDICTION = false
+private const val ENABLE_MOTION_PREDICTION = true
 
 data class InkCanvasState(
     val strokes: List<Stroke>,

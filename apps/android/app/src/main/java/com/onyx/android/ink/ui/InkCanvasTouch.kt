@@ -25,8 +25,7 @@ private const val STYLUS_BUTTON_MASK =
 private const val EDGE_TOLERANCE_PX = 12f
 private const val MIN_TOLERANCE_ZOOM = 0.001f
 
-// Disabled while pen-up handoff is stabilized; prediction introduces visible divergence.
-private const val ENABLE_PREDICTED_STROKES = false
+private const val ENABLE_PREDICTED_STROKES = true
 
 internal data class InkCanvasInteraction(
     val brush: Brush,
@@ -244,7 +243,7 @@ private fun handlePointerDown(
             strokeInput,
             effectiveBrush.toInkBrush(
                 interaction.viewTransform,
-                alphaMultiplier = IN_PROGRESS_STROKE_ALPHA,
+                alphaMultiplier = inProgressAlphaForBrush(effectiveBrush),
             ),
         )
     runtime.activeStrokeIds[pointerId] = strokeId
@@ -382,7 +381,10 @@ private fun handlePredictedStrokes(
             val predictedStrokeId =
                 view.startStroke(
                     startInput,
-                    effectiveBrush.toInkBrush(interaction.viewTransform, PREDICTED_STROKE_ALPHA),
+                    effectiveBrush.toInkBrush(
+                        interaction.viewTransform,
+                        alphaMultiplier = predictedAlphaForBrush(effectiveBrush),
+                    ),
                 )
             view.addToStroke(predictedEvent, predictedPointerId, predictedStrokeId)
             runtime.predictedStrokeIds[predictedPointerId] = predictedStrokeId
@@ -558,7 +560,7 @@ private fun createStrokeInput(
     startTime: Long,
 ): StrokeInput {
     val toolType = event.getToolType(pointerIndex).toInputToolType()
-    val pressure = event.getPressure(pointerIndex).coerceIn(0f, 1f)
+    val pressure = applyPressureGamma(event.getPressure(pointerIndex))
     val tilt = event.getAxisValue(MotionEvent.AXIS_TILT, pointerIndex)
     val orientation = event.getOrientation(pointerIndex)
     return StrokeInput.create(
@@ -572,6 +574,20 @@ private fun createStrokeInput(
         orientationRadians = orientation,
     )
 }
+
+private fun inProgressAlphaForBrush(brush: Brush): Float =
+    if (brush.tool == Tool.HIGHLIGHTER) {
+        HIGHLIGHTER_STROKE_ALPHA
+    } else {
+        IN_PROGRESS_STROKE_ALPHA
+    }
+
+private fun predictedAlphaForBrush(brush: Brush): Float =
+    if (brush.tool == Tool.HIGHLIGHTER) {
+        HIGHLIGHTER_STROKE_ALPHA * PREDICTED_STROKE_ALPHA
+    } else {
+        PREDICTED_STROKE_ALPHA
+    }
 
 private fun createStrokePoint(
     event: MotionEvent,

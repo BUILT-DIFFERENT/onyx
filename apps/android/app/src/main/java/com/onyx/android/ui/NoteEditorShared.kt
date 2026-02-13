@@ -20,9 +20,7 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 private const val PDF_RENDER_BUCKET_BASE = 1f
-private const val PDF_RENDER_BUCKET_MID = 1.5f
 private const val PDF_RENDER_BUCKET_HIGH = 2f
-private const val PDF_RENDER_BUCKET_HIGHER = 3f
 private const val PDF_RENDER_BUCKET_MAX = 4f
 private const val MIN_ZOOM_FACTOR_OF_FIT = 0.75f
 private const val MAX_ZOOM_FACTOR_OF_FIT = 6f
@@ -30,9 +28,7 @@ private const val DEFAULT_FIT_ZOOM = 1f
 private val PDF_RENDER_SCALE_BUCKETS =
     floatArrayOf(
         PDF_RENDER_BUCKET_BASE,
-        PDF_RENDER_BUCKET_MID,
         PDF_RENDER_BUCKET_HIGH,
-        PDF_RENDER_BUCKET_HIGHER,
         PDF_RENDER_BUCKET_MAX,
     )
 private const val PDF_RENDER_MAX_PIXELS = 16_000_000f

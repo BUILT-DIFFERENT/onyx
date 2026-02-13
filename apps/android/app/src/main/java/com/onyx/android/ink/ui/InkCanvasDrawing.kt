@@ -41,12 +41,12 @@ internal const val PRESSURE_FALLBACK = 0.5f
 private const val MIN_STROKE_POINTS = 2
 private const val CATMULL_ROM_TENSION = 0.5f
 internal const val CATMULL_ROM_SUBDIVISIONS = 8
-private const val PRESSURE_GAMMA = 0.6f
+internal const val PRESSURE_GAMMA = 0.6f
 private const val TAPER_POINT_COUNT = 5
 private const val TAPER_MIN_FACTOR = 0.15f
 private const val PATH_CACHE_MAX_ENTRIES = 500
 private const val MIN_WIDTH_FOR_OUTLINE = 0.01f
-private const val HIGHLIGHTER_STROKE_ALPHA = 0.35f
+internal const val HIGHLIGHTER_STROKE_ALPHA = 0.35f
 
 /**
  * Thread-safe LRU-bounded color cache to avoid per-frame Color.parseColor() calls.
@@ -454,7 +454,7 @@ internal fun computePerPointWidths(
     val count = points.size
     return List(count) { index ->
         val pressure = points[index].pressure ?: PRESSURE_FALLBACK
-        val gammaPressure = pressure.coerceIn(0f, 1f).pow(PRESSURE_GAMMA)
+        val gammaPressure = applyPressureGamma(pressure)
         val factor = style.minWidthFactor + (style.maxWidthFactor - style.minWidthFactor) * gammaPressure
         val baseAdjusted = style.baseWidth * factor
 
@@ -462,6 +462,8 @@ internal fun computePerPointWidths(
         baseAdjusted * taperFactor
     }
 }
+
+internal fun applyPressureGamma(pressure: Float): Float = pressure.coerceIn(0f, 1f).pow(PRESSURE_GAMMA)
 
 /**
  * Returns a multiplier in [TAPER_MIN_FACTOR, 1.0] that fades width at the
