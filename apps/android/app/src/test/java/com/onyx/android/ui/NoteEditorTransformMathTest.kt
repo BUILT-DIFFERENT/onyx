@@ -127,7 +127,7 @@ class NoteEditorTransformMathTest {
     fun `render scale is clamped for very large pages`() {
         val renderScale =
             resolvePdfRenderScale(
-                viewZoom = 4f,
+                bucketedScale = 4f,
                 pageWidth = 5000f,
                 pageHeight = 5000f,
             )
@@ -145,6 +145,19 @@ class NoteEditorTransformMathTest {
         assertEquals(pagePair.second, transform.pageToScreenY(20f), DELTA)
         assertEquals(screenPair.first, transform.screenToPageX(300f), DELTA)
         assertEquals(screenPair.second, transform.screenToPageY(90f), DELTA)
+    }
+
+    @Test
+    fun `zoom bucket hysteresis prevents oscillation near boundary`() {
+        val stayedAtOne = zoomToRenderScaleBucket(zoom = 2.1f, previousBucket = 1f)
+        val switchedToTwo = zoomToRenderScaleBucket(zoom = 2.2f, previousBucket = 1f)
+        val stayedAtTwo = zoomToRenderScaleBucket(zoom = 1.8f, previousBucket = 2f)
+        val switchedBackToOne = zoomToRenderScaleBucket(zoom = 1.79f, previousBucket = 2f)
+
+        assertEquals(1f, stayedAtOne, DELTA)
+        assertEquals(2f, switchedToTwo, DELTA)
+        assertEquals(2f, stayedAtTwo, DELTA)
+        assertEquals(1f, switchedBackToOne, DELTA)
     }
 }
 

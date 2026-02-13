@@ -19,3 +19,10 @@
 - `bun run lint` ✅
 - `node ../../scripts/gradlew.js :app:testDebugUnitTest --tests "com.onyx.android.ui.NoteEditorTransformMathTest" --tests "com.onyx.android.ink.ui.StrokeRenderMathTest"` ✅
 - `node ../../scripts/gradlew.js :app:test` ⚠️ fails in pre-existing Android graphics-dependent tests (`ColorCacheTest`, `VariableWidthOutlineTest`), unchanged by this session.
+
+## Session 3: P1.4 + P1.5 Validation
+
+- `bun run android:lint` ✅
+- `bun run typecheck` ✅
+- `bun run lint` ✅
+- `node ../../scripts/gradlew.js :app:testDebugUnitTest --tests "com.onyx.android.ink.cache.StrokeTileCacheTest" --tests "com.onyx.android.ink.perf.FrameBudgetManagerTest" --tests "com.onyx.android.ui.NoteEditorTransformMathTest"` ✅

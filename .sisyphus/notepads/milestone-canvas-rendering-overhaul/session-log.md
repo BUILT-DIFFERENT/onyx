@@ -20,3 +20,12 @@
 - Completed P1.2 implementation updates: shared pressure gamma shaping between committed and in-progress pipelines and aligned highlighter alpha mapping for in-progress/predicted strokes.
 - Completed P1.4 pre-task (blocking): reduced PDF render zoom buckets from 5 levels to 3 (`1x/2x/4x`) and updated transform math tests.
 - Added P1.3 investigation artifact (`.sisyphus/notepads/ink-latency-investigation.md`) with interim decision `PENDING_DEVICE_PROFILE` due missing physical-device Perfetto capture.
+
+### Session 3
+
+- Implemented `P1.4` core cache module: added `StrokeTileCache` with byte-bounded `LruCache`, mutex-guarded multi-step put/get-or-put paths, page/stroke invalidation, low-RAM size policy, and bucket hysteresis helper.
+- Implemented `P1.5`: added `FrameBudgetManager` with injectable clock, utilization guard, and over-budget checks for frame work shedding.
+- Added essential tests:
+  - `StrokeTileCacheTest` for invalidation bounds math, tile range coverage, hysteresis thresholds, and low-RAM size selection.
+  - `FrameBudgetManagerTest` for budget enforcement, edge conditions, and constructor guards.
+- Applied zoom bucket hysteresis in `NoteEditorShared.kt` for PDF render bucket selection to reduce threshold oscillation.
