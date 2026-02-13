@@ -4,9 +4,9 @@
   "session_ids": ["ses_3a84bceafffeq9AcLXH5kMXuR8"],
   "plan_name": "milestone-canvas-rendering-overhaul",
   "status": "in_progress",
-  "completion": "10/10 (100%)",
-  "tasks_complete": 10,
-  "tasks_total": 10,
+  "completion": "14/14 (100%)",
+  "tasks_complete": 14,
+  "tasks_total": 14,
   "previous_plan": {
     "name": "milestone-a-offline-ink-myscript",
     "status": "complete",

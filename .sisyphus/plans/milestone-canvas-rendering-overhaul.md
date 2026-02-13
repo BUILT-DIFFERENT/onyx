@@ -655,7 +655,7 @@ This report prevents re-litigation of spike findings during Phase 2 implementati
   - **Draw-time safety guard:** Before calling `bitmap.asImageBitmap()` at draw time, check `bitmap.isRecycled`. If recycled (race between eviction and draw), skip the tile and request re-render. This prevents `IllegalStateException` from drawing a recycled bitmap. Pattern: `val bmp = cache.get(key); if (bmp != null && !bmp.isRecycled) { drawImage(bmp.asImageBitmap(), ...) }`.
   - _(Strategy B — refcount — kept as documented fallback only: maintain per-tile `AtomicInteger`, increment on draw start, decrement on frame complete, only recycle when refcount == 0 and evicted.)_
 
-#### [ ] P1.5: Frame Budget Manager (Week 4)
+#### [x] P1.5: Frame Budget Manager (Week 4)
 
 - **File:** New `apps/android/app/src/main/java/com/onyx/android/ink/perf/FrameBudgetManager.kt`
 - **Purpose:** Limit per-frame work to stay within 8ms (120Hz) or 16ms (60Hz)
@@ -730,7 +730,7 @@ implementation("com.github.Zoltaneusz:PdfiumAndroid:v1.10.0")
 
 ### 6.2 Tasks
 
-#### [ ] P2.0: Renderer-Agnostic Text Model (Week 6 — BEFORE P2.2)
+#### [x] P2.0: Renderer-Agnostic Text Model (Week 6 — BEFORE P2.2)
 
 **WHY FIRST:** Current `NoteEditorState.kt` imports MuPDF types directly (`StructuredText`, `TextChar`, `Quad` at line 6). UI code should not depend on renderer-specific classes. Create an abstraction layer BEFORE swapping renderers.
 
@@ -767,7 +767,7 @@ implementation("com.github.Zoltaneusz:PdfiumAndroid:v1.10.0")
 - **Migration:** Replace all `StructuredText`, `TextChar`, `Quad` references in `NoteEditorState.kt` with the agnostic model. Implement `PdfTextExtractor` for MuPDF first (to verify model works), then swap to Pdfium implementation in P2.2.
 - **Acceptance:** `NoteEditorState.kt` no longer imports any MuPDF classes after this task.
 
-#### [ ] P2.1: PdfiumAndroid Integration (Week 6)
+#### [x] P2.1: PdfiumAndroid Integration (Week 6)
 
 - **Primary file:** new `apps/android/app/src/main/java/com/onyx/android/pdf/PdfiumRenderer.kt` (replacing `PdfRenderer.kt`)
 - **Mandatory integration call sites (must all be updated in Phase 2):**
@@ -796,7 +796,7 @@ implementation("com.github.Zoltaneusz:PdfiumAndroid:v1.10.0")
   | `page.destroy()` | `pdfiumCore.closePage()`/doc-close lifecycle | explicit in wrapper |
   | `document.destroy()` | `pdfiumCore.closeDocument()` | |
 
-#### [ ] P2.2: Text Selection Parity (Week 6-7)
+#### [x] P2.2: Text Selection Parity (Week 6-7)
 
 - **CRITICAL:** Must maintain feature parity with current MuPDF text selection
 - **Current call flow to preserve:**

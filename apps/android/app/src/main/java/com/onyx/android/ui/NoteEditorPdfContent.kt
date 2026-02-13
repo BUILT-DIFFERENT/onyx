@@ -6,6 +6,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
@@ -20,8 +24,11 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
@@ -45,10 +52,12 @@ internal fun PdfPageContent(contentState: NoteEditorContentState) {
 @Composable
 private fun rememberPdfSelectionState(contentState: NoteEditorContentState): PdfSelectionState {
     var textSelection by remember { mutableStateOf<TextSelection?>(null) }
+    var isSelectionDragComplete by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(contentState.currentPage?.pageId) {
         textSelection = null
+        isSelectionDragComplete = false
     }
 
     return PdfSelectionState(
@@ -57,6 +66,8 @@ private fun rememberPdfSelectionState(contentState: NoteEditorContentState): Pdf
         viewTransform = contentState.viewTransform,
         selection = textSelection,
         onSelectionChange = { textSelection = it },
+        isSelectionDragComplete = isSelectionDragComplete,
+        onSelectionDragCompleteChange = { isSelectionDragComplete = it },
         coroutineScope = coroutineScope,
     )
 }
@@ -66,23 +77,13 @@ private fun PdfPageLayers(
     contentState: NoteEditorContentState,
     selectionState: PdfSelectionState,
 ) {
-    val bitmap = contentState.pdfBitmap
+    val clipboardManager = LocalClipboardManager.current
     val viewTransform = contentState.viewTransform
-    val pageWidth = contentState.pageWidth
-    val pageHeight = contentState.pageHeight
 
-    Box(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .pdfSelectionInput(selectionState),
-    ) {
+    Box(modifier = Modifier.fillMaxSize().pdfSelectionInput(selectionState)) {
+        val bitmap = contentState.pdfBitmap
         if (bitmap != null) {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val destinationWidthPx =
-                    (pageWidth * viewTransform.zoom).roundToInt().coerceAtLeast(1)
-                val destinationHeightPx =
-                    (pageHeight * viewTransform.zoom).roundToInt().coerceAtLeast(1)
                 drawImage(
                     image = bitmap.asImageBitmap(),
                     srcOffset = IntOffset.Zero,
@@ -92,14 +93,20 @@ private fun PdfPageLayers(
                             viewTransform.panX.roundToInt(),
                             viewTransform.panY.roundToInt(),
                         ),
-                    dstSize = IntSize(destinationWidthPx, destinationHeightPx),
+                    dstSize =
+                        IntSize(
+                            (contentState.pageWidth * viewTransform.zoom).roundToInt().coerceAtLeast(1),
+                            (contentState.pageHeight * viewTransform.zoom).roundToInt().coerceAtLeast(1),
+                        ),
                     filterQuality = FilterQuality.High,
                 )
             }
         }
-        PdfSelectionOverlay(
+        PdfSelectionOverlay(selection = selectionState.selection, viewTransform = viewTransform)
+        PdfSelectionCopyButton(
             selection = selectionState.selection,
-            viewTransform = viewTransform,
+            showCopyAction = selectionState.isSelectionDragComplete,
+            onCopy = { text -> clipboardManager.setText(AnnotatedString(text)) },
         )
         val inkCanvasState =
             InkCanvasState(
@@ -125,12 +132,35 @@ private fun PdfPageLayers(
     }
 }
 
+@Composable
+private fun PdfSelectionCopyButton(
+    selection: TextSelection?,
+    showCopyAction: Boolean,
+    onCopy: (String) -> Unit,
+) {
+    if (!showCopyAction) return
+    val copyText = clipboardTextForSelection(selection) ?: return
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+        contentAlignment = Alignment.TopEnd,
+    ) {
+        Button(onClick = { onCopy(copyText) }) {
+            Text("Copy")
+        }
+    }
+}
+
 private data class PdfSelectionState(
     val textExtractor: PdfTextExtractor?,
     val currentPage: PageEntity?,
     val viewTransform: ViewTransform,
     val selection: TextSelection?,
     val onSelectionChange: (TextSelection?) -> Unit,
+    val isSelectionDragComplete: Boolean,
+    val onSelectionDragCompleteChange: (Boolean) -> Unit,
     val coroutineScope: CoroutineScope,
 )
 
@@ -144,6 +174,12 @@ private fun Modifier.pdfSelectionInput(state: PdfSelectionState): Modifier =
             onDrag = { change, _ ->
                 handlePdfDragMove(state, change)
             },
+            onDragEnd = {
+                state.onSelectionDragCompleteChange(true)
+            },
+            onDragCancel = {
+                state.onSelectionDragCompleteChange(false)
+            },
         )
     }
 
@@ -151,6 +187,8 @@ private fun handlePdfDragStart(
     state: PdfSelectionState,
     offset: androidx.compose.ui.geometry.Offset,
 ) {
+    state.onSelectionDragCompleteChange(false)
+    state.onSelectionChange(null)
     val extractor = state.textExtractor ?: return
     val pageIndex = state.currentPage?.pdfPageNo ?: return
     val pageX = state.viewTransform.screenToPageX(offset.x)
@@ -194,6 +232,7 @@ private fun handlePdfDragMove(
 ) {
     val selection = state.selection
     if (selection != null) {
+        state.onSelectionDragCompleteChange(false)
         val pageX = state.viewTransform.screenToPageX(change.position.x)
         val pageY = state.viewTransform.screenToPageY(change.position.y)
         val endCharIndex =
@@ -248,4 +287,9 @@ private fun PdfSelectionOverlay(
             drawPath(path, color = highlightColor)
         }
     }
+}
+
+internal fun clipboardTextForSelection(selection: TextSelection?): String? {
+    val text = selection?.text ?: return null
+    return text.takeIf { it.isNotBlank() }
 }
