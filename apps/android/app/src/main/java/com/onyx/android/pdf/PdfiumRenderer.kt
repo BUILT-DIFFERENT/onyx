@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import android.util.LruCache
+import com.onyx.android.BuildConfig
 import java.io.File
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -149,16 +150,18 @@ class PdfiumRenderer(
     }
 
     private fun ensureMuPdfTextExtractor(): MuPdfTextExtractor? {
-        val existingExtractor = muPdfTextExtractor
-        if (existingExtractor != null) {
-            return existingExtractor
+        var resolvedExtractor: MuPdfTextExtractor? = null
+        if (BuildConfig.ENABLE_MUPDF_TEXT_SELECTION) {
+            resolvedExtractor = muPdfTextExtractor
+            if (resolvedExtractor == null) {
+                resolvedExtractor =
+                    runCatching { MuPdfTextExtractor(pdfFile) }
+                        .onFailure { error ->
+                            Log.w(PDFIUM_RENDERER_LOG_TAG, "MuPDF text fallback unavailable", error)
+                        }.getOrNull()
+                muPdfTextExtractor = resolvedExtractor
+            }
         }
-        val createdExtractor =
-            runCatching { MuPdfTextExtractor(pdfFile) }
-                .onFailure { error ->
-                    Log.w(PDFIUM_RENDERER_LOG_TAG, "MuPDF text fallback unavailable", error)
-                }.getOrNull()
-        muPdfTextExtractor = createdExtractor
-        return createdExtractor
+        return resolvedExtractor
     }
 }

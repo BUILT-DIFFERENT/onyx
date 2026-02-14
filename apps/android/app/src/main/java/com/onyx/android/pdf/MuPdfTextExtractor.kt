@@ -2,12 +2,10 @@ package com.onyx.android.pdf
 
 import android.graphics.PointF
 import android.util.LruCache
-import com.artifex.mupdf.fitz.Document
-import com.artifex.mupdf.fitz.StructuredText
-import com.artifex.mupdf.fitz.StructuredText.TextChar
 import java.io.Closeable
 import java.io.File
 
+private const val DOCUMENT_CLASS_NAME = "com.artifex.mupdf.fitz.Document"
 private const val PDF_TEXT_CACHE_MAX_ENTRIES = 12
 private const val REPLACEMENT_CHARACTER = "\uFFFD"
 
@@ -15,17 +13,18 @@ internal class MuPdfTextExtractor(
     pdfFile: File,
 ) : PdfTextExtractor, Closeable {
     private val lock = Any()
-    private val document: Document = Document.openDocument(pdfFile.absolutePath)
+    private val bridge = MuPdfReflectionBridge()
+    private val document = bridge.openDocument(pdfFile)
     private val textCache =
-        object : LruCache<Int, StructuredText>(PDF_TEXT_CACHE_MAX_ENTRIES) {
+        object : LruCache<Int, Any>(PDF_TEXT_CACHE_MAX_ENTRIES) {
             override fun entryRemoved(
                 evicted: Boolean,
                 key: Int,
-                oldValue: StructuredText?,
-                newValue: StructuredText?,
+                oldValue: Any?,
+                newValue: Any?,
             ) {
                 if (oldValue !== null && oldValue !== newValue) {
-                    oldValue.destroy()
+                    bridge.destroy(oldValue)
                 }
             }
         }
@@ -37,24 +36,10 @@ internal class MuPdfTextExtractor(
             if (cachedCharacters != null) {
                 return@synchronized cachedCharacters
             }
-            val characters =
-                extractTextStructure(pageIndex)
-                    .charSequence()
-                    .map { char ->
-                        PdfTextChar(
-                            char = char.codePointToString(),
-                            quad =
-                                PdfTextQuad(
-                                    p1 = PointF(char.quad.ul_x, char.quad.ul_y),
-                                    p2 = PointF(char.quad.ur_x, char.quad.ur_y),
-                                    p3 = PointF(char.quad.lr_x, char.quad.lr_y),
-                                    p4 = PointF(char.quad.ll_x, char.quad.ll_y),
-                                ),
-                            pageIndex = pageIndex,
-                        )
-                    }.toList()
-            characterCache.put(pageIndex, characters)
-            characters
+            val structuredText = extractTextStructure(pageIndex)
+            val extractedCharacters = bridge.extractCharacters(structuredText, pageIndex)
+            characterCache.put(pageIndex, extractedCharacters)
+            extractedCharacters
         }
     }
 
@@ -62,35 +47,112 @@ internal class MuPdfTextExtractor(
         synchronized(lock) {
             textCache.evictAll()
             characterCache.evictAll()
-            document.destroy()
+            bridge.destroy(document)
         }
     }
 
-    private fun extractTextStructure(pageIndex: Int): StructuredText {
+    private fun extractTextStructure(pageIndex: Int): Any {
         val cachedText = textCache.get(pageIndex)
         if (cachedText != null) {
             return cachedText
         }
-        val page = document.loadPage(pageIndex)
+        val page = bridge.loadPage(document, pageIndex)
         return try {
-            page.toStructuredText().also { text -> textCache.put(pageIndex, text) }
+            bridge.toStructuredText(page).also { text -> textCache.put(pageIndex, text) }
         } finally {
-            page.destroy()
+            bridge.destroy(page)
         }
     }
 }
 
-private fun StructuredText.charSequence(): Sequence<TextChar> =
-    blocks
-        .asSequence()
-        .flatMap { block -> block.lines.asSequence() }
-        .flatMap { line -> line.chars.asSequence() }
+private class MuPdfReflectionBridge {
+    private val documentClass = Class.forName(DOCUMENT_CLASS_NAME)
+    private val openDocumentMethod = documentClass.getMethod("openDocument", String::class.java)
+    private val loadPageMethod = documentClass.getMethod("loadPage", Int::class.javaPrimitiveType)
+    private val destroyMethods = mutableMapOf<Class<*>, java.lang.reflect.Method?>()
 
-private fun TextChar.codePointToString(): String {
-    val codePoint = c
-    return if (Character.isValidCodePoint(codePoint)) {
-        String(Character.toChars(codePoint))
+    fun openDocument(pdfFile: File): Any = requireNotNull(openDocumentMethod.invoke(null, pdfFile.absolutePath))
+
+    fun loadPage(
+        document: Any,
+        pageIndex: Int,
+    ): Any = requireNotNull(loadPageMethod.invoke(document, pageIndex))
+
+    fun toStructuredText(page: Any): Any = requireNotNull(page.javaClass.getMethod("toStructuredText").invoke(page))
+
+    fun extractCharacters(
+        structuredText: Any,
+        pageIndex: Int,
+    ): List<PdfTextChar> {
+        val result = ArrayList<PdfTextChar>()
+        val blocks = readArray(structuredText, "blocks")
+        for (block in blocks) {
+            val lines = readArray(block, "lines")
+            for (line in lines) {
+                val chars = readArray(line, "chars")
+                for (char in chars) {
+                    result += toPdfTextChar(char, pageIndex)
+                }
+            }
+        }
+        return result
+    }
+
+    fun destroy(instance: Any) {
+        val method =
+            destroyMethods.getOrPut(instance.javaClass) {
+                runCatching { instance.javaClass.getMethod("destroy") }.getOrNull()
+            } ?: return
+        method.invoke(instance)
+    }
+
+    private fun toPdfTextChar(
+        textChar: Any,
+        pageIndex: Int,
+    ): PdfTextChar {
+        val codePoint = textChar.javaClass.getField("c").getInt(textChar)
+        val quad = requireNotNull(textChar.javaClass.getField("quad").get(textChar))
+        return PdfTextChar(
+            char = codePoint.toUnicodeString(),
+            quad =
+                PdfTextQuad(
+                    p1 = PointF(readFloat(quad, "ul_x"), readFloat(quad, "ul_y")),
+                    p2 = PointF(readFloat(quad, "ur_x"), readFloat(quad, "ur_y")),
+                    p3 = PointF(readFloat(quad, "lr_x"), readFloat(quad, "lr_y")),
+                    p4 = PointF(readFloat(quad, "ll_x"), readFloat(quad, "ll_y")),
+                ),
+            pageIndex = pageIndex,
+        )
+    }
+
+    private fun readArray(
+        owner: Any,
+        fieldName: String,
+    ): List<Any> {
+        val value = owner.javaClass.getField(fieldName).get(owner)
+        val result = ArrayList<Any>()
+        if (value != null && value.javaClass.isArray) {
+            val size = java.lang.reflect.Array.getLength(value)
+            result.ensureCapacity(size)
+            for (index in 0 until size) {
+                val element = java.lang.reflect.Array.get(value, index)
+                if (element != null) {
+                    result += element
+                }
+            }
+        }
+        return result
+    }
+
+    private fun readFloat(
+        owner: Any,
+        fieldName: String,
+    ): Float = owner.javaClass.getField(fieldName).getFloat(owner)
+}
+
+private fun Int.toUnicodeString(): String =
+    if (Character.isValidCodePoint(this)) {
+        String(Character.toChars(this))
     } else {
         REPLACEMENT_CHARACTER
     }
-}

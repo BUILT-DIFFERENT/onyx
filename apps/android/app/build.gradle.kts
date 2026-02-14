@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.onyx.android"
-        minSdk = 28
+        minSdk = 30
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -25,8 +25,21 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("boolean", "ENABLE_MUPDF_TEXT_SELECTION", "false")
+        }
+
+        create("internalDebug") {
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            applicationIdSuffix = ".internal"
+            versionNameSuffix = "-internal"
+            buildConfigField("boolean", "ENABLE_MUPDF_TEXT_SELECTION", "true")
+        }
+
         release {
             isMinifyEnabled = false
+            buildConfigField("boolean", "ENABLE_MUPDF_TEXT_SELECTION", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -45,6 +58,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {
@@ -118,13 +132,11 @@ dependencies {
     // JSON
     implementation("com.google.code.gson:gson:2.10.1")
 
-    // MuPDF - PDF rendering (AGPL-3.0 license)
-    implementation("com.artifex.mupdf:fitz:1.24.10")
+    // MuPDF - PDF text-selection fallback only for internal debug variant (AGPL)
+    add("internalDebugImplementation", "com.artifex.mupdf:fitz:1.24.10")
 
     // PdfiumAndroid - PDF rendering (Apache 2.0 / BSD)
-    // P0.0 Pre-Gate: Using min_SDK_28 branch commit (v1.10.0 has minSdk 30, incompatible)
-    // Working coordinate: commit b68e47459ab90501fd377aa6456618bc87f06d3c from min_SDK_28 branch
-    implementation("com.github.Zoltaneusz:PdfiumAndroid:b68e47459ab90501fd377aa6456618bc87f06d3c")
+    implementation("com.github.Zoltaneusz:PdfiumAndroid:v1.10.0")
 
     // Testing
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
@@ -146,6 +158,29 @@ dependencies {
 // Enable JUnit 5 platform for unit tests
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+val verifyReleaseNoMuPdf by tasks.registering {
+    group = "verification"
+    description = "Ensure release variants do not include MuPDF."
+    doLast {
+        val hasMuPdf =
+            configurations
+                .getByName("releaseRuntimeClasspath")
+                .incoming
+                .resolutionResult
+                .allComponents
+                .any { component ->
+                    component.moduleVersion?.group == "com.artifex.mupdf"
+                }
+        check(!hasMuPdf) {
+            "Release runtime classpath includes MuPDF. MuPDF must stay internal-debug only."
+        }
+    }
+}
+
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    dependsOn(verifyReleaseNoMuPdf)
 }
 
 // ktlint configuration
