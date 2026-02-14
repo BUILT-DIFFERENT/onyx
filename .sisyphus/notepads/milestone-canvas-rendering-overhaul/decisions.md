@@ -14,3 +14,8 @@
 - Implement `StrokeTileCache` with byte-bounded `LruCache` and explicit low-RAM downshift policy (16 MiB on low-RAM / memoryClass < 192, otherwise 32 MiB).
 - Adopt hysteresis thresholds (`up=1.1x`, `down=0.9x`) for render scale bucket transitions to reduce zoom-boundary churn.
 - Keep tile invalidation expansion as `maxStrokeWidth/2 + 2px` anti-alias bleed margin for stale-edge prevention.
+- Adopt PDF tile cache sizing tiers of 64 MiB (default) and 32 MiB (low-RAM / memoryClass < 192).
+- Default Pdfium tile rendering path is serialized (`Dispatchers.IO.limitedParallelism(1)` + mutex) pending explicit thread-safety confirmation from runtime profiling.
+- Use async tile pipeline controls: dedup by `PdfTileKey`, cancel no-longer-visible tiles on viewport change, and cap in-flight renders via `Semaphore(4)`.
+- Keep previous-scale tiles visible while current-scale tiles render to reduce blank/flash behavior during zoom transitions.
+- Add minimal in-editor PDF selection `Copy` action bound to `PdfTextSelection.text` for clipboard parity.

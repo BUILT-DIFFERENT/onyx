@@ -26,3 +26,10 @@
 - `bun run typecheck` ✅
 - `bun run lint` ✅
 - `node ../../scripts/gradlew.js :app:testDebugUnitTest --tests "com.onyx.android.ink.cache.StrokeTileCacheTest" --tests "com.onyx.android.ink.perf.FrameBudgetManagerTest" --tests "com.onyx.android.ui.NoteEditorTransformMathTest"` ✅
+
+## Session 4: P2.3 + P2.4 Validation
+
+- `bun run android:lint` ✅
+- `bun run typecheck` ✅
+- `bun run lint` ✅
+- `node ../../scripts/gradlew.js :app:testDebugUnitTest --tests "com.onyx.android.pdf.PdfTileRendererMathTest" --tests "com.onyx.android.pdf.PdfTileCacheTest" --tests "com.onyx.android.pdf.AsyncPdfPipelineTest"` ✅

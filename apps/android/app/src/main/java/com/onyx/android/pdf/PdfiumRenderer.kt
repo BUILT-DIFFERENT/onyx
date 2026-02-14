@@ -24,7 +24,7 @@ internal fun renderScaleCacheKey(renderScale: Float): Int =
         .roundToInt()
         .coerceAtLeast(MIN_RENDER_SCALE_CACHE_KEY)
 
-interface PdfDocumentRenderer : PdfTextExtractor {
+interface PdfDocumentRenderer : PdfTextExtractor, PdfTileRenderEngine {
     fun getPageCount(): Int
 
     fun getPageBounds(pageIndex: Int): Pair<Float, Float>
@@ -44,6 +44,7 @@ class PdfiumRenderer(
 ) : PdfDocumentRenderer {
     private val lock = Any()
     private val documentSession = PdfiumDocumentSession.open(context, pdfFile, password = password)
+    private val tileRenderer = PdfTileRenderer(documentSession = documentSession)
     private var muPdfTextExtractor: MuPdfTextExtractor? = null
     private val bitmapCache =
         object : LruCache<PdfBitmapCacheKey, Bitmap>(PDF_BITMAP_CACHE_MAX_SIZE_KIB) {
@@ -106,6 +107,8 @@ class PdfiumRenderer(
             } ?: return emptyList()
         return textExtractor.getCharacters(pageIndex)
     }
+
+    override suspend fun renderTile(key: PdfTileKey): Bitmap = tileRenderer.renderTile(key)
 
     override fun close() {
         synchronized(lock) {

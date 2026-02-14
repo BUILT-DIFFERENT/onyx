@@ -1,11 +1,16 @@
-@file:Suppress("FunctionName")
+@file:Suppress("FunctionName", "TooManyFunctions")
 
 package com.onyx.android.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
@@ -20,14 +26,19 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
+import com.onyx.android.R
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
 import com.onyx.android.ink.ui.InkCanvasCallbacks
 import com.onyx.android.ink.ui.InkCanvasState
 import com.onyx.android.pdf.PdfTextExtractor
+import com.onyx.android.pdf.PdfTileKey
 import com.onyx.android.pdf.buildPdfTextSelection
 import com.onyx.android.pdf.findPdfTextCharIndexAtPagePoint
 import kotlinx.coroutines.CoroutineScope
@@ -44,8 +55,10 @@ internal fun PdfPageContent(contentState: NoteEditorContentState) {
 
 @Composable
 private fun rememberPdfSelectionState(contentState: NoteEditorContentState): PdfSelectionState {
+    val appContext = LocalContext.current.applicationContext
     var textSelection by remember { mutableStateOf<TextSelection?>(null) }
     val coroutineScope = rememberCoroutineScope()
+    val clipboardManager = remember { appContext.getSystemService(ClipboardManager::class.java) }
 
     LaunchedEffect(contentState.currentPage?.pageId) {
         textSelection = null
@@ -57,11 +70,18 @@ private fun rememberPdfSelectionState(contentState: NoteEditorContentState): Pdf
         viewTransform = contentState.viewTransform,
         selection = textSelection,
         onSelectionChange = { textSelection = it },
+        onCopySelection = {
+            val text = textSelection?.text?.takeIf { value -> value.isNotBlank() }
+            if (text != null) {
+                clipboardManager?.setPrimaryClip(ClipData.newPlainText("PDF Selection", text))
+            }
+        },
         coroutineScope = coroutineScope,
     )
 }
 
 @Composable
+@Suppress("LongMethod")
 private fun PdfPageLayers(
     contentState: NoteEditorContentState,
     selectionState: PdfSelectionState,
@@ -70,6 +90,9 @@ private fun PdfPageLayers(
     val viewTransform = contentState.viewTransform
     val pageWidth = contentState.pageWidth
     val pageHeight = contentState.pageHeight
+    val tileEntries = contentState.pdfTiles
+    val tileScaleBucket = contentState.pdfRenderScaleBucket
+    val tileSizePx = contentState.pdfTileSizePx
 
     Box(
         modifier =
@@ -77,30 +100,41 @@ private fun PdfPageLayers(
                 .fillMaxSize()
                 .pdfSelectionInput(selectionState),
     ) {
-        if (bitmap != null) {
+        if (bitmap != null || tileEntries.isNotEmpty()) {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val destinationWidthPx =
-                    (pageWidth * viewTransform.zoom).roundToInt().coerceAtLeast(1)
-                val destinationHeightPx =
-                    (pageHeight * viewTransform.zoom).roundToInt().coerceAtLeast(1)
-                drawImage(
-                    image = bitmap.asImageBitmap(),
-                    srcOffset = IntOffset.Zero,
-                    srcSize = IntSize(bitmap.width, bitmap.height),
-                    dstOffset =
-                        IntOffset(
-                            viewTransform.panX.roundToInt(),
-                            viewTransform.panY.roundToInt(),
-                        ),
-                    dstSize = IntSize(destinationWidthPx, destinationHeightPx),
-                    filterQuality = FilterQuality.High,
-                )
+                if (bitmap != null) {
+                    val destinationWidthPx =
+                        (pageWidth * viewTransform.zoom).roundToInt().coerceAtLeast(1)
+                    val destinationHeightPx =
+                        (pageHeight * viewTransform.zoom).roundToInt().coerceAtLeast(1)
+                    drawImage(
+                        image = bitmap.asImageBitmap(),
+                        srcOffset = IntOffset.Zero,
+                        srcSize = IntSize(bitmap.width, bitmap.height),
+                        dstOffset =
+                            IntOffset(
+                                viewTransform.panX.roundToInt(),
+                                viewTransform.panY.roundToInt(),
+                            ),
+                        dstSize = IntSize(destinationWidthPx, destinationHeightPx),
+                        filterQuality = FilterQuality.High,
+                    )
+                }
+                if (tileEntries.isNotEmpty()) {
+                    drawPdfTiles(
+                        entries = tileEntries.entries,
+                        viewTransform = viewTransform,
+                        tileSizePx = tileSizePx,
+                        activeScaleBucket = tileScaleBucket,
+                    )
+                }
             }
         }
         PdfSelectionOverlay(
             selection = selectionState.selection,
             viewTransform = viewTransform,
         )
+        PdfSelectionCopyAction(selectionState)
         val inkCanvasState =
             InkCanvasState(
                 strokes = contentState.strokes,
@@ -131,6 +165,7 @@ private data class PdfSelectionState(
     val viewTransform: ViewTransform,
     val selection: TextSelection?,
     val onSelectionChange: (TextSelection?) -> Unit,
+    val onCopySelection: () -> Unit,
     val coroutineScope: CoroutineScope,
 )
 
@@ -143,6 +178,9 @@ private fun Modifier.pdfSelectionInput(state: PdfSelectionState): Modifier =
             },
             onDrag = { change, _ ->
                 handlePdfDragMove(state, change)
+            },
+            onDragEnd = {
+                handlePdfDragEnd(state)
             },
         )
     }
@@ -220,6 +258,13 @@ private fun handlePdfDragMove(
     }
 }
 
+private fun handlePdfDragEnd(state: PdfSelectionState) {
+    val selection = state.selection ?: return
+    if (selection.selection.text.isBlank()) {
+        state.onSelectionChange(null)
+    }
+}
+
 @Composable
 private fun PdfSelectionOverlay(
     selection: TextSelection?,
@@ -246,6 +291,78 @@ private fun PdfSelectionOverlay(
                     close()
                 }
             drawPath(path, color = highlightColor)
+        }
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPdfTiles(
+    entries: Set<Map.Entry<PdfTileKey, android.graphics.Bitmap>>,
+    viewTransform: ViewTransform,
+    tileSizePx: Int,
+    activeScaleBucket: Float?,
+) {
+    val (staleEntries, currentEntries) =
+        entries.partition { entry ->
+            activeScaleBucket == null || entry.key.scaleBucket != activeScaleBucket
+        }
+    staleEntries.forEach { entry ->
+        drawPdfTile(entry.key, entry.value, viewTransform, tileSizePx)
+    }
+    currentEntries.forEach { entry ->
+        drawPdfTile(entry.key, entry.value, viewTransform, tileSizePx)
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPdfTile(
+    key: PdfTileKey,
+    bitmap: android.graphics.Bitmap,
+    viewTransform: ViewTransform,
+    tileSizePx: Int,
+) {
+    if (bitmap.isRecycled) {
+        return
+    }
+    val scaleBucket = key.scaleBucket
+    if (scaleBucket <= 0f) {
+        return
+    }
+    val tilePageSize = tileSizePx / scaleBucket
+    val tilePageLeft = key.tileX * tilePageSize
+    val tilePageTop = key.tileY * tilePageSize
+    val tilePageWidth = bitmap.width / scaleBucket
+    val tilePageHeight = bitmap.height / scaleBucket
+    val tileScreenLeft = viewTransform.pageToScreenX(tilePageLeft)
+    val tileScreenTop = viewTransform.pageToScreenY(tilePageTop)
+    val tileScreenWidth = (tilePageWidth * viewTransform.zoom).roundToInt().coerceAtLeast(1)
+    val tileScreenHeight = (tilePageHeight * viewTransform.zoom).roundToInt().coerceAtLeast(1)
+    drawImage(
+        image = bitmap.asImageBitmap(),
+        srcOffset = IntOffset.Zero,
+        srcSize = IntSize(bitmap.width, bitmap.height),
+        dstOffset =
+            IntOffset(
+                x = tileScreenLeft.roundToInt(),
+                y = tileScreenTop.roundToInt(),
+            ),
+        dstSize = IntSize(width = tileScreenWidth, height = tileScreenHeight),
+        filterQuality = FilterQuality.High,
+    )
+}
+
+@Composable
+private fun PdfSelectionCopyAction(state: PdfSelectionState) {
+    if (state.selection == null) {
+        return
+    }
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopEnd,
+    ) {
+        Button(
+            modifier = Modifier.padding(12.dp),
+            onClick = state.onCopySelection,
+        ) {
+            Text(stringResource(R.string.pdf_selection_copy))
         }
     }
 }

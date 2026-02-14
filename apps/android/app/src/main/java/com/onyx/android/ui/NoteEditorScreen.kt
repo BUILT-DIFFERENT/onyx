@@ -310,7 +310,8 @@ private fun rememberNoteEditorUiState(
             pdfOpenRetryNonce = pdfOpenRetryNonce,
             onPdfPasswordRequired = onPdfPasswordRequired,
             onPdfOpenError = onPdfOpenError,
-            viewZoom = viewTransform.zoom,
+            viewTransform = viewTransform,
+            viewportSize = viewportSize,
         )
     val zoomLimits =
         remember(pdfState.pageWidth, pdfState.pageHeight, viewportSize) {
@@ -430,6 +431,9 @@ private fun rememberNoteEditorUiState(
         NoteEditorContentState(
             isPdfPage = pdfState.isPdfPage,
             isReadOnly = isReadOnly,
+            pdfTiles = pdfState.pdfTiles,
+            pdfRenderScaleBucket = pdfState.pdfRenderScaleBucket,
+            pdfTileSizePx = pdfState.pdfTileSizePx,
             pdfBitmap = pdfState.pdfBitmap,
             pdfRenderer = pdfState.pdfRenderer,
             currentPage = pageState.currentPage,
@@ -529,7 +533,7 @@ private fun rememberPageState(viewModel: NoteEditorViewModel): NoteEditorPageSta
 }
 
 @Composable
-@Suppress("LongParameterList")
+@Suppress("LongMethod", "LongParameterList")
 private fun rememberPdfState(
     appContext: Context,
     currentPage: PageEntity?,
@@ -538,7 +542,8 @@ private fun rememberPdfState(
     pdfOpenRetryNonce: Int,
     onPdfPasswordRequired: (assetId: String, isIncorrectPassword: Boolean) -> Unit,
     onPdfOpenError: (String) -> Unit,
-    viewZoom: Float,
+    viewTransform: ViewTransform,
+    viewportSize: IntSize,
 ): NoteEditorPdfState {
     val isPdfPage = currentPage?.kind == "pdf" || currentPage?.kind == "mixed"
     val pageWidth = currentPage?.width ?: 0f
@@ -572,13 +577,26 @@ private fun rememberPdfState(
             isPdfPage = isPdfPage,
             currentPage = currentPage,
             pdfRenderer = pdfRenderer,
-            viewZoom = viewZoom,
+            viewZoom = viewTransform.zoom,
+        )
+    val pdfTileState =
+        rememberPdfTiles(
+            isPdfPage = isPdfPage,
+            currentPage = currentPage,
+            pdfRenderer = pdfRenderer,
+            viewTransform = viewTransform,
+            viewportSize = viewportSize,
+            pageWidth = pageWidth,
+            pageHeight = pageHeight,
         )
     val pageWidthDp = with(LocalDensity.current) { pageWidth.toDp() }
     val pageHeightDp = with(LocalDensity.current) { pageHeight.toDp() }
     return NoteEditorPdfState(
         isPdfPage = isPdfPage,
         pdfRenderer = pdfRenderer,
+        pdfTiles = pdfTileState.tiles,
+        pdfRenderScaleBucket = pdfTileState.scaleBucket,
+        pdfTileSizePx = pdfTileState.tileSizePx,
         pdfBitmap = pdfBitmap,
         pageWidthDp = pageWidthDp,
         pageHeightDp = pageHeightDp,
