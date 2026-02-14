@@ -11,6 +11,7 @@ import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.pdf.PdfDocumentRenderer
 import com.onyx.android.pdf.PdfTextChar
 import com.onyx.android.pdf.PdfTextSelection
+import com.onyx.android.pdf.PdfTileKey
 
 internal data class TextSelection(
     val pageIndex: Int,
@@ -55,6 +56,9 @@ internal data class NoteEditorToolbarState(
 internal data class NoteEditorContentState(
     val isPdfPage: Boolean,
     val isReadOnly: Boolean,
+    val pdfTiles: Map<PdfTileKey, android.graphics.Bitmap>,
+    val pdfRenderScaleBucket: Float?,
+    val pdfTileSizePx: Int,
     val pdfBitmap: android.graphics.Bitmap?,
     val pdfRenderer: PdfDocumentRenderer?,
     val currentPage: PageEntity?,
@@ -94,6 +98,9 @@ internal data class NoteEditorPageState(
 internal data class NoteEditorPdfState(
     val isPdfPage: Boolean,
     val pdfRenderer: PdfDocumentRenderer?,
+    val pdfTiles: Map<PdfTileKey, android.graphics.Bitmap>,
+    val pdfRenderScaleBucket: Float?,
+    val pdfTileSizePx: Int,
     val pdfBitmap: android.graphics.Bitmap?,
     val pageWidthDp: Dp,
     val pageHeightDp: Dp,

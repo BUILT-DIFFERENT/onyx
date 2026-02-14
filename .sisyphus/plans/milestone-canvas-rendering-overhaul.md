@@ -730,7 +730,7 @@ implementation("com.github.Zoltaneusz:PdfiumAndroid:v1.10.0")
 
 ### 6.2 Tasks
 
-#### [ ] P2.0: Renderer-Agnostic Text Model (Week 6 — BEFORE P2.2)
+#### [x] P2.0: Renderer-Agnostic Text Model (Week 6 — BEFORE P2.2)
 
 **WHY FIRST:** Current `NoteEditorState.kt` imports MuPDF types directly (`StructuredText`, `TextChar`, `Quad` at line 6). UI code should not depend on renderer-specific classes. Create an abstraction layer BEFORE swapping renderers.
 
@@ -767,7 +767,7 @@ implementation("com.github.Zoltaneusz:PdfiumAndroid:v1.10.0")
 - **Migration:** Replace all `StructuredText`, `TextChar`, `Quad` references in `NoteEditorState.kt` with the agnostic model. Implement `PdfTextExtractor` for MuPDF first (to verify model works), then swap to Pdfium implementation in P2.2.
 - **Acceptance:** `NoteEditorState.kt` no longer imports any MuPDF classes after this task.
 
-#### [ ] P2.1: PdfiumAndroid Integration (Week 6)
+#### [x] P2.1: PdfiumAndroid Integration (Week 6)
 
 - **Primary file:** new `apps/android/app/src/main/java/com/onyx/android/pdf/PdfiumRenderer.kt` (replacing `PdfRenderer.kt`)
 - **Mandatory integration call sites (must all be updated in Phase 2):**
@@ -796,7 +796,7 @@ implementation("com.github.Zoltaneusz:PdfiumAndroid:v1.10.0")
   | `page.destroy()` | `pdfiumCore.closePage()`/doc-close lifecycle | explicit in wrapper |
   | `document.destroy()` | `pdfiumCore.closeDocument()` | |
 
-#### [ ] P2.2: Text Selection Parity (Week 6-7)
+#### [x] P2.2: Text Selection Parity (Week 6-7)
 
 - **CRITICAL:** Must maintain feature parity with current MuPDF text selection
 - **Current call flow to preserve:**
@@ -817,7 +817,7 @@ implementation("com.github.Zoltaneusz:PdfiumAndroid:v1.10.0")
   - **Native bridge fallback:** If `Zoltaneusz/PdfiumAndroid` only exposes flat text via `getPageText()` without per-character bounding boxes, a JNI bridge to Pdfium's native `FPDFText_GetCharBox()` / `FPDFText_GetCharOrigin()` / `FPDFText_CountChars()` may be required. The Phase 0 spike must assess this. If native bridge is needed, add ~1 week to Phase 2 timeline and create a `PdfiumTextBridge.kt` + `pdfium_text_jni.cpp` pair. Keep the fork locked; do not swap libraries.
   - **MuPDF fallback wiring (conditional):** If fallback Option A is chosen, add a dedicated `internal` product flavor (or `internalDebug` buildType) in `apps/android/app/build.gradle.kts` and scope MuPDF dependencies ONLY to that variant. Gate selection code paths with a `BuildConfig` flag and assert release variants exclude MuPDF at build time.
 
-#### [ ] P2.3: Tile-Based Rendering (Week 7-8)
+#### [x] P2.3: Tile-Based Rendering (Week 7-8)
 
 - **Files:**
   - New: `apps/android/app/src/main/java/com/onyx/android/pdf/PdfTileRenderer.kt`
@@ -880,7 +880,7 @@ implementation("com.github.Zoltaneusz:PdfiumAndroid:v1.10.0")
   }
   ```
 
-#### [ ] P2.4: Async Rendering Pipeline (Week 8-9)
+#### [x] P2.4: Async Rendering Pipeline (Week 8-9)
 
 - **Goal:** Never block UI thread for PDF rendering, and avoid waiting for full-page raster completion
 - **File:** new `apps/android/app/src/main/java/com/onyx/android/pdf/AsyncPdfPipeline.kt`

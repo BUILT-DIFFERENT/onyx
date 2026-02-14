@@ -1,4 +1,4 @@
-@file:Suppress("FunctionName", "LongParameterList")
+@file:Suppress("FunctionName", "LongParameterList", "TooManyFunctions")
 
 package com.onyx.android.ui
 
@@ -11,12 +11,25 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntSize
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.pdf.AsyncPdfPipeline
+import com.onyx.android.pdf.DEFAULT_PDF_TILE_SIZE_PX
 import com.onyx.android.pdf.PdfDocumentRenderer
+import com.onyx.android.pdf.PdfTileKey
+import com.onyx.android.pdf.PdfVisiblePageRect
+import com.onyx.android.pdf.createPdfTileCache
+import com.onyx.android.pdf.maxTileIndexForPage
+import com.onyx.android.pdf.pageRectToTileRange
+import com.onyx.android.pdf.tileKeysForRange
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
@@ -36,6 +49,7 @@ private const val PDF_RENDER_MAX_PIXELS = 16_000_000f
 private const val PDF_RENDER_MIN_SCALE = 0.5f
 private const val PDF_BUCKET_SWITCH_UP_MULTIPLIER = 1.1f
 private const val PDF_BUCKET_SWITCH_DOWN_MULTIPLIER = 0.9f
+private const val PDF_TILE_PREFETCH_DISTANCE = 1
 
 internal data class ZoomLimits(
     val minZoom: Float,
@@ -231,6 +245,136 @@ internal fun rememberPdfBitmap(
     return pdfBitmap
 }
 
+internal data class PdfTileRenderState(
+    val tiles: Map<PdfTileKey, android.graphics.Bitmap>,
+    val scaleBucket: Float?,
+    val tileSizePx: Int,
+)
+
+@Composable
+@Suppress("CyclomaticComplexMethod", "LongMethod")
+internal fun rememberPdfTiles(
+    isPdfPage: Boolean,
+    currentPage: PageEntity?,
+    pdfRenderer: PdfDocumentRenderer?,
+    viewTransform: ViewTransform,
+    viewportSize: IntSize,
+    pageWidth: Float,
+    pageHeight: Float,
+): PdfTileRenderState {
+    val appContext = LocalContext.current.applicationContext
+    var tiles by
+        remember(currentPage?.pageId) {
+            mutableStateOf<Map<PdfTileKey, android.graphics.Bitmap>>(emptyMap())
+        }
+    var previousScaleBucket by remember(currentPage?.pageId) { mutableStateOf<Float?>(null) }
+    val scaleBucket = zoomToRenderScaleBucket(viewTransform.zoom, previousScaleBucket)
+    SideEffect {
+        previousScaleBucket = scaleBucket
+    }
+    val tileCache = remember(pdfRenderer) { pdfRenderer?.let { createPdfTileCache(appContext) } }
+    val pipeline =
+        remember(pdfRenderer, tileCache) {
+            if (pdfRenderer != null && tileCache != null) {
+                AsyncPdfPipeline(pdfRenderer, tileCache)
+            } else {
+                null
+            }
+        }
+    val coroutineScope = rememberCoroutineScope()
+
+    DisposableEffect(pipeline, tileCache) {
+        onDispose {
+            if (pipeline != null) {
+                coroutineScope.launch {
+                    pipeline.cancelAll()
+                    tileCache?.clear()
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(currentPage?.pageId) {
+        tiles = emptyMap()
+    }
+
+    LaunchedEffect(pipeline, currentPage?.pageId) {
+        val activePipeline = pipeline ?: return@LaunchedEffect
+        val activePageIndex = currentPage?.pdfPageNo ?: return@LaunchedEffect
+        activePipeline.tileUpdates.collect { update ->
+            if (update.key.pageIndex == activePageIndex && !update.bitmap.isRecycled) {
+                tiles = tiles + (update.key to update.bitmap)
+            }
+        }
+    }
+
+    LaunchedEffect(
+        pipeline,
+        tileCache,
+        isPdfPage,
+        currentPage?.pageId,
+        viewTransform.zoom,
+        viewTransform.panX,
+        viewTransform.panY,
+        viewportSize,
+        scaleBucket,
+    ) {
+        if (!isPdfPage) {
+            return@LaunchedEffect
+        }
+        val activePipeline = pipeline ?: return@LaunchedEffect
+        val activeTileCache = tileCache ?: return@LaunchedEffect
+        val pageIndex = currentPage?.pdfPageNo ?: return@LaunchedEffect
+        if (viewportSize.width <= 0 || viewportSize.height <= 0) {
+            return@LaunchedEffect
+        }
+        val pageRect =
+            visiblePageRect(
+                viewTransform = viewTransform,
+                viewportSize = viewportSize,
+                pageWidth = pageWidth,
+                pageHeight = pageHeight,
+            ) ?: return@LaunchedEffect
+        val range =
+            pageRectToTileRange(
+                pageRect = pageRect,
+                scaleBucket = scaleBucket,
+                tileSizePx = DEFAULT_PDF_TILE_SIZE_PX,
+            )
+        if (!range.isValid) {
+            return@LaunchedEffect
+        }
+        val (maxTileX, maxTileY) =
+            maxTileIndexForPage(
+                pageWidthPoints = pageWidth,
+                pageHeightPoints = pageHeight,
+                scaleBucket = scaleBucket,
+                tileSizePx = DEFAULT_PDF_TILE_SIZE_PX,
+            )
+        val requestedRange =
+            range
+                .withPrefetch(PDF_TILE_PREFETCH_DISTANCE)
+                .clampedToPage(pageMaxTileX = maxTileX, pageMaxTileY = maxTileY)
+        if (!requestedRange.isValid) {
+            return@LaunchedEffect
+        }
+        tiles = activeTileCache.snapshotForPage(pageIndex)
+        activePipeline.requestTiles(
+            tileKeysForRange(
+                pageIndex = pageIndex,
+                scaleBucket = scaleBucket,
+                tileRange = requestedRange,
+            ),
+        )
+    }
+
+    return PdfTileRenderState(
+        tiles = tiles.filterValues { bitmap -> !bitmap.isRecycled },
+        scaleBucket = scaleBucket,
+        tileSizePx = DEFAULT_PDF_TILE_SIZE_PX,
+    )
+}
+
 internal fun resolvePdfRenderScale(
     bucketedScale: Float,
     pageWidth: Float,
@@ -279,4 +423,33 @@ internal fun zoomToRenderScaleBucket(
         selectedIndex--
     }
     return PDF_RENDER_SCALE_BUCKETS[selectedIndex]
+}
+
+@Suppress("ComplexCondition", "ReturnCount")
+internal fun visiblePageRect(
+    viewTransform: ViewTransform,
+    viewportSize: IntSize,
+    pageWidth: Float,
+    pageHeight: Float,
+): PdfVisiblePageRect? {
+    if (pageWidth <= 0f || pageHeight <= 0f || viewportSize.width <= 0 || viewportSize.height <= 0) {
+        return null
+    }
+    val leftPage = viewTransform.screenToPageX(0f)
+    val rightPage = viewTransform.screenToPageX(viewportSize.width.toFloat())
+    val topPage = viewTransform.screenToPageY(0f)
+    val bottomPage = viewTransform.screenToPageY(viewportSize.height.toFloat())
+    val clampedLeft = max(0f, min(leftPage, rightPage)).coerceAtMost(pageWidth)
+    val clampedRight = min(pageWidth, max(leftPage, rightPage)).coerceAtLeast(0f)
+    val clampedTop = max(0f, min(topPage, bottomPage)).coerceAtMost(pageHeight)
+    val clampedBottom = min(pageHeight, max(topPage, bottomPage)).coerceAtLeast(0f)
+    if (clampedLeft >= clampedRight || clampedTop >= clampedBottom) {
+        return null
+    }
+    return PdfVisiblePageRect(
+        left = clampedLeft,
+        top = clampedTop,
+        right = clampedRight,
+        bottom = clampedBottom,
+    )
 }
