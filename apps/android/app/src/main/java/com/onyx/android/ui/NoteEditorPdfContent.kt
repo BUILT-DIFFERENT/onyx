@@ -27,9 +27,11 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.onyx.android.R
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
@@ -360,7 +362,7 @@ private fun PdfSelectionCopyAction(state: PdfSelectionState) {
             modifier = Modifier.padding(12.dp),
             onClick = state.onCopySelection,
         ) {
-            Text("Copy")
+            Text(stringResource(R.string.pdf_selection_copy))
         }
     }
 }

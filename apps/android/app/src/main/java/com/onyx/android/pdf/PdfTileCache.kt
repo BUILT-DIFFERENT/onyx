@@ -22,7 +22,7 @@ data class PdfTileKey(
 )
 
 interface PdfTileStore {
-    fun getTile(key: PdfTileKey): Bitmap?
+    suspend fun getTile(key: PdfTileKey): Bitmap?
 
     suspend fun putTile(
         key: PdfTileKey,
@@ -65,15 +65,15 @@ class PdfTileCache(
         require(tileSizePx >= MIN_TILE_SIZE_PX) { "tileSizePx must be >= $MIN_TILE_SIZE_PX" }
     }
 
-    override fun getTile(key: PdfTileKey): Bitmap? {
-        val bitmap = cache.get(key) ?: return null
-        return if (bitmap.isRecycled) {
-            cache.remove(key)
-            null
-        } else {
+    override suspend fun getTile(key: PdfTileKey): Bitmap? =
+        cacheMutex.withLock {
+            val bitmap = cache.get(key) ?: return@withLock null
+            if (bitmap.isRecycled) {
+                cache.remove(key)
+                return@withLock null
+            }
             bitmap
         }
-    }
 
     override suspend fun putTile(
         key: PdfTileKey,
@@ -108,15 +108,23 @@ class PdfTileCache(
         }
     }
 
-    fun snapshotForPage(pageIndex: Int): Map<PdfTileKey, Bitmap> =
-        cache
-            .snapshot()
-            .filterKeys { key -> key.pageIndex == pageIndex }
-            .filterValues { bitmap -> !bitmap.isRecycled }
+    suspend fun snapshotForPage(pageIndex: Int): Map<PdfTileKey, Bitmap> =
+        cacheMutex.withLock {
+            cache
+                .snapshot()
+                .filterKeys { key -> key.pageIndex == pageIndex }
+                .filterValues { bitmap -> !bitmap.isRecycled }
+        }
 
-    fun sizeBytes(): Int = cache.size()
+    suspend fun sizeBytes(): Int =
+        cacheMutex.withLock {
+            cache.size()
+        }
 
-    fun maxSizeBytes(): Int = cache.maxSize()
+    suspend fun maxSizeBytes(): Int =
+        cacheMutex.withLock {
+            cache.maxSize()
+        }
 }
 
 internal fun resolvePdfTileCacheSizeBytes(

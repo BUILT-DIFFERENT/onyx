@@ -80,7 +80,7 @@ class AsyncPdfPipelineTest {
 private class FakeTileStore : PdfTileStore {
     private val tiles = linkedMapOf<PdfTileKey, Bitmap>()
 
-    override fun getTile(key: PdfTileKey): Bitmap? = tiles[key]
+    override suspend fun getTile(key: PdfTileKey): Bitmap? = tiles[key]
 
     override suspend fun putTile(
         key: PdfTileKey,

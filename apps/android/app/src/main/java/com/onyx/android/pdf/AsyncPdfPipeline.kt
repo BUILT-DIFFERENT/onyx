@@ -5,6 +5,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -12,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 private const val DEFAULT_TILE_REQUEST_BUFFER_CAPACITY = 64
 
@@ -49,9 +51,11 @@ class AsyncPdfPipeline(
                 }
                 val renderJob =
                     scope.launch {
+                        var semaphoreAcquired = false
                         var renderedBitmap: Bitmap? = null
-                        renderSemaphore.acquire()
                         try {
+                            renderSemaphore.acquire()
+                            semaphoreAcquired = true
                             renderedBitmap = renderer.renderTile(key)
                             val cachedBitmap = cache.putTile(key, renderedBitmap)
                             _tileUpdates.tryEmit(PdfTileUpdate(key, cachedBitmap))
@@ -66,9 +70,13 @@ class AsyncPdfPipeline(
                             }
                             throw cancellation
                         } finally {
-                            renderSemaphore.release()
-                            requestMutex.withLock {
-                                inFlight.remove(key)
+                            withContext(NonCancellable) {
+                                if (semaphoreAcquired) {
+                                    renderSemaphore.release()
+                                }
+                                requestMutex.withLock {
+                                    inFlight.remove(key)
+                                }
                             }
                         }
                     }
@@ -84,7 +92,7 @@ class AsyncPdfPipeline(
         }
     }
 
-    private fun shouldRequestTile(key: PdfTileKey): Boolean {
+    private suspend fun shouldRequestTile(key: PdfTileKey): Boolean {
         val cachedTile = cache.getTile(key)
         val isInFlight = inFlight.containsKey(key)
         return cachedTile == null && !isInFlight
