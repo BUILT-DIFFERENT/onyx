@@ -30,12 +30,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Add
@@ -71,9 +74,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
@@ -85,14 +91,20 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
+import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
 import com.onyx.android.ink.ui.InkCanvasCallbacks
 import com.onyx.android.ink.ui.InkCanvasState
+import com.onyx.android.pdf.PdfTileKey
 import java.util.Locale
 import kotlin.math.roundToInt
+import androidx.compose.ui.graphics.Brush as ComposeBrush
+import com.onyx.android.ink.model.Stroke as InkStroke
 
 private const val MIN_WIDTH_FACTOR_FLOOR = 0.1f
 private const val HALF_FACTOR = 2f
@@ -111,6 +123,8 @@ private val NOTEWISE_SELECTED = Color(0xFF136CC5)
 private val NOTEWISE_STROKE = Color(0xFF3B435B)
 private val NOTE_PAPER = Color(0xFFFDFDFD)
 private val NOTE_PAPER_STROKE = Color(0xFFCBCED6)
+private val NOTE_PAPER_SHADOW = Color(0x15000000)
+private val EDGE_GLOW_COLOR = Color(0x40000000)
 private const val NOTEWISE_LEFT_GROUP_WIDTH_DP = 360
 private const val NOTEWISE_RIGHT_GROUP_WIDTH_DP = 82
 private const val EDITOR_VIEWPORT_TEST_TAG = "note-editor-viewport"
@@ -148,6 +162,336 @@ internal fun NoteEditorScaffold(
             transformState = transformState,
             paddingValues = paddingValues,
         )
+    }
+}
+
+/**
+ * Scaffold for multi-page LazyColumn layout with continuous vertical scroll.
+ */
+@Composable
+internal fun MultiPageEditorScaffold(
+    topBarState: NoteEditorTopBarState,
+    toolbarState: NoteEditorToolbarState,
+    multiPageContentState: MultiPageContentState,
+) {
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            NoteEditorTopBar(
+                topBarState = topBarState,
+                toolbarState = toolbarState,
+            )
+        },
+    ) { paddingValues ->
+        MultiPageEditorContent(
+            contentState = multiPageContentState,
+            paddingValues = paddingValues,
+        )
+    }
+}
+
+private const val PAGE_GAP_DP = 8
+private const val PAGE_TRACKING_DEBOUNCE_MS = 100L
+
+/**
+ * Multi-page content with LazyColumn for continuous vertical scroll.
+ */
+@Composable
+@Suppress("LongMethod")
+private fun MultiPageEditorContent(
+    contentState: MultiPageContentState,
+    paddingValues: PaddingValues,
+) {
+    val lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = contentState.firstVisiblePageIndex)
+
+    // Track visible page changes with debounce - calculate full visible range
+    LaunchedEffect(lazyListState.layoutInfo.visibleItemsInfo) {
+        kotlinx.coroutines.delay(PAGE_TRACKING_DEBOUNCE_MS)
+        val visibleItems = lazyListState.layoutInfo.visibleItemsInfo
+        if (visibleItems.isNotEmpty()) {
+            val firstVisibleIndex = visibleItems.first().index
+            val lastVisibleIndex = visibleItems.last().index
+            // Notify for the full visible range (inclusive)
+            contentState.onVisiblePageChanged(firstVisibleIndex)
+            // Trigger virtualized loading for the range
+            contentState.onVisiblePagesChanged(firstVisibleIndex..lastVisibleIndex)
+        }
+    }
+
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(MaterialTheme.colorScheme.background),
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .onSizeChanged { size ->
+                        contentState.onViewportSizeChanged(size)
+                    }
+                    .testTag(EDITOR_VIEWPORT_TEST_TAG)
+                    .semantics { contentDescription = "Editor viewport" },
+        ) {
+            LazyColumn(
+                state = lazyListState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding =
+                    PaddingValues(
+                        top = TOOLBAR_CONTENT_PADDING_DP.dp + PAGE_GAP_DP.dp,
+                        bottom = PAGE_GAP_DP.dp,
+                    ),
+                verticalArrangement = Arrangement.spacedBy(PAGE_GAP_DP.dp),
+            ) {
+                items(
+                    count = contentState.pages.size,
+                    key = { index -> contentState.pages[index].page.pageId },
+                ) { index ->
+                    val pageState = contentState.pages[index]
+                    PageItem(
+                        pageState = pageState,
+                        isReadOnly = contentState.isReadOnly,
+                        brush = contentState.brush,
+                        isStylusButtonEraserActive = contentState.isStylusButtonEraserActive,
+                        interactionMode = contentState.interactionMode,
+                        viewTransform = contentState.viewTransform,
+                        onStrokeFinished = { stroke -> contentState.onStrokeFinished(stroke, pageState.page.pageId) },
+                        onStrokeErased = { stroke -> contentState.onStrokeErased(stroke, pageState.page.pageId) },
+                        onStylusButtonEraserActiveChanged = contentState.onStylusButtonEraserActiveChanged,
+                        onTransformGesture = contentState.onTransformGesture,
+                        onPanGestureEnd = contentState.onPanGestureEnd,
+                    )
+                }
+            }
+        }
+
+        // Thumbnail strip at bottom for PDF documents
+        if (contentState.thumbnails.isNotEmpty()) {
+            ThumbnailStrip(
+                thumbnails = contentState.thumbnails,
+                currentPageIndex = contentState.firstVisiblePageIndex,
+                onPageSelected = contentState.onPageSelected,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+/**
+ * Individual page item in the LazyColumn.
+ */
+@Composable
+@Suppress("LongMethod", "LongParameterList", "UNUSED_PARAMETER")
+private fun PageItem(
+    pageState: PageItemState,
+    isReadOnly: Boolean,
+    brush: Brush,
+    isStylusButtonEraserActive: Boolean,
+    interactionMode: InteractionMode,
+    viewTransform: ViewTransform,
+    onStrokeFinished: (InkStroke) -> Unit,
+    onStrokeErased: (InkStroke) -> Unit,
+    onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
+    onTransformGesture: (Float, Float, Float, Float, Float) -> Unit,
+    onPanGestureEnd: (Float, Float) -> Unit,
+) {
+    Box(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(pageState.pageHeightDp)
+                .clipToBounds()
+                .background(NOTE_PAPER),
+    ) {
+        // Page shadow and border overlay
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val shadowSpread = PAGE_SHADOW_SPREAD_DP.dp.toPx()
+            val borderWidth = PAGE_BORDER_WIDTH_DP.dp.toPx()
+
+            // Draw page shadow (subtle drop shadow on right and bottom edges)
+            drawPageShadow(
+                left = 0f,
+                top = 0f,
+                pageWidthPx = size.width,
+                pageHeightPx = size.height,
+                shadowSpread = shadowSpread,
+            )
+
+            // Draw page border
+            drawRect(
+                color = NOTE_PAPER_STROKE,
+                topLeft = Offset.Zero,
+                size = Size(size.width, size.height),
+                style = Stroke(width = borderWidth),
+            )
+        }
+
+        // PDF content if applicable
+        if (pageState.isPdfPage && pageState.pdfBitmap != null) {
+            PdfPageBitmap(
+                bitmap = pageState.pdfBitmap,
+                pageWidth = pageState.pageWidth,
+                pageHeight = pageState.pageHeight,
+                viewTransform = viewTransform,
+            )
+        }
+
+        // PDF tiles if available
+        if (pageState.isPdfPage && pageState.pdfTiles.isNotEmpty()) {
+            PdfTilesOverlay(
+                tiles = pageState.pdfTiles,
+                viewTransform = viewTransform,
+                tileSizePx = pageState.pdfTileSizePx,
+                previousScaleBucket = pageState.pdfPreviousScaleBucket,
+                crossfadeProgress = pageState.pdfCrossfadeProgress,
+            )
+        }
+
+        // Ink canvas for drawing
+        val inkCanvasState =
+            remember(pageState.page.pageId, pageState.strokes, viewTransform, brush) {
+                InkCanvasState(
+                    strokes = pageState.strokes,
+                    viewTransform = viewTransform,
+                    brush = brush,
+                    pageWidth = pageState.pageWidth,
+                    pageHeight = pageState.pageHeight,
+                    allowEditing = !isReadOnly,
+                )
+            }
+        val inkCanvasCallbacks =
+            remember(onStrokeFinished, onStrokeErased, onTransformGesture, onPanGestureEnd, onStylusButtonEraserActiveChanged) {
+                InkCanvasCallbacks(
+                    onStrokeFinished = if (isReadOnly) ({}) else onStrokeFinished,
+                    onStrokeErased = if (isReadOnly) ({}) else onStrokeErased,
+                    onTransformGesture = onTransformGesture,
+                    onPanGestureEnd = onPanGestureEnd,
+                    onStylusButtonEraserActiveChanged = onStylusButtonEraserActiveChanged,
+                )
+            }
+        InkCanvas(
+            state = inkCanvasState,
+            callbacks = inkCanvasCallbacks,
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+/**
+ * Renders a PDF page bitmap.
+ */
+@Composable
+private fun PdfPageBitmap(
+    bitmap: android.graphics.Bitmap,
+    pageWidth: Float,
+    pageHeight: Float,
+    viewTransform: ViewTransform,
+) {
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val destinationWidthPx = (pageWidth * viewTransform.zoom).roundToInt().coerceAtLeast(1)
+        val destinationHeightPx = (pageHeight * viewTransform.zoom).roundToInt().coerceAtLeast(1)
+        drawImage(
+            image = bitmap.asImageBitmap(),
+            srcOffset = IntOffset.Zero,
+            srcSize = IntSize(bitmap.width, bitmap.height),
+            dstOffset =
+                IntOffset(
+                    viewTransform.panX.roundToInt(),
+                    viewTransform.panY.roundToInt(),
+                ),
+            dstSize = IntSize(destinationWidthPx, destinationHeightPx),
+            filterQuality = FilterQuality.High,
+        )
+    }
+}
+
+/**
+ * Renders PDF tiles overlay.
+ */
+@Composable
+private fun PdfTilesOverlay(
+    tiles: Map<PdfTileKey, android.graphics.Bitmap>,
+    viewTransform: ViewTransform,
+    tileSizePx: Int,
+    previousScaleBucket: Float?,
+    crossfadeProgress: Float,
+) {
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        // Partition tiles into previous bucket (fading out) and current bucket (fading in)
+        val (previousBucketEntries, currentBucketEntries) =
+            tiles.entries.partition { entry ->
+                previousScaleBucket != null && entry.key.scaleBucket == previousScaleBucket
+            }
+
+        // Calculate alpha based on crossfade progress
+        // Previous bucket fades out (1.0 -> 0.0), current bucket fades in (0.0 -> 1.0)
+        val previousBucketAlpha = 1f - crossfadeProgress
+        val currentBucketAlpha = crossfadeProgress
+
+        // Draw previous bucket tiles with fading alpha
+        if (previousBucketEntries.isNotEmpty() && previousBucketAlpha > 0f) {
+            previousBucketEntries.forEach { entry ->
+                val key = entry.key
+                val bitmap = entry.value
+                if (bitmap.isRecycled) return@forEach
+
+                val scaleBucket = key.scaleBucket
+                if (scaleBucket <= 0f) return@forEach
+
+                val tilePageSize = tileSizePx / scaleBucket
+                val tilePageLeft = key.tileX * tilePageSize
+                val tilePageTop = key.tileY * tilePageSize
+                val tilePageWidth = bitmap.width / scaleBucket
+                val tilePageHeight = bitmap.height / scaleBucket
+                val tileScreenLeft = viewTransform.pageToScreenX(tilePageLeft)
+                val tileScreenTop = viewTransform.pageToScreenY(tilePageTop)
+                val tileScreenWidth = (tilePageWidth * viewTransform.zoom).roundToInt().coerceAtLeast(1)
+                val tileScreenHeight = (tilePageHeight * viewTransform.zoom).roundToInt().coerceAtLeast(1)
+
+                drawImage(
+                    image = bitmap.asImageBitmap(),
+                    srcOffset = IntOffset.Zero,
+                    srcSize = IntSize(bitmap.width, bitmap.height),
+                    dstOffset = IntOffset(tileScreenLeft.roundToInt(), tileScreenTop.roundToInt()),
+                    dstSize = IntSize(tileScreenWidth, tileScreenHeight),
+                    filterQuality = FilterQuality.High,
+                    alpha = previousBucketAlpha,
+                )
+            }
+        }
+
+        // Draw current bucket tiles with fading in alpha
+        currentBucketEntries.forEach { entry ->
+            val key = entry.key
+            val bitmap = entry.value
+            if (bitmap.isRecycled) return@forEach
+
+            val scaleBucket = key.scaleBucket
+            if (scaleBucket <= 0f) return@forEach
+
+            val tilePageSize = tileSizePx / scaleBucket
+            val tilePageLeft = key.tileX * tilePageSize
+            val tilePageTop = key.tileY * tilePageSize
+            val tilePageWidth = bitmap.width / scaleBucket
+            val tilePageHeight = bitmap.height / scaleBucket
+            val tileScreenLeft = viewTransform.pageToScreenX(tilePageLeft)
+            val tileScreenTop = viewTransform.pageToScreenY(tilePageTop)
+            val tileScreenWidth = (tilePageWidth * viewTransform.zoom).roundToInt().coerceAtLeast(1)
+            val tileScreenHeight = (tilePageHeight * viewTransform.zoom).roundToInt().coerceAtLeast(1)
+
+            drawImage(
+                image = bitmap.asImageBitmap(),
+                srcOffset = IntOffset.Zero,
+                srcSize = IntSize(bitmap.width, bitmap.height),
+                dstOffset = IntOffset(tileScreenLeft.roundToInt(), tileScreenTop.roundToInt()),
+                dstSize = IntSize(tileScreenWidth, tileScreenHeight),
+                filterQuality = FilterQuality.High,
+                alpha = currentBucketAlpha,
+            )
+        }
     }
 }
 
@@ -508,6 +852,19 @@ private fun NoteEditorTopBar(
                     style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier.semantics { contentDescription = pageCounterDescription },
                 )
+                // Outline button for PDF documents
+                if (topBarState.isPdfDocument) {
+                    IconButton(
+                        onClick = topBarState.onOpenOutline,
+                        modifier = Modifier.semantics { contentDescription = "Table of contents" },
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                            contentDescription = null,
+                            tint = NOTEWISE_ICON,
+                        )
+                    }
+                }
                 IconButton(
                     onClick = topBarState.onCreatePage,
                     enabled = isEditingEnabled,
@@ -1027,55 +1384,73 @@ private fun NoteEditorContent(
     transformState: TransformableState,
     paddingValues: PaddingValues,
 ) {
-    Box(
+    Column(
         modifier =
             Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
-                .onSizeChanged { size ->
-                    contentState.onViewportSizeChanged(size)
-                }
-                .testTag(EDITOR_VIEWPORT_TEST_TAG)
-                .semantics { contentDescription = "Editor viewport" },
+                .background(MaterialTheme.colorScheme.background),
     ) {
-        if (!contentState.isPdfPage) {
-            FixedPageBackground(contentState = contentState)
+        Box(
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(top = TOOLBAR_CONTENT_PADDING_DP.dp)
+                    .onSizeChanged { size ->
+                        contentState.onViewportSizeChanged(size)
+                    }
+                    .testTag(EDITOR_VIEWPORT_TEST_TAG)
+                    .semantics { contentDescription = "Editor viewport" },
+        ) {
+            if (!contentState.isPdfPage) {
+                FixedPageBackground(contentState = contentState)
+            }
+            if (contentState.isPdfPage) {
+                PdfPageContent(contentState)
+            } else {
+                val inkCanvasState =
+                    InkCanvasState(
+                        strokes = contentState.strokes,
+                        viewTransform = contentState.viewTransform,
+                        brush = contentState.brush,
+                        pageWidth = contentState.pageWidth,
+                        pageHeight = contentState.pageHeight,
+                        allowEditing = !contentState.isReadOnly,
+                    )
+                val inkCanvasCallbacks =
+                    InkCanvasCallbacks(
+                        onStrokeFinished =
+                            if (contentState.isReadOnly) {
+                                {}
+                            } else {
+                                contentState.onStrokeFinished
+                            },
+                        onStrokeErased =
+                            if (contentState.isReadOnly) {
+                                {}
+                            } else {
+                                contentState.onStrokeErased
+                            },
+                        onTransformGesture = contentState.onTransformGesture,
+                        onPanGestureEnd = contentState.onPanGestureEnd,
+                        onStylusButtonEraserActiveChanged = contentState.onStylusButtonEraserActiveChanged,
+                    )
+                InkCanvas(
+                    state = inkCanvasState,
+                    callbacks = inkCanvasCallbacks,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
-        if (contentState.isPdfPage) {
-            PdfPageContent(contentState)
-        } else {
-            val inkCanvasState =
-                InkCanvasState(
-                    strokes = contentState.strokes,
-                    viewTransform = contentState.viewTransform,
-                    brush = contentState.brush,
-                    pageWidth = contentState.pageWidth,
-                    pageHeight = contentState.pageHeight,
-                    allowEditing = !contentState.isReadOnly,
-                )
-            val inkCanvasCallbacks =
-                InkCanvasCallbacks(
-                    onStrokeFinished =
-                        if (contentState.isReadOnly) {
-                            {}
-                        } else {
-                            contentState.onStrokeFinished
-                        },
-                    onStrokeErased =
-                        if (contentState.isReadOnly) {
-                            {}
-                        } else {
-                            contentState.onStrokeErased
-                        },
-                    onTransformGesture = contentState.onTransformGesture,
-                    onPanGestureEnd = contentState.onPanGestureEnd,
-                    onStylusButtonEraserActiveChanged = contentState.onStylusButtonEraserActiveChanged,
-                )
-            InkCanvas(
-                state = inkCanvasState,
-                callbacks = inkCanvasCallbacks,
-                modifier = Modifier.fillMaxSize(),
+
+        // Thumbnail strip at bottom for PDF documents
+        if (contentState.thumbnails.isNotEmpty()) {
+            ThumbnailStrip(
+                thumbnails = contentState.thumbnails,
+                currentPageIndex = contentState.currentPageIndex,
+                onPageSelected = contentState.onPageSelected,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -1095,18 +1470,201 @@ private fun FixedPageBackground(contentState: NoteEditorContentState) {
         val top = transform.pageToScreenY(0f)
         val pageWidthPx = transform.pageWidthToScreen(pageWidth)
         val pageHeightPx = transform.pageWidthToScreen(pageHeight)
+        val shadowSpread = PAGE_SHADOW_SPREAD_DP.dp.toPx()
+        val borderWidth = PAGE_BORDER_WIDTH_DP.dp.toPx()
+        val edgeGlowWidth = EDGE_GLOW_WIDTH_DP.dp.toPx()
+
+        // Draw page shadow (subtle drop shadow on right and bottom edges)
+        drawPageShadow(
+            left = left,
+            top = top,
+            pageWidthPx = pageWidthPx,
+            pageHeightPx = pageHeightPx,
+            shadowSpread = shadowSpread,
+        )
+
+        // Draw page background
         drawRect(
             color = NOTE_PAPER,
             topLeft = Offset(left, top),
             size = Size(pageWidthPx, pageHeightPx),
         )
+
+        // Draw page border
         drawRect(
             color = NOTE_PAPER_STROKE,
             topLeft = Offset(left, top),
             size = Size(pageWidthPx, pageHeightPx),
-            style = Stroke(width = 1.dp.toPx()),
+            style = Stroke(width = borderWidth),
+        )
+
+        // Draw edge glow indicators when at document limits
+        drawEdgeGlowIndicators(
+            left = left,
+            top = top,
+            pageWidthPx = pageWidthPx,
+            pageHeightPx = pageHeightPx,
+            viewTransform = transform,
+            edgeGlowWidth = edgeGlowWidth,
+            viewportWidth = size.width,
+            viewportHeight = size.height,
         )
     }
+}
+
+/**
+ * Draws a subtle drop shadow on the right and bottom edges of the page.
+ */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPageShadow(
+    left: Float,
+    top: Float,
+    pageWidthPx: Float,
+    pageHeightPx: Float,
+    shadowSpread: Float,
+) {
+    // Right edge shadow
+    drawRect(
+        brush =
+            ComposeBrush.horizontalGradient(
+                colors =
+                    listOf(
+                        NOTE_PAPER_SHADOW,
+                        Color.Transparent,
+                    ),
+                startX = left + pageWidthPx,
+                endX = left + pageWidthPx + shadowSpread,
+            ),
+        topLeft = Offset(left + pageWidthPx, top),
+        size = Size(shadowSpread, pageHeightPx + shadowSpread),
+    )
+
+    // Bottom edge shadow
+    drawRect(
+        brush =
+            ComposeBrush.verticalGradient(
+                colors =
+                    listOf(
+                        NOTE_PAPER_SHADOW,
+                        Color.Transparent,
+                    ),
+                startY = top + pageHeightPx,
+                endY = top + pageHeightPx + shadowSpread,
+            ),
+        topLeft = Offset(left + shadowSpread, top + pageHeightPx),
+        size = Size(pageWidthPx - shadowSpread, shadowSpread),
+    )
+}
+
+/**
+ * Draws edge glow indicators when the user pans to document limits.
+ * Shows a subtle glow on the edge that has been reached.
+ */
+@Suppress("UNUSED_PARAMETER", "LongParameterList")
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawEdgeGlowIndicators(
+    left: Float,
+    top: Float,
+    pageWidthPx: Float,
+    pageHeightPx: Float,
+    viewTransform: ViewTransform,
+    edgeGlowWidth: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
+) {
+    // Calculate how close we are to each edge (0 = at edge, 1 = far from edge)
+    val leftEdgeDistance = (left - 0f).coerceAtLeast(0f)
+    val rightEdgeDistance = (viewportWidth - (left + pageWidthPx)).coerceAtLeast(0f)
+    val topEdgeDistance = (top - 0f).coerceAtLeast(0f)
+    val bottomEdgeDistance = (viewportHeight - (top + pageHeightPx)).coerceAtLeast(0f)
+
+    // Calculate glow intensity based on distance (closer = more intense)
+    val leftGlowAlpha = calculateGlowAlpha(leftEdgeDistance, edgeGlowWidth)
+    val rightGlowAlpha = calculateGlowAlpha(rightEdgeDistance, edgeGlowWidth)
+    val topGlowAlpha = calculateGlowAlpha(topEdgeDistance, edgeGlowWidth)
+    val bottomGlowAlpha = calculateGlowAlpha(bottomEdgeDistance, edgeGlowWidth)
+
+    // Draw left edge glow (when page left edge is near viewport left)
+    if (leftGlowAlpha > 0f && left < edgeGlowWidth) {
+        drawRect(
+            brush =
+                ComposeBrush.horizontalGradient(
+                    colors =
+                        listOf(
+                            EDGE_GLOW_COLOR.copy(alpha = EDGE_GLOW_ALPHA_MAX * leftGlowAlpha),
+                            Color.Transparent,
+                        ),
+                    startX = 0f,
+                    endX = edgeGlowWidth,
+                ),
+            topLeft = Offset(0f, 0f),
+            size = Size(edgeGlowWidth, viewportHeight),
+        )
+    }
+
+    // Draw right edge glow (when page right edge is near viewport right)
+    if (rightGlowAlpha > 0f && left + pageWidthPx > viewportWidth - edgeGlowWidth) {
+        drawRect(
+            brush =
+                ComposeBrush.horizontalGradient(
+                    colors =
+                        listOf(
+                            Color.Transparent,
+                            EDGE_GLOW_COLOR.copy(alpha = EDGE_GLOW_ALPHA_MAX * rightGlowAlpha),
+                        ),
+                    startX = viewportWidth - edgeGlowWidth,
+                    endX = viewportWidth,
+                ),
+            topLeft = Offset(viewportWidth - edgeGlowWidth, 0f),
+            size = Size(edgeGlowWidth, viewportHeight),
+        )
+    }
+
+    // Draw top edge glow (when page top edge is near viewport top)
+    if (topGlowAlpha > 0f && top < edgeGlowWidth) {
+        drawRect(
+            brush =
+                ComposeBrush.verticalGradient(
+                    colors =
+                        listOf(
+                            EDGE_GLOW_COLOR.copy(alpha = EDGE_GLOW_ALPHA_MAX * topGlowAlpha),
+                            Color.Transparent,
+                        ),
+                    startY = 0f,
+                    endY = edgeGlowWidth,
+                ),
+            topLeft = Offset(0f, 0f),
+            size = Size(viewportWidth, edgeGlowWidth),
+        )
+    }
+
+    // Draw bottom edge glow (when page bottom edge is near viewport bottom)
+    if (bottomGlowAlpha > 0f && top + pageHeightPx > viewportHeight - edgeGlowWidth) {
+        drawRect(
+            brush =
+                ComposeBrush.verticalGradient(
+                    colors =
+                        listOf(
+                            Color.Transparent,
+                            EDGE_GLOW_COLOR.copy(alpha = EDGE_GLOW_ALPHA_MAX * bottomGlowAlpha),
+                        ),
+                    startY = viewportHeight - edgeGlowWidth,
+                    endY = viewportHeight,
+                ),
+            topLeft = Offset(0f, viewportHeight - edgeGlowWidth),
+            size = Size(viewportWidth, edgeGlowWidth),
+        )
+    }
+}
+
+/**
+ * Calculate glow alpha based on distance from edge.
+ * Returns 0 when far from edge, 1 when at edge.
+ */
+private fun calculateGlowAlpha(
+    distance: Float,
+    threshold: Float,
+): Float {
+    if (distance >= threshold) return 0f
+    return 1f - (distance / threshold)
 }
 
 private fun resolveStabilization(brush: Brush): Float {

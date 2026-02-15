@@ -25,6 +25,7 @@ internal const val TOOLBAR_GROUP_HORIZONTAL_PADDING_DP = 10
 internal const val TOOLBAR_GROUP_VERTICAL_PADDING_DP = 6
 internal const val TOOLBAR_TOP_ROW_SPACING_DP = 8
 internal const val TOOLBAR_ROW_HEIGHT_DP = 48
+internal const val TOOLBAR_CONTENT_PADDING_DP = 56
 internal const val BRUSH_SIZE_SLIDER_WIDTH_DP = 184
 internal const val BRUSH_SIZE_VALUE_MIN_WIDTH_DP = 18
 internal const val TOOL_SETTINGS_PANEL_MIN_WIDTH_DP = 236
@@ -38,6 +39,13 @@ internal const val PEN_STABILIZATION_DELTA_MAX = 0.25f
 internal const val HIGHLIGHTER_OPACITY_MIN = 0.1f
 internal const val HIGHLIGHTER_OPACITY_MAX = 1f
 internal const val COLOR_PICKER_TEXT_FIELD_WIDTH_DP = 156
+
+// Page boundary indicator constants
+internal const val PAGE_SHADOW_SPREAD_DP = 8
+internal const val PAGE_BORDER_WIDTH_DP = 1
+internal const val EDGE_GLOW_WIDTH_DP = 32
+internal const val EDGE_GLOW_ALPHA_MAX = 0.4f
+internal const val EDGE_GLOW_THRESHOLD_PX = 50f
 
 internal val DEFAULT_PALETTE =
     listOf(

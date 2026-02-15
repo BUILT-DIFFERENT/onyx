@@ -65,6 +65,7 @@ private fun defaultTopBarState(): NoteEditorTopBarState =
         totalPages = 1,
         currentPageIndex = 0,
         isReadOnly = true,
+        isPdfDocument = false,
         canNavigatePrevious = false,
         canNavigateNext = false,
         canUndo = false,
@@ -77,6 +78,7 @@ private fun defaultTopBarState(): NoteEditorTopBarState =
         onUndo = {},
         onRedo = {},
         onToggleReadOnly = {},
+        onOpenOutline = {},
     )
 
 private fun defaultToolbarState(): NoteEditorToolbarState =
@@ -96,6 +98,11 @@ private fun defaultContentState(
     NoteEditorContentState(
         isPdfPage = false,
         isReadOnly = isReadOnly,
+        pdfTiles = emptyMap(),
+        pdfRenderScaleBucket = null,
+        pdfPreviousScaleBucket = null,
+        pdfTileSizePx = 512,
+        pdfCrossfadeProgress = 1f,
         pdfBitmap = null,
         pdfRenderer = null,
         currentPage = null,
@@ -107,10 +114,14 @@ private fun defaultContentState(
         strokes = emptyList(),
         brush = Brush(),
         isStylusButtonEraserActive = false,
+        interactionMode = InteractionMode.DRAW,
+        thumbnails = emptyList(),
+        currentPageIndex = 0,
         onStrokeFinished = { onStrokeFinished() },
         onStrokeErased = { onStrokeErased() },
         onStylusButtonEraserActiveChanged = {},
         onTransformGesture = onTransformGesture,
         onPanGestureEnd = { _, _ -> },
         onViewportSizeChanged = { _: IntSize -> },
+        onPageSelected = {},
     )

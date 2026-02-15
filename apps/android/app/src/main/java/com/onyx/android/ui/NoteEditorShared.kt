@@ -8,7 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -248,8 +250,13 @@ internal fun rememberPdfBitmap(
 internal data class PdfTileRenderState(
     val tiles: Map<PdfTileKey, android.graphics.Bitmap>,
     val scaleBucket: Float?,
+    val previousScaleBucket: Float?,
     val tileSizePx: Int,
+    val crossfadeProgress: Float,
 )
+
+private const val PDF_CROSSFADE_DURATION_MS = 150
+private const val PDF_CROSSFADE_FRAME_DELAY_MS = 16L
 
 @Composable
 @Suppress("CyclomaticComplexMethod", "LongMethod")
@@ -267,11 +274,77 @@ internal fun rememberPdfTiles(
         remember(currentPage?.pageId) {
             mutableStateOf<Map<PdfTileKey, android.graphics.Bitmap>>(emptyMap())
         }
-    var previousScaleBucket by remember(currentPage?.pageId) { mutableStateOf<Float?>(null) }
-    val scaleBucket = zoomToRenderScaleBucket(viewTransform.zoom, previousScaleBucket)
-    SideEffect {
-        previousScaleBucket = scaleBucket
+    // For hysteresis in bucket selection
+    var hysteresisBucket by remember(currentPage?.pageId) { mutableStateOf<Float?>(null) }
+    // For crossfade transition - tracks the bucket we're transitioning FROM
+    var retainedPreviousBucket by remember(currentPage?.pageId) { mutableStateOf<Float?>(null) }
+    // Track when bucket changed for crossfade timing
+    var bucketChangeTimestamp by remember(currentPage?.pageId) { mutableLongStateOf(0L) }
+    // Track crossfade progress (0f to 1f)
+    var crossfadeProgress by remember(currentPage?.pageId) { mutableStateOf(1f) }
+
+    val scaleBucket = zoomToRenderScaleBucket(viewTransform.zoom, hysteresisBucket)
+
+    // Use derivedStateOf to compute visible tiles with previous bucket fallback
+    val visibleTilesWithFallback by remember {
+        derivedStateOf {
+            val currentBucket = scaleBucket
+            val previousBucket = retainedPreviousBucket
+
+            // scaleBucket is never null (zoomToRenderScaleBucket always returns a value)
+            if (previousBucket == null || previousBucket == currentBucket) {
+                tiles.filterKeys { it.scaleBucket == currentBucket }
+                    .filterValues { !it.isRecycled }
+            } else {
+                // Include tiles from both buckets for crossfade
+                val currentTiles =
+                    tiles.filterKeys {
+                        it.scaleBucket == currentBucket
+                    }.filterValues { !it.isRecycled }
+
+                val currentPositions = currentTiles.keys.map { it.tileX to it.tileY }.toSet()
+
+                // Add previous bucket tiles for positions not covered by current bucket
+                val previousTiles =
+                    tiles.filterKeys {
+                        it.scaleBucket == previousBucket &&
+                            (it.tileX to it.tileY) !in currentPositions
+                    }.filterValues { !it.isRecycled }
+
+                currentTiles + previousTiles
+            }
+        }
     }
+
+    // Detect scale bucket changes and update retained bucket for crossfade
+    SideEffect {
+        if (hysteresisBucket != null && hysteresisBucket != scaleBucket) {
+            // Bucket changed - retain the old bucket for crossfade
+            retainedPreviousBucket = hysteresisBucket
+            bucketChangeTimestamp = System.currentTimeMillis()
+            crossfadeProgress = 0f
+        }
+        hysteresisBucket = scaleBucket
+    }
+
+    // Animate crossfade progress and prune previous bucket tiles after crossfade completes
+    LaunchedEffect(retainedPreviousBucket, bucketChangeTimestamp) {
+        if (retainedPreviousBucket != null) {
+            // Animate crossfade progress
+            val startTime = bucketChangeTimestamp
+            while (System.currentTimeMillis() - startTime < PDF_CROSSFADE_DURATION_MS) {
+                val elapsed = System.currentTimeMillis() - startTime
+                crossfadeProgress = (elapsed.toFloat() / PDF_CROSSFADE_DURATION_MS).coerceIn(0f, 1f)
+                kotlinx.coroutines.delay(PDF_CROSSFADE_FRAME_DELAY_MS) // ~60fps
+            }
+            crossfadeProgress = 1f
+            // Only clear if no new bucket change happened during delay
+            if (System.currentTimeMillis() - bucketChangeTimestamp >= PDF_CROSSFADE_DURATION_MS) {
+                retainedPreviousBucket = null
+            }
+        }
+    }
+
     val tileCache = remember(pdfRenderer) { pdfRenderer?.let { createPdfTileCache(appContext) } }
     val pipeline =
         remember(pdfRenderer, tileCache) {
@@ -296,6 +369,8 @@ internal fun rememberPdfTiles(
 
     LaunchedEffect(currentPage?.pageId) {
         tiles = emptyMap()
+        retainedPreviousBucket = null
+        crossfadeProgress = 1f
     }
 
     LaunchedEffect(pipeline, currentPage?.pageId) {
@@ -358,7 +433,13 @@ internal fun rememberPdfTiles(
         if (!requestedRange.isValid) {
             return@LaunchedEffect
         }
-        tiles = activeTileCache.snapshotForPage(pageIndex)
+        // Get tiles with fallback to previous bucket for smooth crossfade
+        tiles =
+            activeTileCache.snapshotForPageWithFallback(
+                pageIndex = pageIndex,
+                currentBucket = scaleBucket,
+                previousBucket = retainedPreviousBucket,
+            )
         activePipeline.requestTiles(
             tileKeysForRange(
                 pageIndex = pageIndex,
@@ -369,9 +450,11 @@ internal fun rememberPdfTiles(
     }
 
     return PdfTileRenderState(
-        tiles = tiles.filterValues { bitmap -> !bitmap.isRecycled },
+        tiles = visibleTilesWithFallback,
         scaleBucket = scaleBucket,
+        previousScaleBucket = retainedPreviousBucket,
         tileSizePx = DEFAULT_PDF_TILE_SIZE_PX,
+        crossfadeProgress = crossfadeProgress,
     )
 }
 

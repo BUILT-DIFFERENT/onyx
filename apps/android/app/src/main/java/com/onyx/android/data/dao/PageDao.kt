@@ -12,6 +12,9 @@ interface PageDao {
     @Query("SELECT * FROM pages WHERE noteId = :noteId ORDER BY indexInNote ASC")
     fun getPagesForNote(noteId: String): Flow<List<PageEntity>>
 
+    @Query("SELECT * FROM pages WHERE noteId = :noteId ORDER BY indexInNote ASC")
+    suspend fun getPagesForNoteSync(noteId: String): List<PageEntity>
+
     @Query("SELECT * FROM pages WHERE pageId = :pageId")
     suspend fun getById(pageId: String): PageEntity?
 
