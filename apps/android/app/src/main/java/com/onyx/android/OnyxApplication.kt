@@ -5,7 +5,9 @@ import android.util.Log
 import com.onyx.android.data.OnyxDatabase
 import com.onyx.android.data.repository.NoteRepository
 import com.onyx.android.data.serialization.StrokeSerializer
+import com.onyx.android.data.thumbnail.ThumbnailGenerator
 import com.onyx.android.device.DeviceIdentity
+import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfPasswordStore
 import com.onyx.android.recognition.MyScriptEngine
 
@@ -29,14 +31,28 @@ class OnyxApplication : Application(), AppContainer {
         pdfPasswordStore = PdfPasswordStore()
         Log.d("OnyxApp", "PdfPasswordStore initialized")
 
+        val pdfAssetStorage = PdfAssetStorage(applicationContext)
+        val thumbnailGenerator =
+            ThumbnailGenerator(
+                context = applicationContext,
+                thumbnailDao = database.thumbnailDao(),
+                noteDao = database.noteDao(),
+                pageDao = database.pageDao(),
+                pdfAssetStorage = pdfAssetStorage,
+            )
+        Log.d("OnyxApp", "ThumbnailGenerator initialized")
+
         noteRepository =
             NoteRepository(
                 noteDao = database.noteDao(),
                 pageDao = database.pageDao(),
                 strokeDao = database.strokeDao(),
                 recognitionDao = database.recognitionDao(),
+                folderDao = database.folderDao(),
+                tagDao = database.tagDao(),
                 deviceIdentity = deviceIdentity,
                 strokeSerializer = StrokeSerializer,
+                thumbnailGenerator = thumbnailGenerator,
             )
         Log.d("OnyxApp", "NoteRepository initialized")
 

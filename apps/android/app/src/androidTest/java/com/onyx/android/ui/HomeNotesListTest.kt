@@ -35,8 +35,15 @@ class HomeNotesListTest {
             MaterialTheme {
                 NotesListContent(
                     notes = listOf(note),
+                    noteTags = emptyMap(),
+                    selectionMode = false,
+                    selectedNoteIds = emptySet(),
                     onNavigateToEditor = { _, _ -> },
                     onRequestDeleteNote = { target -> requestedDeleteNoteId = target.noteId },
+                    onMoveNote = {},
+                    onManageTags = {},
+                    onEnterSelectionMode = {},
+                    onToggleNoteSelection = {},
                 )
             }
         }

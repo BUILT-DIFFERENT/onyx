@@ -1,9 +1,11 @@
 package com.onyx.android.data.repository
 
+import com.onyx.android.data.dao.FolderDao
 import com.onyx.android.data.dao.NoteDao
 import com.onyx.android.data.dao.PageDao
 import com.onyx.android.data.dao.RecognitionDao
 import com.onyx.android.data.dao.StrokeDao
+import com.onyx.android.data.dao.TagDao
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.data.entity.RecognitionIndexEntity
 import com.onyx.android.data.entity.StrokeEntity
@@ -32,6 +34,8 @@ class NoteRepositoryTest {
     private lateinit var pageDao: PageDao
     private lateinit var strokeDao: StrokeDao
     private lateinit var recognitionDao: RecognitionDao
+    private lateinit var folderDao: FolderDao
+    private lateinit var tagDao: TagDao
     private lateinit var deviceIdentity: DeviceIdentity
     private lateinit var repository: NoteRepository
 
@@ -41,6 +45,8 @@ class NoteRepositoryTest {
         pageDao = mockk(relaxed = true)
         strokeDao = mockk(relaxed = true)
         recognitionDao = mockk(relaxed = true)
+        folderDao = mockk(relaxed = true)
+        tagDao = mockk(relaxed = true)
         deviceIdentity = mockk()
 
         every { deviceIdentity.getDeviceId() } returns "test-device-uuid"
@@ -68,8 +74,11 @@ class NoteRepositoryTest {
                 pageDao = pageDao,
                 strokeDao = strokeDao,
                 recognitionDao = recognitionDao,
+                folderDao = folderDao,
+                tagDao = tagDao,
                 deviceIdentity = deviceIdentity,
                 strokeSerializer = StrokeSerializer,
+                thumbnailGenerator = null,
             )
     }
 
