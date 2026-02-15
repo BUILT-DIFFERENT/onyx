@@ -31,6 +31,8 @@ internal class NoteEditorViewModel(
 ) : ViewModel() {
     companion object {
         private const val LOG_TAG = "NoteEditorViewModel"
+        private const val PAGE_BUFFER_SIZE = 1
+        private const val PAGE_LOG_PREVIEW_COUNT = 5
     }
 
     private val _strokes = MutableStateFlow<List<Stroke>>(emptyList())
@@ -45,6 +47,16 @@ internal class NoteEditorViewModel(
     val currentPage: StateFlow<PageEntity?> = _currentPage.asStateFlow()
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    // Active recognition page - updated ONLY on stylus interaction, NOT on scroll
+    // This ensures recognition stays on the correct page during fast scrolling
+    private val _activeRecognitionPageId = MutableStateFlow<String?>(null)
+    val activeRecognitionPageId: StateFlow<String?> = _activeRecognitionPageId.asStateFlow()
+
+    // Multi-page strokes cache: pageId -> strokes
+    private val _pageStrokesCache = MutableStateFlow<Map<String, List<Stroke>>>(emptyMap())
+    val pageStrokesCache: StateFlow<Map<String, List<Stroke>>> = _pageStrokesCache.asStateFlow()
+
     private var currentPageId: String? = null
     private var pendingInitialPageId: String? = initialPageId
     private val strokeWriteQueue = Channel<suspend () -> Unit>(Channel.UNLIMITED)
@@ -173,7 +185,8 @@ internal class NoteEditorViewModel(
                 repository.saveStroke(pageId, stroke)
             }
         }
-        if (updateRecognition) {
+        // Only update recognition if this is the active recognition page
+        if (updateRecognition && currentPageId == _activeRecognitionPageId.value) {
             myScriptPageManager?.addStroke(stroke)
         }
     }
@@ -189,7 +202,8 @@ internal class NoteEditorViewModel(
                 repository.deleteStroke(stroke.id)
             }
         }
-        if (updateRecognition) {
+        // Only update recognition if this is the active recognition page
+        if (updateRecognition && currentPageId == _activeRecognitionPageId.value) {
             myScriptPageManager?.onStrokeErased(stroke.id, _strokes.value)
         }
     }
@@ -226,6 +240,249 @@ internal class NoteEditorViewModel(
         }
     }
 
+    /**
+     * Add stroke for a specific page (multi-page mode).
+     */
+    fun addStrokeForPage(
+        stroke: Stroke,
+        pageId: String,
+        persist: Boolean,
+        updateRecognition: Boolean = true,
+    ) {
+        val currentCache = _pageStrokesCache.value.toMutableMap()
+        val pageStrokes = currentCache[pageId].orEmpty() + stroke
+        currentCache[pageId] = pageStrokes
+        _pageStrokesCache.value = currentCache
+
+        if (persist) {
+            enqueueStrokeWrite {
+                repository.saveStroke(pageId, stroke)
+            }
+        }
+        if (updateRecognition && pageId == currentPageId) {
+            myScriptPageManager?.addStroke(stroke)
+        }
+    }
+
+    /**
+     * Remove stroke for a specific page (multi-page mode).
+     */
+    fun removeStrokeForPage(
+        stroke: Stroke,
+        pageId: String,
+        persist: Boolean,
+        updateRecognition: Boolean = true,
+    ) {
+        val currentCache = _pageStrokesCache.value.toMutableMap()
+        val pageStrokes = currentCache[pageId].orEmpty() - stroke
+        currentCache[pageId] = pageStrokes
+        _pageStrokesCache.value = currentCache
+
+        if (persist) {
+            enqueueStrokeWrite {
+                repository.deleteStroke(stroke.id)
+            }
+        }
+        if (updateRecognition && pageId == currentPageId) {
+            myScriptPageManager?.onStrokeErased(stroke.id, pageStrokes)
+        }
+    }
+
+    /**
+     * Load strokes for a range of pages (for pre-loading in multi-page mode).
+     */
+    fun loadStrokesForPages(pageIds: List<String>) {
+        viewModelScope.launch {
+            runCatching {
+                val currentCache = _pageStrokesCache.value.toMutableMap()
+                for (pageId in pageIds) {
+                    if (!currentCache.containsKey(pageId)) {
+                        val strokes = repository.getStrokesForPage(pageId)
+                        currentCache[pageId] = strokes
+                    }
+                }
+                _pageStrokesCache.value = currentCache
+            }.onFailure { throwable ->
+                reportError("Failed to load strokes for pages.", throwable)
+            }
+        }
+    }
+
+    /**
+     * Update the current visible page index (for tracking in multi-page mode).
+     */
+    fun setVisiblePageIndex(index: Int) {
+        if (index != _currentPageIndex.value && index in 0..(_pages.value.lastIndex)) {
+            _currentPageIndex.value = index
+            val page = _pages.value.getOrNull(index)
+            if (page != null && page.pageId != currentPageId) {
+                currentPageId = page.pageId
+                _currentPage.value = page
+            }
+        }
+    }
+
+    /**
+     * Get strokes for a specific page from cache or load if needed.
+     */
+    fun getStrokesForPage(pageId: String): List<Stroke> {
+        return _pageStrokesCache.value[pageId].orEmpty()
+    }
+
+    /**
+     * Set the active recognition page based on stylus interaction.
+     * This should be called when stylus input is detected on a page.
+     * This is intentionally decoupled from scroll-driven currentPage changes.
+     *
+     * @param pageId The page ID that received stylus input
+     */
+    fun setActiveRecognitionPage(pageId: String) {
+        if (_activeRecognitionPageId.value != pageId) {
+            // Close the previous recognition page if different
+            if (_activeRecognitionPageId.value != null && _activeRecognitionPageId.value != pageId) {
+                myScriptPageManager?.closeCurrentPage()
+            }
+            _activeRecognitionPageId.value = pageId
+            // Initialize recognition for the new active page
+            myScriptPageManager?.onPageEnter(pageId)
+        }
+    }
+
+    /**
+     * Get the active recognition page ID.
+     * Returns the current page ID if no active recognition page is set.
+     */
+    fun getActiveRecognitionPageId(): String? {
+        return _activeRecognitionPageId.value ?: currentPageId
+    }
+
+    /**
+     * Handle visible pages changed event for virtualized stroke loading.
+     * Loads strokes for visible pages ± buffer, unloads strokes for pages outside range.
+     * Commits any in-progress strokes before unloading a page.
+     *
+     * @param visibleRange The range of currently visible page indices (0-based, inclusive)
+     */
+    fun onVisiblePagesChanged(visibleRange: IntRange) {
+        val pages = _pages.value
+        if (pages.isEmpty()) return
+
+        // Calculate pages to load with ±1 buffer
+        val rangeStart = (visibleRange.first - PAGE_BUFFER_SIZE).coerceAtLeast(0)
+        val rangeEnd = (visibleRange.last + PAGE_BUFFER_SIZE).coerceAtMost(pages.lastIndex)
+        val pagesToLoadIndices =
+            rangeStart..rangeEnd
+
+        // Get page IDs for the range to load
+        val pageIdsToLoad = pages.slice(pagesToLoadIndices).map { it.pageId }.toSet()
+
+        // Find pages to unload (outside the buffer range)
+        val pageIdsToUnload = _pageStrokesCache.value.keys - pageIdsToLoad
+
+        // Commit strokes for pages that will be unloaded
+        if (pageIdsToUnload.isNotEmpty()) {
+            commitStrokesForPages(pageIdsToUnload)
+        }
+
+        // Unload pages outside the range
+        if (pageIdsToUnload.isNotEmpty()) {
+            unloadPagesFromCache(pageIdsToUnload)
+        }
+
+        // Load strokes for pages in range that aren't already cached
+        val pagesNotCached = pageIdsToLoad.filter { !_pageStrokesCache.value.containsKey(it) }
+        if (pagesNotCached.isNotEmpty()) {
+            loadStrokesForPagesAsync(pagesNotCached)
+        }
+    }
+
+    /**
+     * Commit any pending strokes for the specified pages before unloading.
+     * This ensures no strokes are lost when pages are removed from cache.
+     */
+    private fun commitStrokesForPages(pageIds: Set<String>) {
+        // Strokes are already persisted via strokeWriteQueue when added/removed.
+        // This method exists for future extensibility if we add batched/uncommitted strokes.
+        // Currently, all strokes are persisted immediately via addStrokeForPage/removeStrokeForPage.
+        Log.d(
+            LOG_TAG,
+            "Committing strokes for pages before unload: ${
+                pageIds.take(PAGE_LOG_PREVIEW_COUNT).joinToString()
+            }",
+        )
+    }
+
+    /**
+     * Remove pages from the stroke cache to free memory.
+     */
+    private fun unloadPagesFromCache(pageIds: Set<String>) {
+        val currentCache = _pageStrokesCache.value.toMutableMap()
+        var modified = false
+        for (pageId in pageIds) {
+            if (currentCache.remove(pageId) != null) {
+                modified = true
+                Log.d(LOG_TAG, "Unloaded strokes from cache for page: $pageId")
+            }
+        }
+        if (modified) {
+            _pageStrokesCache.value = currentCache
+        }
+    }
+
+    /**
+     * Load strokes for pages asynchronously (non-blocking).
+     */
+    private fun loadStrokesForPagesAsync(pageIds: List<String>) {
+        viewModelScope.launch {
+            runCatching {
+                val currentCache = _pageStrokesCache.value.toMutableMap()
+                for (pageId in pageIds) {
+                    if (!currentCache.containsKey(pageId)) {
+                        val strokes = repository.getStrokesForPage(pageId)
+                        currentCache[pageId] = strokes
+                        Log.d(LOG_TAG, "Loaded ${strokes.size} strokes for page: $pageId")
+                    }
+                }
+                _pageStrokesCache.value = currentCache
+            }.onFailure { throwable ->
+                reportError("Failed to load strokes for pages.", throwable)
+            }
+        }
+    }
+
+    /**
+     * Force load strokes for a specific page (synchronous).
+     * Returns immediately if already cached.
+     */
+    suspend fun ensurePageLoaded(pageId: String) {
+        if (_pageStrokesCache.value.containsKey(pageId)) return
+
+        runCatching {
+            val strokes = repository.getStrokesForPage(pageId)
+            val currentCache = _pageStrokesCache.value.toMutableMap()
+            currentCache[pageId] = strokes
+            _pageStrokesCache.value = currentCache
+        }.onFailure { throwable ->
+            reportError("Failed to load strokes for page: $pageId", throwable)
+        }
+    }
+
+    /**
+     * Get the set of currently loaded page IDs in the cache.
+     */
+    fun getLoadedPageIds(): Set<String> = _pageStrokesCache.value.keys
+
+    /**
+     * Clear all strokes from cache (for memory pressure situations).
+     * Commits any pending data first.
+     */
+    fun clearStrokeCache() {
+        val loadedPages = _pageStrokesCache.value.keys
+        commitStrokesForPages(loadedPages)
+        _pageStrokesCache.value = emptyMap()
+        Log.d(LOG_TAG, "Cleared stroke cache for ${loadedPages.size} pages")
+    }
+
     private fun replacePageInState(updatedPage: PageEntity) {
         val currentPages = _pages.value.toMutableList()
         val pageIndex = currentPages.indexOfFirst { it.pageId == updatedPage.pageId }
@@ -259,8 +516,12 @@ internal class NoteEditorViewModel(
     }
 
     private suspend fun setCurrentPage(page: PageEntity?) {
+        // Note: Do NOT change activeRecognitionPageId here - it's only updated on stylus interaction
         if (currentPageId != page?.pageId && currentPageId != null) {
-            myScriptPageManager?.closeCurrentPage()
+            // Only close MyScript page if it's not the active recognition page
+            if (currentPageId != _activeRecognitionPageId.value) {
+                myScriptPageManager?.closeCurrentPage()
+            }
         }
         currentPageId = page?.pageId
         _currentPage.value = page
@@ -269,11 +530,17 @@ internal class NoteEditorViewModel(
             return
         }
         currentPageId?.let { pageId ->
-            myScriptPageManager?.onPageEnter(pageId)
+            // Only initialize recognition if this is also the active recognition page
+            if (pageId == _activeRecognitionPageId.value) {
+                myScriptPageManager?.onPageEnter(pageId)
+            }
             val loadedStrokes = repository.getStrokesForPage(pageId)
             _strokes.value = loadedStrokes
-            loadedStrokes.forEach { stroke ->
-                myScriptPageManager?.addStroke(stroke)
+            // Only add strokes to recognition if this is the active recognition page
+            if (pageId == _activeRecognitionPageId.value) {
+                loadedStrokes.forEach { stroke ->
+                    myScriptPageManager?.addStroke(stroke)
+                }
             }
         } ?: run {
             _strokes.value = emptyList()
@@ -282,6 +549,7 @@ internal class NoteEditorViewModel(
 
     override fun onCleared() {
         myScriptPageManager?.closeCurrentPage()
+        _activeRecognitionPageId.value = null
         strokeWriteQueue.close()
         super.onCleared()
     }

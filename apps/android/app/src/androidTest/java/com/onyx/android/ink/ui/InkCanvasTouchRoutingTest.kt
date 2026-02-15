@@ -3,6 +3,7 @@ package com.onyx.android.ink.ui
 import android.content.Context
 import android.view.InputDevice
 import android.view.MotionEvent
+import androidx.ink.authoring.InProgressStrokeId
 import androidx.ink.authoring.InProgressStrokesView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -834,6 +835,7 @@ private fun createInteraction(
     onTransformGesture: (Float, Float, Float, Float, Float) -> Unit = { _, _, _, _, _ -> },
     onPanGestureEnd: (Float, Float) -> Unit = { _, _ -> },
     onStylusButtonEraserActiveChanged: (Boolean) -> Unit = {},
+    onStrokeRenderFinished: (InProgressStrokeId) -> Unit = {},
 ): InkCanvasInteraction =
     InkCanvasInteraction(
         brush = Brush(tool = Tool.PEN),
@@ -847,6 +849,7 @@ private fun createInteraction(
         onTransformGesture = onTransformGesture,
         onPanGestureEnd = onPanGestureEnd,
         onStylusButtonEraserActiveChanged = onStylusButtonEraserActiveChanged,
+        onStrokeRenderFinished = onStrokeRenderFinished,
     )
 
 private fun singlePointerEvent(

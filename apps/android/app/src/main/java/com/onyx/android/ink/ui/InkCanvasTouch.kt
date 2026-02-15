@@ -9,6 +9,7 @@
 package com.onyx.android.ink.ui
 
 import android.view.MotionEvent
+import androidx.ink.authoring.InProgressStrokeId
 import androidx.ink.authoring.InProgressStrokesView
 import androidx.ink.strokes.StrokeInput
 import com.onyx.android.ink.model.Brush
@@ -48,6 +49,7 @@ internal data class InkCanvasInteraction(
         velocityY: Float,
     ) -> Unit,
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
+    val onStrokeRenderFinished: (InProgressStrokeId) -> Unit,
 )
 
 internal fun handleTouchEvent(
@@ -444,7 +446,8 @@ private fun handlePointerUp(
             )
             val finishedStroke = buildStroke(points, effectiveBrush)
             interaction.onStrokeFinished(finishedStroke)
-            view.removeFinishedStrokes(setOf(strokeId))
+            // Defer removal to callback synchronized with view rendering to prevent ghosting
+            interaction.onStrokeRenderFinished(strokeId)
             runtime.activeStrokeIds.remove(pointerId)
             runtime.activeStrokeBrushes.remove(pointerId)
             runtime.activeStrokePoints.remove(pointerId)

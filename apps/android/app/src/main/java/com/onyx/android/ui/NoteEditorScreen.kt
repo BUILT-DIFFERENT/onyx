@@ -35,6 +35,7 @@ import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.pdf.OutlineItem
 import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfIncorrectPasswordException
 import com.onyx.android.pdf.PdfPasswordRequiredException
@@ -166,6 +167,8 @@ private fun NoteEditorScreenContent(
     var pdfPasswordInput by rememberSaveable { mutableStateOf("") }
     var pdfOpenErrorMessage by rememberSaveable { mutableStateOf<String?>(null) }
     var pdfOpenRetryNonce by rememberSaveable { mutableStateOf(0) }
+    var showOutlineSheet by rememberSaveable { mutableStateOf(false) }
+    var outlineItems by remember { mutableStateOf<List<OutlineItem>>(emptyList()) }
     val uiState =
         rememberNoteEditorUiState(
             noteId = noteId,
@@ -185,6 +188,8 @@ private fun NoteEditorScreenContent(
                 pdfOpenErrorMessage = message
             },
             onNavigateBack = onNavigateBack,
+            onOpenOutline = { showOutlineSheet = true },
+            onLoadOutline = { renderer -> outlineItems = renderer.getTableOfContents() },
         )
     NoteEditorScaffold(
         topBarState = uiState.topBarState,
@@ -192,6 +197,18 @@ private fun NoteEditorScreenContent(
         contentState = uiState.contentState,
         transformState = uiState.transformState,
     )
+    if (showOutlineSheet) {
+        PdfOutlineSheet(
+            outlineItems = outlineItems,
+            onOutlineItemClick = { item ->
+                showOutlineSheet = false
+                if (item.pageIndex >= 0) {
+                    viewModel.navigateBy(item.pageIndex - uiState.topBarState.currentPageIndex)
+                }
+            },
+            onDismiss = { showOutlineSheet = false },
+        )
+    }
     if (pdfPasswordPrompt != null) {
         NoteEditorPdfPasswordDialog(
             password = pdfPasswordInput,
@@ -288,6 +305,8 @@ private fun rememberNoteEditorUiState(
     onPdfPasswordRequired: (assetId: String, isIncorrectPassword: Boolean) -> Unit,
     onPdfOpenError: (String) -> Unit,
     onNavigateBack: () -> Unit,
+    onOpenOutline: () -> Unit,
+    onLoadOutline: (PdfiumRenderer) -> Unit,
 ): NoteEditorUiState {
     val appContext = LocalContext.current.applicationContext
     val brushState = rememberBrushState()
@@ -329,6 +348,10 @@ private fun rememberNoteEditorUiState(
         viewModel = viewModel,
         undoController = undoController,
     )
+    // Track visible pages for virtualized stroke loading
+    LaunchedEffect(pageState.currentPageIndex) {
+        viewModel.onVisiblePagesChanged(pageState.currentPageIndex..pageState.currentPageIndex)
+    }
     val strokeCallbacks = buildStrokeCallbacks(undoController, pageState.currentPage)
     LaunchedEffect(pageState.currentPage?.pageId, viewportSize) {
         if (viewportSize.width > 0 && viewportSize.height > 0) {
@@ -352,6 +375,13 @@ private fun rememberNoteEditorUiState(
             undoController,
             onNavigateBack,
             viewModel,
+            isPdfDocument = pdfState.isPdfPage,
+            onOpenOutline = {
+                pdfState.pdfRenderer?.let { renderer ->
+                    onLoadOutline(renderer as PdfiumRenderer)
+                }
+                onOpenOutline()
+            },
         ).copy(
             isReadOnly = isReadOnly,
             onToggleReadOnly = { isReadOnly = !isReadOnly },
@@ -427,13 +457,35 @@ private fun rememberNoteEditorUiState(
                     }
                 }
         }
+    // Generate thumbnails for PDF documents
+    val thumbnails =
+        remember(pdfState.pdfRenderer, pdfState.isPdfPage) {
+            val renderer = pdfState.pdfRenderer
+            if (renderer != null && pdfState.isPdfPage) {
+                val pageCount = renderer.getPageCount()
+                (0 until pageCount).map { pageIndex ->
+                    val bounds = renderer.getPageBounds(pageIndex)
+                    val aspectRatio = bounds.first / bounds.second.coerceAtLeast(1f)
+                    ThumbnailItem(
+                        pageIndex = pageIndex,
+                        bitmap = renderer.renderThumbnail(pageIndex),
+                        aspectRatio = aspectRatio,
+                    )
+                }
+            } else {
+                emptyList()
+            }
+        }
+
     val contentState =
         NoteEditorContentState(
             isPdfPage = pdfState.isPdfPage,
             isReadOnly = isReadOnly,
             pdfTiles = pdfState.pdfTiles,
             pdfRenderScaleBucket = pdfState.pdfRenderScaleBucket,
+            pdfPreviousScaleBucket = pdfState.pdfPreviousScaleBucket,
             pdfTileSizePx = pdfState.pdfTileSizePx,
+            pdfCrossfadeProgress = pdfState.pdfCrossfadeProgress,
             pdfBitmap = pdfState.pdfBitmap,
             pdfRenderer = pdfState.pdfRenderer,
             currentPage = pageState.currentPage,
@@ -445,12 +497,16 @@ private fun rememberNoteEditorUiState(
             strokes = pageState.strokes,
             brush = brushState.brush,
             isStylusButtonEraserActive = isStylusButtonEraserActive,
+            interactionMode = InteractionMode.DRAW,
+            thumbnails = thumbnails,
+            currentPageIndex = pageState.currentPageIndex,
             onStrokeFinished = strokeCallbacks.onStrokeFinished,
             onStrokeErased = strokeCallbacks.onStrokeErased,
             onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
             onTransformGesture = onTransformGesture,
             onPanGestureEnd = onPanGestureEnd,
             onViewportSizeChanged = { viewportSize = it },
+            onPageSelected = { targetIndex -> viewModel.navigateBy(targetIndex - pageState.currentPageIndex) },
         )
 
     return NoteEditorUiState(
@@ -596,7 +652,9 @@ private fun rememberPdfState(
         pdfRenderer = pdfRenderer,
         pdfTiles = pdfTileState.tiles,
         pdfRenderScaleBucket = pdfTileState.scaleBucket,
+        pdfPreviousScaleBucket = pdfTileState.previousScaleBucket,
         pdfTileSizePx = pdfTileState.tileSizePx,
+        pdfCrossfadeProgress = pdfTileState.crossfadeProgress,
         pdfBitmap = pdfBitmap,
         pageWidthDp = pageWidthDp,
         pageHeightDp = pageHeightDp,
@@ -612,17 +670,21 @@ private tailrec fun Context.findActivity(): Activity? =
         else -> null
     }
 
+@Suppress("LongParameterList")
 private fun buildTopBarState(
     pageState: NoteEditorPageState,
     undoController: UndoController,
     onNavigateBack: () -> Unit,
     viewModel: NoteEditorViewModel,
+    isPdfDocument: Boolean,
+    onOpenOutline: () -> Unit,
 ): NoteEditorTopBarState =
     NoteEditorTopBarState(
         noteTitle = pageState.noteTitle,
         totalPages = pageState.pages.size,
         currentPageIndex = pageState.currentPageIndex,
         isReadOnly = false,
+        isPdfDocument = isPdfDocument,
         canNavigatePrevious = pageState.currentPageIndex > 0,
         canNavigateNext = pageState.currentPageIndex < pageState.pages.size - 1,
         canUndo = undoController.undoStack.isNotEmpty(),
@@ -635,6 +697,7 @@ private fun buildTopBarState(
         onUndo = undoController::undo,
         onRedo = undoController::redo,
         onToggleReadOnly = {},
+        onOpenOutline = onOpenOutline,
     )
 
 private fun buildToolbarState(
