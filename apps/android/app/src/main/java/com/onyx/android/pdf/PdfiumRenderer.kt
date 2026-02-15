@@ -152,8 +152,9 @@ class PdfiumRenderer(
     }
 
     override suspend fun getCharacters(pageIndex: Int): List<PdfTextChar> {
-        // Text extraction not supported - PdfiumAndroid doesn't provide text extraction APIs
-        return emptyList()
+        return synchronized(lock) {
+            documentSession.getTextCharacters(pageIndex)
+        }
     }
 
     override fun getTableOfContents(): List<OutlineItem> {

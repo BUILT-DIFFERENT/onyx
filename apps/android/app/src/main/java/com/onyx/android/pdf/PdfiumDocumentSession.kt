@@ -2,6 +2,7 @@ package com.onyx.android.pdf
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.RectF
 import android.os.ParcelFileDescriptor
 import com.shockwave.pdfium.PdfDocument
 import com.shockwave.pdfium.PdfiumCore
@@ -9,6 +10,7 @@ import java.io.Closeable
 import java.io.File
 import java.io.IOException
 import java.util.Locale
+import kotlin.math.roundToInt
 
 private val PASSWORD_ERROR_MARKERS =
     listOf(
@@ -17,6 +19,10 @@ private val PASSWORD_ERROR_MARKERS =
         "security",
         "decrypt",
     )
+private const val PDF_ROTATION_MAX = 3
+private const val PDFIUM_NATIVE_RIGHT_OFFSET = 1
+private const val PDFIUM_NATIVE_BOTTOM_OFFSET = 2
+private const val PDFIUM_NATIVE_TOP_OFFSET = 3
 
 data class PdfPageInfo(
     val widthPoints: Float,
@@ -132,6 +138,7 @@ internal class PdfiumDocumentSession private constructor(
     private val pdfDocument: PdfDocument,
 ) : Closeable {
     private val openedPages = mutableSetOf<Int>()
+    private val openedPagePointers = mutableMapOf<Int, Long>()
     private var closed = false
 
     val pageCount: Int = pdfiumCore.getPageCount(pdfDocument)
@@ -162,6 +169,31 @@ internal class PdfiumDocumentSession private constructor(
             region.height,
             renderAnnotations,
         )
+    }
+
+    @Suppress("ReturnCount")
+    fun getTextCharacters(pageIndex: Int): List<PdfTextChar> {
+        ensureOpen()
+        ensurePageOpened(pageIndex)
+
+        val pagePointer = resolveNativePagePointer(pageIndex) ?: return emptyList()
+        val nativeTextPage = PdfiumNativeTextBridge.extractPageText(pagePointer) ?: return emptyList()
+        if (nativeTextPage.isEmpty) {
+            return emptyList()
+        }
+
+        val pageHeightPoints = pdfiumCore.getPageHeightPoint(pdfDocument, pageIndex).toFloat()
+        val rotation = PdfiumNativeTextBridge.getPageRotation(pagePointer).coerceIn(0, PDF_ROTATION_MAX)
+        return if (rotation == 0) {
+            nativeTextPage.toPdfTextChars(pageIndex = pageIndex, pageHeightPoints = pageHeightPoints)
+        } else {
+            mapTextCharsWithRotation(
+                pageIndex = pageIndex,
+                nativeTextPage = nativeTextPage,
+                pageHeightPoints = pageHeightPoints,
+                rotation = rotation,
+            )
+        }
     }
 
     /**
@@ -201,6 +233,7 @@ internal class PdfiumDocumentSession private constructor(
         closed = true
         pdfiumCore.closeDocument(pdfDocument)
         openedPages.clear()
+        openedPagePointers.clear()
     }
 
     private fun ensurePageOpened(pageIndex: Int) {
@@ -208,7 +241,85 @@ internal class PdfiumDocumentSession private constructor(
             "Page index $pageIndex is out of bounds for $pageCount pages"
         }
         if (openedPages.add(pageIndex)) {
-            pdfiumCore.openPage(pdfDocument, pageIndex)
+            openedPagePointers[pageIndex] = pdfiumCore.openPage(pdfDocument, pageIndex)
+        }
+    }
+
+    @Suppress("ReturnCount", "UNCHECKED_CAST")
+    private fun resolveNativePagePointer(pageIndex: Int): Long? {
+        openedPagePointers[pageIndex]?.takeIf { it != 0L }?.let { return it }
+
+        val nativePagesField =
+            runCatching {
+                PdfDocument::class.java.getDeclaredField("mNativePagesPtr").apply {
+                    isAccessible = true
+                }
+            }.getOrNull() ?: return null
+
+        val nativePages =
+            runCatching {
+                nativePagesField.get(pdfDocument) as? Map<Int, Long>
+            }.getOrNull() ?: return null
+
+        val pointer = nativePages[pageIndex] ?: return null
+        if (pointer != 0L) {
+            openedPagePointers[pageIndex] = pointer
+        }
+        return pointer.takeIf { it != 0L }
+    }
+
+    private fun mapTextCharsWithRotation(
+        pageIndex: Int,
+        nativeTextPage: PdfiumNativeTextPage,
+        pageHeightPoints: Float,
+        rotation: Int,
+    ): List<PdfTextChar> {
+        val pageWidthPoints = pdfiumCore.getPageWidthPoint(pdfDocument, pageIndex)
+        val pageHeightInt = pageHeightPoints.roundToInt()
+        return buildList(nativeTextPage.codePoints.size) {
+            nativeTextPage.codePoints.indices.forEach { charIndex ->
+                val codePoint = nativeTextPage.codePoints[charIndex]
+                if (!Character.isValidCodePoint(codePoint) || codePoint == 0) {
+                    return@forEach
+                }
+
+                val offset = charIndex * PDFIUM_CHAR_BOX_VALUES_PER_CHAR
+                val left = nativeTextPage.boxes[offset]
+                val right = nativeTextPage.boxes[offset + PDFIUM_NATIVE_RIGHT_OFFSET]
+                val bottom = nativeTextPage.boxes[offset + PDFIUM_NATIVE_BOTTOM_OFFSET]
+                val top = nativeTextPage.boxes[offset + PDFIUM_NATIVE_TOP_OFFSET]
+
+                val mappedRect =
+                    pdfiumCore.mapRectToDevice(
+                        pdfDocument,
+                        pageIndex,
+                        0,
+                        0,
+                        pageWidthPoints,
+                        pageHeightInt,
+                        rotation,
+                        RectF(left, bottom, right, top),
+                    )
+
+                val normalizedLeft = minOf(mappedRect.left, mappedRect.right)
+                val normalizedRight = maxOf(mappedRect.left, mappedRect.right)
+                val normalizedTop = minOf(mappedRect.top, mappedRect.bottom)
+                val normalizedBottom = maxOf(mappedRect.top, mappedRect.bottom)
+
+                add(
+                    PdfTextChar(
+                        char = String(Character.toChars(codePoint)),
+                        pageIndex = pageIndex,
+                        quad =
+                            PdfTextQuad(
+                                p1 = pointF(normalizedLeft, normalizedTop),
+                                p2 = pointF(normalizedRight, normalizedTop),
+                                p3 = pointF(normalizedRight, normalizedBottom),
+                                p4 = pointF(normalizedLeft, normalizedBottom),
+                            ),
+                    ),
+                )
+            }
         }
     }
 
