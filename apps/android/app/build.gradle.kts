@@ -24,9 +24,15 @@ android {
         }
     }
 
+    sourceSets {
+        getByName("androidTest") {
+            assets.srcDir("$projectDir/schemas")
+        }
+    }
+
     buildTypes {
         debug {
-            buildConfigField("boolean", "ENABLE_MUPDF_TEXT_SELECTION", "false")
+            // MuPDF text selection removed - PdfiumAndroid doesn't provide text extraction
         }
 
         create("internalDebug") {
@@ -34,12 +40,10 @@ android {
             matchingFallbacks += listOf("debug")
             applicationIdSuffix = ".internal"
             versionNameSuffix = "-internal"
-            buildConfigField("boolean", "ENABLE_MUPDF_TEXT_SELECTION", "true")
         }
 
         release {
             isMinifyEnabled = false
-            buildConfigField("boolean", "ENABLE_MUPDF_TEXT_SELECTION", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -122,6 +126,7 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
+    androidTestImplementation("androidx.room:room-testing:2.6.1")
 
     // WorkManager for background tasks
     implementation("androidx.work:work-runtime-ktx:2.9.0")
@@ -131,9 +136,6 @@ dependencies {
 
     // JSON
     implementation("com.google.code.gson:gson:2.10.1")
-
-    // MuPDF - PDF text-selection fallback only for internal debug variant (AGPL)
-    add("internalDebugImplementation", "com.artifex.mupdf:fitz:1.24.10")
 
     // PdfiumAndroid - PDF rendering (Apache 2.0 / BSD)
     implementation("com.github.Zoltaneusz:PdfiumAndroid:v1.10.0")
@@ -158,29 +160,6 @@ dependencies {
 // Enable JUnit 5 platform for unit tests
 tasks.withType<Test> {
     useJUnitPlatform()
-}
-
-val verifyReleaseNoMuPdf by tasks.registering {
-    group = "verification"
-    description = "Ensure release variants do not include MuPDF."
-    doLast {
-        val hasMuPdf =
-            configurations
-                .getByName("releaseRuntimeClasspath")
-                .incoming
-                .resolutionResult
-                .allComponents
-                .any { component ->
-                    component.moduleVersion?.group == "com.artifex.mupdf"
-                }
-        check(!hasMuPdf) {
-            "Release runtime classpath includes MuPDF. MuPDF must stay internal-debug only."
-        }
-    }
-}
-
-tasks.matching { it.name == "preReleaseBuild" }.configureEach {
-    dependsOn(verifyReleaseNoMuPdf)
 }
 
 // ktlint configuration

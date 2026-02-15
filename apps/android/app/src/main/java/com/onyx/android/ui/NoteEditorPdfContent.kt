@@ -1,4 +1,4 @@
-@file:Suppress("FunctionName", "TooManyFunctions")
+@file:Suppress("FunctionName", "TooManyFunctions", "LongMethod", "LongParameterList")
 
 package com.onyx.android.ui
 
@@ -20,10 +20,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -46,6 +49,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
+import androidx.compose.ui.graphics.Brush as ComposeBrush
+
+private const val PDF_NOTE_PAPER_SHADOW = 0x15000000
+private const val PDF_NOTE_PAPER_STROKE = 0xFFCBCED6
+private const val PDF_EDGE_GLOW_COLOR = 0x40000000
 
 @Composable
 internal fun PdfPageContent(contentState: NoteEditorContentState) {
@@ -91,8 +99,14 @@ private fun PdfPageLayers(
     val pageWidth = contentState.pageWidth
     val pageHeight = contentState.pageHeight
     val tileEntries = contentState.pdfTiles
-    val tileScaleBucket = contentState.pdfRenderScaleBucket
+    val tilePreviousScaleBucket = contentState.pdfPreviousScaleBucket
     val tileSizePx = contentState.pdfTileSizePx
+    val crossfadeProgress = contentState.pdfCrossfadeProgress
+
+    // Colors for page boundary indicators
+    val notePaperShadow = Color(PDF_NOTE_PAPER_SHADOW)
+    val notePaperStroke = Color(PDF_NOTE_PAPER_STROKE)
+    val edgeGlowColor = Color(PDF_EDGE_GLOW_COLOR)
 
     Box(
         modifier =
@@ -102,6 +116,28 @@ private fun PdfPageLayers(
     ) {
         if (bitmap != null || tileEntries.isNotEmpty()) {
             Canvas(modifier = Modifier.fillMaxSize()) {
+                if (pageWidth <= 0f || pageHeight <= 0f) {
+                    return@Canvas
+                }
+
+                val left = viewTransform.panX
+                val top = viewTransform.panY
+                val pageWidthPx = (pageWidth * viewTransform.zoom).roundToInt().toFloat()
+                val pageHeightPx = (pageHeight * viewTransform.zoom).roundToInt().toFloat()
+                val shadowSpread = PAGE_SHADOW_SPREAD_DP.dp.toPx()
+                val borderWidth = PAGE_BORDER_WIDTH_DP.dp.toPx()
+                val edgeGlowWidth = EDGE_GLOW_WIDTH_DP.dp.toPx()
+
+                // Draw page shadow (subtle drop shadow on right and bottom edges)
+                drawPdfPageShadow(
+                    left = left,
+                    top = top,
+                    pageWidthPx = pageWidthPx,
+                    pageHeightPx = pageHeightPx,
+                    shadowSpread = shadowSpread,
+                    shadowColor = notePaperShadow,
+                )
+
                 if (bitmap != null) {
                     val destinationWidthPx =
                         (pageWidth * viewTransform.zoom).roundToInt().coerceAtLeast(1)
@@ -125,9 +161,31 @@ private fun PdfPageLayers(
                         entries = tileEntries.entries,
                         viewTransform = viewTransform,
                         tileSizePx = tileSizePx,
-                        activeScaleBucket = tileScaleBucket,
+                        previousScaleBucket = tilePreviousScaleBucket,
+                        crossfadeProgress = crossfadeProgress,
                     )
                 }
+
+                // Draw page border
+                drawRect(
+                    color = notePaperStroke,
+                    topLeft = Offset(left, top),
+                    size = Size(pageWidthPx, pageHeightPx),
+                    style = Stroke(width = borderWidth),
+                )
+
+                // Draw edge glow indicators when at document limits
+                drawPdfEdgeGlowIndicators(
+                    left = left,
+                    top = top,
+                    pageWidthPx = pageWidthPx,
+                    pageHeightPx = pageHeightPx,
+                    viewTransform = viewTransform,
+                    edgeGlowWidth = edgeGlowWidth,
+                    viewportWidth = size.width,
+                    viewportHeight = size.height,
+                    edgeGlowColor = edgeGlowColor,
+                )
             }
         }
         PdfSelectionOverlay(
@@ -299,17 +357,42 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPdfTiles(
     entries: Set<Map.Entry<PdfTileKey, android.graphics.Bitmap>>,
     viewTransform: ViewTransform,
     tileSizePx: Int,
-    activeScaleBucket: Float?,
+    previousScaleBucket: Float?,
+    crossfadeProgress: Float,
 ) {
-    val (staleEntries, currentEntries) =
+    // Partition tiles into previous bucket (fading out) and current bucket (fading in)
+    val (previousBucketEntries, currentBucketEntries) =
         entries.partition { entry ->
-            activeScaleBucket == null || entry.key.scaleBucket != activeScaleBucket
+            previousScaleBucket != null && entry.key.scaleBucket == previousScaleBucket
         }
-    staleEntries.forEach { entry ->
-        drawPdfTile(entry.key, entry.value, viewTransform, tileSizePx)
+
+    // Calculate alpha based on crossfade progress
+    // Previous bucket fades out (1.0 -> 0.0), current bucket fades in (0.0 -> 1.0)
+    val previousBucketAlpha = 1f - crossfadeProgress
+    val currentBucketAlpha = crossfadeProgress
+
+    // Draw previous bucket tiles with fading alpha
+    if (previousBucketEntries.isNotEmpty() && previousBucketAlpha > 0f) {
+        previousBucketEntries.forEach { entry ->
+            drawPdfTile(
+                key = entry.key,
+                bitmap = entry.value,
+                viewTransform = viewTransform,
+                tileSizePx = tileSizePx,
+                alpha = previousBucketAlpha,
+            )
+        }
     }
-    currentEntries.forEach { entry ->
-        drawPdfTile(entry.key, entry.value, viewTransform, tileSizePx)
+
+    // Draw current bucket tiles with fading in alpha
+    currentBucketEntries.forEach { entry ->
+        drawPdfTile(
+            key = entry.key,
+            bitmap = entry.value,
+            viewTransform = viewTransform,
+            tileSizePx = tileSizePx,
+            alpha = currentBucketAlpha,
+        )
     }
 }
 
@@ -318,6 +401,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPdfTile(
     bitmap: android.graphics.Bitmap,
     viewTransform: ViewTransform,
     tileSizePx: Int,
+    alpha: Float = 1f,
 ) {
     if (bitmap.isRecycled) {
         return
@@ -346,6 +430,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPdfTile(
             ),
         dstSize = IntSize(width = tileScreenWidth, height = tileScreenHeight),
         filterQuality = FilterQuality.High,
+        alpha = alpha,
     )
 }
 
@@ -365,4 +450,162 @@ private fun PdfSelectionCopyAction(state: PdfSelectionState) {
             Text(stringResource(R.string.pdf_selection_copy))
         }
     }
+}
+
+/**
+ * Draws a subtle drop shadow on the right and bottom edges of the PDF page.
+ */
+@Suppress("LongParameterList")
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPdfPageShadow(
+    left: Float,
+    top: Float,
+    pageWidthPx: Float,
+    pageHeightPx: Float,
+    shadowSpread: Float,
+    shadowColor: Color,
+) {
+    // Right edge shadow
+    drawRect(
+        brush =
+            ComposeBrush.horizontalGradient(
+                colors =
+                    listOf(
+                        shadowColor,
+                        Color.Transparent,
+                    ),
+                startX = left + pageWidthPx,
+                endX = left + pageWidthPx + shadowSpread,
+            ),
+        topLeft = Offset(left + pageWidthPx, top),
+        size = Size(shadowSpread, pageHeightPx + shadowSpread),
+    )
+
+    // Bottom edge shadow
+    drawRect(
+        brush =
+            ComposeBrush.verticalGradient(
+                colors =
+                    listOf(
+                        shadowColor,
+                        Color.Transparent,
+                    ),
+                startY = top + pageHeightPx,
+                endY = top + pageHeightPx + shadowSpread,
+            ),
+        topLeft = Offset(left + shadowSpread, top + pageHeightPx),
+        size = Size(pageWidthPx - shadowSpread, shadowSpread),
+    )
+}
+
+/**
+ * Draws edge glow indicators when the user pans to document limits.
+ * Shows a subtle glow on the edge that has been reached.
+ */
+@Suppress("UNUSED_PARAMETER", "LongParameterList", "LongMethod")
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPdfEdgeGlowIndicators(
+    left: Float,
+    top: Float,
+    pageWidthPx: Float,
+    pageHeightPx: Float,
+    viewTransform: ViewTransform,
+    edgeGlowWidth: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
+    edgeGlowColor: Color,
+) {
+    // Calculate how close we are to each edge (0 = at edge, 1 = far from edge)
+    val leftEdgeDistance = (left - 0f).coerceAtLeast(0f)
+    val rightEdgeDistance = (viewportWidth - (left + pageWidthPx)).coerceAtLeast(0f)
+    val topEdgeDistance = (top - 0f).coerceAtLeast(0f)
+    val bottomEdgeDistance = (viewportHeight - (top + pageHeightPx)).coerceAtLeast(0f)
+
+    // Calculate glow intensity based on distance (closer = more intense)
+    val leftGlowAlpha = calculatePdfGlowAlpha(leftEdgeDistance, edgeGlowWidth)
+    val rightGlowAlpha = calculatePdfGlowAlpha(rightEdgeDistance, edgeGlowWidth)
+    val topGlowAlpha = calculatePdfGlowAlpha(topEdgeDistance, edgeGlowWidth)
+    val bottomGlowAlpha = calculatePdfGlowAlpha(bottomEdgeDistance, edgeGlowWidth)
+
+    // Draw left edge glow (when page left edge is near viewport left)
+    if (leftGlowAlpha > 0f && left < edgeGlowWidth) {
+        drawRect(
+            brush =
+                ComposeBrush.horizontalGradient(
+                    colors =
+                        listOf(
+                            edgeGlowColor.copy(alpha = EDGE_GLOW_ALPHA_MAX * leftGlowAlpha),
+                            Color.Transparent,
+                        ),
+                    startX = 0f,
+                    endX = edgeGlowWidth,
+                ),
+            topLeft = Offset(0f, 0f),
+            size = Size(edgeGlowWidth, viewportHeight),
+        )
+    }
+
+    // Draw right edge glow (when page right edge is near viewport right)
+    if (rightGlowAlpha > 0f && left + pageWidthPx > viewportWidth - edgeGlowWidth) {
+        drawRect(
+            brush =
+                ComposeBrush.horizontalGradient(
+                    colors =
+                        listOf(
+                            Color.Transparent,
+                            edgeGlowColor.copy(alpha = EDGE_GLOW_ALPHA_MAX * rightGlowAlpha),
+                        ),
+                    startX = viewportWidth - edgeGlowWidth,
+                    endX = viewportWidth,
+                ),
+            topLeft = Offset(viewportWidth - edgeGlowWidth, 0f),
+            size = Size(edgeGlowWidth, viewportHeight),
+        )
+    }
+
+    // Draw top edge glow (when page top edge is near viewport top)
+    if (topGlowAlpha > 0f && top < edgeGlowWidth) {
+        drawRect(
+            brush =
+                ComposeBrush.verticalGradient(
+                    colors =
+                        listOf(
+                            edgeGlowColor.copy(alpha = EDGE_GLOW_ALPHA_MAX * topGlowAlpha),
+                            Color.Transparent,
+                        ),
+                    startY = 0f,
+                    endY = edgeGlowWidth,
+                ),
+            topLeft = Offset(0f, 0f),
+            size = Size(viewportWidth, edgeGlowWidth),
+        )
+    }
+
+    // Draw bottom edge glow (when page bottom edge is near viewport bottom)
+    if (bottomGlowAlpha > 0f && top + pageHeightPx > viewportHeight - edgeGlowWidth) {
+        drawRect(
+            brush =
+                ComposeBrush.verticalGradient(
+                    colors =
+                        listOf(
+                            Color.Transparent,
+                            edgeGlowColor.copy(alpha = EDGE_GLOW_ALPHA_MAX * bottomGlowAlpha),
+                        ),
+                    startY = viewportHeight - edgeGlowWidth,
+                    endY = viewportHeight,
+                ),
+            topLeft = Offset(0f, viewportHeight - edgeGlowWidth),
+            size = Size(viewportWidth, edgeGlowWidth),
+        )
+    }
+}
+
+/**
+ * Calculate glow alpha based on distance from edge.
+ * Returns 0 when far from edge, 1 when at edge.
+ */
+private fun calculatePdfGlowAlpha(
+    distance: Float,
+    threshold: Float,
+): Float {
+    if (distance >= threshold) return 0f
+    return 1f - (distance / threshold)
 }

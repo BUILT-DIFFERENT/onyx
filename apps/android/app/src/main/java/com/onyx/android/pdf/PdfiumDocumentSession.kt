@@ -35,6 +35,18 @@ data class PdfRenderRegion(
     val height: Int,
 )
 
+/**
+ * Represents a bookmark/outline item in a PDF's table of contents.
+ * @param title The display text of the bookmark
+ * @param pageIndex The zero-based page index this bookmark points to (-1 if no page target)
+ * @param children Nested child bookmarks for hierarchical outlines
+ */
+data class OutlineItem(
+    val title: String,
+    val pageIndex: Int,
+    val children: List<OutlineItem> = emptyList(),
+)
+
 class PdfPasswordRequiredException(
     cause: Throwable? = null,
 ) : IOException("This PDF requires a password.", cause)
@@ -49,6 +61,12 @@ interface PdfDocumentInfoReader {
         pdfFile: File,
         password: String? = null,
     ): PdfDocumentInfo
+
+    @Throws(IOException::class)
+    fun readTableOfContents(
+        pdfFile: File,
+        password: String? = null,
+    ): List<OutlineItem>
 }
 
 internal fun isLikelyPdfPasswordFailure(message: String?): Boolean {
@@ -94,6 +112,19 @@ class PdfiumDocumentInfoReader(
                 }
             PdfDocumentInfo(pageCount = pageCount, pages = pages)
         }
+
+    @Throws(IOException::class)
+    override fun readTableOfContents(
+        pdfFile: File,
+        password: String?,
+    ): List<OutlineItem> =
+        PdfiumDocumentSession.open(
+            context = context,
+            pdfFile = pdfFile,
+            password = password,
+        ).use { session ->
+            session.getTableOfContents()
+        }
 }
 
 internal class PdfiumDocumentSession private constructor(
@@ -130,6 +161,36 @@ internal class PdfiumDocumentSession private constructor(
             region.width,
             region.height,
             renderAnnotations,
+        )
+    }
+
+    /**
+     * Retrieves the table of contents (bookmarks/outline) from the PDF.
+     * @return A list of top-level outline items, each potentially containing nested children.
+     */
+    fun getTableOfContents(): List<OutlineItem> {
+        ensureOpen()
+        val bookmarks = pdfiumCore.getTableOfContents(pdfDocument)
+        return bookmarks.map { it.toOutlineItem() }
+    }
+
+    /**
+     * Recursively converts a PdfDocument.Bookmark to an OutlineItem.
+     */
+    private fun PdfDocument.Bookmark.toOutlineItem(): OutlineItem {
+        val childItems = this.children?.map { it.toOutlineItem() } ?: emptyList()
+        // PdfiumAndroid Bookmark has pageIndex as Long?, need to handle it
+        val targetPageIndex =
+            try {
+                val method = this.javaClass.getDeclaredMethod("getPageIndex")
+                method.invoke(this) as? Long ?: -1L
+            } catch (_: Exception) {
+                -1L
+            }
+        return OutlineItem(
+            title = this.title ?: "",
+            pageIndex = targetPageIndex.toInt(),
+            children = childItems,
         )
     }
 

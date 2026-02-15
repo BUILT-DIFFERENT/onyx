@@ -116,6 +116,60 @@ class PdfTileCache(
                 .filterValues { bitmap -> !bitmap.isRecycled }
         }
 
+    /**
+     * Get tiles for a specific page and scale bucket.
+     * Used for crossfade rendering during zoom transitions.
+     */
+    suspend fun snapshotForPageAndBucket(
+        pageIndex: Int,
+        scaleBucket: Float,
+    ): Map<PdfTileKey, Bitmap> =
+        cacheMutex.withLock {
+            cache
+                .snapshot()
+                .filterKeys { key -> key.pageIndex == pageIndex && key.scaleBucket == scaleBucket }
+                .filterValues { bitmap -> !bitmap.isRecycled }
+        }
+
+    /**
+     * Get tiles for a page including multiple scale buckets for smooth crossfade.
+     * Returns tiles for both current and previous scale buckets.
+     *
+     * @param pageIndex The page index to get tiles for
+     * @param currentBucket The current scale bucket (highest priority)
+     * @param previousBucket The previous scale bucket to include for crossfade (optional)
+     * @return Map of tiles with both buckets if available
+     */
+    suspend fun snapshotForPageWithFallback(
+        pageIndex: Int,
+        currentBucket: Float,
+        previousBucket: Float? = null,
+    ): Map<PdfTileKey, Bitmap> =
+        cacheMutex.withLock {
+            val snapshot = cache.snapshot()
+            val currentBucketTiles =
+                snapshot
+                    .filterKeys { key ->
+                        key.pageIndex == pageIndex && key.scaleBucket == currentBucket
+                    }.filterValues { bitmap -> !bitmap.isRecycled }
+
+            if (previousBucket == null || previousBucket == currentBucket) {
+                return@withLock currentBucketTiles
+            }
+
+            // Add previous bucket tiles for positions not covered by current bucket
+            val currentTilePositions = currentBucketTiles.keys.map { it.tileX to it.tileY }.toSet()
+            val previousBucketTiles =
+                snapshot
+                    .filterKeys { key ->
+                        key.pageIndex == pageIndex &&
+                            key.scaleBucket == previousBucket &&
+                            (key.tileX to key.tileY) !in currentTilePositions
+                    }.filterValues { bitmap -> !bitmap.isRecycled }
+
+            currentBucketTiles + previousBucketTiles
+        }
+
     suspend fun sizeBytes(): Int =
         cacheMutex.withLock {
             cache.size()
