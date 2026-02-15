@@ -165,6 +165,14 @@ fun InkCanvas(
                         runtime.finishedStrokePathCache.remove(stroke.id)
                         currentCallbacks.onStrokeErased(stroke)
                     }
+                    // Use postOnAnimation to remove finished strokes synchronized with the display refresh.
+                    // This prevents ghosting by ensuring the stroke is removed from the
+                    // InProgressStrokesView at the same frame it appears in Compose's Canvas.
+                    val onStrokeRenderFinished = { strokeId: InProgressStrokeId ->
+                        postOnAnimation {
+                            removeFinishedStrokes(setOf(strokeId))
+                        }
+                    }
                     setOnTouchListener { _, event ->
                         val interaction =
                             InkCanvasInteraction(
@@ -179,6 +187,7 @@ fun InkCanvas(
                                 onTransformGesture = currentCallbacks.onTransformGesture,
                                 onPanGestureEnd = currentCallbacks.onPanGestureEnd,
                                 onStylusButtonEraserActiveChanged = currentCallbacks.onStylusButtonEraserActiveChanged,
+                                onStrokeRenderFinished = onStrokeRenderFinished,
                             )
                         handleTouchEvent(
                             view = this@apply,
@@ -201,6 +210,7 @@ fun InkCanvas(
                                 onTransformGesture = currentCallbacks.onTransformGesture,
                                 onPanGestureEnd = currentCallbacks.onPanGestureEnd,
                                 onStylusButtonEraserActiveChanged = currentCallbacks.onStylusButtonEraserActiveChanged,
+                                onStrokeRenderFinished = onStrokeRenderFinished,
                             )
                         handleGenericMotionEvent(event, interaction, runtime)
                     }

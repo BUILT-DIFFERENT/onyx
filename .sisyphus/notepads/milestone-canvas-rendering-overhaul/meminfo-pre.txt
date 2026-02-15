@@ -1,0 +1,72 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 685030996 Realtime: 2521231756
+
+** MEMINFO in pid 7405 [com.onyx.android] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap    28171    28124       32       39    29604    42524    31126     6887
+  Dalvik Heap    13760    13708        0       66    17400    32250     7674    24576
+ Dalvik Other    16133     5544        0        0    27264                           
+        Stack     1656     1656        0        0     1664                           
+       Ashmem        9        0        0        0      584                           
+    Other dev       22        0       20        0      448                           
+     .so mmap    14175      172     9400       21    48336                           
+    .jar mmap     3385        0      856        0    41684                           
+    .apk mmap    74731     1336    73128        0    76704                           
+    .ttf mmap      332        0      244        0      576                           
+    .dex mmap        9        0        0        0      756                           
+    .oat mmap       33        0        0        0     1364                           
+    .art mmap    10466     9000     1036       93    26164                           
+   Other mmap      196        4      140        0     1308                           
+   EGL mtrack    43381    43381        0        0    43381                           
+    GL mtrack     7916     7916        0        0     7916                           
+      Unknown     1485     1440       28        2     2208                           
+        TOTAL   216081   112281    84884      221   327361    74774    38800    31463
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    23744                          43564
+         Native Heap:    28124                          29604
+                Code:    85532                         190992
+               Stack:     1656                           1664
+            Graphics:    51297                          51297
+       Private Other:     6812
+              System:    18916
+             Unknown:                                   10240
+ 
+           TOTAL PSS:   216081            TOTAL RSS:   327361       TOTAL SWAP PSS:      221
+ 
+ Objects
+               Views:       30         ViewRootImpl:        3
+         AppContexts:        9           Activities:        3
+              Assets:       32        AssetManagers:        0
+       Local Binders:       30        Proxy Binders:       85
+       Parcel memory:       15         Parcel count:       54
+    Death Recipients:        0             WebViews:        0
+ 
+ Native Allocations
+                         Count                       Total(kB)
+                        ------                         ------
+   Bitmap (malloced):       26                             66
+    Other (malloced):      942                             88
+ Other (nonmalloced):      138                             94
+ 
+ SQL
+         MEMORY_USED:      547
+  PAGECACHE_OVERFLOW:      185          MALLOC_SIZE:       46
+ 
+ DATABASES
+      pgsz     dbsz   Lookaside(b) cache hits cache misses cache size  Dbname
+PER CONNECTION STATS
+         4      164             45    25   233     7  /data/user/0/com.onyx.android/databases/onyx_notes.db
+         4       16                    0     0     0    (attached) temp
+         4      164             94    13    17     5  /data/user/0/com.onyx.android/databases/onyx_notes.db (25)
+         4      104            123     9    51    11  /data/user/0/com.onyx.android/no_backup/androidx.work.workdb
+         4        8                    0     0     0    (attached) temp
+         4      104             25     4    14     2  /data/user/0/com.onyx.android/no_backup/androidx.work.workdb (2)
+POOL STATS
+     cache hits  cache misses    cache size  Dbname
+             68           542           610  /data/user/0/com.onyx.android/databases/onyx_notes.db
+             15            81            96  /data/user/0/com.onyx.android/no_backup/androidx.work.workdb
