@@ -131,6 +131,10 @@ internal data class MultiPageContentState(
     val interactionMode: InteractionMode,
     val pdfRenderer: PdfDocumentRenderer?,
     val firstVisiblePageIndex: Int,
+    val documentZoom: Float,
+    val documentPanX: Float,
+    val minDocumentZoom: Float,
+    val maxDocumentZoom: Float,
     val thumbnails: List<ThumbnailItem>,
     val onStrokeFinished: (Stroke, String) -> Unit,
     val onStrokeErased: (Stroke, String) -> Unit,
@@ -146,9 +150,12 @@ internal data class MultiPageContentState(
         velocityX: Float,
         velocityY: Float,
     ) -> Unit,
+    val onDocumentZoomChange: (Float) -> Unit,
+    val onDocumentPanXChange: (Float) -> Unit,
     val onViewportSizeChanged: (IntSize) -> Unit,
     val onVisiblePageChanged: (Int) -> Unit,
-    val onVisiblePagesChanged: (IntRange) -> Unit,
+    val onVisiblePagesImmediateChanged: (IntRange) -> Unit,
+    val onVisiblePagesPrefetchChanged: (IntRange) -> Unit,
     val onPageSelected: (Int) -> Unit,
 )
 
@@ -192,7 +199,9 @@ internal data class MultiPageUiState(
 )
 
 internal data class BrushState(
-    val brush: Brush,
+    val activeBrush: Brush,
+    val penBrush: Brush,
+    val highlighterBrush: Brush,
     val lastNonEraserTool: Tool,
     val onBrushChange: (Brush) -> Unit,
 )

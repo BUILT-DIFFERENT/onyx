@@ -2,7 +2,6 @@
 
 package com.onyx.android.ink.ui
 
-import android.graphics.Color.parseColor
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -21,6 +20,7 @@ import com.onyx.android.ink.model.StrokeStyle
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 import androidx.compose.ui.graphics.drawscope.Stroke as ComposeStroke
 import androidx.ink.brush.Brush as InkBrush
@@ -39,11 +39,15 @@ private const val RGB_MASK = 0x00FFFFFF
 private const val MAX_ALPHA = 255
 internal const val PRESSURE_FALLBACK = 0.5f
 private const val MIN_STROKE_POINTS = 2
-private const val CATMULL_ROM_TENSION = 0.5f
-internal const val CATMULL_ROM_SUBDIVISIONS = 8
+private const val CENTRIPETAL_ALPHA = 0.5f
+private const val MIN_CATMULL_ROM_SUBDIVISIONS = 2
+private const val MAX_CATMULL_ROM_SUBDIVISIONS = 10
 internal const val PRESSURE_GAMMA = 0.6f
 private const val TAPER_POINT_COUNT = 5
-private const val TAPER_MIN_FACTOR = 0.15f
+private const val TAPER_MIN_FACTOR = 0.35f
+private const val SHORT_STROKE_TAPER_THRESHOLD = 8
+private const val SHORT_STROKE_TAPER_REDUCTION = 0.35f
+private const val MIN_RENDERED_WIDTH_FACTOR = 0.18f
 private const val PATH_CACHE_MAX_ENTRIES = 500
 private const val MIN_WIDTH_FOR_OUTLINE = 0.01f
 internal const val HIGHLIGHTER_STROKE_ALPHA = 0.35f
@@ -60,7 +64,21 @@ internal object ColorCache {
 
     @Synchronized
     fun resolve(hex: String): Int {
-        return cache.getOrPut(hex) { parseColor(hex) }
+        return cache.getOrPut(hex) { parseHexColor(hex) }
+    }
+}
+
+private fun parseHexColor(hex: String): Int {
+    val trimmed = hex.trim()
+    require(trimmed.startsWith("#")) { "Color must start with #, received: $hex" }
+    val digits = trimmed.substring(1)
+    val parsed =
+        digits.toLongOrNull(16)
+            ?: throw IllegalArgumentException("Invalid hex color: $hex")
+    return when (digits.length) {
+        6 -> (parsed or 0xFF000000L).toInt()
+        8 -> parsed.toInt()
+        else -> throw IllegalArgumentException("Unsupported hex color length: ${digits.length}")
     }
 }
 
@@ -184,7 +202,7 @@ private fun buildStrokePathCacheEntry(
     points: List<StrokePoint>,
     style: StrokeStyle,
 ): StrokePathCacheEntry {
-    val samples = catmullRomSmooth(points)
+    val samples = catmullRomSmooth(points, style.smoothingLevel)
     val widths = computePerPointWidths(samples, style)
     val path = buildVariableWidthOutline(samples, widths)
     return StrokePathCacheEntry(path = path)
@@ -300,7 +318,10 @@ private fun Path.addRoundCap(
     val perpX = -dy
     val perpY = dx
     val len = sqrt(perpX * perpX + perpY * perpY)
-    if (len < MIN_WIDTH_FOR_OUTLINE) return
+    if (len < MIN_WIDTH_FOR_OUTLINE) {
+        lineTo(toX, toY)
+        return
+    }
     val nx = perpX / len * radius
     val ny = perpY / len * radius
     quadraticBezierTo(cx + nx, cy + ny, toX, toY)
@@ -380,12 +401,25 @@ internal data class StrokeRenderPoint(
  * - Subdivisions between each pair of control points yield fluid curves
  *   instead of the polygonal/jagged lines the 3-point average produced.
  */
-internal fun catmullRomSmooth(points: List<StrokePoint>): List<StrokeRenderPoint> {
+internal fun catmullRomSmooth(
+    points: List<StrokePoint>,
+    smoothingLevel: Float = 0.35f,
+): List<StrokeRenderPoint> {
     if (points.size <= MIN_STROKE_POINTS) {
         return points.map { point -> StrokeRenderPoint(point.x, point.y, point.p) }
     }
 
-    val result = ArrayList<StrokeRenderPoint>(points.size * CATMULL_ROM_SUBDIVISIONS)
+    val clampedSmoothing = smoothingLevel.coerceIn(0f, 1f)
+    if (clampedSmoothing <= 0.01f) {
+        return points.map { point -> StrokeRenderPoint(point.x, point.y, point.p) }
+    }
+    val subdivisions =
+        (
+            MIN_CATMULL_ROM_SUBDIVISIONS +
+                (MAX_CATMULL_ROM_SUBDIVISIONS - MIN_CATMULL_ROM_SUBDIVISIONS) * clampedSmoothing
+        ).roundToInt().coerceIn(MIN_CATMULL_ROM_SUBDIVISIONS, MAX_CATMULL_ROM_SUBDIVISIONS)
+
+    val result = ArrayList<StrokeRenderPoint>(points.size * subdivisions)
     val first = points.first()
     result += StrokeRenderPoint(first.x, first.y, first.p)
 
@@ -400,11 +434,30 @@ internal fun catmullRomSmooth(points: List<StrokePoint>): List<StrokeRenderPoint
         val p2Pressure = p2.p ?: PRESSURE_FALLBACK
         val p3Pressure = p3.p ?: PRESSURE_FALLBACK
 
-        for (step in 1..CATMULL_ROM_SUBDIVISIONS) {
-            val t = step.toFloat() / CATMULL_ROM_SUBDIVISIONS
-            val x = catmullRomValue(p0.x, p1.x, p2.x, p3.x, t)
-            val y = catmullRomValue(p0.y, p1.y, p2.y, p3.y, t)
-            val pressure = catmullRomValue(p0Pressure, p1Pressure, p2Pressure, p3Pressure, t)
+        val t0 = 0f
+        val t1 = t0 + centripetalStep(p0.x, p0.y, p1.x, p1.y)
+        val t2 = t1 + centripetalStep(p1.x, p1.y, p2.x, p2.y)
+        val t3 = t2 + centripetalStep(p2.x, p2.y, p3.x, p3.y)
+        if (t2 <= t1) {
+            result += StrokeRenderPoint(p2.x, p2.y, p2.p)
+            continue
+        }
+        for (step in 1..subdivisions) {
+            val t = t1 + (t2 - t1) * (step.toFloat() / subdivisions)
+            val x = centripetalCatmullRomValue(p0.x, p1.x, p2.x, p3.x, t, t0, t1, t2, t3)
+            val y = centripetalCatmullRomValue(p0.y, p1.y, p2.y, p3.y, t, t0, t1, t2, t3)
+            val pressure =
+                centripetalCatmullRomValue(
+                    p0Pressure,
+                    p1Pressure,
+                    p2Pressure,
+                    p3Pressure,
+                    t,
+                    t0,
+                    t1,
+                    t2,
+                    t3,
+                )
             result += StrokeRenderPoint(x, y, pressure.coerceIn(0f, 1f))
         }
     }
@@ -412,11 +465,61 @@ internal fun catmullRomSmooth(points: List<StrokePoint>): List<StrokeRenderPoint
 }
 
 /**
- * Evaluates a single Catmull-Rom spline component at parameter t ∈ [0,1].
- *
- * Uses the standard matrix form with tension = 0.5:
- *   q(t) = 0.5 * [ (-t + 2t² - t³)·v0 + (2 - 5t² + 3t³)·v1 +
- *                   (t + 4t² - 3t³)·v2 + (-t² + t³)·v3 ]
+ * Uses centripetal parameterization to reduce overshoot and endpoint artifacts.
+ */
+internal fun centripetalCatmullRomValue(
+    v0: Float,
+    v1: Float,
+    v2: Float,
+    v3: Float,
+    t: Float,
+    t0: Float,
+    t1: Float,
+    t2: Float,
+    t3: Float,
+): Float {
+    val safeT1 = if (t1 <= t0) t0 + 0.0001f else t1
+    val safeT2 = if (t2 <= safeT1) safeT1 + 0.0001f else t2
+    val safeT3 = if (t3 <= safeT2) safeT2 + 0.0001f else t3
+
+    val a1 = lerpParameter(v0, v1, t0, safeT1, t)
+    val a2 = lerpParameter(v1, v2, safeT1, safeT2, t)
+    val a3 = lerpParameter(v2, v3, safeT2, safeT3, t)
+
+    val b1 = lerpParameter(a1, a2, t0, safeT2, t)
+    val b2 = lerpParameter(a2, a3, safeT1, safeT3, t)
+
+    return lerpParameter(b1, b2, safeT1, safeT2, t)
+}
+
+private fun centripetalStep(
+    x0: Float,
+    y0: Float,
+    x1: Float,
+    y1: Float,
+): Float {
+    val dx = x1 - x0
+    val dy = y1 - y0
+    val distance = sqrt(dx * dx + dy * dy).coerceAtLeast(MIN_WIDTH_FOR_OUTLINE)
+    return distance.pow(CENTRIPETAL_ALPHA)
+}
+
+private fun lerpParameter(
+    v0: Float,
+    v1: Float,
+    t0: Float,
+    t1: Float,
+    t: Float,
+): Float {
+    if (t1 <= t0) {
+        return v1
+    }
+    val ratio = ((t - t0) / (t1 - t0)).coerceIn(0f, 1f)
+    return v0 + (v1 - v0) * ratio
+}
+
+/**
+ * Compatibility wrapper for tests and call sites that still evaluate Catmull-Rom in [0, 1].
  */
 internal fun catmullRomValue(
     v0: Float,
@@ -425,14 +528,10 @@ internal fun catmullRomValue(
     v3: Float,
     t: Float,
 ): Float {
-    val t2 = t * t
-    val t3 = t2 * t
-    return CATMULL_ROM_TENSION * (
-        (-t + 2f * t2 - t3) * v0 +
-            (2f - 5f * t2 + 3f * t3) * v1 +
-            (t + 4f * t2 - 3f * t3) * v2 +
-            (-t2 + t3) * v3
-    )
+    val normalizedT = t.coerceIn(0f, 1f)
+    // Map compatibility t in [0, 1] to the active segment [t1, t2].
+    val segmentT = 1f + normalizedT
+    return centripetalCatmullRomValue(v0, v1, v2, v3, segmentT, 0f, 1f, 2f, 3f)
 }
 
 /**
@@ -452,14 +551,20 @@ internal fun computePerPointWidths(
 ): List<Float> {
     if (points.isEmpty()) return emptyList()
     val count = points.size
+    val minRenderedWidth = (style.baseWidth * MIN_RENDERED_WIDTH_FACTOR).coerceAtLeast(MIN_WIDTH_FOR_OUTLINE)
     return List(count) { index ->
         val pressure = points[index].pressure ?: PRESSURE_FALLBACK
         val gammaPressure = applyPressureGamma(pressure)
         val factor = style.minWidthFactor + (style.maxWidthFactor - style.minWidthFactor) * gammaPressure
         val baseAdjusted = style.baseWidth * factor
 
-        val taperFactor = computeTaperFactor(index, count)
-        baseAdjusted * taperFactor
+        val taperFactor =
+            computeTaperFactor(
+                index = index,
+                totalPoints = count,
+                taperStrength = style.endTaperStrength,
+            )
+        (baseAdjusted * taperFactor).coerceAtLeast(minRenderedWidth)
     }
 }
 
@@ -472,10 +577,23 @@ internal fun applyPressureGamma(pressure: Float): Float = pressure.coerceIn(0f, 
 internal fun computeTaperFactor(
     index: Int,
     totalPoints: Int,
+    taperStrength: Float = 0.35f,
 ): Float {
-    if (totalPoints <= 1) return 1f
-    val taperLength = TAPER_POINT_COUNT.coerceAtMost(totalPoints / 2)
-    if (taperLength <= 0) return 1f
+    if (totalPoints <= 1) {
+        return 1f
+    }
+    val clampedStrength = taperStrength.coerceIn(0f, 1f)
+    if (clampedStrength <= 0f) {
+        return 1f
+    }
+    if (totalPoints <= SHORT_STROKE_TAPER_THRESHOLD) {
+        return 1f - (SHORT_STROKE_TAPER_REDUCTION * clampedStrength)
+    }
+    val taperLengthBase = maxOf(1, (TAPER_POINT_COUNT * clampedStrength).roundToInt())
+    val taperLength = taperLengthBase.coerceAtMost(totalPoints / 2)
+    if (taperLength <= 0) {
+        return 1f
+    }
 
     val startTaper =
         if (index < taperLength) {
@@ -490,7 +608,8 @@ internal fun computeTaperFactor(
         } else {
             1f
         }
-    return minOf(startTaper, endTaper)
+    val rawFactor = minOf(startTaper, endTaper)
+    return 1f - clampedStrength * (1f - rawFactor)
 }
 
 internal fun pressureWidth(

@@ -117,7 +117,8 @@ class NoteEditorToolbarTest {
             up()
         }
         composeRule.onNodeWithText("Pen settings").assertIsDisplayed()
-        composeRule.onNodeWithText("Stabilization").assertIsDisplayed()
+        composeRule.onNodeWithText("Smoothing").assertIsDisplayed()
+        composeRule.onNodeWithText("End taper").assertIsDisplayed()
     }
 
     @Test

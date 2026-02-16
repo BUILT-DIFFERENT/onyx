@@ -149,10 +149,13 @@ class VariableWidthOutlineTest {
                 StrokePoint(x = 10f, y = 10f, t = 1L, p = 0.5f),
                 StrokePoint(x = 20f, y = 0f, t = 2L, p = 0.5f),
             )
-        val result = catmullRomSmooth(points)
-        // 1 (first point) + 2 segments × CATMULL_ROM_SUBDIVISIONS = 1 + 2×8 = 17
-        val expected = 1 + (points.size - 1) * CATMULL_ROM_SUBDIVISIONS
-        assertEquals(expected, result.size, "Should produce expected number of subdivisions")
+        val noSmoothing = catmullRomSmooth(points, smoothingLevel = 0f)
+        val mediumSmoothing = catmullRomSmooth(points, smoothingLevel = 0.5f)
+        val fullSmoothing = catmullRomSmooth(points, smoothingLevel = 1f)
+
+        assertEquals(points.size, noSmoothing.size, "Zero smoothing should preserve raw points")
+        assertTrue(mediumSmoothing.size > noSmoothing.size, "Medium smoothing should add interpolated points")
+        assertTrue(fullSmoothing.size >= mediumSmoothing.size, "Higher smoothing should not reduce subdivisions")
     }
 
     @Test

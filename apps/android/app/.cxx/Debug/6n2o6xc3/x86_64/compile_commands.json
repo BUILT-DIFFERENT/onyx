@@ -1,0 +1,7 @@
+[
+{
+  "directory": "C:/onyx/apps/android/app/.cxx/Debug/6n2o6xc3/x86_64",
+  "command": "C:\\Users\\gamer\\AppData\\Local\\Android\\Sdk\\ndk\\27.0.12077973\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe --target=x86_64-none-linux-android30 --sysroot=C:/Users/gamer/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/sysroot -Donyx_pdfium_text_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -std=c++17 -fno-limit-debug-info  -fPIC -o CMakeFiles\\onyx_pdfium_text.dir\\pdfium_text_jni.cpp.o -c C:\\onyx\\apps\\android\\app\\src\\main\\cpp\\pdfium_text_jni.cpp",
+  "file": "C:\\onyx\\apps\\android\\app\\src\\main\\cpp\\pdfium_text_jni.cpp"
+}
+]

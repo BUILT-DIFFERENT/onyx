@@ -15,6 +15,7 @@ internal fun cancelActiveStroke(
     view.cancelStroke(strokeId, event)
     runtime.activeStrokeIds.remove(pointerId)
     runtime.activePointerModes.remove(pointerId)
+    runtime.stylusPointerIds.remove(pointerId)
     runtime.activeStrokeBrushes.remove(pointerId)
     runtime.activeStrokePoints.remove(pointerId)
     runtime.activeStrokeStartTimes.remove(pointerId)
@@ -31,6 +32,7 @@ internal fun cancelActiveStrokes(
     }
     runtime.activeStrokeIds.clear()
     runtime.activePointerModes.clear()
+    runtime.stylusPointerIds.clear()
     runtime.activeStrokeBrushes.clear()
     runtime.activeStrokePoints.clear()
     runtime.activeStrokeStartTimes.clear()

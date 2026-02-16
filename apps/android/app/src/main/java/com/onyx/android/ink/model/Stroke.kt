@@ -19,6 +19,8 @@ data class StrokeStyle(
     val baseWidth: Float,
     val minWidthFactor: Float = 0.85f,
     val maxWidthFactor: Float = 1.15f,
+    val smoothingLevel: Float = 0.35f,
+    val endTaperStrength: Float = 0.35f,
     val nibRotation: Boolean = false,
 )
 

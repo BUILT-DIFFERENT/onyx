@@ -22,8 +22,6 @@ import com.onyx.android.ink.model.ViewTransform
 private const val PALM_CONTACT_SIZE_THRESHOLD = 1.0f
 private const val PREDICTED_STROKE_ALPHA = 0.2f
 private const val IN_PROGRESS_STROKE_ALPHA = 1f
-private const val STYLUS_BUTTON_MASK =
-    MotionEvent.BUTTON_STYLUS_PRIMARY or MotionEvent.BUTTON_STYLUS_SECONDARY
 private const val EDGE_TOLERANCE_PX = 12f
 private const val MIN_TOLERANCE_ZOOM = 0.001f
 
@@ -61,15 +59,42 @@ internal fun handleTouchEvent(
     runtime: InkCanvasRuntime,
 ): Boolean {
     syncStylusButtonEraserState(event, interaction, runtime)
-    if (!interaction.allowFingerGestures && !eventHasStylusPointer(event)) {
+    if (!interaction.allowFingerGestures && !eventHasStylusStream(event, runtime)) {
         return false
+    }
+    if (!interaction.allowFingerGestures) {
+        return when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN,
+            MotionEvent.ACTION_POINTER_DOWN,
+            -> handlePointerDown(view, event, interaction, runtime)
+
+            MotionEvent.ACTION_MOVE -> handlePointerMove(view, event, interaction, runtime)
+
+            MotionEvent.ACTION_UP,
+            MotionEvent.ACTION_POINTER_UP,
+            -> handlePointerUp(view, event, interaction, runtime)
+
+            MotionEvent.ACTION_HOVER_ENTER,
+            MotionEvent.ACTION_HOVER_MOVE,
+            -> handleHover(event, interaction, runtime)
+
+            MotionEvent.ACTION_HOVER_EXIT -> {
+                runtime.hoverPreviewState.hide()
+                updateStylusButtonEraserState(false, interaction, runtime)
+                true
+            }
+
+            MotionEvent.ACTION_CANCEL -> handleCancel(view, event, interaction, runtime)
+
+            else -> false
+        }
     }
     return when {
         runtime.isTransforming || shouldStartTransformGesture(event) -> {
             handleTransformGesture(view, event, interaction, runtime)
         }
 
-        runtime.isSingleFingerPanning || shouldStartSingleFingerPanGesture(event) -> {
+        runtime.isSingleFingerPanning || shouldStartSingleFingerPanGesture(event, runtime) -> {
             handleSingleFingerPanGesture(view, event, interaction, runtime)
         }
 
@@ -122,7 +147,7 @@ internal fun handleGenericMotionEvent(
         MotionEvent.ACTION_BUTTON_PRESS,
         MotionEvent.ACTION_BUTTON_RELEASE,
         -> {
-            if (eventHasStylusPointer(event)) {
+            if (eventHasStylusStream(event, runtime)) {
                 handleHover(event, interaction, runtime)
             } else {
                 false
@@ -144,7 +169,7 @@ private fun syncStylusButtonEraserState(
             MotionEvent.ACTION_HOVER_EXIT,
             -> true
 
-            else -> eventHasStylusPointer(event)
+            else -> eventHasStylusStream(event, runtime)
         }
     if (!shouldUpdate) {
         return
@@ -172,28 +197,22 @@ private fun updateStylusButtonEraserState(
     interaction.onStylusButtonEraserActiveChanged(isActive)
 }
 
-private fun eventHasStylusPointer(event: MotionEvent): Boolean {
-    for (index in 0 until event.pointerCount) {
-        if (isStylusToolType(event.getToolType(index))) {
-            return true
-        }
-    }
-    return false
-}
-
-private fun isStylusButtonPressed(event: MotionEvent): Boolean = (event.buttonState and STYLUS_BUTTON_MASK) != 0
+private fun isStylusButtonPressed(event: MotionEvent): Boolean =
+    event.buttonState and MotionEvent.BUTTON_STYLUS_PRIMARY == MotionEvent.BUTTON_STYLUS_PRIMARY ||
+        event.buttonState and MotionEvent.BUTTON_STYLUS_SECONDARY == MotionEvent.BUTTON_STYLUS_SECONDARY
 
 private fun resolvePointerMode(
     event: MotionEvent,
     pointerIndex: Int,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
+    pointerIsStylusStream: Boolean,
 ): PointerMode {
     val toolType = event.getToolType(pointerIndex)
     if (toolType == MotionEvent.TOOL_TYPE_ERASER || interaction.brush.tool == Tool.ERASER) {
         return PointerMode.ERASE
     }
-    if (isStylusToolType(toolType) && (runtime.isStylusButtonEraserActive || isStylusButtonPressed(event))) {
+    if (pointerIsStylusStream && (runtime.isStylusButtonEraserActive || isStylusButtonPressed(event))) {
         return PointerMode.ERASE
     }
     return PointerMode.DRAW
@@ -209,19 +228,25 @@ private fun handlePointerDown(
     val pointerId = event.getPointerId(actionIndex)
     val actionToolType = event.getToolType(actionIndex)
     val contactSize = event.getSize(actionIndex)
+    val pointerIsStylusStream = isPointerStylusStream(event, actionIndex, runtime)
     val isKnownDrawingTool = isSupportedToolType(actionToolType)
     val isUnknownTool = actionToolType == MotionEvent.TOOL_TYPE_UNKNOWN
     val shouldHandle =
-        (isKnownDrawingTool || isUnknownTool) && contactSize <= PALM_CONTACT_SIZE_THRESHOLD
+        (isKnownDrawingTool || isUnknownTool || pointerIsStylusStream) && contactSize <= PALM_CONTACT_SIZE_THRESHOLD
     if (!shouldHandle) {
         return false
+    }
+    if (pointerIsStylusStream) {
+        runtime.stylusPointerIds.add(pointerId)
+    } else {
+        runtime.stylusPointerIds.remove(pointerId)
     }
     if (!interaction.allowEditing) {
         return true
     }
-    val pointerMode = resolvePointerMode(event, actionIndex, interaction, runtime)
+    val pointerMode = resolvePointerMode(event, actionIndex, interaction, runtime, pointerIsStylusStream)
     runtime.activePointerModes[pointerId] = pointerMode
-    if (isStylusToolType(actionToolType)) {
+    if (pointerIsStylusStream) {
         view.requestUnbufferedDispatch(event)
     }
     if (pointerMode == PointerMode.ERASE) {
@@ -243,7 +268,18 @@ private fun handlePointerDown(
     runtime.motionPredictionAdapter?.record(event)
     val startTime = event.eventTime
     runtime.activeStrokeStartTimes[pointerId] = startTime
-    val strokeInput = createStrokeInput(event, actionIndex, startTime)
+    val strokeInput =
+        createStrokeInput(
+            event = event,
+            pointerIndex = actionIndex,
+            startTime = startTime,
+            resolvedToolType =
+                if (actionToolType == MotionEvent.TOOL_TYPE_UNKNOWN && pointerIsStylusStream) {
+                    MotionEvent.TOOL_TYPE_STYLUS
+                } else {
+                    actionToolType
+                },
+        )
     val effectiveBrush = interaction.brush.withToolType(actionToolType)
     val strokeId =
         view.startStroke(
@@ -373,11 +409,20 @@ private fun handlePredictedStrokes(
             if (startIndex < 0) {
                 continue
             }
+            val predictedPointerIsStylus =
+                runtime.stylusPointerIds.contains(predictedPointerId) ||
+                    isPointerStylusStream(predictedEvent, index, runtime)
             val startInput =
                 createStrokeInput(
                     event = event,
                     pointerIndex = startIndex,
                     startTime = event.eventTime,
+                    resolvedToolType =
+                        if (toolType == MotionEvent.TOOL_TYPE_UNKNOWN && predictedPointerIsStylus) {
+                            MotionEvent.TOOL_TYPE_STYLUS
+                        } else {
+                            toolType
+                        },
                 )
             val effectiveBrush =
                 if (toolType == MotionEvent.TOOL_TYPE_UNKNOWN) {
@@ -409,6 +454,10 @@ private fun handlePointerUp(
     val actionIndex = event.actionIndex
     val pointerId = event.getPointerId(actionIndex)
     val actionToolType = event.getToolType(actionIndex)
+    val pointerWasStylusStream =
+        runtime.stylusPointerIds.contains(pointerId) ||
+            isPointerStylusStream(event, actionIndex, runtime)
+    runtime.stylusPointerIds.remove(pointerId)
     val pointerMode = runtime.activePointerModes.remove(pointerId)
     var handled = false
     if (event.isCanceledEvent()) {
@@ -423,7 +472,18 @@ private fun handlePointerUp(
         val strokeId = runtime.activeStrokeIds[pointerId]
         if (strokeId != null) {
             val startTime = runtime.activeStrokeStartTimes[pointerId] ?: event.eventTime
-            val strokeInput = createStrokeInput(event, actionIndex, startTime)
+            val strokeInput =
+                createStrokeInput(
+                    event = event,
+                    pointerIndex = actionIndex,
+                    startTime = startTime,
+                    resolvedToolType =
+                        if (actionToolType == MotionEvent.TOOL_TYPE_UNKNOWN && pointerWasStylusStream) {
+                            MotionEvent.TOOL_TYPE_STYLUS
+                        } else {
+                            actionToolType
+                        },
+                )
             val effectiveBrush =
                 runtime.activeStrokeBrushes[pointerId] ?: interaction.brush.withToolType(actionToolType)
             cancelPredictedStroke(view, event, pointerId, runtime.predictedStrokeIds)
@@ -516,7 +576,7 @@ private fun handleHover(
 ): Boolean {
     val actionIndex = event.actionIndex
     val actionToolType = event.getToolType(actionIndex)
-    if (!isStylusToolType(actionToolType)) {
+    if (!isStylusToolType(actionToolType) && !isPointerStylusStream(event, actionIndex, runtime)) {
         runtime.hoverPreviewState.hide()
         return false
     }
@@ -554,6 +614,7 @@ private fun handleCancel(
     runtime.activeStrokeBrushes.clear()
     runtime.activeStrokePoints.clear()
     runtime.activeStrokeStartTimes.clear()
+    runtime.stylusPointerIds.clear()
     runtime.panVelocityTracker?.recycle()
     runtime.panVelocityTracker = null
     runtime.invalidateActiveStrokeRender()
@@ -566,8 +627,9 @@ private fun createStrokeInput(
     event: MotionEvent,
     pointerIndex: Int,
     startTime: Long,
+    resolvedToolType: Int = event.getToolType(pointerIndex),
 ): StrokeInput {
-    val toolType = event.getToolType(pointerIndex).toInputToolType()
+    val toolType = resolvedToolType.toInputToolType()
     val pressure = applyPressureGamma(event.getPressure(pointerIndex))
     val tilt = event.getAxisValue(MotionEvent.AXIS_TILT, pointerIndex)
     val orientation = event.getOrientation(pointerIndex)

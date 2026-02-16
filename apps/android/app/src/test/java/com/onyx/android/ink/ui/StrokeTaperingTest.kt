@@ -15,16 +15,14 @@ class StrokeTaperingTest {
 
     @Test
     fun `computeTaperFactor returns min factor at index 0`() {
-        val factor = computeTaperFactor(index = 0, totalPoints = 20)
-        // At index 0, taper = TAPER_MIN_FACTOR + (1 - TAPER_MIN_FACTOR) * (0/5) = TAPER_MIN_FACTOR
-        assertEquals(0.15f, factor, 0.0001f)
+        val factor = computeTaperFactor(index = 0, totalPoints = 20, taperStrength = 1f)
+        assertEquals(0.35f, factor, 0.0001f)
     }
 
     @Test
     fun `computeTaperFactor returns min factor at last index`() {
-        val factor = computeTaperFactor(index = 19, totalPoints = 20)
-        // distFromEnd = 0, so endTaper = TAPER_MIN_FACTOR
-        assertEquals(0.15f, factor, 0.0001f)
+        val factor = computeTaperFactor(index = 19, totalPoints = 20, taperStrength = 1f)
+        assertEquals(0.35f, factor, 0.0001f)
     }
 
     @Test
@@ -59,12 +57,16 @@ class StrokeTaperingTest {
 
     @Test
     fun `computeTaperFactor handles very short strokes`() {
-        // With 3 points, taperLength = min(5, 3/2) = 1
-        val factors = (0 until 3).map { computeTaperFactor(it, 3) }
-        // First and last should be tapered, middle should be 1.0
-        assertTrue(factors[0] < 1f, "First point should be tapered")
-        assertEquals(1f, factors[1], 0.0001f)
-        assertTrue(factors[2] < 1f, "Last point should be tapered")
+        val factors = (0 until 3).map { computeTaperFactor(it, 3, taperStrength = 1f) }
+        assertTrue(factors.all { it < 1f }, "Short strokes should still taper, but not collapse")
+        assertEquals(factors[0], factors[1], 0.0001f)
+        assertEquals(factors[1], factors[2], 0.0001f)
+    }
+
+    @Test
+    fun `computeTaperFactor can disable tapering`() {
+        val factors = (0 until 20).map { computeTaperFactor(it, 20, taperStrength = 0f) }
+        assertTrue(factors.all { it == 1f })
     }
 
     @Test
@@ -132,5 +134,25 @@ class StrokeTaperingTest {
             highWidths[10] > lowWidths[10],
             "High pressure (${highWidths[10]}) should produce wider stroke than low (${lowWidths[10]})",
         )
+    }
+
+    @Test
+    fun `computePerPointWidths keeps practical minimum width on short strokes`() {
+        val style =
+            StrokeStyle(
+                tool = Tool.PEN,
+                baseWidth = 2f,
+                minWidthFactor = 0.3f,
+                maxWidthFactor = 0.5f,
+                endTaperStrength = 1f,
+            )
+        val points =
+            listOf(
+                StrokeRenderPoint(0f, 0f, 0.1f),
+                StrokeRenderPoint(5f, 0f, 0.2f),
+                StrokeRenderPoint(10f, 0f, 0.1f),
+            )
+        val widths = computePerPointWidths(points, style)
+        assertTrue(widths.all { it > 0.3f }, "Widths should not collapse to near-zero on short strokes")
     }
 }

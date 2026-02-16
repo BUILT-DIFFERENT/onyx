@@ -55,6 +55,9 @@ private const val NOTE_EDITOR_LOG_TAG = "NoteEditorScreen"
 private const val PDF_OPEN_FAILED_MESSAGE = "Unable to open this PDF."
 private const val PDF_PASSWORD_INCORRECT_MESSAGE = "Incorrect PDF password. Please try again."
 private const val ENABLE_STACKED_PAGES = true
+private const val STACKED_DOCUMENT_MIN_ZOOM = 1f
+private const val STACKED_DOCUMENT_MAX_ZOOM = 4f
+private const val DEFAULT_STACKED_HIGHLIGHTER_BASE_WIDTH = 6.5f
 
 internal sealed interface PdfOpenFailureUiAction {
     data class PromptForPassword(
@@ -431,7 +434,7 @@ private fun rememberNoteEditorUiState(
         )
     val toolbarState =
         buildToolbarState(
-            brushState.brush,
+            brushState.activeBrush,
             brushState.lastNonEraserTool,
             isStylusButtonEraserActive,
             brushState.onBrushChange,
@@ -538,7 +541,7 @@ private fun rememberNoteEditorUiState(
             pageWidth = pdfState.pageWidth,
             pageHeight = pdfState.pageHeight,
             strokes = pageState.strokes,
-            brush = brushState.brush,
+            brush = brushState.activeBrush,
             isStylusButtonEraserActive = isStylusButtonEraserActive,
             interactionMode = InteractionMode.DRAW,
             thumbnails = thumbnails,
@@ -572,7 +575,7 @@ private fun rememberNoteEditorUiState(
 }
 
 @Composable
-@Suppress("LongMethod", "LongParameterList")
+@Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod")
 private fun rememberMultiPageUiState(
     noteId: String,
     viewModel: NoteEditorViewModel,
@@ -593,7 +596,12 @@ private fun rememberMultiPageUiState(
     var isReadOnly by rememberSaveable { mutableStateOf(false) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
-    var visibleRange by remember { mutableStateOf(0..0) }
+    var documentZoom by rememberSaveable { mutableStateOf(1f) }
+    var documentPanX by rememberSaveable { mutableStateOf(0f) }
+    var immediateVisibleRange by
+        remember(pageState.currentPageIndex) {
+            mutableStateOf(pageState.currentPageIndex..pageState.currentPageIndex)
+        }
     val pageStrokesCache by viewModel.pageStrokesCache.collectAsState()
     val pageById = remember(pageState.pages) { pageState.pages.associateBy { it.pageId } }
     val viewportWidth = viewportSize.width.toFloat()
@@ -640,14 +648,17 @@ private fun rememberMultiPageUiState(
             val pageHeight = page.height
             val scale =
                 if (viewportWidth > 0f && pageWidth > 0f) {
-                    viewportWidth / pageWidth
+                    (viewportWidth / pageWidth) * documentZoom
                 } else {
-                    1f
+                    documentZoom
                 }
+            val scaledPageWidth = pageWidth * scale
+            val minPanX = (viewportWidth - scaledPageWidth).coerceAtMost(0f)
+            val pagePanX = documentPanX.coerceIn(minPanX, 0f)
             val renderTransform =
                 ViewTransform(
                     zoom = scale,
-                    panX = 0f,
+                    panX = pagePanX,
                     panY = 0f,
                 )
             val pageWidthDp = with(density) { (pageWidth * scale).toDp() }
@@ -660,7 +671,7 @@ private fun rememberMultiPageUiState(
                 pageHeight = pageHeight,
                 strokes = pageStrokesCache[page.pageId].orEmpty(),
                 isPdfPage = page.kind == "pdf" || page.kind == "mixed",
-                isVisible = index in visibleRange,
+                isVisible = index in immediateVisibleRange,
                 renderTransform = renderTransform,
             )
         }
@@ -682,7 +693,7 @@ private fun rememberMultiPageUiState(
         )
     val toolbarState =
         buildToolbarState(
-            brushState.brush,
+            brushState.activeBrush,
             brushState.lastNonEraserTool,
             isStylusButtonEraserActive,
             brushState.onBrushChange,
@@ -711,14 +722,19 @@ private fun rememberMultiPageUiState(
         MultiPageContentState(
             pages = pages,
             isReadOnly = isReadOnly,
-            brush = brushState.brush,
+            brush = brushState.activeBrush,
             isStylusButtonEraserActive = isStylusButtonEraserActive,
             interactionMode = InteractionMode.SCROLL,
             pdfRenderer = pdfRenderer,
             firstVisiblePageIndex = pageState.currentPageIndex,
+            documentZoom = documentZoom,
+            documentPanX = documentPanX,
+            minDocumentZoom = STACKED_DOCUMENT_MIN_ZOOM,
+            maxDocumentZoom = STACKED_DOCUMENT_MAX_ZOOM,
             thumbnails = thumbnails,
             onStrokeFinished = { stroke, pageId ->
                 val page = pageById[pageId]
+                viewModel.setActiveRecognitionPage(pageId)
                 undoController.onStrokeFinished(stroke, page)
             },
             onStrokeErased = { stroke, pageId ->
@@ -727,10 +743,32 @@ private fun rememberMultiPageUiState(
             onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
             onTransformGesture = { _, _, _, _, _ -> },
             onPanGestureEnd = { _, _ -> },
+            onDocumentZoomChange = { updatedZoom ->
+                val clampedZoom = updatedZoom.coerceIn(STACKED_DOCUMENT_MIN_ZOOM, STACKED_DOCUMENT_MAX_ZOOM)
+                documentZoom = clampedZoom
+                val minPanX =
+                    if (viewportWidth > 0f) {
+                        (viewportWidth * (1f - clampedZoom)).coerceAtMost(0f)
+                    } else {
+                        0f
+                    }
+                documentPanX = documentPanX.coerceIn(minPanX, 0f)
+            },
+            onDocumentPanXChange = { updatedPanX ->
+                val minPanX =
+                    if (viewportWidth > 0f) {
+                        (viewportWidth * (1f - documentZoom)).coerceAtMost(0f)
+                    } else {
+                        0f
+                    }
+                documentPanX = updatedPanX.coerceIn(minPanX, 0f)
+            },
             onViewportSizeChanged = { viewportSize = it },
             onVisiblePageChanged = viewModel::setVisiblePageIndex,
-            onVisiblePagesChanged = { range ->
-                visibleRange = range
+            onVisiblePagesImmediateChanged = { range ->
+                immediateVisibleRange = range
+            },
+            onVisiblePagesPrefetchChanged = { range ->
                 viewModel.onVisiblePagesChanged(range)
             },
             onPageSelected = { targetIndex ->
@@ -747,17 +785,57 @@ private fun rememberMultiPageUiState(
 
 @Composable
 private fun rememberBrushState(): BrushState {
-    var brush by remember { mutableStateOf(Brush()) }
-    var lastNonEraserTool by remember { mutableStateOf(brush.tool) }
-    LaunchedEffect(brush.tool) {
-        if (brush.tool != Tool.ERASER) {
-            lastNonEraserTool = brush.tool
+    var penBrush by remember { mutableStateOf(Brush(tool = Tool.PEN)) }
+    var highlighterBrush by
+        remember {
+            mutableStateOf(
+                Brush(
+                    tool = Tool.HIGHLIGHTER,
+                    color = "#B31E88E5",
+                    baseWidth = DEFAULT_STACKED_HIGHLIGHTER_BASE_WIDTH,
+                ),
+            )
         }
-    }
+    var selectedTool by remember { mutableStateOf(Tool.PEN) }
+    var lastNonEraserTool by remember { mutableStateOf(Tool.PEN) }
+    val activeBrush =
+        when (selectedTool) {
+            Tool.PEN -> penBrush
+            Tool.HIGHLIGHTER -> highlighterBrush
+            Tool.ERASER -> {
+                when (lastNonEraserTool) {
+                    Tool.HIGHLIGHTER -> highlighterBrush.copy(tool = Tool.ERASER)
+                    else -> penBrush.copy(tool = Tool.ERASER)
+                }
+            }
+        }
     return BrushState(
-        brush = brush,
+        activeBrush = activeBrush,
+        penBrush = penBrush,
+        highlighterBrush = highlighterBrush,
         lastNonEraserTool = lastNonEraserTool,
-        onBrushChange = { updatedBrush -> brush = updatedBrush },
+        onBrushChange = { updatedBrush ->
+            when (updatedBrush.tool) {
+                Tool.PEN -> {
+                    selectedTool = Tool.PEN
+                    lastNonEraserTool = Tool.PEN
+                    penBrush = updatedBrush
+                }
+                Tool.HIGHLIGHTER -> {
+                    selectedTool = Tool.HIGHLIGHTER
+                    lastNonEraserTool = Tool.HIGHLIGHTER
+                    highlighterBrush = updatedBrush
+                }
+                Tool.ERASER -> {
+                    selectedTool = Tool.ERASER
+                    if (lastNonEraserTool == Tool.HIGHLIGHTER) {
+                        highlighterBrush = highlighterBrush.copy(tool = Tool.HIGHLIGHTER)
+                    } else {
+                        penBrush = penBrush.copy(tool = Tool.PEN)
+                    }
+                }
+            }
+        },
     )
 }
 

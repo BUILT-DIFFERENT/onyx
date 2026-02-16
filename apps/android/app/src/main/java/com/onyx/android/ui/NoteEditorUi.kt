@@ -71,6 +71,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -82,6 +83,8 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
@@ -103,13 +106,16 @@ import com.onyx.android.ink.ui.InkCanvasState
 import com.onyx.android.pdf.DEFAULT_PDF_TILE_SIZE_PX
 import com.onyx.android.pdf.PdfDocumentRenderer
 import com.onyx.android.pdf.PdfTileKey
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import java.util.Locale
+import kotlin.math.abs
 import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.Brush as ComposeBrush
 import com.onyx.android.ink.model.Stroke as InkStroke
 
-private const val MIN_WIDTH_FACTOR_FLOOR = 0.1f
-private const val HALF_FACTOR = 2f
 private const val HEX_COLOR_LENGTH_RGB = 7
 private const val MIN_COLOR_CHANNEL = 0
 private const val MAX_COLOR_CHANNEL = 255
@@ -194,6 +200,9 @@ internal fun MultiPageEditorScaffold(
 
 private const val PAGE_GAP_DP = 8
 private const val PAGE_TRACKING_DEBOUNCE_MS = 100L
+private const val PINCH_ZOOM_CHANGE_MIN = 0.92f
+private const val PINCH_ZOOM_CHANGE_MAX = 1.08f
+private const val PINCH_ZOOM_EPSILON = 0.002f
 
 /**
  * Multi-page content with LazyColumn for continuous vertical scroll.
@@ -205,6 +214,7 @@ private fun MultiPageEditorContent(
     paddingValues: PaddingValues,
 ) {
     val lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = contentState.firstVisiblePageIndex)
+    var pendingZoomAnchor by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     LaunchedEffect(contentState.firstVisiblePageIndex) {
         val targetIndex = contentState.firstVisiblePageIndex
         if (targetIndex >= 0 && lazyListState.firstVisibleItemIndex != targetIndex) {
@@ -212,19 +222,132 @@ private fun MultiPageEditorContent(
         }
     }
 
-    // Track visible page changes with debounce - calculate full visible range
-    LaunchedEffect(lazyListState.layoutInfo.visibleItemsInfo) {
-        kotlinx.coroutines.delay(PAGE_TRACKING_DEBOUNCE_MS)
-        val visibleItems = lazyListState.layoutInfo.visibleItemsInfo
-        if (visibleItems.isNotEmpty()) {
-            val firstVisibleIndex = visibleItems.first().index
-            val lastVisibleIndex = visibleItems.last().index
-            // Notify for the full visible range (inclusive)
-            contentState.onVisiblePageChanged(firstVisibleIndex)
-            // Trigger virtualized loading for the range
-            contentState.onVisiblePagesChanged(firstVisibleIndex..lastVisibleIndex)
+    LaunchedEffect(lazyListState) {
+        snapshotFlow {
+            val visibleItems = lazyListState.layoutInfo.visibleItemsInfo
+            if (visibleItems.isEmpty()) {
+                null
+            } else {
+                visibleItems.first().index..visibleItems.last().index
+            }
         }
+            .filter { it != null }
+            .map { it ?: 0..0 }
+            .distinctUntilChanged()
+            .collect { visibleRange ->
+                contentState.onVisiblePageChanged(visibleRange.first)
+                contentState.onVisiblePagesImmediateChanged(visibleRange)
+            }
     }
+
+    LaunchedEffect(lazyListState) {
+        snapshotFlow {
+            val visibleItems = lazyListState.layoutInfo.visibleItemsInfo
+            if (visibleItems.isEmpty()) {
+                null
+            } else {
+                visibleItems.first().index..visibleItems.last().index
+            }
+        }
+            .filter { it != null }
+            .map { it ?: 0..0 }
+            .distinctUntilChanged()
+            .collectLatest { visibleRange ->
+                kotlinx.coroutines.delay(PAGE_TRACKING_DEBOUNCE_MS)
+                contentState.onVisiblePagesPrefetchChanged(visibleRange)
+            }
+    }
+
+    LaunchedEffect(pendingZoomAnchor) {
+        val anchor = pendingZoomAnchor ?: return@LaunchedEffect
+        lazyListState.scrollToItem(
+            index = anchor.first,
+            scrollOffset = anchor.second,
+        )
+        pendingZoomAnchor = null
+    }
+
+    val zoomGestureModifier =
+        Modifier.pointerInput(contentState.documentZoom, contentState.minDocumentZoom, contentState.maxDocumentZoom) {
+            var previousDistance: Float? = null
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent()
+                    val pressedPointers = event.changes.filter { change -> change.pressed }
+                    val activeTouchPointers = pressedPointers.filter { change -> change.type == PointerType.Touch }
+                    val hasNonTouchPointers = pressedPointers.any { change -> change.type != PointerType.Touch }
+                    val shouldHandlePinch =
+                        pressedPointers.isNotEmpty() &&
+                            !hasNonTouchPointers &&
+                            activeTouchPointers.size >= 2
+                    if (!shouldHandlePinch) {
+                        previousDistance = null
+                    } else {
+                        val firstPointer = activeTouchPointers[0].position
+                        val secondPointer = activeTouchPointers[1].position
+                        val focalX = (firstPointer.x + secondPointer.x) / 2f
+                        val focalY = (firstPointer.y + secondPointer.y) / 2f
+                        val currentDistance = (firstPointer - secondPointer).getDistance()
+                        val lastDistance = previousDistance
+                        if (lastDistance != null && lastDistance > 0f && currentDistance > 0f) {
+                            val zoomChange =
+                                (currentDistance / lastDistance).coerceIn(
+                                    PINCH_ZOOM_CHANGE_MIN,
+                                    PINCH_ZOOM_CHANGE_MAX,
+                                )
+                            if (abs(zoomChange - 1f) > PINCH_ZOOM_EPSILON) {
+                                val oldZoom = contentState.documentZoom
+                                val newZoom =
+                                    (oldZoom * zoomChange).coerceIn(
+                                        contentState.minDocumentZoom,
+                                        contentState.maxDocumentZoom,
+                                    )
+                                if (newZoom != oldZoom) {
+                                    val zoomRatio = if (oldZoom > 0f) newZoom / oldZoom else 1f
+                                    val viewportWidth = lazyListState.layoutInfo.viewportSize.width.toFloat()
+                                    val focusedItemInfo =
+                                        lazyListState.layoutInfo.visibleItemsInfo.firstOrNull { itemInfo ->
+                                            focalY >= itemInfo.offset && focalY <= itemInfo.offset + itemInfo.size
+                                        }
+                                    if (focusedItemInfo != null) {
+                                        val focusItemHeight = focusedItemInfo.size.toFloat().coerceAtLeast(1f)
+                                        val focusFraction =
+                                            ((focalY - focusedItemInfo.offset) / focusItemHeight).coerceIn(0f, 1f)
+                                        val newFocusedHeight = focusItemHeight * zoomRatio
+                                        val targetScrollOffset =
+                                            ((focusFraction * newFocusedHeight) - focalY).roundToInt().coerceAtLeast(0)
+                                        val currentScrollOffset = lazyListState.firstVisibleItemScrollOffset
+                                        val needsScrollAdjust =
+                                            focusedItemInfo.index != lazyListState.firstVisibleItemIndex ||
+                                                abs(targetScrollOffset - currentScrollOffset) > 1
+                                        if (needsScrollAdjust) {
+                                            pendingZoomAnchor = focusedItemInfo.index to targetScrollOffset
+                                        }
+                                    }
+                                    val focusedPage =
+                                        focusedItemInfo?.let { itemInfo ->
+                                            contentState.pages.getOrNull(itemInfo.index)
+                                        }
+                                    val oldContentWidth =
+                                        focusedPage?.let { page ->
+                                            page.pageWidth * page.renderTransform.zoom
+                                        } ?: viewportWidth
+                                    val newContentWidth = oldContentWidth * zoomRatio
+                                    val minPanX = (viewportWidth - newContentWidth).coerceAtMost(0f)
+                                    val oldPanX = contentState.documentPanX
+                                    val newPanX =
+                                        (focalX - ((focalX - oldPanX) * zoomRatio)).coerceIn(minPanX, 0f)
+                                    contentState.onDocumentZoomChange(newZoom)
+                                    contentState.onDocumentPanXChange(newPanX)
+                                }
+                                activeTouchPointers.forEach { change -> change.consume() }
+                            }
+                        }
+                        previousDistance = currentDistance
+                    }
+                }
+            }
+        }
 
     Column(
         modifier =
@@ -238,6 +361,7 @@ private fun MultiPageEditorContent(
                 Modifier
                     .weight(1f)
                     .fillMaxWidth()
+                    .then(zoomGestureModifier)
                     .onSizeChanged { size ->
                         contentState.onViewportSizeChanged(size)
                     }
@@ -1253,12 +1377,22 @@ private fun ToolSettingsDialog(
                         enabled = true,
                         onBrushChange = onBrushChange,
                     )
-                    val stabilization = resolveStabilization(brush)
-                    Text(text = "Stabilization", style = MaterialTheme.typography.bodyMedium)
+                    val smoothing = resolveSmoothingLevel(brush)
+                    Text(text = "Smoothing", style = MaterialTheme.typography.bodyMedium)
                     Slider(
-                        value = stabilization,
+                        value = smoothing,
                         onValueChange = { level ->
-                            onBrushChange(applyStabilization(brush, level))
+                            onBrushChange(applySmoothingLevel(brush, level))
+                        },
+                        valueRange = 0f..1f,
+                        steps = TOOL_SETTINGS_DIALOG_SLIDER_STEPS,
+                    )
+                    val taperStrength = resolveEndTaperStrength(brush)
+                    Text(text = "End taper", style = MaterialTheme.typography.bodyMedium)
+                    Slider(
+                        value = taperStrength,
+                        onValueChange = { strength ->
+                            onBrushChange(applyEndTaperStrength(brush, strength))
                         },
                         valueRange = 0f..1f,
                         steps = TOOL_SETTINGS_DIALOG_SLIDER_STEPS,
@@ -1282,6 +1416,26 @@ private fun ToolSettingsDialog(
                             )
                         },
                         valueRange = HIGHLIGHTER_OPACITY_MIN..HIGHLIGHTER_OPACITY_MAX,
+                    )
+                    val smoothing = resolveSmoothingLevel(brush)
+                    Text(text = "Smoothing", style = MaterialTheme.typography.bodyMedium)
+                    Slider(
+                        value = smoothing,
+                        onValueChange = { level ->
+                            onBrushChange(applySmoothingLevel(brush, level))
+                        },
+                        valueRange = 0f..1f,
+                        steps = TOOL_SETTINGS_DIALOG_SLIDER_STEPS,
+                    )
+                    val taperStrength = resolveEndTaperStrength(brush)
+                    Text(text = "End taper", style = MaterialTheme.typography.bodyMedium)
+                    Slider(
+                        value = taperStrength,
+                        onValueChange = { strength ->
+                            onBrushChange(applyEndTaperStrength(brush, strength))
+                        },
+                        valueRange = 0f..1f,
+                        steps = TOOL_SETTINGS_DIALOG_SLIDER_STEPS,
                     )
                 }
                 ToolPanelType.ERASER -> {
@@ -1721,35 +1875,19 @@ private fun calculateGlowAlpha(
     return 1f - (distance / threshold)
 }
 
-private fun resolveStabilization(brush: Brush): Float {
-    val delta =
-        ((brush.maxWidthFactor - brush.minWidthFactor) / HALF_FACTOR)
-            .coerceAtLeast(MIN_WIDTH_FACTOR_FLOOR)
-    val normalized =
-        (
-            (delta - PEN_STABILIZATION_DELTA_MIN) /
-                (PEN_STABILIZATION_DELTA_MAX - PEN_STABILIZATION_DELTA_MIN)
-        )
-            .coerceIn(0f, 1f)
-    return normalized
-}
+private fun resolveSmoothingLevel(brush: Brush): Float = brush.smoothingLevel.coerceIn(0f, 1f)
 
-private fun applyStabilization(
+private fun applySmoothingLevel(
     brush: Brush,
     level: Float,
-): Brush {
-    val clampedLevel = level.coerceIn(0f, 1f)
-    val delta =
-        (
-            PEN_STABILIZATION_DELTA_MIN +
-                (PEN_STABILIZATION_DELTA_MAX - PEN_STABILIZATION_DELTA_MIN) * clampedLevel
-        )
-            .coerceAtLeast(MIN_WIDTH_FACTOR_FLOOR)
-    return brush.copy(
-        minWidthFactor = (1f - delta).coerceAtLeast(MIN_WIDTH_FACTOR_FLOOR),
-        maxWidthFactor = 1f + delta,
-    )
-}
+): Brush = brush.copy(smoothingLevel = level.coerceIn(0f, 1f))
+
+private fun resolveEndTaperStrength(brush: Brush): Float = brush.endTaperStrength.coerceIn(0f, 1f)
+
+private fun applyEndTaperStrength(
+    brush: Brush,
+    strength: Float,
+): Brush = brush.copy(endTaperStrength = strength.coerceIn(0f, 1f))
 
 private fun resolveOpacity(brush: Brush): Float {
     val parsedColor =

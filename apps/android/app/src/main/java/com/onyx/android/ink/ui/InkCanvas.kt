@@ -32,6 +32,7 @@ internal enum class PointerMode {
 internal class InkCanvasRuntime(
     val activeStrokeIds: MutableMap<Int, InProgressStrokeId>,
     val activePointerModes: MutableMap<Int, PointerMode>,
+    val stylusPointerIds: MutableSet<Int>,
     val activeStrokePoints: MutableMap<Int, MutableList<StrokePoint>>,
     val activeStrokeBrushes: MutableMap<Int, Brush>,
     val activeStrokeStartTimes: MutableMap<Int, Long>,
@@ -55,6 +56,13 @@ internal class InkCanvasRuntime(
 
     fun invalidateActiveStrokeRender() {
         activeStrokeRenderVersion += 1
+    }
+
+    fun hasActiveStrokeInputs(): Boolean {
+        return activeStrokeIds.isNotEmpty() ||
+            activeStrokePoints.isNotEmpty() ||
+            activeStrokeBrushes.isNotEmpty() ||
+            activeStrokeStartTimes.isNotEmpty()
     }
 }
 
@@ -109,6 +117,7 @@ fun InkCanvas(
             InkCanvasRuntime(
                 activeStrokeIds = mutableMapOf(),
                 activePointerModes = mutableMapOf(),
+                stylusPointerIds = mutableSetOf(),
                 activeStrokePoints = mutableMapOf(),
                 activeStrokeBrushes = mutableMapOf(),
                 activeStrokeStartTimes = mutableMapOf(),
@@ -170,11 +179,15 @@ fun InkCanvas(
                     // Use postOnAnimation to remove finished strokes synchronized with the display refresh.
                     // This prevents ghosting by ensuring the stroke is removed from the
                     // InProgressStrokesView at the same frame it appears in Compose's Canvas.
-                    val onStrokeRenderFinished = { _: InProgressStrokeId ->
+                    val onStrokeRenderFinished = { strokeId: InProgressStrokeId ->
                         postOnAnimation {
-                            val finishedStrokeIds = getFinishedStrokes().keys
-                            if (finishedStrokeIds.isNotEmpty()) {
-                                removeFinishedStrokes(finishedStrokeIds.toSet())
+                            removeFinishedStrokes(setOf(strokeId))
+                            // Fallback cleanup: only sweep residual finished ids when no active stroke exists.
+                            if (!runtime.hasActiveStrokeInputs()) {
+                                val residualFinishedIds = getFinishedStrokes().keys
+                                if (residualFinishedIds.isNotEmpty()) {
+                                    removeFinishedStrokes(residualFinishedIds.toSet())
+                                }
                             }
                         }
                     }
@@ -243,11 +256,14 @@ fun InkCanvas(
                     runtime.pendingCommittedStrokes.keys.removeAll(persistedIds)
                 }
 
-                val staleFinishedStrokeIds = inProgressView.getFinishedStrokes().keys
-                if (staleFinishedStrokeIds.isNotEmpty()) {
-                    // Safety net: if a finished stroke misses the per-stroke removal callback,
-                    // clear it here to avoid stuck jagged duplicates in the overlay layer.
-                    inProgressView.removeFinishedStrokes(staleFinishedStrokeIds.toSet())
+                if (!runtime.hasActiveStrokeInputs()) {
+                    val staleFinishedStrokeIds = inProgressView.getFinishedStrokes().keys
+                    if (staleFinishedStrokeIds.isNotEmpty()) {
+                        // Guarded fallback cleanup to prevent ghost overlays without dropping active segments.
+                        inProgressView.postOnAnimation {
+                            inProgressView.removeFinishedStrokes(staleFinishedStrokeIds.toSet())
+                        }
+                    }
                 }
             },
             modifier = Modifier.fillMaxSize(),
@@ -282,13 +298,7 @@ private fun shouldConsumeCanvasTouchEvent(
     if (allowFingerGestures) {
         return true
     }
-    for (index in 0 until event.pointerCount) {
-        val toolType = event.getToolType(index)
-        if (toolType == MotionEvent.TOOL_TYPE_STYLUS || toolType == MotionEvent.TOOL_TYPE_ERASER) {
-            return true
-        }
-    }
-    return false
+    return eventHasStylusStream(event)
 }
 
 private fun buildOutsidePageMaskPath(

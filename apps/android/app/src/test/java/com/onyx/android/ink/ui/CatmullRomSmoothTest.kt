@@ -53,9 +53,10 @@ class CatmullRomSmoothTest {
                 StrokePoint(x = 20f, y = 0f, t = 2L, p = 0.5f),
             )
         val result = catmullRomSmooth(points)
-        // Should produce 1 (first) + 2 segments × 8 subdivisions = 17 points
+        // Adaptive smoothing should add points but keep endpoints stable.
         assertTrue(result.size > points.size, "Smoothed should have more points than input")
-        assertEquals(17, result.size)
+        assertEquals(points.first().x, result.first().x, 0.0001f)
+        assertEquals(points.last().x, result.last().x, 0.0001f)
     }
 
     @Test
@@ -128,8 +129,7 @@ class CatmullRomSmoothTest {
                 StrokePoint(x = 20f, y = 0f, t = 3L, p = 0.5f),
             )
         val result = catmullRomSmooth(points)
-        // Expect 1 + 3*8 = 25 interpolated points
-        assertEquals(25, result.size)
+        assertTrue(result.size > points.size, "Curved input should gain interpolated points")
         // First and last should match input
         assertEquals(0f, result.first().x, 0.0001f)
         assertEquals(20f, result.last().x, 0.0001f)

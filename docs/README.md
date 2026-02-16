@@ -19,6 +19,7 @@ Architecture and runbooks for Onyx v0.
 
 ## Branch Review and Planning
 - `docs/architecture/branch-architecture-analysis.md`
+- `docs/architecture/comprehensive-app-change-plan.md`
 
 - [`system-overview.md`](architecture/system-overview.md) — System topology and client roles
 - [`data-model.md`](architecture/data-model.md) — Convex tables and canonical data model
@@ -30,6 +31,7 @@ Architecture and runbooks for Onyx v0.
 - [`observability.md`](architecture/observability.md) — Logging and monitoring
 - [`migrations-backups.md`](architecture/migrations-backups.md) — Schema migrations and backup policy
 - [`full-project-analysis.md`](architecture/full-project-analysis.md) — Complete project analysis with prioritised change list
+- [`comprehensive-app-change-plan.md`](architecture/comprehensive-app-change-plan.md) — Single-source consolidated plan for all required app changes
 
 ## Android Remediation Tracking
 

@@ -164,6 +164,67 @@ class InkCanvasTouchRoutingTest {
     }
 
     @Test
+    fun stylusSourceUnknownToolType_routesToDrawingNotPan() {
+        val view = InProgressStrokesView(context)
+        val runtime = createRuntime()
+        var strokeFinishedCount = 0
+        val transformCalls = mutableListOf<TransformCall>()
+        val interaction =
+            createInteraction(
+                allowFingerGestures = false,
+                onStrokeFinished = { strokeFinishedCount += 1 },
+                onTransformGesture = { zoom, panX, panY, centroidX, centroidY ->
+                    transformCalls += TransformCall(zoom, panX, panY, centroidX, centroidY)
+                },
+            )
+
+        val downTime = 340L
+        val down =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 30f,
+                y = 30f,
+                toolType = MotionEvent.TOOL_TYPE_UNKNOWN,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val move =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 356L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 42f,
+                y = 44f,
+                toolType = MotionEvent.TOOL_TYPE_UNKNOWN,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val up =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 372L,
+                action = MotionEvent.ACTION_UP,
+                x = 42f,
+                y = 44f,
+                toolType = MotionEvent.TOOL_TYPE_UNKNOWN,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, down, interaction, runtime))
+            assertTrue(handleTouchEvent(view, move, interaction, runtime))
+            assertTrue(handleTouchEvent(view, up, interaction, runtime))
+        } finally {
+            down.recycle()
+            move.recycle()
+            up.recycle()
+        }
+
+        assertEquals(1, strokeFinishedCount)
+        assertTrue(transformCalls.isEmpty())
+    }
+
+    @Test
     fun readOnlyMode_blocksStylusEditingButKeepsPanGestures() {
         val view = InProgressStrokesView(context)
         val runtime = createRuntime()
@@ -816,6 +877,7 @@ private fun createRuntime(): InkCanvasRuntime =
     InkCanvasRuntime(
         activeStrokeIds = mutableMapOf(),
         activePointerModes = mutableMapOf(),
+        stylusPointerIds = mutableSetOf(),
         activeStrokePoints = mutableMapOf(),
         activeStrokeBrushes = mutableMapOf(),
         activeStrokeStartTimes = mutableMapOf(),
