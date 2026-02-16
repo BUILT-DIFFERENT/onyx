@@ -100,6 +100,8 @@ import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
 import com.onyx.android.ink.ui.InkCanvasCallbacks
 import com.onyx.android.ink.ui.InkCanvasState
+import com.onyx.android.pdf.DEFAULT_PDF_TILE_SIZE_PX
+import com.onyx.android.pdf.PdfDocumentRenderer
 import com.onyx.android.pdf.PdfTileKey
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -203,6 +205,12 @@ private fun MultiPageEditorContent(
     paddingValues: PaddingValues,
 ) {
     val lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = contentState.firstVisiblePageIndex)
+    LaunchedEffect(contentState.firstVisiblePageIndex) {
+        val targetIndex = contentState.firstVisiblePageIndex
+        if (targetIndex >= 0 && lazyListState.firstVisibleItemIndex != targetIndex) {
+            lazyListState.animateScrollToItem(targetIndex)
+        }
+    }
 
     // Track visible page changes with debounce - calculate full visible range
     LaunchedEffect(lazyListState.layoutInfo.visibleItemsInfo) {
@@ -257,7 +265,7 @@ private fun MultiPageEditorContent(
                         brush = contentState.brush,
                         isStylusButtonEraserActive = contentState.isStylusButtonEraserActive,
                         interactionMode = contentState.interactionMode,
-                        viewTransform = contentState.viewTransform,
+                        pdfRenderer = contentState.pdfRenderer,
                         onStrokeFinished = { stroke -> contentState.onStrokeFinished(stroke, pageState.page.pageId) },
                         onStrokeErased = { stroke -> contentState.onStrokeErased(stroke, pageState.page.pageId) },
                         onStylusButtonEraserActiveChanged = contentState.onStylusButtonEraserActiveChanged,
@@ -291,13 +299,58 @@ private fun PageItem(
     brush: Brush,
     isStylusButtonEraserActive: Boolean,
     interactionMode: InteractionMode,
-    viewTransform: ViewTransform,
+    pdfRenderer: PdfDocumentRenderer?,
     onStrokeFinished: (InkStroke) -> Unit,
     onStrokeErased: (InkStroke) -> Unit,
     onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
     onTransformGesture: (Float, Float, Float, Float, Float) -> Unit,
     onPanGestureEnd: (Float, Float) -> Unit,
 ) {
+    val renderTransform = pageState.renderTransform
+    val viewportWidthPx = (pageState.pageWidth * renderTransform.zoom).roundToInt().coerceAtLeast(1)
+    val viewportHeightPx = (pageState.pageHeight * renderTransform.zoom).roundToInt().coerceAtLeast(1)
+    val viewportSize = IntSize(viewportWidthPx, viewportHeightPx)
+
+    val pdfTileState =
+        if (pageState.isPdfPage && pdfRenderer != null && pageState.isVisible) {
+            rememberPdfTiles(
+                isPdfPage = true,
+                currentPage = pageState.page,
+                pdfRenderer = pdfRenderer,
+                viewTransform = renderTransform,
+                viewportSize = viewportSize,
+                pageWidth = pageState.pageWidth,
+                pageHeight = pageState.pageHeight,
+            )
+        } else {
+            PdfTileRenderState(
+                tiles = emptyMap(),
+                scaleBucket = null,
+                previousScaleBucket = null,
+                tileSizePx = DEFAULT_PDF_TILE_SIZE_PX,
+                crossfadeProgress = 1f,
+            )
+        }
+    val pdfBitmap =
+        if (pageState.isPdfPage && pdfRenderer != null) {
+            if (pageState.isVisible) {
+                rememberPdfBitmap(
+                    isPdfPage = true,
+                    currentPage = pageState.page,
+                    pdfRenderer = pdfRenderer,
+                    viewZoom = renderTransform.zoom,
+                )
+            } else {
+                rememberPdfThumbnail(
+                    isPdfPage = true,
+                    currentPage = pageState.page,
+                    pdfRenderer = pdfRenderer,
+                )
+            }
+        } else {
+            null
+        }
+
     Box(
         modifier =
             Modifier
@@ -330,36 +383,37 @@ private fun PageItem(
         }
 
         // PDF content if applicable
-        if (pageState.isPdfPage && pageState.pdfBitmap != null) {
+        if (pageState.isPdfPage && pdfBitmap != null) {
             PdfPageBitmap(
-                bitmap = pageState.pdfBitmap,
+                bitmap = pdfBitmap,
                 pageWidth = pageState.pageWidth,
                 pageHeight = pageState.pageHeight,
-                viewTransform = viewTransform,
+                viewTransform = renderTransform,
             )
         }
 
         // PDF tiles if available
-        if (pageState.isPdfPage && pageState.pdfTiles.isNotEmpty()) {
+        if (pageState.isPdfPage && pdfTileState.tiles.isNotEmpty()) {
             PdfTilesOverlay(
-                tiles = pageState.pdfTiles,
-                viewTransform = viewTransform,
-                tileSizePx = pageState.pdfTileSizePx,
-                previousScaleBucket = pageState.pdfPreviousScaleBucket,
-                crossfadeProgress = pageState.pdfCrossfadeProgress,
+                tiles = pdfTileState.tiles,
+                viewTransform = renderTransform,
+                tileSizePx = pdfTileState.tileSizePx,
+                previousScaleBucket = pdfTileState.previousScaleBucket,
+                crossfadeProgress = pdfTileState.crossfadeProgress,
             )
         }
 
         // Ink canvas for drawing
         val inkCanvasState =
-            remember(pageState.page.pageId, pageState.strokes, viewTransform, brush) {
+            remember(pageState.page.pageId, pageState.strokes, renderTransform, brush) {
                 InkCanvasState(
                     strokes = pageState.strokes,
-                    viewTransform = viewTransform,
+                    viewTransform = renderTransform,
                     brush = brush,
                     pageWidth = pageState.pageWidth,
                     pageHeight = pageState.pageHeight,
                     allowEditing = !isReadOnly,
+                    allowFingerGestures = false,
                 )
             }
         val inkCanvasCallbacks =

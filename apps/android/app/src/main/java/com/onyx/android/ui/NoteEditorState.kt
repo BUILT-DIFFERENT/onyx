@@ -116,12 +116,8 @@ internal data class PageItemState(
     val pageHeight: Float,
     val strokes: List<Stroke>,
     val isPdfPage: Boolean,
-    val pdfBitmap: android.graphics.Bitmap?,
-    val pdfTiles: Map<PdfTileKey, android.graphics.Bitmap>,
-    val pdfRenderScaleBucket: Float?,
-    val pdfPreviousScaleBucket: Float?,
-    val pdfTileSizePx: Int,
-    val pdfCrossfadeProgress: Float,
+    val isVisible: Boolean,
+    val renderTransform: ViewTransform,
 )
 
 /**
@@ -133,7 +129,6 @@ internal data class MultiPageContentState(
     val brush: Brush,
     val isStylusButtonEraserActive: Boolean,
     val interactionMode: InteractionMode,
-    val viewTransform: ViewTransform,
     val pdfRenderer: PdfDocumentRenderer?,
     val firstVisiblePageIndex: Int,
     val thumbnails: List<ThumbnailItem>,

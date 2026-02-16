@@ -54,6 +54,7 @@ private const val PAN_FLING_DECAY_RATE = -5f
 private const val NOTE_EDITOR_LOG_TAG = "NoteEditorScreen"
 private const val PDF_OPEN_FAILED_MESSAGE = "Unable to open this PDF."
 private const val PDF_PASSWORD_INCORRECT_MESSAGE = "Incorrect PDF password. Please try again."
+private const val ENABLE_STACKED_PAGES = true
 
 internal sealed interface PdfOpenFailureUiAction {
     data class PromptForPassword(
@@ -169,45 +170,87 @@ private fun NoteEditorScreenContent(
     var pdfOpenRetryNonce by rememberSaveable { mutableStateOf(0) }
     var showOutlineSheet by rememberSaveable { mutableStateOf(false) }
     var outlineItems by remember { mutableStateOf<List<OutlineItem>>(emptyList()) }
-    val uiState =
-        rememberNoteEditorUiState(
-            noteId = noteId,
-            viewModel = viewModel,
-            pdfAssetStorage = pdfAssetStorage,
-            pdfPasswordStore = pdfPasswordStore,
-            pdfOpenRetryNonce = pdfOpenRetryNonce,
-            onPdfPasswordRequired = { assetId, isIncorrectPassword ->
-                pdfPasswordPrompt =
-                    EditorPdfPasswordPromptState(
-                        assetId = assetId,
-                        showIncorrectMessage = isIncorrectPassword,
-                    )
-                pdfPasswordInput = ""
-            },
-            onPdfOpenError = { message ->
-                pdfOpenErrorMessage = message
-            },
-            onNavigateBack = onNavigateBack,
-            onOpenOutline = { showOutlineSheet = true },
-            onLoadOutline = { renderer -> outlineItems = renderer.getTableOfContents() },
+    if (ENABLE_STACKED_PAGES) {
+        val uiState =
+            rememberMultiPageUiState(
+                noteId = noteId,
+                viewModel = viewModel,
+                pdfAssetStorage = pdfAssetStorage,
+                pdfPasswordStore = pdfPasswordStore,
+                pdfOpenRetryNonce = pdfOpenRetryNonce,
+                onPdfPasswordRequired = { assetId, isIncorrectPassword ->
+                    pdfPasswordPrompt =
+                        EditorPdfPasswordPromptState(
+                            assetId = assetId,
+                            showIncorrectMessage = isIncorrectPassword,
+                        )
+                    pdfPasswordInput = ""
+                },
+                onPdfOpenError = { message ->
+                    pdfOpenErrorMessage = message
+                },
+                onNavigateBack = onNavigateBack,
+                onOpenOutline = { showOutlineSheet = true },
+                onLoadOutline = { renderer -> outlineItems = renderer.getTableOfContents() },
+            )
+        MultiPageEditorScaffold(
+            topBarState = uiState.topBarState,
+            toolbarState = uiState.toolbarState,
+            multiPageContentState = uiState.multiPageContentState,
         )
-    NoteEditorScaffold(
-        topBarState = uiState.topBarState,
-        toolbarState = uiState.toolbarState,
-        contentState = uiState.contentState,
-        transformState = uiState.transformState,
-    )
-    if (showOutlineSheet) {
-        PdfOutlineSheet(
-            outlineItems = outlineItems,
-            onOutlineItemClick = { item ->
-                showOutlineSheet = false
-                if (item.pageIndex >= 0) {
-                    viewModel.navigateBy(item.pageIndex - uiState.topBarState.currentPageIndex)
-                }
-            },
-            onDismiss = { showOutlineSheet = false },
+        if (showOutlineSheet) {
+            PdfOutlineSheet(
+                outlineItems = outlineItems,
+                onOutlineItemClick = { item ->
+                    showOutlineSheet = false
+                    if (item.pageIndex >= 0) {
+                        viewModel.navigateBy(item.pageIndex - uiState.topBarState.currentPageIndex)
+                    }
+                },
+                onDismiss = { showOutlineSheet = false },
+            )
+        }
+    } else {
+        val uiState =
+            rememberNoteEditorUiState(
+                noteId = noteId,
+                viewModel = viewModel,
+                pdfAssetStorage = pdfAssetStorage,
+                pdfPasswordStore = pdfPasswordStore,
+                pdfOpenRetryNonce = pdfOpenRetryNonce,
+                onPdfPasswordRequired = { assetId, isIncorrectPassword ->
+                    pdfPasswordPrompt =
+                        EditorPdfPasswordPromptState(
+                            assetId = assetId,
+                            showIncorrectMessage = isIncorrectPassword,
+                        )
+                    pdfPasswordInput = ""
+                },
+                onPdfOpenError = { message ->
+                    pdfOpenErrorMessage = message
+                },
+                onNavigateBack = onNavigateBack,
+                onOpenOutline = { showOutlineSheet = true },
+                onLoadOutline = { renderer -> outlineItems = renderer.getTableOfContents() },
+            )
+        NoteEditorScaffold(
+            topBarState = uiState.topBarState,
+            toolbarState = uiState.toolbarState,
+            contentState = uiState.contentState,
+            transformState = uiState.transformState,
         )
+        if (showOutlineSheet) {
+            PdfOutlineSheet(
+                outlineItems = outlineItems,
+                onOutlineItemClick = { item ->
+                    showOutlineSheet = false
+                    if (item.pageIndex >= 0) {
+                        viewModel.navigateBy(item.pageIndex - uiState.topBarState.currentPageIndex)
+                    }
+                },
+                onDismiss = { showOutlineSheet = false },
+            )
+        }
     }
     if (pdfPasswordPrompt != null) {
         NoteEditorPdfPasswordDialog(
@@ -529,6 +572,180 @@ private fun rememberNoteEditorUiState(
 }
 
 @Composable
+@Suppress("LongMethod", "LongParameterList")
+private fun rememberMultiPageUiState(
+    noteId: String,
+    viewModel: NoteEditorViewModel,
+    pdfAssetStorage: PdfAssetStorage,
+    pdfPasswordStore: PdfPasswordStore,
+    pdfOpenRetryNonce: Int,
+    onPdfPasswordRequired: (assetId: String, isIncorrectPassword: Boolean) -> Unit,
+    onPdfOpenError: (String) -> Unit,
+    onNavigateBack: () -> Unit,
+    onOpenOutline: () -> Unit,
+    onLoadOutline: (PdfiumRenderer) -> Unit,
+): MultiPageUiState {
+    val appContext = LocalContext.current.applicationContext
+    val density = LocalDensity.current
+    val brushState = rememberBrushState()
+    val pageState = rememberPageState(viewModel)
+    val undoController = remember(viewModel) { UndoController(viewModel, MAX_UNDO_ACTIONS, useMultiPage = true) }
+    var isReadOnly by rememberSaveable { mutableStateOf(false) }
+    var viewportSize by remember { mutableStateOf(IntSize.Zero) }
+    var isStylusButtonEraserActive by remember { mutableStateOf(false) }
+    var visibleRange by remember { mutableStateOf(0..0) }
+    val pageStrokesCache by viewModel.pageStrokesCache.collectAsState()
+    val pageById = remember(pageState.pages) { pageState.pages.associateBy { it.pageId } }
+    val viewportWidth = viewportSize.width.toFloat()
+
+    val pdfAssetId =
+        pageState.pages.firstOrNull { it.kind == "pdf" || it.kind == "mixed" }?.pdfAssetId
+    val rendererResult =
+        remember(pdfAssetId, pdfOpenRetryNonce) {
+            pdfAssetId?.let { assetId ->
+                runCatching {
+                    PdfiumRenderer(
+                        context = appContext,
+                        pdfFile = pdfAssetStorage.getFileForAsset(assetId),
+                        password = pdfPasswordStore.getPassword(assetId),
+                    )
+                }
+            }
+        }
+    val pdfRenderer = rendererResult?.getOrNull()
+    LaunchedEffect(pdfAssetId, rendererResult?.exceptionOrNull()) {
+        val assetId = pdfAssetId ?: return@LaunchedEffect
+        val error = rendererResult?.exceptionOrNull() ?: return@LaunchedEffect
+        Log.e(NOTE_EDITOR_LOG_TAG, "Failed to open PDF asset $assetId", error)
+        when (val action = mapPdfOpenFailureToUiAction(error)) {
+            is PdfOpenFailureUiAction.PromptForPassword ->
+                onPdfPasswordRequired(assetId, action.isIncorrectPassword)
+            is PdfOpenFailureUiAction.ShowOpenError -> onPdfOpenError(action.message)
+        }
+    }
+    DisposePdfRenderer(pdfRenderer)
+    ObserveNoteEditorLifecycle(
+        noteId = noteId,
+        currentPageId = pageState.currentPage?.pageId,
+        viewModel = viewModel,
+        undoController = undoController,
+    )
+    LaunchedEffect(pageState.currentPage?.pageId) {
+        isStylusButtonEraserActive = false
+    }
+
+    val pages =
+        pageState.pages.mapIndexed { index, page ->
+            val pageWidth = page.width
+            val pageHeight = page.height
+            val scale =
+                if (viewportWidth > 0f && pageWidth > 0f) {
+                    viewportWidth / pageWidth
+                } else {
+                    1f
+                }
+            val renderTransform =
+                ViewTransform(
+                    zoom = scale,
+                    panX = 0f,
+                    panY = 0f,
+                )
+            val pageWidthDp = with(density) { (pageWidth * scale).toDp() }
+            val pageHeightDp = with(density) { (pageHeight * scale).toDp() }
+            PageItemState(
+                page = page,
+                pageWidthDp = pageWidthDp,
+                pageHeightDp = pageHeightDp,
+                pageWidth = pageWidth,
+                pageHeight = pageHeight,
+                strokes = pageStrokesCache[page.pageId].orEmpty(),
+                isPdfPage = page.kind == "pdf" || page.kind == "mixed",
+                isVisible = index in visibleRange,
+                renderTransform = renderTransform,
+            )
+        }
+
+    val topBarState =
+        buildTopBarState(
+            pageState,
+            undoController,
+            onNavigateBack,
+            viewModel,
+            isPdfDocument = pdfRenderer != null,
+            onOpenOutline = {
+                pdfRenderer?.let(onLoadOutline)
+                onOpenOutline()
+            },
+        ).copy(
+            isReadOnly = isReadOnly,
+            onToggleReadOnly = { isReadOnly = !isReadOnly },
+        )
+    val toolbarState =
+        buildToolbarState(
+            brushState.brush,
+            brushState.lastNonEraserTool,
+            isStylusButtonEraserActive,
+            brushState.onBrushChange,
+        )
+
+    val thumbnails =
+        remember(pdfRenderer) {
+            val renderer = pdfRenderer
+            if (renderer != null) {
+                val pageCount = renderer.getPageCount()
+                (0 until pageCount).map { pageIndex ->
+                    val bounds = renderer.getPageBounds(pageIndex)
+                    val aspectRatio = bounds.first / bounds.second.coerceAtLeast(1f)
+                    ThumbnailItem(
+                        pageIndex = pageIndex,
+                        bitmap = renderer.renderThumbnail(pageIndex),
+                        aspectRatio = aspectRatio,
+                    )
+                }
+            } else {
+                emptyList()
+            }
+        }
+
+    val multiPageContentState =
+        MultiPageContentState(
+            pages = pages,
+            isReadOnly = isReadOnly,
+            brush = brushState.brush,
+            isStylusButtonEraserActive = isStylusButtonEraserActive,
+            interactionMode = InteractionMode.SCROLL,
+            pdfRenderer = pdfRenderer,
+            firstVisiblePageIndex = pageState.currentPageIndex,
+            thumbnails = thumbnails,
+            onStrokeFinished = { stroke, pageId ->
+                val page = pageById[pageId]
+                undoController.onStrokeFinished(stroke, page)
+            },
+            onStrokeErased = { stroke, pageId ->
+                undoController.onStrokeErased(stroke, pageId)
+            },
+            onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
+            onTransformGesture = { _, _, _, _, _ -> },
+            onPanGestureEnd = { _, _ -> },
+            onViewportSizeChanged = { viewportSize = it },
+            onVisiblePageChanged = viewModel::setVisiblePageIndex,
+            onVisiblePagesChanged = { range ->
+                visibleRange = range
+                viewModel.onVisiblePagesChanged(range)
+            },
+            onPageSelected = { targetIndex ->
+                viewModel.navigateBy(targetIndex - pageState.currentPageIndex)
+            },
+        )
+
+    return MultiPageUiState(
+        topBarState = topBarState,
+        toolbarState = toolbarState,
+        multiPageContentState = multiPageContentState,
+    )
+}
+
+@Composable
 private fun rememberBrushState(): BrushState {
     var brush by remember { mutableStateOf(Brush()) }
     var lastNonEraserTool by remember { mutableStateOf(brush.tool) }
@@ -568,7 +785,8 @@ private fun buildStrokeCallbacks(
             undoController.onStrokeFinished(newStroke, currentPage)
         },
         onStrokeErased = { erasedStroke ->
-            undoController.onStrokeErased(erasedStroke)
+            val pageId = currentPage?.pageId ?: return@StrokeCallbacks
+            undoController.onStrokeErased(erasedStroke, pageId)
         },
     )
 

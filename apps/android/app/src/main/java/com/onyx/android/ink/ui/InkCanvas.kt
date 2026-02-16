@@ -67,6 +67,7 @@ data class InkCanvasState(
     val pageWidth: Float,
     val pageHeight: Float,
     val allowEditing: Boolean = true,
+    val allowFingerGestures: Boolean = true,
 )
 
 data class InkCanvasCallbacks(
@@ -99,6 +100,7 @@ fun InkCanvas(
     val currentPageWidth by rememberUpdatedState(state.pageWidth)
     val currentPageHeight by rememberUpdatedState(state.pageHeight)
     val currentAllowEditing by rememberUpdatedState(state.allowEditing)
+    val currentAllowFingerGestures by rememberUpdatedState(state.allowFingerGestures)
     val currentCallbacks by rememberUpdatedState(callbacks)
     val hoverPreviewState = remember { HoverPreviewState() }
 
@@ -168,9 +170,12 @@ fun InkCanvas(
                     // Use postOnAnimation to remove finished strokes synchronized with the display refresh.
                     // This prevents ghosting by ensuring the stroke is removed from the
                     // InProgressStrokesView at the same frame it appears in Compose's Canvas.
-                    val onStrokeRenderFinished = { strokeId: InProgressStrokeId ->
+                    val onStrokeRenderFinished = { _: InProgressStrokeId ->
                         postOnAnimation {
-                            removeFinishedStrokes(setOf(strokeId))
+                            val finishedStrokeIds = getFinishedStrokes().keys
+                            if (finishedStrokeIds.isNotEmpty()) {
+                                removeFinishedStrokes(finishedStrokeIds.toSet())
+                            }
                         }
                     }
                     setOnTouchListener { _, event ->
@@ -182,6 +187,7 @@ fun InkCanvas(
                                 pageWidth = currentPageWidth,
                                 pageHeight = currentPageHeight,
                                 allowEditing = currentAllowEditing,
+                                allowFingerGestures = currentAllowFingerGestures,
                                 onStrokeFinished = onFinished,
                                 onStrokeErased = onErased,
                                 onTransformGesture = currentCallbacks.onTransformGesture,
@@ -199,7 +205,7 @@ fun InkCanvas(
                         // Always consume touch streams for canvas tool types so
                         // InProgressStrokesView does not also process them and
                         // create duplicate/jagged overlay strokes.
-                        handled || shouldConsumeCanvasTouchEvent(event)
+                        handled || shouldConsumeCanvasTouchEvent(event, currentAllowFingerGestures)
                     }
                     setOnGenericMotionListener { _, event ->
                         val interaction =
@@ -210,6 +216,7 @@ fun InkCanvas(
                                 pageWidth = currentPageWidth,
                                 pageHeight = currentPageHeight,
                                 allowEditing = currentAllowEditing,
+                                allowFingerGestures = currentAllowFingerGestures,
                                 onStrokeFinished = onFinished,
                                 onStrokeErased = onErased,
                                 onTransformGesture = currentCallbacks.onTransformGesture,
@@ -252,18 +259,37 @@ fun InkCanvas(
     }
 }
 
-private fun shouldConsumeCanvasTouchEvent(event: MotionEvent): Boolean =
-    when (event.actionMasked) {
-        MotionEvent.ACTION_DOWN,
-        MotionEvent.ACTION_UP,
-        MotionEvent.ACTION_MOVE,
-        MotionEvent.ACTION_CANCEL,
-        MotionEvent.ACTION_POINTER_DOWN,
-        MotionEvent.ACTION_POINTER_UP,
-        -> true
+@Suppress("ReturnCount")
+private fun shouldConsumeCanvasTouchEvent(
+    event: MotionEvent,
+    allowFingerGestures: Boolean,
+): Boolean {
+    val shouldConsumeAction =
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN,
+            MotionEvent.ACTION_UP,
+            MotionEvent.ACTION_MOVE,
+            MotionEvent.ACTION_CANCEL,
+            MotionEvent.ACTION_POINTER_DOWN,
+            MotionEvent.ACTION_POINTER_UP,
+            -> true
 
-        else -> false
+            else -> false
+        }
+    if (!shouldConsumeAction) {
+        return false
     }
+    if (allowFingerGestures) {
+        return true
+    }
+    for (index in 0 until event.pointerCount) {
+        val toolType = event.getToolType(index)
+        if (toolType == MotionEvent.TOOL_TYPE_STYLUS || toolType == MotionEvent.TOOL_TYPE_ERASER) {
+            return true
+        }
+    }
+    return false
+}
 
 private fun buildOutsidePageMaskPath(
     viewWidth: Float,

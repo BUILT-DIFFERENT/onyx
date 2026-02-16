@@ -247,6 +247,28 @@ internal fun rememberPdfBitmap(
     return pdfBitmap
 }
 
+@Composable
+internal fun rememberPdfThumbnail(
+    isPdfPage: Boolean,
+    currentPage: PageEntity?,
+    pdfRenderer: PdfDocumentRenderer?,
+): android.graphics.Bitmap? {
+    var pdfBitmap by remember(currentPage?.pageId) { mutableStateOf<android.graphics.Bitmap?>(null) }
+    LaunchedEffect(currentPage?.pageId, isPdfPage, pdfRenderer) {
+        if (!isPdfPage) {
+            pdfBitmap = null
+            return@LaunchedEffect
+        }
+        val renderer = pdfRenderer ?: return@LaunchedEffect
+        val pageIndex = currentPage?.pdfPageNo ?: return@LaunchedEffect
+        pdfBitmap =
+            withContext(Dispatchers.Default) {
+                renderer.renderThumbnail(pageIndex)
+            }
+    }
+    return pdfBitmap
+}
+
 internal data class PdfTileRenderState(
     val tiles: Map<PdfTileKey, android.graphics.Bitmap>,
     val scaleBucket: Float?,

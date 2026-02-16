@@ -4,6 +4,7 @@
     "LongMethod",
     "NestedBlockDepth",
     "ReturnCount",
+    "CyclomaticComplexMethod",
 )
 
 package com.onyx.android.ink.ui
@@ -35,6 +36,7 @@ internal data class InkCanvasInteraction(
     val pageWidth: Float,
     val pageHeight: Float,
     val allowEditing: Boolean,
+    val allowFingerGestures: Boolean,
     val onStrokeFinished: (Stroke) -> Unit,
     val onStrokeErased: (Stroke) -> Unit,
     val onTransformGesture: (
@@ -59,6 +61,9 @@ internal fun handleTouchEvent(
     runtime: InkCanvasRuntime,
 ): Boolean {
     syncStylusButtonEraserState(event, interaction, runtime)
+    if (!interaction.allowFingerGestures && !eventHasStylusPointer(event)) {
+        return false
+    }
     return when {
         runtime.isTransforming || shouldStartTransformGesture(event) -> {
             handleTransformGesture(view, event, interaction, runtime)

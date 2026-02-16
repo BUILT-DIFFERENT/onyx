@@ -9,6 +9,7 @@ import com.onyx.android.ink.model.Stroke
 internal class UndoController(
     private val viewModel: NoteEditorViewModel,
     private val maxUndoActions: Int,
+    private val useMultiPage: Boolean = false,
 ) {
     val undoStack = mutableStateListOf<InkAction>()
     val redoStack = mutableStateListOf<InkAction>()
@@ -21,8 +22,18 @@ internal class UndoController(
     fun undo() {
         val action = undoStack.removeLastOrNull() ?: return
         when (action) {
-            is InkAction.AddStroke -> viewModel.removeStroke(action.stroke, persist = true)
-            is InkAction.RemoveStroke -> viewModel.addStroke(action.stroke, persist = true)
+            is InkAction.AddStroke ->
+                if (useMultiPage) {
+                    viewModel.removeStrokeForPage(action.stroke, action.pageId, persist = true)
+                } else {
+                    viewModel.removeStroke(action.stroke, persist = true)
+                }
+            is InkAction.RemoveStroke ->
+                if (useMultiPage) {
+                    viewModel.addStrokeForPage(action.stroke, action.pageId, persist = true)
+                } else {
+                    viewModel.addStroke(action.stroke, persist = true)
+                }
         }
         redoStack.add(action)
     }
@@ -30,8 +41,18 @@ internal class UndoController(
     fun redo() {
         val action = redoStack.removeLastOrNull() ?: return
         when (action) {
-            is InkAction.AddStroke -> viewModel.addStroke(action.stroke, persist = true)
-            is InkAction.RemoveStroke -> viewModel.removeStroke(action.stroke, persist = true)
+            is InkAction.AddStroke ->
+                if (useMultiPage) {
+                    viewModel.addStrokeForPage(action.stroke, action.pageId, persist = true)
+                } else {
+                    viewModel.addStroke(action.stroke, persist = true)
+                }
+            is InkAction.RemoveStroke ->
+                if (useMultiPage) {
+                    viewModel.removeStrokeForPage(action.stroke, action.pageId, persist = true)
+                } else {
+                    viewModel.removeStroke(action.stroke, persist = true)
+                }
         }
         undoStack.add(action)
         trimUndoStack()
@@ -41,20 +62,34 @@ internal class UndoController(
         stroke: Stroke,
         currentPage: PageEntity?,
     ) {
-        viewModel.addStroke(stroke, persist = true)
-        undoStack.add(InkAction.AddStroke(stroke))
+        val pageId = currentPage?.pageId
+        if (pageId == null) {
+            return
+        }
+        if (useMultiPage) {
+            viewModel.addStrokeForPage(stroke, pageId, persist = true)
+        } else {
+            viewModel.addStroke(stroke, persist = true)
+        }
+        undoStack.add(InkAction.AddStroke(stroke, pageId))
         trimUndoStack()
         redoStack.clear()
-        val pageId = currentPage?.pageId
-        if (pageId != null && currentPage.kind == "pdf") {
+        if (currentPage.kind == "pdf") {
             viewModel.upgradePageToMixed(pageId)
         }
         logStrokePoints(stroke)
     }
 
-    fun onStrokeErased(stroke: Stroke) {
-        viewModel.removeStroke(stroke, persist = true)
-        undoStack.add(InkAction.RemoveStroke(stroke))
+    fun onStrokeErased(
+        stroke: Stroke,
+        pageId: String,
+    ) {
+        if (useMultiPage) {
+            viewModel.removeStrokeForPage(stroke, pageId, persist = true)
+        } else {
+            viewModel.removeStroke(stroke, persist = true)
+        }
+        undoStack.add(InkAction.RemoveStroke(stroke, pageId))
         trimUndoStack()
         redoStack.clear()
     }
