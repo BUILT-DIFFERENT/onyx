@@ -189,12 +189,17 @@ fun InkCanvas(
                                 onStylusButtonEraserActiveChanged = currentCallbacks.onStylusButtonEraserActiveChanged,
                                 onStrokeRenderFinished = onStrokeRenderFinished,
                             )
-                        handleTouchEvent(
-                            view = this@apply,
-                            event = event,
-                            interaction = interaction,
-                            runtime = runtime,
-                        )
+                        val handled =
+                            handleTouchEvent(
+                                view = this@apply,
+                                event = event,
+                                interaction = interaction,
+                                runtime = runtime,
+                            )
+                        // Always consume touch streams for canvas tool types so
+                        // InProgressStrokesView does not also process them and
+                        // create duplicate/jagged overlay strokes.
+                        handled || shouldConsumeCanvasTouchEvent(event)
                     }
                     setOnGenericMotionListener { _, event ->
                         val interaction =
@@ -230,6 +235,13 @@ fun InkCanvas(
                 if (runtime.pendingCommittedStrokes.isNotEmpty()) {
                     runtime.pendingCommittedStrokes.keys.removeAll(persistedIds)
                 }
+
+                val staleFinishedStrokeIds = inProgressView.getFinishedStrokes().keys
+                if (staleFinishedStrokeIds.isNotEmpty()) {
+                    // Safety net: if a finished stroke misses the per-stroke removal callback,
+                    // clear it here to avoid stuck jagged duplicates in the overlay layer.
+                    inProgressView.removeFinishedStrokes(staleFinishedStrokeIds.toSet())
+                }
             },
             modifier = Modifier.fillMaxSize(),
         )
@@ -239,6 +251,19 @@ fun InkCanvas(
         }
     }
 }
+
+private fun shouldConsumeCanvasTouchEvent(event: MotionEvent): Boolean =
+    when (event.actionMasked) {
+        MotionEvent.ACTION_DOWN,
+        MotionEvent.ACTION_UP,
+        MotionEvent.ACTION_MOVE,
+        MotionEvent.ACTION_CANCEL,
+        MotionEvent.ACTION_POINTER_DOWN,
+        MotionEvent.ACTION_POINTER_UP,
+        -> true
+
+        else -> false
+    }
 
 private fun buildOutsidePageMaskPath(
     viewWidth: Float,
