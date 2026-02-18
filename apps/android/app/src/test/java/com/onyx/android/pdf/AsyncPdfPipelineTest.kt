@@ -75,23 +75,78 @@ class AsyncPdfPipelineTest {
             assertEquals(1, renderer.renderCount(keyB))
             assertTrue(cache.contains(keyB))
         }
+
+    @Test
+    fun `requestTiles respects max queue size`() =
+        runTest {
+            val keys =
+                (0..10).map { i ->
+                    PdfTileKey(pageIndex = 0, tileX = i, tileY = 0, scaleBucket = 1f)
+                }
+            val renderer = FakeRenderer(keys.associateWith { fakeBitmap() })
+            val cache = FakeTileStore()
+            val config =
+                PdfPipelineConfig(
+                    maxInFlightRenders = 2,
+                    maxQueueSize = 5,
+                )
+            val pipeline =
+                AsyncPdfPipeline(
+                    renderer = renderer,
+                    cache = cache,
+                    scope = this,
+                    config = config,
+                )
+
+            pipeline.requestTiles(keys)
+            advanceUntilIdle()
+
+            val totalRendered = keys.sumOf { renderer.renderCount(it) }
+            assertTrue(totalRendered <= 5)
+        }
+
+    @Test
+    fun `pipeline config exposes prefetch radius`() =
+        runTest {
+            val config = PdfPipelineConfig(prefetchRadius = 3)
+            assertEquals(3, config.prefetchRadius)
+        }
+
+    @Test
+    fun `pipeline uses config prefetch radius`() =
+        runTest {
+            val key = PdfTileKey(pageIndex = 0, tileX = 0, tileY = 0, scaleBucket = 1f)
+            val renderer = FakeRenderer(mapOf(key to fakeBitmap()))
+            val cache = FakeTileStore()
+            val config = PdfPipelineConfig(prefetchRadius = 2)
+            val pipeline =
+                AsyncPdfPipeline(
+                    renderer = renderer,
+                    cache = cache,
+                    scope = this,
+                    config = config,
+                )
+
+            assertEquals(2, pipeline.prefetchRadius)
+        }
 }
 
 private class FakeTileStore : PdfTileStore {
-    private val tiles = linkedMapOf<PdfTileKey, Bitmap>()
+    private val tiles = linkedMapOf<PdfTileKey, ValidatingTile>()
 
-    override suspend fun getTile(key: PdfTileKey): Bitmap? = tiles[key]
+    override suspend fun getTile(key: PdfTileKey): ValidatingTile? = tiles[key]
 
     override suspend fun putTile(
         key: PdfTileKey,
         bitmap: Bitmap,
-    ): Bitmap {
+    ): ValidatingTile {
         val existing = tiles[key]
         if (existing != null) {
             return existing
         }
-        tiles[key] = bitmap
-        return bitmap
+        val tile = ValidatingTile(bitmap)
+        tiles[key] = tile
+        return tile
     }
 
     override suspend fun clear() {

@@ -42,6 +42,7 @@ import com.onyx.android.ink.ui.InkCanvasCallbacks
 import com.onyx.android.ink.ui.InkCanvasState
 import com.onyx.android.pdf.PdfTextExtractor
 import com.onyx.android.pdf.PdfTileKey
+import com.onyx.android.pdf.ValidatingTile
 import com.onyx.android.pdf.buildPdfTextSelection
 import com.onyx.android.pdf.findPdfTextCharIndexAtPagePoint
 import kotlinx.coroutines.CoroutineScope
@@ -354,29 +355,25 @@ private fun PdfSelectionOverlay(
 }
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPdfTiles(
-    entries: Set<Map.Entry<PdfTileKey, android.graphics.Bitmap>>,
+    entries: Set<Map.Entry<PdfTileKey, ValidatingTile>>,
     viewTransform: ViewTransform,
     tileSizePx: Int,
     previousScaleBucket: Float?,
     crossfadeProgress: Float,
 ) {
-    // Partition tiles into previous bucket (fading out) and current bucket (fading in)
     val (previousBucketEntries, currentBucketEntries) =
         entries.partition { entry ->
             previousScaleBucket != null && entry.key.scaleBucket == previousScaleBucket
         }
 
-    // Calculate alpha based on crossfade progress
-    // Previous bucket fades out (1.0 -> 0.0), current bucket fades in (0.0 -> 1.0)
     val previousBucketAlpha = 1f - crossfadeProgress
     val currentBucketAlpha = crossfadeProgress
 
-    // Draw previous bucket tiles with fading alpha
     if (previousBucketEntries.isNotEmpty() && previousBucketAlpha > 0f) {
         previousBucketEntries.forEach { entry ->
             drawPdfTile(
                 key = entry.key,
-                bitmap = entry.value,
+                tile = entry.value,
                 viewTransform = viewTransform,
                 tileSizePx = tileSizePx,
                 alpha = previousBucketAlpha,
@@ -388,7 +385,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPdfTiles(
     currentBucketEntries.forEach { entry ->
         drawPdfTile(
             key = entry.key,
-            bitmap = entry.value,
+            tile = entry.value,
             viewTransform = viewTransform,
             tileSizePx = tileSizePx,
             alpha = currentBucketAlpha,
@@ -398,14 +395,12 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPdfTiles(
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPdfTile(
     key: PdfTileKey,
-    bitmap: android.graphics.Bitmap,
+    tile: ValidatingTile,
     viewTransform: ViewTransform,
     tileSizePx: Int,
     alpha: Float = 1f,
 ) {
-    if (bitmap.isRecycled) {
-        return
-    }
+    val bitmap = tile.getBitmapIfValid() ?: return
     val scaleBucket = key.scaleBucket
     if (scaleBucket <= 0f) {
         return

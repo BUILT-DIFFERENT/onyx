@@ -1,6 +1,8 @@
 package com.onyx.android.pdf
 
 import android.graphics.Bitmap
+import android.util.Log
+import com.onyx.android.ink.perf.PerfInstrumentation
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,39 +18,87 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 private const val DEFAULT_TILE_REQUEST_BUFFER_CAPACITY = 64
+private const val MAX_IN_FLIGHT_QUEUE_SIZE = 32
+private const val TAG = "AsyncPdfPipeline"
 
 data class PdfTileUpdate(
     val key: PdfTileKey,
-    val bitmap: Bitmap,
+    val tile: ValidatingTile,
+    val requestStartNanos: Long,
 )
+
+data class PdfPipelineConfig(
+    val maxInFlightRenders: Int = 4,
+    val maxQueueSize: Int = MAX_IN_FLIGHT_QUEUE_SIZE,
+    val prefetchRadius: Int = 1,
+) {
+    init {
+        require(maxInFlightRenders >= 1) { "maxInFlightRenders must be at least 1" }
+        require(maxQueueSize >= 1) { "maxQueueSize must be at least 1" }
+        require(prefetchRadius >= 0) { "prefetchRadius must be non-negative" }
+    }
+
+    companion object {
+        val DEFAULT = PdfPipelineConfig()
+    }
+}
 
 class AsyncPdfPipeline(
     private val renderer: PdfTileRenderEngine,
     private val cache: PdfTileStore,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
-    maxInFlightRenders: Int = 4,
+    private val config: PdfPipelineConfig = PdfPipelineConfig.DEFAULT,
 ) {
+    constructor(
+        renderer: PdfTileRenderEngine,
+        cache: PdfTileStore,
+        scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+        maxInFlightRenders: Int = 4,
+    ) : this(
+        renderer = renderer,
+        cache = cache,
+        scope = scope,
+        config = PdfPipelineConfig(maxInFlightRenders = maxInFlightRenders),
+    )
+
     private val requestMutex = Mutex()
     private val inFlight = mutableMapOf<PdfTileKey, Job>()
-    private val renderSemaphore = Semaphore(maxInFlightRenders.coerceAtLeast(1))
+    private val requestTimestamps = mutableMapOf<PdfTileKey, Long>()
+    private val renderSemaphore = Semaphore(config.maxInFlightRenders.coerceAtLeast(1))
     private val _tileUpdates =
         MutableSharedFlow<PdfTileUpdate>(
             extraBufferCapacity = DEFAULT_TILE_REQUEST_BUFFER_CAPACITY,
         )
 
     val tileUpdates: SharedFlow<PdfTileUpdate> = _tileUpdates
+    val prefetchRadius: Int get() = config.prefetchRadius
 
     suspend fun requestTiles(visibleTiles: List<PdfTileKey>) {
         val visibleSet = visibleTiles.toSet()
         requestMutex.withLock {
             val staleKeys = inFlight.keys.filter { key -> key !in visibleSet }
-            staleKeys.forEach { key ->
-                inFlight.remove(key)?.cancel()
+            if (staleKeys.isNotEmpty()) {
+                staleKeys.forEach { key ->
+                    inFlight.remove(key)?.cancel()
+                    requestTimestamps.remove(key)
+                }
+                PerfInstrumentation.logTileStaleCancel(staleKeys.size)
             }
+            PerfInstrumentation.logTileQueueDepth(inFlight.size)
+
             for (key in visibleTiles) {
                 if (!shouldRequestTile(key)) {
                     continue
                 }
+                if (inFlight.size >= config.maxQueueSize) {
+                    Log.w(
+                        TAG,
+                        "Queue full (${inFlight.size}/${config.maxQueueSize}), dropping request for $key",
+                    )
+                    break
+                }
+                val requestStartNanos = System.nanoTime()
+                requestTimestamps[key] = requestStartNanos
                 val renderJob =
                     scope.launch {
                         var semaphoreAcquired = false
@@ -58,12 +108,17 @@ class AsyncPdfPipeline(
                             semaphoreAcquired = true
                             renderedBitmap = renderer.renderTile(key)
                             val cachedBitmap = cache.putTile(key, renderedBitmap)
-                            _tileUpdates.tryEmit(PdfTileUpdate(key, cachedBitmap))
+                            val startNanos =
+                                requestMutex.withLock {
+                                    requestTimestamps.remove(key) ?: requestStartNanos
+                                }
+                            PerfInstrumentation.logTileVisibleLatency(startNanos)
+                            _tileUpdates.tryEmit(PdfTileUpdate(key, cachedBitmap, startNanos))
                         } catch (cancellation: CancellationException) {
                             val bitmap = renderedBitmap
                             if (
                                 bitmap != null &&
-                                cache.getTile(key) !== bitmap &&
+                                cache.getTile(key)?.bitmap !== bitmap &&
                                 !bitmap.isRecycled
                             ) {
                                 bitmap.recycle()
@@ -89,6 +144,7 @@ class AsyncPdfPipeline(
         requestMutex.withLock {
             inFlight.values.forEach { job -> job.cancel() }
             inFlight.clear()
+            requestTimestamps.clear()
         }
     }
 

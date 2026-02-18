@@ -106,6 +106,7 @@ import com.onyx.android.ink.ui.InkCanvasState
 import com.onyx.android.pdf.DEFAULT_PDF_TILE_SIZE_PX
 import com.onyx.android.pdf.PdfDocumentRenderer
 import com.onyx.android.pdf.PdfTileKey
+import com.onyx.android.pdf.ValidatingTile
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -230,8 +231,7 @@ private fun MultiPageEditorContent(
             } else {
                 visibleItems.first().index..visibleItems.last().index
             }
-        }
-            .filter { it != null }
+        }.filter { it != null }
             .map { it ?: 0..0 }
             .distinctUntilChanged()
             .collect { visibleRange ->
@@ -248,8 +248,7 @@ private fun MultiPageEditorContent(
             } else {
                 visibleItems.first().index..visibleItems.last().index
             }
-        }
-            .filter { it != null }
+        }.filter { it != null }
             .map { it ?: 0..0 }
             .distinctUntilChanged()
             .collectLatest { visibleRange ->
@@ -304,7 +303,9 @@ private fun MultiPageEditorContent(
                                     )
                                 if (newZoom != oldZoom) {
                                     val zoomRatio = if (oldZoom > 0f) newZoom / oldZoom else 1f
-                                    val viewportWidth = lazyListState.layoutInfo.viewportSize.width.toFloat()
+                                    val viewportWidth =
+                                        lazyListState.layoutInfo.viewportSize.width
+                                            .toFloat()
                                     val focusedItemInfo =
                                         lazyListState.layoutInfo.visibleItemsInfo.firstOrNull { itemInfo ->
                                             focalY >= itemInfo.offset && focalY <= itemInfo.offset + itemInfo.size
@@ -364,8 +365,7 @@ private fun MultiPageEditorContent(
                     .then(zoomGestureModifier)
                     .onSizeChanged { size ->
                         contentState.onViewportSizeChanged(size)
-                    }
-                    .testTag(EDITOR_VIEWPORT_TEST_TAG)
+                    }.testTag(EDITOR_VIEWPORT_TEST_TAG)
                     .semantics { contentDescription = "Editor viewport" },
         ) {
             LazyColumn(
@@ -591,30 +591,26 @@ private fun PdfPageBitmap(
  */
 @Composable
 private fun PdfTilesOverlay(
-    tiles: Map<PdfTileKey, android.graphics.Bitmap>,
+    tiles: Map<PdfTileKey, ValidatingTile>,
     viewTransform: ViewTransform,
     tileSizePx: Int,
     previousScaleBucket: Float?,
     crossfadeProgress: Float,
 ) {
     Canvas(modifier = Modifier.fillMaxSize()) {
-        // Partition tiles into previous bucket (fading out) and current bucket (fading in)
         val (previousBucketEntries, currentBucketEntries) =
             tiles.entries.partition { entry ->
                 previousScaleBucket != null && entry.key.scaleBucket == previousScaleBucket
             }
 
-        // Calculate alpha based on crossfade progress
-        // Previous bucket fades out (1.0 -> 0.0), current bucket fades in (0.0 -> 1.0)
         val previousBucketAlpha = 1f - crossfadeProgress
         val currentBucketAlpha = crossfadeProgress
 
-        // Draw previous bucket tiles with fading alpha
         if (previousBucketEntries.isNotEmpty() && previousBucketAlpha > 0f) {
             previousBucketEntries.forEach { entry ->
                 val key = entry.key
-                val bitmap = entry.value
-                if (bitmap.isRecycled) return@forEach
+                val tile = entry.value
+                val bitmap = tile.getBitmapIfValid() ?: return@forEach
 
                 val scaleBucket = key.scaleBucket
                 if (scaleBucket <= 0f) return@forEach
@@ -641,11 +637,10 @@ private fun PdfTilesOverlay(
             }
         }
 
-        // Draw current bucket tiles with fading in alpha
         currentBucketEntries.forEach { entry ->
             val key = entry.key
-            val bitmap = entry.value
-            if (bitmap.isRecycled) return@forEach
+            val tile = entry.value
+            val bitmap = tile.getBitmapIfValid() ?: return@forEach
 
             val scaleBucket = key.scaleBucket
             if (scaleBucket <= 0f) return@forEach
@@ -1161,16 +1156,14 @@ private fun ToolToggleButton(
                     width = if (isSelected) 0.dp else UNSELECTED_BORDER_WIDTH_DP.dp,
                     color = NOTEWISE_STROKE,
                     shape = CircleShape,
-                )
-                .combinedClickable(
+                ).combinedClickable(
                     enabled = enabled,
                     role = Role.Button,
                     interactionSource = interactionSource,
                     indication = null,
                     onClick = onToggle,
                     onLongClick = onLongPress,
-                )
-                .semantics { contentDescription = visuals.label },
+                ).semantics { contentDescription = visuals.label },
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -1204,16 +1197,14 @@ private fun EraserToggleButton(
                     width = if (isSelected) 0.dp else UNSELECTED_BORDER_WIDTH_DP.dp,
                     color = NOTEWISE_STROKE,
                     shape = CircleShape,
-                )
-                .combinedClickable(
+                ).combinedClickable(
                     enabled = enabled,
                     role = Role.Button,
                     interactionSource = interactionSource,
                     indication = null,
                     onClick = onToggle,
                     onLongClick = onLongPress,
-                )
-                .semantics { contentDescription = "Eraser" },
+                ).semantics { contentDescription = "Eraser" },
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -1285,8 +1276,7 @@ private fun PaletteSwatch(
                     indication = null,
                     onClick = onClick,
                     onLongClick = onLongPress,
-                )
-                .semantics {
+                ).semantics {
                     contentDescription = "Brush color ${paletteColorName(hexColor)}"
                 },
     )
@@ -1398,6 +1388,7 @@ private fun ToolSettingsDialog(
                         steps = TOOL_SETTINGS_DIALOG_SLIDER_STEPS,
                     )
                 }
+
                 ToolPanelType.HIGHLIGHTER -> {
                     BrushSizeControl(
                         brush = brush,
@@ -1438,6 +1429,7 @@ private fun ToolSettingsDialog(
                         steps = TOOL_SETTINGS_DIALOG_SLIDER_STEPS,
                     )
                 }
+
                 ToolPanelType.ERASER -> {
                     Text(text = "Stroke eraser", style = MaterialTheme.typography.bodyMedium)
                     Text(
@@ -1607,8 +1599,7 @@ private fun NoteEditorContent(
                     .padding(top = TOOLBAR_CONTENT_PADDING_DP.dp)
                     .onSizeChanged { size ->
                         contentState.onViewportSizeChanged(size)
-                    }
-                    .testTag(EDITOR_VIEWPORT_TEST_TAG)
+                    }.testTag(EDITOR_VIEWPORT_TEST_TAG)
                     .semantics { contentDescription = "Editor viewport" },
         ) {
             if (!contentState.isPdfPage) {
@@ -1933,14 +1924,21 @@ private fun normalizeHexColor(rawColor: String): String {
     }
     val prefixed = if (trimmed.startsWith("#")) trimmed else "#$trimmed"
     return when {
-        HEX_COLOR_REGEX.matches(prefixed) -> prefixed
+        HEX_COLOR_REGEX.matches(prefixed) -> {
+            prefixed
+        }
+
         prefixed.matches(Regex("^#[0-9A-F]{3}$")) -> {
             "#${prefixed[1]}${prefixed[1]}${prefixed[2]}${prefixed[2]}${prefixed[3]}${prefixed[3]}"
         }
+
         prefixed.matches(Regex("^#[0-9A-F]{4}$")) -> {
             "#${prefixed[1]}${prefixed[1]}${prefixed[2]}${prefixed[2]}${prefixed[3]}${prefixed[3]}${prefixed[4]}${prefixed[4]}"
         }
-        else -> "#000000"
+
+        else -> {
+            "#000000"
+        }
     }
 }
 

@@ -15,20 +15,27 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.ink.ui.TransformGesture
 import com.onyx.android.pdf.AsyncPdfPipeline
 import com.onyx.android.pdf.DEFAULT_PDF_TILE_SIZE_PX
 import com.onyx.android.pdf.PdfDocumentRenderer
+import com.onyx.android.pdf.PdfPipelineConfig
 import com.onyx.android.pdf.PdfTileKey
 import com.onyx.android.pdf.PdfVisiblePageRect
+import com.onyx.android.pdf.ValidatingTile
 import com.onyx.android.pdf.createPdfTileCache
 import com.onyx.android.pdf.maxTileIndexForPage
 import com.onyx.android.pdf.pageRectToTileRange
 import com.onyx.android.pdf.tileKeysForRange
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.max
@@ -51,7 +58,13 @@ private const val PDF_RENDER_MAX_PIXELS = 16_000_000f
 private const val PDF_RENDER_MIN_SCALE = 0.5f
 private const val PDF_BUCKET_SWITCH_UP_MULTIPLIER = 1.1f
 private const val PDF_BUCKET_SWITCH_DOWN_MULTIPLIER = 0.9f
-private const val PDF_TILE_PREFETCH_DISTANCE = 1
+private const val PDF_TILE_PREFETCH_DISTANCE_DEFAULT = 1
+private const val TILE_REQUEST_FRAME_DEBOUNCE_MS = 16L
+
+private const val OVERSCROLL_MAX_DISTANCE_PX = 150f
+private const val OVERSCROLL_RESISTANCE_FACTOR = 0.4f
+private const val SNAP_BACK_DURATION_MS = 300L
+private const val SNAP_BACK_FRAME_DELAY_MS = 16L
 
 internal data class ZoomLimits(
     val minZoom: Float,
@@ -117,14 +130,6 @@ internal fun rememberTransformState(
             ),
         )
     }
-
-internal data class TransformGesture(
-    val zoomChange: Float,
-    val panChangeX: Float,
-    val panChangeY: Float,
-    val centroidX: Float,
-    val centroidY: Float,
-)
 
 internal fun applyTransformGesture(
     current: ViewTransform,
@@ -209,6 +214,185 @@ internal fun constrainTransformToViewport(
     return transform.copy(panX = constrainedPanX, panY = constrainedPanY)
 }
 
+internal fun applyRubberBandTransform(
+    transform: ViewTransform,
+    pageWidth: Float,
+    pageHeight: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
+): ViewTransform {
+    if (!hasValidDimensions(pageWidth, pageHeight, viewportWidth, viewportHeight)) {
+        return transform
+    }
+    val contentWidth = pageWidth * transform.zoom
+    val contentHeight = pageHeight * transform.zoom
+
+    val constrainedPanX =
+        if (contentWidth <= viewportWidth) {
+            applyRubberBandResistance(
+                value = transform.panX,
+                center = (viewportWidth - contentWidth) / 2f,
+            )
+        } else {
+            applyRubberBandResistanceToBounds(
+                value = transform.panX,
+                min = viewportWidth - contentWidth,
+                max = 0f,
+            )
+        }
+    val constrainedPanY =
+        if (contentHeight <= viewportHeight) {
+            applyRubberBandResistance(
+                value = transform.panY,
+                center = (viewportHeight - contentHeight) / 2f,
+            )
+        } else {
+            applyRubberBandResistanceToBounds(
+                value = transform.panY,
+                min = viewportHeight - contentHeight,
+                max = 0f,
+            )
+        }
+
+    return transform.copy(panX = constrainedPanX, panY = constrainedPanY)
+}
+
+private fun applyRubberBandResistance(
+    value: Float,
+    center: Float,
+): Float {
+    val offset = value - center
+    val resistance = OVERSCROLL_RESISTANCE_FACTOR
+    val dampedOffset = offset * resistance / (1 + kotlin.math.abs(offset) / OVERSCROLL_MAX_DISTANCE_PX)
+    return center + dampedOffset.coerceIn(-OVERSCROLL_MAX_DISTANCE_PX, OVERSCROLL_MAX_DISTANCE_PX)
+}
+
+private fun applyRubberBandResistanceToBounds(
+    value: Float,
+    min: Float,
+    max: Float,
+): Float {
+    if (value in min..max) return value
+    val overscroll =
+        when {
+            value < min -> min - value
+            else -> value - max
+        }
+    val resistance = OVERSCROLL_RESISTANCE_FACTOR
+    val dampedOverscroll = overscroll * resistance / (1 + overscroll / OVERSCROLL_MAX_DISTANCE_PX)
+    return when {
+        value < min -> min - dampedOverscroll.coerceAtMost(OVERSCROLL_MAX_DISTANCE_PX)
+        else -> max + dampedOverscroll.coerceAtMost(OVERSCROLL_MAX_DISTANCE_PX)
+    }
+}
+
+internal fun needsRubberBandSnapBack(
+    transform: ViewTransform,
+    pageWidth: Float,
+    pageHeight: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
+): Boolean {
+    if (!hasValidDimensions(pageWidth, pageHeight, viewportWidth, viewportHeight)) {
+        return false
+    }
+    val contentWidth = pageWidth * transform.zoom
+    val contentHeight = pageHeight * transform.zoom
+    val xOutOfBounds =
+        if (contentWidth <= viewportWidth) {
+            val center = (viewportWidth - contentWidth) / 2f
+            kotlin.math.abs(transform.panX - center) > 1f
+        } else {
+            transform.panX < viewportWidth - contentWidth || transform.panX > 0f
+        }
+    val yOutOfBounds =
+        if (contentHeight <= viewportHeight) {
+            val center = (viewportHeight - contentHeight) / 2f
+            kotlin.math.abs(transform.panY - center) > 1f
+        } else {
+            transform.panY < viewportHeight - contentHeight || transform.panY > 0f
+        }
+    return xOutOfBounds || yOutOfBounds
+}
+
+internal fun computeFocalPointPreservingTransform(
+    previousTransform: ViewTransform,
+    previousViewportWidth: Float,
+    previousViewportHeight: Float,
+    newViewportWidth: Float,
+    newViewportHeight: Float,
+    pageWidth: Float,
+    pageHeight: Float,
+    zoomLimits: ZoomLimits,
+): ViewTransform {
+    if (!hasValidDimensions(pageWidth, pageHeight, newViewportWidth, newViewportHeight)) {
+        return previousTransform
+    }
+    val previousCenterScreenX = previousViewportWidth / 2f
+    val previousCenterScreenY = previousViewportHeight / 2f
+    val focalPageX = previousTransform.screenToPageX(previousCenterScreenX)
+    val focalPageY = previousTransform.screenToPageY(previousCenterScreenY)
+    val newCenterScreenX = newViewportWidth / 2f
+    val newCenterScreenY = newViewportHeight / 2f
+    val newPanX = newCenterScreenX - focalPageX * previousTransform.zoom
+    val newPanY = newCenterScreenY - focalPageY * previousTransform.zoom
+    val newZoom = previousTransform.zoom.coerceIn(zoomLimits.minZoom, zoomLimits.maxZoom)
+    val unconstrained = previousTransform.copy(zoom = newZoom, panX = newPanX, panY = newPanY)
+    return constrainTransformToViewport(
+        transform = unconstrained,
+        pageWidth = pageWidth,
+        pageHeight = pageHeight,
+        viewportWidth = newViewportWidth,
+        viewportHeight = newViewportHeight,
+    )
+}
+
+internal suspend fun animateSnapBackToValidBounds(
+    currentTransform: ViewTransform,
+    pageWidth: Float,
+    pageHeight: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
+    onUpdate: (ViewTransform) -> Unit,
+) {
+    val targetTransform =
+        constrainTransformToViewport(
+            transform = currentTransform,
+            pageWidth = pageWidth,
+            pageHeight = pageHeight,
+            viewportWidth = viewportWidth,
+            viewportHeight = viewportHeight,
+        )
+    val startPanX = currentTransform.panX
+    val startPanY = currentTransform.panY
+    val targetPanX = targetTransform.panX
+    val targetPanY = targetTransform.panY
+    if (kotlin.math.abs(startPanX - targetPanX) < 1f && kotlin.math.abs(startPanY - targetPanY) < 1f) {
+        return
+    }
+    val startTime = System.currentTimeMillis()
+    var lastTransform = currentTransform
+    while (true) {
+        val elapsed = System.currentTimeMillis() - startTime
+        if (elapsed >= SNAP_BACK_DURATION_MS) {
+            onUpdate(targetTransform)
+            break
+        }
+        val progress = (elapsed.toFloat() / SNAP_BACK_DURATION_MS).coerceIn(0f, 1f)
+        val eased = easeOutCubic(progress)
+        val currentPanX = startPanX + (targetPanX - startPanX) * eased
+        val currentPanY = startPanY + (targetPanY - startPanY) * eased
+        lastTransform = lastTransform.copy(panX = currentPanX, panY = currentPanY)
+        onUpdate(lastTransform)
+        kotlinx.coroutines.delay(SNAP_BACK_FRAME_DELAY_MS)
+    }
+}
+
+private fun easeOutCubic(t: Float): Float {
+    val t1 = t - 1f
+    return t1 * t1 * t1 + 1f
+}
+
 private fun hasValidDimensions(
     pageWidth: Float,
     pageHeight: Float,
@@ -270,7 +454,7 @@ internal fun rememberPdfThumbnail(
 }
 
 internal data class PdfTileRenderState(
-    val tiles: Map<PdfTileKey, android.graphics.Bitmap>,
+    val tiles: Map<PdfTileKey, ValidatingTile>,
     val scaleBucket: Float?,
     val previousScaleBucket: Float?,
     val tileSizePx: Int,
@@ -294,7 +478,7 @@ internal fun rememberPdfTiles(
     val appContext = LocalContext.current.applicationContext
     var tiles by
         remember(currentPage?.pageId) {
-            mutableStateOf<Map<PdfTileKey, android.graphics.Bitmap>>(emptyMap())
+            mutableStateOf<Map<PdfTileKey, ValidatingTile>>(emptyMap())
         }
     // For hysteresis in bucket selection
     var hysteresisBucket by remember(currentPage?.pageId) { mutableStateOf<Float?>(null) }
@@ -313,25 +497,25 @@ internal fun rememberPdfTiles(
             val currentBucket = scaleBucket
             val previousBucket = retainedPreviousBucket
 
-            // scaleBucket is never null (zoomToRenderScaleBucket always returns a value)
             if (previousBucket == null || previousBucket == currentBucket) {
-                tiles.filterKeys { it.scaleBucket == currentBucket }
-                    .filterValues { !it.isRecycled }
+                tiles
+                    .filterKeys { it.scaleBucket == currentBucket }
+                    .filterValues { it.isValid() }
             } else {
-                // Include tiles from both buckets for crossfade
                 val currentTiles =
-                    tiles.filterKeys {
-                        it.scaleBucket == currentBucket
-                    }.filterValues { !it.isRecycled }
+                    tiles
+                        .filterKeys {
+                            it.scaleBucket == currentBucket
+                        }.filterValues { it.isValid() }
 
                 val currentPositions = currentTiles.keys.map { it.tileX to it.tileY }.toSet()
 
-                // Add previous bucket tiles for positions not covered by current bucket
                 val previousTiles =
-                    tiles.filterKeys {
-                        it.scaleBucket == previousBucket &&
-                            (it.tileX to it.tileY) !in currentPositions
-                    }.filterValues { !it.isRecycled }
+                    tiles
+                        .filterKeys {
+                            it.scaleBucket == previousBucket &&
+                                (it.tileX to it.tileY) !in currentPositions
+                        }.filterValues { it.isValid() }
 
                 currentTiles + previousTiles
             }
@@ -368,10 +552,22 @@ internal fun rememberPdfTiles(
     }
 
     val tileCache = remember(pdfRenderer) { pdfRenderer?.let { createPdfTileCache(appContext) } }
+    val pipelineConfig =
+        remember {
+            PdfPipelineConfig(
+                maxInFlightRenders = 4,
+                maxQueueSize = 32,
+                prefetchRadius = PDF_TILE_PREFETCH_DISTANCE_DEFAULT,
+            )
+        }
     val pipeline =
-        remember(pdfRenderer, tileCache) {
+        remember(pdfRenderer, tileCache, pipelineConfig) {
             if (pdfRenderer != null && tileCache != null) {
-                AsyncPdfPipeline(pdfRenderer, tileCache)
+                AsyncPdfPipeline(
+                    renderer = pdfRenderer,
+                    cache = tileCache,
+                    config = pipelineConfig,
+                )
             } else {
                 null
             }
@@ -399,76 +595,72 @@ internal fun rememberPdfTiles(
         val activePipeline = pipeline ?: return@LaunchedEffect
         val activePageIndex = currentPage?.pdfPageNo ?: return@LaunchedEffect
         activePipeline.tileUpdates.collect { update ->
-            if (update.key.pageIndex == activePageIndex && !update.bitmap.isRecycled) {
-                tiles = tiles + (update.key to update.bitmap)
+            if (update.key.pageIndex == activePageIndex && update.tile.isValid()) {
+                tiles = tiles + (update.key to update.tile)
             }
         }
     }
 
+    @OptIn(FlowPreview::class)
     LaunchedEffect(
         pipeline,
         tileCache,
         isPdfPage,
         currentPage?.pageId,
-        viewTransform.zoom,
-        viewTransform.panX,
-        viewTransform.panY,
-        viewportSize,
-        scaleBucket,
     ) {
-        if (!isPdfPage) {
-            return@LaunchedEffect
-        }
+        if (!isPdfPage) return@LaunchedEffect
         val activePipeline = pipeline ?: return@LaunchedEffect
         val activeTileCache = tileCache ?: return@LaunchedEffect
         val pageIndex = currentPage?.pdfPageNo ?: return@LaunchedEffect
-        if (viewportSize.width <= 0 || viewportSize.height <= 0) {
-            return@LaunchedEffect
-        }
-        val pageRect =
-            visiblePageRect(
-                viewTransform = viewTransform,
-                viewportSize = viewportSize,
-                pageWidth = pageWidth,
-                pageHeight = pageHeight,
-            ) ?: return@LaunchedEffect
-        val range =
-            pageRectToTileRange(
-                pageRect = pageRect,
-                scaleBucket = scaleBucket,
-                tileSizePx = DEFAULT_PDF_TILE_SIZE_PX,
-            )
-        if (!range.isValid) {
-            return@LaunchedEffect
-        }
-        val (maxTileX, maxTileY) =
-            maxTileIndexForPage(
-                pageWidthPoints = pageWidth,
-                pageHeightPoints = pageHeight,
-                scaleBucket = scaleBucket,
-                tileSizePx = DEFAULT_PDF_TILE_SIZE_PX,
-            )
-        val requestedRange =
-            range
-                .withPrefetch(PDF_TILE_PREFETCH_DISTANCE)
-                .clampedToPage(pageMaxTileX = maxTileX, pageMaxTileY = maxTileY)
-        if (!requestedRange.isValid) {
-            return@LaunchedEffect
-        }
-        // Get tiles with fallback to previous bucket for smooth crossfade
-        tiles =
-            activeTileCache.snapshotForPageWithFallback(
-                pageIndex = pageIndex,
-                currentBucket = scaleBucket,
-                previousBucket = retainedPreviousBucket,
-            )
-        activePipeline.requestTiles(
-            tileKeysForRange(
-                pageIndex = pageIndex,
-                scaleBucket = scaleBucket,
-                tileRange = requestedRange,
-            ),
-        )
+
+        snapshotFlow {
+            Triple(viewTransform, viewportSize, scaleBucket)
+        }.debounce(TILE_REQUEST_FRAME_DEBOUNCE_MS)
+            .distinctUntilChanged()
+            .collect { (transform, size, bucket) ->
+                if (size.width <= 0 || size.height <= 0) return@collect
+                val pageRect =
+                    visiblePageRect(
+                        viewTransform = transform,
+                        viewportSize = size,
+                        pageWidth = pageWidth,
+                        pageHeight = pageHeight,
+                    ) ?: return@collect
+                val range =
+                    pageRectToTileRange(
+                        pageRect = pageRect,
+                        scaleBucket = bucket,
+                        tileSizePx = DEFAULT_PDF_TILE_SIZE_PX,
+                    )
+                if (!range.isValid) return@collect
+                val (maxTileX, maxTileY) =
+                    maxTileIndexForPage(
+                        pageWidthPoints = pageWidth,
+                        pageHeightPoints = pageHeight,
+                        scaleBucket = bucket,
+                        tileSizePx = DEFAULT_PDF_TILE_SIZE_PX,
+                    )
+                val prefetchDistance = activePipeline.prefetchRadius
+                val requestedRange =
+                    range
+                        .withPrefetch(prefetchDistance)
+                        .clampedToPage(pageMaxTileX = maxTileX, pageMaxTileY = maxTileY)
+                if (!requestedRange.isValid) return@collect
+                tiles =
+                    activeTileCache
+                        .snapshotForPageWithFallback(
+                            pageIndex = pageIndex,
+                            currentBucket = bucket,
+                            previousBucket = retainedPreviousBucket,
+                        )
+                activePipeline.requestTiles(
+                    tileKeysForRange(
+                        pageIndex = pageIndex,
+                        scaleBucket = bucket,
+                        tileRange = requestedRange,
+                    ),
+                )
+            }
     }
 
     return PdfTileRenderState(

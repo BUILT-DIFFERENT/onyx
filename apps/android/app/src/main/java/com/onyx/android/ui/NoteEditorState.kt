@@ -12,11 +12,8 @@ import com.onyx.android.pdf.PdfDocumentRenderer
 import com.onyx.android.pdf.PdfTextChar
 import com.onyx.android.pdf.PdfTextSelection
 import com.onyx.android.pdf.PdfTileKey
+import com.onyx.android.pdf.ValidatingTile
 
-/**
- * Interaction mode for finger input.
- * Stylus always triggers DRAW mode regardless of this setting.
- */
 internal enum class InteractionMode {
     DRAW,
     PAN,
@@ -68,7 +65,7 @@ internal data class NoteEditorToolbarState(
 internal data class NoteEditorContentState(
     val isPdfPage: Boolean,
     val isReadOnly: Boolean,
-    val pdfTiles: Map<PdfTileKey, android.graphics.Bitmap>,
+    val pdfTiles: Map<PdfTileKey, ValidatingTile>,
     val pdfRenderScaleBucket: Float?,
     val pdfPreviousScaleBucket: Float?,
     val pdfTileSizePx: Int,
@@ -170,7 +167,7 @@ internal data class NoteEditorPageState(
 internal data class NoteEditorPdfState(
     val isPdfPage: Boolean,
     val pdfRenderer: PdfDocumentRenderer?,
-    val pdfTiles: Map<PdfTileKey, android.graphics.Bitmap>,
+    val pdfTiles: Map<PdfTileKey, ValidatingTile>,
     val pdfRenderScaleBucket: Float?,
     val pdfPreviousScaleBucket: Float?,
     val pdfTileSizePx: Int,

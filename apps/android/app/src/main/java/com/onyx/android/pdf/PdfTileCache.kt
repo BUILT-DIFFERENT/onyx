@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.util.LruCache
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.atomic.AtomicBoolean
 
 private const val DEFAULT_PDF_TILE_CACHE_SIZE_BYTES = 64 * 1024 * 1024
 private const val LOW_RAM_PDF_TILE_CACHE_SIZE_BYTES = 32 * 1024 * 1024
@@ -21,13 +22,27 @@ data class PdfTileKey(
     val scaleBucket: Float,
 )
 
+class ValidatingTile(
+    val bitmap: Bitmap,
+) {
+    private val valid = AtomicBoolean(true)
+
+    fun isValid(): Boolean = valid.get() && !bitmap.isRecycled
+
+    fun invalidate() {
+        valid.set(false)
+    }
+
+    fun getBitmapIfValid(): Bitmap? = if (isValid()) bitmap else null
+}
+
 interface PdfTileStore {
-    suspend fun getTile(key: PdfTileKey): Bitmap?
+    suspend fun getTile(key: PdfTileKey): ValidatingTile?
 
     suspend fun putTile(
         key: PdfTileKey,
         bitmap: Bitmap,
-    ): Bitmap
+    ): ValidatingTile
 
     suspend fun clear()
 }
@@ -42,6 +57,7 @@ class PdfTileCache(
     },
 ) : PdfTileStore {
     private val cacheMutex = Mutex()
+    private val tileWrappers = mutableMapOf<Bitmap, ValidatingTile>()
     private val cache =
         object : LruCache<PdfTileKey, Bitmap>(maxSizeBytes.coerceAtLeast(MIN_CACHE_SIZE_BYTES)) {
             override fun sizeOf(
@@ -56,6 +72,8 @@ class PdfTileCache(
                 newValue: Bitmap?,
             ) {
                 if (oldValue !== newValue) {
+                    val wrapper = tileWrappers.remove(oldValue)
+                    wrapper?.invalidate()
                     recycleBitmap(oldValue)
                 }
             }
@@ -65,23 +83,24 @@ class PdfTileCache(
         require(tileSizePx >= MIN_TILE_SIZE_PX) { "tileSizePx must be >= $MIN_TILE_SIZE_PX" }
     }
 
-    override suspend fun getTile(key: PdfTileKey): Bitmap? =
+    override suspend fun getTile(key: PdfTileKey): ValidatingTile? =
         cacheMutex.withLock {
             val bitmap = cache.get(key) ?: return@withLock null
             if (bitmap.isRecycled) {
                 cache.remove(key)
+                tileWrappers.remove(bitmap)
                 return@withLock null
             }
-            bitmap
+            tileWrappers.getOrPut(bitmap) { ValidatingTile(bitmap) }
         }
 
     override suspend fun putTile(
         key: PdfTileKey,
         bitmap: Bitmap,
-    ): Bitmap {
+    ): ValidatingTile {
         val existing = getTile(key)
         if (existing != null) {
-            if (existing !== bitmap) {
+            if (existing.bitmap !== bitmap) {
                 recycleBitmap(bitmap)
             }
             return existing
@@ -92,59 +111,55 @@ class PdfTileCache(
                 if (lockedExisting !== bitmap) {
                     recycleBitmap(bitmap)
                 }
-                return@withLock lockedExisting
+                return@withLock tileWrappers.getOrPut(lockedExisting) { ValidatingTile(lockedExisting) }
             }
             if (lockedExisting?.isRecycled == true) {
                 cache.remove(key)
+                tileWrappers.remove(lockedExisting)
             }
             cache.put(key, bitmap)
-            bitmap
+            tileWrappers.getOrPut(bitmap) { ValidatingTile(bitmap) }
         }
     }
 
     override suspend fun clear() {
         cacheMutex.withLock {
+            tileWrappers.values.forEach { it.invalidate() }
+            tileWrappers.clear()
             cache.evictAll()
         }
     }
 
-    suspend fun snapshotForPage(pageIndex: Int): Map<PdfTileKey, Bitmap> =
+    suspend fun snapshotForPage(pageIndex: Int): Map<PdfTileKey, ValidatingTile> =
         cacheMutex.withLock {
             cache
                 .snapshot()
                 .filterKeys { key -> key.pageIndex == pageIndex }
                 .filterValues { bitmap -> !bitmap.isRecycled }
+                .mapValues { (_, bitmap) ->
+                    tileWrappers.getOrPut(bitmap) { ValidatingTile(bitmap) }
+                }
         }
 
-    /**
-     * Get tiles for a specific page and scale bucket.
-     * Used for crossfade rendering during zoom transitions.
-     */
     suspend fun snapshotForPageAndBucket(
         pageIndex: Int,
         scaleBucket: Float,
-    ): Map<PdfTileKey, Bitmap> =
+    ): Map<PdfTileKey, ValidatingTile> =
         cacheMutex.withLock {
             cache
                 .snapshot()
                 .filterKeys { key -> key.pageIndex == pageIndex && key.scaleBucket == scaleBucket }
                 .filterValues { bitmap -> !bitmap.isRecycled }
+                .mapValues { (_, bitmap) ->
+                    tileWrappers.getOrPut(bitmap) { ValidatingTile(bitmap) }
+                }
         }
 
-    /**
-     * Get tiles for a page including multiple scale buckets for smooth crossfade.
-     * Returns tiles for both current and previous scale buckets.
-     *
-     * @param pageIndex The page index to get tiles for
-     * @param currentBucket The current scale bucket (highest priority)
-     * @param previousBucket The previous scale bucket to include for crossfade (optional)
-     * @return Map of tiles with both buckets if available
-     */
     suspend fun snapshotForPageWithFallback(
         pageIndex: Int,
         currentBucket: Float,
         previousBucket: Float? = null,
-    ): Map<PdfTileKey, Bitmap> =
+    ): Map<PdfTileKey, ValidatingTile> =
         cacheMutex.withLock {
             val snapshot = cache.snapshot()
             val currentBucketTiles =
@@ -152,12 +167,14 @@ class PdfTileCache(
                     .filterKeys { key ->
                         key.pageIndex == pageIndex && key.scaleBucket == currentBucket
                     }.filterValues { bitmap -> !bitmap.isRecycled }
+                    .mapValues { (_, bitmap) ->
+                        tileWrappers.getOrPut(bitmap) { ValidatingTile(bitmap) }
+                    }
 
             if (previousBucket == null || previousBucket == currentBucket) {
                 return@withLock currentBucketTiles
             }
 
-            // Add previous bucket tiles for positions not covered by current bucket
             val currentTilePositions = currentBucketTiles.keys.map { it.tileX to it.tileY }.toSet()
             val previousBucketTiles =
                 snapshot
@@ -166,6 +183,9 @@ class PdfTileCache(
                             key.scaleBucket == previousBucket &&
                             (key.tileX to key.tileY) !in currentTilePositions
                     }.filterValues { bitmap -> !bitmap.isRecycled }
+                    .mapValues { (_, bitmap) ->
+                        tileWrappers.getOrPut(bitmap) { ValidatingTile(bitmap) }
+                    }
 
             currentBucketTiles + previousBucketTiles
         }
