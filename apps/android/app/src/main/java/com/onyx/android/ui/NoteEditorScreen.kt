@@ -35,6 +35,7 @@ import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.ink.ui.TransformGesture
 import com.onyx.android.pdf.OutlineItem
 import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfIncorrectPasswordException
@@ -76,8 +77,14 @@ private data class EditorPdfPasswordPromptState(
 
 internal fun mapPdfOpenFailureToUiAction(error: Throwable): PdfOpenFailureUiAction =
     when (error) {
-        is PdfPasswordRequiredException -> PdfOpenFailureUiAction.PromptForPassword(false)
-        is PdfIncorrectPasswordException -> PdfOpenFailureUiAction.PromptForPassword(true)
+        is PdfPasswordRequiredException -> {
+            PdfOpenFailureUiAction.PromptForPassword(false)
+        }
+
+        is PdfIncorrectPasswordException -> {
+            PdfOpenFailureUiAction.PromptForPassword(true)
+        }
+
         else -> {
             val message = error.message?.takeIf { it.isNotBlank() } ?: PDF_OPEN_FAILED_MESSAGE
             PdfOpenFailureUiAction.ShowOpenError(message)
@@ -362,6 +369,7 @@ private fun rememberNoteEditorUiState(
     var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
+    var templateState by rememberSaveable { mutableStateOf(PageTemplateState.BLANK) }
     var panFlingJob by remember { mutableStateOf<Job?>(null) }
     val coroutineScope = rememberCoroutineScope()
     val viewportWidth = viewportSize.width.toFloat()
@@ -437,7 +445,9 @@ private fun rememberNoteEditorUiState(
             brushState.activeBrush,
             brushState.lastNonEraserTool,
             isStylusButtonEraserActive,
+            templateState,
             brushState.onBrushChange,
+            { templateState = it },
         )
     val onTransformGesture: (Float, Float, Float, Float, Float) -> Unit =
         { zoomChange, panChangeX, panChangeY, centroidX, centroidY ->
@@ -546,6 +556,7 @@ private fun rememberNoteEditorUiState(
             interactionMode = InteractionMode.DRAW,
             thumbnails = thumbnails,
             currentPageIndex = pageState.currentPageIndex,
+            templateState = templateState,
             onStrokeFinished = strokeCallbacks.onStrokeFinished,
             onStrokeErased = strokeCallbacks.onStrokeErased,
             onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
@@ -553,6 +564,7 @@ private fun rememberNoteEditorUiState(
             onPanGestureEnd = onPanGestureEnd,
             onViewportSizeChanged = { viewportSize = it },
             onPageSelected = { targetIndex -> viewModel.navigateBy(targetIndex - pageState.currentPageIndex) },
+            onTemplateChange = { templateState = it },
         )
 
     return NoteEditorUiState(
@@ -596,6 +608,7 @@ private fun rememberMultiPageUiState(
     var isReadOnly by rememberSaveable { mutableStateOf(false) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
+    var templateState by rememberSaveable { mutableStateOf(PageTemplateState.BLANK) }
     var documentZoom by rememberSaveable { mutableStateOf(1f) }
     var documentPanX by rememberSaveable { mutableStateOf(0f) }
     var immediateVisibleRange by
@@ -626,9 +639,13 @@ private fun rememberMultiPageUiState(
         val error = rendererResult?.exceptionOrNull() ?: return@LaunchedEffect
         Log.e(NOTE_EDITOR_LOG_TAG, "Failed to open PDF asset $assetId", error)
         when (val action = mapPdfOpenFailureToUiAction(error)) {
-            is PdfOpenFailureUiAction.PromptForPassword ->
+            is PdfOpenFailureUiAction.PromptForPassword -> {
                 onPdfPasswordRequired(assetId, action.isIncorrectPassword)
-            is PdfOpenFailureUiAction.ShowOpenError -> onPdfOpenError(action.message)
+            }
+
+            is PdfOpenFailureUiAction.ShowOpenError -> {
+                onPdfOpenError(action.message)
+            }
         }
     }
     DisposePdfRenderer(pdfRenderer)
@@ -673,6 +690,7 @@ private fun rememberMultiPageUiState(
                 isPdfPage = page.kind == "pdf" || page.kind == "mixed",
                 isVisible = index in immediateVisibleRange,
                 renderTransform = renderTransform,
+                templateState = templateState,
             )
         }
 
@@ -696,7 +714,9 @@ private fun rememberMultiPageUiState(
             brushState.activeBrush,
             brushState.lastNonEraserTool,
             isStylusButtonEraserActive,
+            templateState,
             brushState.onBrushChange,
+            { templateState = it },
         )
 
     val thumbnails =
@@ -732,6 +752,7 @@ private fun rememberMultiPageUiState(
             minDocumentZoom = STACKED_DOCUMENT_MIN_ZOOM,
             maxDocumentZoom = STACKED_DOCUMENT_MAX_ZOOM,
             thumbnails = thumbnails,
+            templateState = templateState,
             onStrokeFinished = { stroke, pageId ->
                 val page = pageById[pageId]
                 viewModel.setActiveRecognitionPage(pageId)
@@ -774,6 +795,7 @@ private fun rememberMultiPageUiState(
             onPageSelected = { targetIndex ->
                 viewModel.navigateBy(targetIndex - pageState.currentPageIndex)
             },
+            onTemplateChange = { templateState = it },
         )
 
     return MultiPageUiState(
@@ -784,6 +806,7 @@ private fun rememberMultiPageUiState(
 }
 
 @Composable
+@Suppress("LongMethod")
 private fun rememberBrushState(): BrushState {
     var penBrush by remember { mutableStateOf(Brush(tool = Tool.PEN)) }
     var highlighterBrush by
@@ -800,13 +823,23 @@ private fun rememberBrushState(): BrushState {
     var lastNonEraserTool by remember { mutableStateOf(Tool.PEN) }
     val activeBrush =
         when (selectedTool) {
-            Tool.PEN -> penBrush
-            Tool.HIGHLIGHTER -> highlighterBrush
+            Tool.PEN -> {
+                penBrush
+            }
+
+            Tool.HIGHLIGHTER -> {
+                highlighterBrush
+            }
+
             Tool.ERASER -> {
                 when (lastNonEraserTool) {
                     Tool.HIGHLIGHTER -> highlighterBrush.copy(tool = Tool.ERASER)
                     else -> penBrush.copy(tool = Tool.ERASER)
                 }
+            }
+
+            Tool.LASSO -> {
+                penBrush
             }
         }
     return BrushState(
@@ -821,11 +854,13 @@ private fun rememberBrushState(): BrushState {
                     lastNonEraserTool = Tool.PEN
                     penBrush = updatedBrush
                 }
+
                 Tool.HIGHLIGHTER -> {
                     selectedTool = Tool.HIGHLIGHTER
                     lastNonEraserTool = Tool.HIGHLIGHTER
                     highlighterBrush = updatedBrush
                 }
+
                 Tool.ERASER -> {
                     selectedTool = Tool.ERASER
                     if (lastNonEraserTool == Tool.HIGHLIGHTER) {
@@ -833,6 +868,11 @@ private fun rememberBrushState(): BrushState {
                     } else {
                         penBrush = penBrush.copy(tool = Tool.PEN)
                     }
+                }
+
+                Tool.LASSO -> {
+                    selectedTool = Tool.LASSO
+                    lastNonEraserTool = Tool.LASSO
                 }
             }
         },
@@ -919,9 +959,13 @@ private fun rememberPdfState(
         val error = rendererResult?.exceptionOrNull() ?: return@LaunchedEffect
         Log.e(NOTE_EDITOR_LOG_TAG, "Failed to open PDF asset $assetId", error)
         when (val action = mapPdfOpenFailureToUiAction(error)) {
-            is PdfOpenFailureUiAction.PromptForPassword ->
+            is PdfOpenFailureUiAction.PromptForPassword -> {
                 onPdfPasswordRequired(assetId, action.isIncorrectPassword)
-            is PdfOpenFailureUiAction.ShowOpenError -> onPdfOpenError(action.message)
+            }
+
+            is PdfOpenFailureUiAction.ShowOpenError -> {
+                onPdfOpenError(action.message)
+            }
         }
     }
     val pdfBitmap =
@@ -996,15 +1040,20 @@ private fun buildTopBarState(
         onOpenOutline = onOpenOutline,
     )
 
+@Suppress("LongParameterList")
 private fun buildToolbarState(
     brush: Brush,
     lastNonEraserTool: Tool,
     isStylusButtonEraserActive: Boolean,
+    templateState: PageTemplateState,
     onBrushChange: (Brush) -> Unit,
+    onTemplateChange: (PageTemplateState) -> Unit,
 ): NoteEditorToolbarState =
     NoteEditorToolbarState(
         brush = brush,
         lastNonEraserTool = lastNonEraserTool,
         isStylusButtonEraserActive = isStylusButtonEraserActive,
+        templateState = templateState,
         onBrushChange = onBrushChange,
+        onTemplateChange = onTemplateChange,
     )

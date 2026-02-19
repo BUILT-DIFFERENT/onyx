@@ -63,9 +63,7 @@ internal object ColorCache {
         }
 
     @Synchronized
-    fun resolve(hex: String): Int {
-        return cache.getOrPut(hex) { parseHexColor(hex) }
-    }
+    fun resolve(hex: String): Int = cache.getOrPut(hex) { parseHexColor(hex) }
 }
 
 private fun parseHexColor(hex: String): Int {
@@ -222,10 +220,7 @@ internal fun buildVariableWidthOutline(
     widths: List<Float>,
 ): Path {
     val path = Path()
-    if (samples.isEmpty() || widths.isEmpty()) return path
-    require(widths.size >= samples.size) {
-        "widths (${widths.size}) must have at least as many entries as samples (${samples.size})"
-    }
+    val geometry = computeStrokeOutlineGeometry(samples, widths) ?: return path
 
     if (samples.size == 1) {
         val p = samples[0]
@@ -233,21 +228,11 @@ internal fun buildVariableWidthOutline(
         path.addOval(Rect(p.x - r, p.y - r, p.x + r, p.y + r))
         return path
     }
-
-    val count = samples.size
-    val leftX = FloatArray(count)
-    val leftY = FloatArray(count)
-    val rightX = FloatArray(count)
-    val rightY = FloatArray(count)
-
-    for (i in 0 until count) {
-        val halfW = (widths[i] / 2f).coerceAtLeast(MIN_WIDTH_FOR_OUTLINE)
-        val (nx, ny) = computeNormal(samples, i)
-        leftX[i] = samples[i].x + nx * halfW
-        leftY[i] = samples[i].y + ny * halfW
-        rightX[i] = samples[i].x - nx * halfW
-        rightY[i] = samples[i].y - ny * halfW
-    }
+    val count = geometry.count
+    val leftX = geometry.leftX
+    val leftY = geometry.leftY
+    val rightX = geometry.rightX
+    val rightY = geometry.rightY
 
     // Build the outline as a single closed contour:
     // 1. Start at right edge of first point
@@ -298,6 +283,64 @@ internal fun buildVariableWidthOutline(
     return path
 }
 
+internal data class StrokeOutlineGeometry(
+    val count: Int,
+    val leftX: FloatArray,
+    val leftY: FloatArray,
+    val rightX: FloatArray,
+    val rightY: FloatArray,
+)
+
+internal fun computeStrokeOutlineGeometry(
+    samples: List<StrokeRenderPoint>,
+    widths: List<Float>,
+): StrokeOutlineGeometry? {
+    if (samples.isEmpty() || widths.isEmpty()) {
+        return null
+    }
+    require(widths.size >= samples.size) {
+        "widths (${widths.size}) must have at least as many entries as samples (${samples.size})"
+    }
+    val count = samples.size
+    val leftX = FloatArray(count)
+    val leftY = FloatArray(count)
+    val rightX = FloatArray(count)
+    val rightY = FloatArray(count)
+
+    if (count == 1) {
+        val x = samples[0].x
+        val y = samples[0].y
+        leftX[0] = x
+        leftY[0] = y
+        rightX[0] = x
+        rightY[0] = y
+        return StrokeOutlineGeometry(
+            count = count,
+            leftX = leftX,
+            leftY = leftY,
+            rightX = rightX,
+            rightY = rightY,
+        )
+    }
+
+    for (i in 0 until count) {
+        val halfW = (widths[i] / 2f).coerceAtLeast(MIN_WIDTH_FOR_OUTLINE)
+        val (nx, ny) = computeNormal(samples, i)
+        leftX[i] = samples[i].x + nx * halfW
+        leftY[i] = samples[i].y + ny * halfW
+        rightX[i] = samples[i].x - nx * halfW
+        rightY[i] = samples[i].y - ny * halfW
+    }
+
+    return StrokeOutlineGeometry(
+        count = count,
+        leftX = leftX,
+        leftY = leftY,
+        rightX = rightX,
+        rightY = rightY,
+    )
+}
+
 /**
  * Adds a semicircular end cap by drawing a quadratic Bézier arc from one side to the other.
  * The control point is offset perpendicular to the chord (from → to) by the radius,
@@ -342,10 +385,12 @@ private fun computeNormal(
             dx = samples[1].x - samples[0].x
             dy = samples[1].y - samples[0].y
         }
+
         i == samples.lastIndex -> {
             dx = samples[i].x - samples[i - 1].x
             dy = samples[i].y - samples[i - 1].y
         }
+
         else -> {
             dx = samples[i + 1].x - samples[i - 1].x
             dy = samples[i + 1].y - samples[i - 1].y
@@ -633,6 +678,7 @@ internal fun Brush.toInkBrush(
             Tool.PEN -> StockBrushes.pressurePenLatest
             Tool.HIGHLIGHTER -> StockBrushes.highlighterLatest
             Tool.ERASER -> StockBrushes.markerLatest
+            Tool.LASSO -> StockBrushes.pressurePenLatest
         }
     val size = viewTransform.pageWidthToScreen(baseWidth).coerceAtLeast(MIN_INK_BRUSH_SIZE)
     val epsilon = (size * INK_BRUSH_EPSILON_SCALE).coerceAtLeast(MIN_INK_BRUSH_EPSILON)

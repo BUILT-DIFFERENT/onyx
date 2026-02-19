@@ -4,23 +4,24 @@ import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.StrokeStyle
 import com.onyx.android.ink.model.Tool
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class VariableWidthOutlineTest {
     @Test
     fun `empty samples produce empty path`() {
-        val path = buildVariableWidthOutline(emptyList(), emptyList())
-        assertTrue(path.isEmpty, "Path should be empty for no samples")
+        val geometry = computeStrokeOutlineGeometry(emptyList(), emptyList())
+        assertNull(geometry, "Geometry should be absent for no samples")
     }
 
     @Test
     fun `single point produces non-empty oval path`() {
         val samples = listOf(StrokeRenderPoint(10f, 10f, 0.5f))
         val widths = listOf(4f)
-        val path = buildVariableWidthOutline(samples, widths)
-        assertFalse(path.isEmpty, "Path should not be empty for a single point")
+        val geometry = computeStrokeOutlineGeometry(samples, widths)
+        assertNotNull(geometry, "Geometry should exist for a single point")
     }
 
     @Test
@@ -31,24 +32,24 @@ class VariableWidthOutlineTest {
                 StrokeRenderPoint(100f, 0f, 0.5f),
             )
         val widths = listOf(4f, 4f)
-        val path = buildVariableWidthOutline(samples, widths)
-        assertFalse(path.isEmpty, "Two-point stroke should produce a non-empty path")
+        val geometry = computeStrokeOutlineGeometry(samples, widths)
+        assertNotNull(geometry, "Two-point stroke should produce geometry")
     }
 
     @Test
     fun `multi-point stroke with uniform width produces outline`() {
         val samples = (0..10).map { StrokeRenderPoint(it * 10f, 0f, 0.5f) }
         val widths = List(11) { 4f }
-        val path = buildVariableWidthOutline(samples, widths)
-        assertFalse(path.isEmpty, "Multi-point stroke should produce a non-empty path")
+        val geometry = computeStrokeOutlineGeometry(samples, widths)
+        assertNotNull(geometry, "Multi-point stroke should produce geometry")
     }
 
     @Test
     fun `variable width produces outline for pressure-varying stroke`() {
         val samples = (0..20).map { StrokeRenderPoint(it * 5f, 0f, it / 20f) }
         val widths = samples.map { (it.pressure ?: 0.5f) * 8f }
-        val path = buildVariableWidthOutline(samples, widths)
-        assertFalse(path.isEmpty, "Variable-width stroke should produce a non-empty path")
+        val geometry = computeStrokeOutlineGeometry(samples, widths)
+        assertNotNull(geometry, "Variable-width stroke should produce geometry")
     }
 
     @Test
@@ -56,8 +57,8 @@ class VariableWidthOutlineTest {
         // Narrow at start, wide in middle, narrow at end
         val samples = (0..10).map { StrokeRenderPoint(it * 10f, 0f, 0.5f) }
         val widths = listOf(1f, 2f, 3f, 4f, 5f, 6f, 5f, 4f, 3f, 2f, 1f)
-        val path = buildVariableWidthOutline(samples, widths)
-        assertFalse(path.isEmpty, "Variable-width stroke should produce a non-empty path")
+        val geometry = computeStrokeOutlineGeometry(samples, widths)
+        assertNotNull(geometry, "Variable-width stroke should produce geometry")
     }
 
     @Test
@@ -68,9 +69,8 @@ class VariableWidthOutlineTest {
                 StrokeRenderPoint(10f, 0f, 0.5f),
             )
         val widths = listOf(0.001f, 0.001f)
-        val path = buildVariableWidthOutline(samples, widths)
-        // Should not crash or produce NaN values
-        assertFalse(path.isEmpty, "Even very small widths should produce a path")
+        val geometry = computeStrokeOutlineGeometry(samples, widths)
+        assertNotNull(geometry, "Even very small widths should produce geometry")
     }
 
     @Test
@@ -82,8 +82,8 @@ class VariableWidthOutlineTest {
                 StrokeRenderPoint(100f, 100f, 0.5f),
             )
         val widths = listOf(4f, 4f, 4f)
-        val path = buildVariableWidthOutline(samples, widths)
-        assertFalse(path.isEmpty, "Diagonal stroke should produce a valid path")
+        val geometry = computeStrokeOutlineGeometry(samples, widths)
+        assertNotNull(geometry, "Diagonal stroke should produce valid geometry")
     }
 
     @Test
@@ -96,8 +96,8 @@ class VariableWidthOutlineTest {
                 StrokeRenderPoint(100f, 0f, 0.5f),
             )
         val widths = listOf(4f, 6f, 6f, 4f)
-        val path = buildVariableWidthOutline(samples, widths)
-        assertFalse(path.isEmpty, "Curved stroke should produce a valid path")
+        val geometry = computeStrokeOutlineGeometry(samples, widths)
+        assertNotNull(geometry, "Curved stroke should produce valid geometry")
     }
 
     @Test
@@ -119,12 +119,12 @@ class VariableWidthOutlineTest {
             )
         val samples = catmullRomSmooth(points)
         val widths = computePerPointWidths(samples, style)
-        val path = buildVariableWidthOutline(samples, widths)
+        val geometry = computeStrokeOutlineGeometry(samples, widths)
 
         // Verify pipeline produces valid output
         assertTrue(samples.size > points.size, "Catmull-Rom should interpolate more points")
         assertEquals(samples.size, widths.size, "Widths count should match samples count")
-        assertFalse(path.isEmpty, "Full pipeline should produce a valid path")
+        assertNotNull(geometry, "Full pipeline should produce valid geometry")
     }
 
     @Test
@@ -136,9 +136,8 @@ class VariableWidthOutlineTest {
                 StrokeRenderPoint(50f, 50f, 0.5f),
             )
         val widths = listOf(4f, 4f)
-        val path = buildVariableWidthOutline(samples, widths)
-        // Should not crash or produce NaN
-        assertFalse(path.isEmpty, "Zero-length segment should still produce a path")
+        val geometry = computeStrokeOutlineGeometry(samples, widths)
+        assertNotNull(geometry, "Zero-length segment should still produce geometry")
     }
 
     @Test
@@ -163,7 +162,7 @@ class VariableWidthOutlineTest {
         val samples = (0..5).map { StrokeRenderPoint(it * 10f, 0f, 0.5f) }
         val widths = listOf(4f, 4f) // too few widths
         org.junit.jupiter.api.assertThrows<IllegalArgumentException> {
-            buildVariableWidthOutline(samples, widths)
+            computeStrokeOutlineGeometry(samples, widths)
         }
     }
 }

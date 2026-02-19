@@ -59,7 +59,9 @@ internal data class NoteEditorToolbarState(
     val brush: Brush,
     val lastNonEraserTool: Tool,
     val isStylusButtonEraserActive: Boolean,
+    val templateState: PageTemplateState,
     val onBrushChange: (Brush) -> Unit,
+    val onTemplateChange: (PageTemplateState) -> Unit,
 )
 
 internal data class NoteEditorContentState(
@@ -84,8 +86,10 @@ internal data class NoteEditorContentState(
     val interactionMode: InteractionMode,
     val thumbnails: List<ThumbnailItem>,
     val currentPageIndex: Int,
+    val templateState: PageTemplateState,
     val onStrokeFinished: (Stroke) -> Unit,
     val onStrokeErased: (Stroke) -> Unit,
+    val onStrokeSplit: (Stroke, List<Stroke>) -> Unit = { _, _ -> },
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
     val onTransformGesture: (
         zoomChange: Float,
@@ -100,6 +104,7 @@ internal data class NoteEditorContentState(
     ) -> Unit,
     val onViewportSizeChanged: (IntSize) -> Unit,
     val onPageSelected: (Int) -> Unit,
+    val onTemplateChange: (PageTemplateState) -> Unit,
 )
 
 /**
@@ -115,6 +120,7 @@ internal data class PageItemState(
     val isPdfPage: Boolean,
     val isVisible: Boolean,
     val renderTransform: ViewTransform,
+    val templateState: PageTemplateState,
 )
 
 /**
@@ -133,8 +139,10 @@ internal data class MultiPageContentState(
     val minDocumentZoom: Float,
     val maxDocumentZoom: Float,
     val thumbnails: List<ThumbnailItem>,
+    val templateState: PageTemplateState,
     val onStrokeFinished: (Stroke, String) -> Unit,
     val onStrokeErased: (Stroke, String) -> Unit,
+    val onStrokeSplit: (Stroke, List<Stroke>, String) -> Unit = { _, _, _ -> },
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
     val onTransformGesture: (
         zoomChange: Float,
@@ -154,6 +162,7 @@ internal data class MultiPageContentState(
     val onVisiblePagesImmediateChanged: (IntRange) -> Unit,
     val onVisiblePagesPrefetchChanged: (IntRange) -> Unit,
     val onPageSelected: (Int) -> Unit,
+    val onTemplateChange: (PageTemplateState) -> Unit,
 )
 
 internal data class NoteEditorPageState(

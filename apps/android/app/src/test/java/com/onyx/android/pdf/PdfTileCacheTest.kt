@@ -3,7 +3,6 @@ package com.onyx.android.pdf
 import android.graphics.Bitmap
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll

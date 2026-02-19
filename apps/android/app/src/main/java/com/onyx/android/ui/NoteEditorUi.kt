@@ -48,6 +48,8 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Loupe
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
@@ -143,6 +145,7 @@ private enum class ToolPanelType {
     PEN,
     HIGHLIGHTER,
     ERASER,
+    LASSO,
 }
 
 private data class ToolButtonVisuals(
@@ -392,6 +395,7 @@ private fun MultiPageEditorContent(
                         pdfRenderer = contentState.pdfRenderer,
                         onStrokeFinished = { stroke -> contentState.onStrokeFinished(stroke, pageState.page.pageId) },
                         onStrokeErased = { stroke -> contentState.onStrokeErased(stroke, pageState.page.pageId) },
+                        onStrokeSplit = { original, segments -> contentState.onStrokeSplit(original, segments, pageState.page.pageId) },
                         onStylusButtonEraserActiveChanged = contentState.onStylusButtonEraserActiveChanged,
                         onTransformGesture = contentState.onTransformGesture,
                         onPanGestureEnd = contentState.onPanGestureEnd,
@@ -426,6 +430,7 @@ private fun PageItem(
     pdfRenderer: PdfDocumentRenderer?,
     onStrokeFinished: (InkStroke) -> Unit,
     onStrokeErased: (InkStroke) -> Unit,
+    onStrokeSplit: (InkStroke, List<InkStroke>) -> Unit,
     onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
     onTransformGesture: (Float, Float, Float, Float, Float) -> Unit,
     onPanGestureEnd: (Float, Float) -> Unit,
@@ -483,12 +488,9 @@ private fun PageItem(
                 .clipToBounds()
                 .background(NOTE_PAPER),
     ) {
-        // Page shadow and border overlay
         Canvas(modifier = Modifier.fillMaxSize()) {
             val shadowSpread = PAGE_SHADOW_SPREAD_DP.dp.toPx()
-            val borderWidth = PAGE_BORDER_WIDTH_DP.dp.toPx()
 
-            // Draw page shadow (subtle drop shadow on right and bottom edges)
             drawPageShadow(
                 left = 0f,
                 top = 0f,
@@ -496,8 +498,19 @@ private fun PageItem(
                 pageHeightPx = size.height,
                 shadowSpread = shadowSpread,
             )
+        }
 
-            // Draw page border
+        PageTemplateBackground(
+            templateState = pageState.templateState,
+            pageWidth = pageState.pageWidth,
+            pageHeight = pageState.pageHeight,
+            viewTransform = renderTransform,
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val borderWidth = PAGE_BORDER_WIDTH_DP.dp.toPx()
+
             drawRect(
                 color = NOTE_PAPER_STROKE,
                 topLeft = Offset.Zero,
@@ -506,7 +519,6 @@ private fun PageItem(
             )
         }
 
-        // PDF content if applicable
         if (pageState.isPdfPage && pdfBitmap != null) {
             PdfPageBitmap(
                 bitmap = pdfBitmap,
@@ -516,7 +528,6 @@ private fun PageItem(
             )
         }
 
-        // PDF tiles if available
         if (pageState.isPdfPage && pdfTileState.tiles.isNotEmpty()) {
             PdfTilesOverlay(
                 tiles = pdfTileState.tiles,
@@ -527,7 +538,6 @@ private fun PageItem(
             )
         }
 
-        // Ink canvas for drawing
         val inkCanvasState =
             remember(pageState.page.pageId, pageState.strokes, renderTransform, brush) {
                 InkCanvasState(
@@ -541,10 +551,18 @@ private fun PageItem(
                 )
             }
         val inkCanvasCallbacks =
-            remember(onStrokeFinished, onStrokeErased, onTransformGesture, onPanGestureEnd, onStylusButtonEraserActiveChanged) {
+            remember(
+                onStrokeFinished,
+                onStrokeErased,
+                onStrokeSplit,
+                onTransformGesture,
+                onPanGestureEnd,
+                onStylusButtonEraserActiveChanged,
+            ) {
                 InkCanvasCallbacks(
                     onStrokeFinished = if (isReadOnly) ({}) else onStrokeFinished,
                     onStrokeErased = if (isReadOnly) ({}) else onStrokeErased,
+                    onStrokeSplit = if (isReadOnly) ({ _, _ -> }) else onStrokeSplit,
                     onTransformGesture = onTransformGesture,
                     onPanGestureEnd = onPanGestureEnd,
                     onStylusButtonEraserActiveChanged = onStylusButtonEraserActiveChanged,
@@ -960,6 +978,40 @@ private fun NoteEditorTopBar(
                         )
                     }
                 }
+                Box {
+                    LassoToggleButton(
+                        isSelected = selectedTool == Tool.LASSO,
+                        enabled = isEditingEnabled,
+                        onToggle = {
+                            activeToolPanel = null
+                            toolbarState.onBrushChange(brush.copy(tool = Tool.LASSO))
+                        },
+                        onLongPress = {
+                            if (isEditingEnabled) {
+                                isColorPickerVisible = false
+                                activeToolPanel = ToolPanelType.LASSO
+                            }
+                        },
+                    )
+                    DropdownMenu(
+                        expanded = activeToolPanel == ToolPanelType.LASSO,
+                        onDismissRequest = { activeToolPanel = null },
+                    ) {
+                        ToolSettingsDialog(
+                            panelType = ToolPanelType.LASSO,
+                            brush = brush,
+                            onDismiss = { activeToolPanel = null },
+                            onBrushChange = toolbarState.onBrushChange,
+                        )
+                    }
+                }
+                Box {
+                    TemplateButton(
+                        templateState = toolbarState.templateState,
+                        enabled = isEditingEnabled,
+                        onTemplateChange = toolbarState.onTemplateChange,
+                    )
+                }
 
                 ToolbarDivider()
 
@@ -1215,6 +1267,171 @@ private fun EraserToggleButton(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun LassoToggleButton(
+    isSelected: Boolean,
+    enabled: Boolean,
+    onToggle: () -> Unit,
+    onLongPress: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val containerColor = if (isSelected) NOTEWISE_SELECTED else Color.Transparent
+
+    Box(
+        modifier =
+            Modifier
+                .size(TOOLBAR_TOUCH_TARGET_SIZE_DP.dp)
+                .clip(CircleShape)
+                .background(containerColor)
+                .border(
+                    width = if (isSelected) 0.dp else UNSELECTED_BORDER_WIDTH_DP.dp,
+                    color = NOTEWISE_STROKE,
+                    shape = CircleShape,
+                ).combinedClickable(
+                    enabled = enabled,
+                    role = Role.Button,
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onToggle,
+                    onLongClick = onLongPress,
+                ).semantics { contentDescription = "Lasso selection tool" },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Loupe,
+            contentDescription = null,
+            tint = NOTEWISE_ICON,
+        )
+    }
+}
+
+@Composable
+private fun TemplateButton(
+    templateState: PageTemplateState,
+    enabled: Boolean,
+    onTemplateChange: (PageTemplateState) -> Unit,
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+    val currentKind = templateState.backgroundKind
+
+    Box {
+        IconButton(
+            onClick = { isExpanded = true },
+            enabled = enabled,
+            modifier = Modifier.semantics { contentDescription = "Page template" },
+        ) {
+            Icon(
+                imageVector = Icons.Filled.GridOn,
+                contentDescription = null,
+                tint = if (currentKind != "blank") NOTEWISE_SELECTED else NOTEWISE_ICON,
+            )
+        }
+        DropdownMenu(
+            expanded = isExpanded,
+            onDismissRequest = { isExpanded = false },
+        ) {
+            TemplateSettingsPanel(
+                templateState = templateState,
+                onDismiss = { isExpanded = false },
+                onTemplateChange = onTemplateChange,
+            )
+        }
+    }
+}
+
+@Composable
+private fun TemplateSettingsPanel(
+    templateState: PageTemplateState,
+    onDismiss: () -> Unit,
+    onTemplateChange: (PageTemplateState) -> Unit,
+) {
+    Card(
+        modifier =
+            Modifier
+                .widthIn(min = TOOL_SETTINGS_PANEL_MIN_WIDTH_DP.dp)
+                .padding(TOOL_SETTINGS_PANEL_OFFSET_DP.dp),
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .padding(
+                        horizontal = TOOL_SETTINGS_PANEL_HORIZONTAL_PADDING_DP.dp,
+                        vertical = TOOL_SETTINGS_PANEL_VERTICAL_PADDING_DP.dp,
+                    ),
+            verticalArrangement = Arrangement.spacedBy(TOOL_SETTINGS_PANEL_ITEM_SPACING_DP.dp),
+        ) {
+            Text(
+                text = "Page template",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+
+            val kinds = listOf("blank" to "Blank", "grid" to "Grid", "lined" to "Lined", "dotted" to "Dotted")
+            kinds.forEach { (kind, label) ->
+                val isSelected = templateState.backgroundKind == kind
+                TextButton(
+                    onClick = {
+                        val newSpacing =
+                            when (kind) {
+                                "blank" -> 0f
+                                "grid" -> 24f
+                                "lined" -> 24f
+                                "dotted" -> 24f
+                                else -> templateState.spacing
+                            }
+                        onTemplateChange(
+                            templateState.copy(
+                                backgroundKind = kind,
+                                spacing = newSpacing,
+                            ),
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = label,
+                            color = if (isSelected) NOTEWISE_SELECTED else MaterialTheme.colorScheme.onSurface,
+                        )
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = null,
+                                tint = NOTEWISE_SELECTED,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (templateState.backgroundKind != "blank") {
+                HorizontalDivider()
+                Text(text = "Spacing", style = MaterialTheme.typography.bodyMedium)
+                Slider(
+                    value = templateState.spacing,
+                    onValueChange = { spacing ->
+                        onTemplateChange(templateState.copy(spacing = spacing))
+                    },
+                    valueRange = 12f..48f,
+                )
+            }
+
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.align(Alignment.End),
+            ) {
+                Text("Done")
+            }
+        }
+    }
+}
+
 @Composable
 private fun PaletteRow(
     selectedColor: String,
@@ -1337,6 +1554,7 @@ private fun ToolSettingsDialog(
             ToolPanelType.PEN -> "Pen settings"
             ToolPanelType.HIGHLIGHTER -> "Highlighter settings"
             ToolPanelType.ERASER -> "Eraser options"
+            ToolPanelType.LASSO -> "Lasso tool"
         }
 
     Card(
@@ -1434,6 +1652,15 @@ private fun ToolSettingsDialog(
                     Text(text = "Stroke eraser", style = MaterialTheme.typography.bodyMedium)
                     Text(
                         text = "Erases entire strokes until segment eraser support is added.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                ToolPanelType.LASSO -> {
+                    Text(text = "Lasso selection", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = "Draw around strokes to select them. Drag to move selected strokes.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1660,6 +1887,7 @@ private fun FixedPageBackground(contentState: NoteEditorContentState) {
     val pageWidth = contentState.pageWidth
     val pageHeight = contentState.pageHeight
     val transform = contentState.viewTransform
+    val templateState = contentState.templateState
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         if (pageWidth <= 0f || pageHeight <= 0f) {
@@ -1688,6 +1916,27 @@ private fun FixedPageBackground(contentState: NoteEditorContentState) {
             topLeft = Offset(left, top),
             size = Size(pageWidthPx, pageHeightPx),
         )
+    }
+
+    // Draw template background (grid/lined/dotted) beneath strokes
+    PageTemplateBackground(
+        templateState = templateState,
+        pageWidth = pageWidth,
+        pageHeight = pageHeight,
+        viewTransform = transform,
+        modifier = Modifier.fillMaxSize(),
+    )
+
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        if (pageWidth <= 0f || pageHeight <= 0f) {
+            return@Canvas
+        }
+        val left = transform.pageToScreenX(0f)
+        val top = transform.pageToScreenY(0f)
+        val pageWidthPx = transform.pageWidthToScreen(pageWidth)
+        val pageHeightPx = transform.pageWidthToScreen(pageHeight)
+        val borderWidth = PAGE_BORDER_WIDTH_DP.dp.toPx()
+        val edgeGlowWidth = EDGE_GLOW_WIDTH_DP.dp.toPx()
 
         // Draw page border
         drawRect(

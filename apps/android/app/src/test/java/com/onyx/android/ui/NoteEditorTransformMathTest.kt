@@ -1,6 +1,7 @@
 package com.onyx.android.ui
 
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.ink.ui.TransformGesture
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

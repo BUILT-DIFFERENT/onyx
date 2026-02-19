@@ -58,12 +58,11 @@ internal class InkCanvasRuntime(
         activeStrokeRenderVersion += 1
     }
 
-    fun hasActiveStrokeInputs(): Boolean {
-        return activeStrokeIds.isNotEmpty() ||
+    fun hasActiveStrokeInputs(): Boolean =
+        activeStrokeIds.isNotEmpty() ||
             activeStrokePoints.isNotEmpty() ||
             activeStrokeBrushes.isNotEmpty() ||
             activeStrokeStartTimes.isNotEmpty()
-    }
 }
 
 private const val ENABLE_MOTION_PREDICTION = true
@@ -81,6 +80,7 @@ data class InkCanvasState(
 data class InkCanvasCallbacks(
     val onStrokeFinished: (Stroke) -> Unit,
     val onStrokeErased: (Stroke) -> Unit,
+    val onStrokeSplit: (original: Stroke, segments: List<Stroke>) -> Unit = { _, _ -> },
     val onTransformGesture: (
         zoomChange: Float,
         panChangeX: Float,
@@ -135,10 +135,12 @@ fun InkCanvas(
             pending.id !in persistedStrokeIds
         }
     val mergedStrokes =
-        LinkedHashMap<String, Stroke>(persistedStrokes.size + pendingStrokes.size).apply {
-            persistedStrokes.forEach { stroke -> put(stroke.id, stroke) }
-            pendingStrokes.forEach { stroke -> put(stroke.id, stroke) }
-        }.values.toList()
+        LinkedHashMap<String, Stroke>(persistedStrokes.size + pendingStrokes.size)
+            .apply {
+                persistedStrokes.forEach { stroke -> put(stroke.id, stroke) }
+                pendingStrokes.forEach { stroke -> put(stroke.id, stroke) }
+            }.values
+            .toList()
     val activeStrokeRenderVersion = runtime.activeStrokeRenderVersion
 
     Box(modifier = modifier) {

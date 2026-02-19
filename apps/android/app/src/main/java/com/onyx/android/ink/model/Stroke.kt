@@ -44,4 +44,7 @@ enum class Tool(
 
     @SerialName("eraser")
     ERASER("eraser"),
+
+    @SerialName("lasso")
+    LASSO("lasso"),
 }

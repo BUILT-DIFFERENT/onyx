@@ -73,6 +73,7 @@ class AsyncPdfPipeline(
     val tileUpdates: SharedFlow<PdfTileUpdate> = _tileUpdates
     val prefetchRadius: Int get() = config.prefetchRadius
 
+    @Suppress("LongMethod", "LoopWithTooManyJumpStatements")
     suspend fun requestTiles(visibleTiles: List<PdfTileKey>) {
         val visibleSet = visibleTiles.toSet()
         requestMutex.withLock {
@@ -91,9 +92,10 @@ class AsyncPdfPipeline(
                     continue
                 }
                 if (inFlight.size >= config.maxQueueSize) {
-                    Log.w(
-                        TAG,
-                        "Queue full (${inFlight.size}/${config.maxQueueSize}), dropping request for $key",
+                    logQueueFull(
+                        inFlightSize = inFlight.size,
+                        maxQueueSize = config.maxQueueSize,
+                        key = key,
                     )
                     break
                 }
@@ -152,5 +154,18 @@ class AsyncPdfPipeline(
         val cachedTile = cache.getTile(key)
         val isInFlight = inFlight.containsKey(key)
         return cachedTile == null && !isInFlight
+    }
+}
+
+private fun logQueueFull(
+    inFlightSize: Int,
+    maxQueueSize: Int,
+    key: PdfTileKey,
+) {
+    runCatching {
+        Log.w(
+            TAG,
+            "Queue full ($inFlightSize/$maxQueueSize), dropping request for $key",
+        )
     }
 }

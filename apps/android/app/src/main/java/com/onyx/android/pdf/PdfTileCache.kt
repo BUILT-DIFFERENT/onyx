@@ -3,7 +3,7 @@ package com.onyx.android.pdf
 import android.app.ActivityManager
 import android.content.Context
 import android.graphics.Bitmap
-import android.util.LruCache
+import androidx.collection.LruCache
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.atomic.AtomicBoolean
