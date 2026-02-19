@@ -1,8 +1,9 @@
-@file:Suppress("TooManyFunctions", "LongParameterList")
+@file:Suppress("TooManyFunctions", "LongParameterList", "ComplexCondition", "LargeClass", "MagicNumber")
 
 package com.onyx.android.ui
 
 import android.util.Log
+import androidx.compose.ui.geometry.Rect
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,10 +13,16 @@ import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.data.repository.EditorSettings
 import com.onyx.android.data.repository.EditorSettingsRepository
 import com.onyx.android.data.repository.NoteRepository
+import com.onyx.android.data.repository.PageTemplateConfig
+import com.onyx.android.ink.algorithm.applyStrokeSplit
+import com.onyx.android.ink.algorithm.restoreStrokeSplit
 import com.onyx.android.ink.model.Stroke
+import com.onyx.android.ink.model.Tool
 import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfPasswordStore
+import com.onyx.android.recognition.ConvertedTextBlock
 import com.onyx.android.recognition.MyScriptPageManager
+import com.onyx.android.recognition.OverlayBounds
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -28,6 +35,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -43,13 +51,40 @@ internal class NoteEditorViewModel
         val pdfPasswordStore: PdfPasswordStore,
         val pdfAssetStorage: PdfAssetStorage,
     ) : ViewModel() {
+        data class ConversionDraft(
+            val pageId: String,
+            val selectedStrokeIds: Set<String>,
+            val bounds: OverlayBounds,
+            val initialText: String,
+            val editingBlockId: String? = null,
+        )
+
         private val noteId: String = checkNotNull(savedStateHandle.get<String>("noteId"))
         private var pendingInitialPageId: String? = savedStateHandle.get<String>("pageId")
+        private val initialSearchHighlightPageId: String? = pendingInitialPageId
+        private var pendingInitialPageIndex: Int? =
+            savedStateHandle
+                .get<Int>("pageIndex")
+                ?.takeIf { pageIndex -> pageIndex >= 0 }
+        private val initialSearchHighlightPageIndex: Int? = pendingInitialPageIndex
+        private val initialHighlightBounds: Rect? =
+            run {
+                val left = savedStateHandle.get<Float>("highlightLeft") ?: Float.NaN
+                val top = savedStateHandle.get<Float>("highlightTop") ?: Float.NaN
+                val right = savedStateHandle.get<Float>("highlightRight") ?: Float.NaN
+                val bottom = savedStateHandle.get<Float>("highlightBottom") ?: Float.NaN
+                if (left.isFinite() && top.isFinite() && right.isFinite() && bottom.isFinite()) {
+                    Rect(left = left, top = top, right = right, bottom = bottom)
+                } else {
+                    null
+                }
+            }
 
         companion object {
             private const val LOG_TAG = "NoteEditorViewModel"
             private const val PAGE_BUFFER_SIZE = 1
             private const val PAGE_LOG_PREVIEW_COUNT = 5
+            private const val SPLIT_RECOGNITION_REFRESH_STROKE_ID = "__segment_eraser_refresh__"
         }
 
         private val _strokes = MutableStateFlow<List<Stroke>>(emptyList())
@@ -62,8 +97,16 @@ internal class NoteEditorViewModel
         val currentPageIndex: StateFlow<Int> = _currentPageIndex.asStateFlow()
         private val _currentPage = MutableStateFlow<PageEntity?>(null)
         val currentPage: StateFlow<PageEntity?> = _currentPage.asStateFlow()
+        private val _currentTemplateConfig = MutableStateFlow(PageTemplateConfig.BLANK)
+        val currentTemplateConfig: StateFlow<PageTemplateConfig> = _currentTemplateConfig.asStateFlow()
+        private val _templateConfigByPageId = MutableStateFlow<Map<String, PageTemplateConfig>>(emptyMap())
+        val templateConfigByPageId: StateFlow<Map<String, PageTemplateConfig>> = _templateConfigByPageId.asStateFlow()
         private val _errorMessage = MutableStateFlow<String?>(null)
         val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+        private val _searchHighlightBounds = MutableStateFlow<Rect?>(initialHighlightBounds)
+        val searchHighlightBounds: StateFlow<Rect?> = _searchHighlightBounds.asStateFlow()
+        val searchHighlightPageId: String? = initialSearchHighlightPageId
+        val searchHighlightPageIndex: Int? = initialSearchHighlightPageIndex
         private val defaultEditorSettings = EditorSettingsRepository.DEFAULT_SETTINGS
         val editorSettings: StateFlow<EditorSettings> =
             editorSettingsRepository
@@ -80,6 +123,19 @@ internal class NoteEditorViewModel
         private val _pageStrokesCache = MutableStateFlow<Map<String, List<Stroke>>>(emptyMap())
         val pageStrokesCache: StateFlow<Map<String, List<Stroke>>> = _pageStrokesCache.asStateFlow()
 
+        private val _recognitionOverlayEnabled = MutableStateFlow(false)
+        val recognitionOverlayEnabled: StateFlow<Boolean> = _recognitionOverlayEnabled.asStateFlow()
+
+        private val _recognizedTextByPage = MutableStateFlow<Map<String, String>>(emptyMap())
+        val recognizedTextByPage: StateFlow<Map<String, String>> = _recognizedTextByPage.asStateFlow()
+
+        private val _convertedTextBlocksByPage = MutableStateFlow<Map<String, List<ConvertedTextBlock>>>(emptyMap())
+        val convertedTextBlocksByPage: StateFlow<Map<String, List<ConvertedTextBlock>>> =
+            _convertedTextBlocksByPage.asStateFlow()
+
+        private val _conversionDraft = MutableStateFlow<ConversionDraft?>(null)
+        val conversionDraft: StateFlow<ConversionDraft?> = _conversionDraft.asStateFlow()
+
         private var currentPageId: String? = null
         private val strokeWriteQueue = Channel<suspend () -> Unit>(Channel.UNLIMITED)
 
@@ -88,6 +144,9 @@ internal class NoteEditorViewModel
                 viewModelScope.launch {
                     runCatching {
                         repository.updateRecognition(pageId, text, "myscript-4.3")
+                        val updated = _recognizedTextByPage.value.toMutableMap()
+                        updated[pageId] = text
+                        _recognizedTextByPage.value = updated
                     }.onFailure { throwable ->
                         reportError("Failed to update recognition state.", throwable)
                     }
@@ -150,16 +209,117 @@ internal class NoteEditorViewModel
                     } else {
                         _noteTitle.value = note.title
                     }
-                    refreshPages(selectPageId = pendingInitialPageId)
+                    refreshPages(selectIndex = pendingInitialPageIndex, selectPageId = pendingInitialPageId)
                     pendingInitialPageId = null
+                    pendingInitialPageIndex = null
                 }.onFailure { throwable ->
                     reportError("Failed to load note.", throwable)
                 }
             }
         }
 
+        fun clearSearchHighlight() {
+            _searchHighlightBounds.value = null
+        }
+
         fun clearError() {
             _errorMessage.value = null
+        }
+
+        fun toggleRecognitionOverlay() {
+            _recognitionOverlayEnabled.value = !_recognitionOverlayEnabled.value
+        }
+
+        fun dismissConversionDraft() {
+            _conversionDraft.value = null
+        }
+
+        fun startConversionDraftFromBlock(
+            pageId: String,
+            block: ConvertedTextBlock,
+        ) {
+            _conversionDraft.value =
+                ConversionDraft(
+                    pageId = pageId,
+                    selectedStrokeIds = emptySet(),
+                    bounds = block.bounds,
+                    initialText = block.text,
+                    editingBlockId = block.id,
+                )
+        }
+
+        fun startConversionDraftFromLasso(
+            pageId: String,
+            lassoStroke: Stroke,
+            pageStrokes: List<Stroke>,
+        ) {
+            val polygon = lassoStroke.points.map { point -> point.x to point.y }
+            if (polygon.size < 3) {
+                return
+            }
+            val selectedStrokes =
+                pageStrokes.filter { stroke ->
+                    stroke.id != lassoStroke.id &&
+                        stroke.style.tool != Tool.LASSO &&
+                        isStrokeCenterInsidePolygon(stroke, polygon)
+                }
+            if (selectedStrokes.isEmpty()) {
+                return
+            }
+            val selectionBounds = mergeBounds(selectedStrokes)
+            val preferredText =
+                _recognizedTextByPage.value[pageId]
+                    ?.trim()
+                    .orEmpty()
+                    .ifBlank { "Converted text" }
+            _conversionDraft.value =
+                ConversionDraft(
+                    pageId = pageId,
+                    selectedStrokeIds = selectedStrokes.mapTo(mutableSetOf()) { stroke -> stroke.id },
+                    bounds = selectionBounds,
+                    initialText = preferredText,
+                    editingBlockId = null,
+                )
+        }
+
+        fun commitConversionDraft(text: String) {
+            val draft = _conversionDraft.value ?: return
+            val normalized = text.trim()
+            if (normalized.isBlank()) {
+                _conversionDraft.value = null
+                return
+            }
+            viewModelScope.launch {
+                runCatching {
+                    val existing = _convertedTextBlocksByPage.value[draft.pageId].orEmpty()
+                    val now = System.currentTimeMillis()
+                    val updatedBlocks =
+                        if (draft.editingBlockId != null) {
+                            existing.map { block ->
+                                if (block.id == draft.editingBlockId) {
+                                    block.copy(text = normalized, updatedAt = now)
+                                } else {
+                                    block
+                                }
+                            }
+                        } else {
+                            existing +
+                                ConvertedTextBlock(
+                                    id = UUID.randomUUID().toString(),
+                                    text = normalized,
+                                    bounds = draft.bounds,
+                                    updatedAt = now,
+                                )
+                        }
+                    repository.saveConvertedTextBlocks(draft.pageId, updatedBlocks)
+                    val updated = _convertedTextBlocksByPage.value.toMutableMap()
+                    updated[draft.pageId] = updatedBlocks
+                    _convertedTextBlocksByPage.value = updated
+                    _conversionDraft.value = null
+                }.onFailure { throwable ->
+                    reportError("Failed to persist converted text.", throwable)
+                }
+            }
         }
 
         fun updateNoteTitle(title: String) {
@@ -208,6 +368,33 @@ internal class NoteEditorViewModel
             }
         }
 
+        fun updateCurrentPageTemplate(config: PageTemplateConfig) {
+            val page = _currentPage.value ?: return
+            val normalized = normalizeTemplateConfig(config)
+            val updatedTemplateMap = _templateConfigByPageId.value.toMutableMap()
+            updatedTemplateMap[page.pageId] = normalized
+            _templateConfigByPageId.value = updatedTemplateMap
+            _currentTemplateConfig.value = normalized
+            viewModelScope.launch {
+                runCatching {
+                    repository.saveTemplateForPage(
+                        pageId = page.pageId,
+                        backgroundKind = normalized.backgroundKind,
+                        spacing = normalized.spacing,
+                        colorHex = normalized.colorHex,
+                    )
+                    pageDao.getById(page.pageId)?.let { updatedPage ->
+                        replacePageInState(updatedPage)
+                        if (currentPageId == updatedPage.pageId) {
+                            _currentPage.value = updatedPage
+                        }
+                    }
+                }.onFailure { throwable ->
+                    reportError("Failed to persist page template.", throwable)
+                }
+            }
+        }
+
         fun addStroke(
             stroke: Stroke,
             persist: Boolean,
@@ -240,6 +427,74 @@ internal class NoteEditorViewModel
             // Only update recognition if this is the active recognition page
             if (updateRecognition && currentPageId == _activeRecognitionPageId.value) {
                 myScriptPageManager?.onStrokeErased(stroke.id, _strokes.value)
+            }
+        }
+
+        fun splitStroke(
+            original: Stroke,
+            segments: List<Stroke>,
+            pageId: String,
+            persist: Boolean,
+            updateRecognition: Boolean = true,
+        ): Int? {
+            val mutation = applyStrokeSplit(_strokes.value, original, segments) ?: return null
+            _strokes.value = mutation.strokes
+            if (persist) {
+                enqueueStrokeWrite {
+                    repository.replaceStrokeWithSegments(pageId, original.id, segments)
+                }
+            }
+            if (updateRecognition && currentPageId == _activeRecognitionPageId.value) {
+                myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, mutation.strokes)
+            }
+            return mutation.insertionIndex
+        }
+
+        fun restoreSplitStroke(
+            original: Stroke,
+            segments: List<Stroke>,
+            pageId: String,
+            insertionIndex: Int,
+            persist: Boolean,
+            updateRecognition: Boolean = true,
+        ) {
+            val restored = restoreStrokeSplit(_strokes.value, original, segments, insertionIndex)
+            _strokes.value = restored
+            if (persist) {
+                enqueueStrokeWrite {
+                    repository.restoreSplitStroke(
+                        pageId = pageId,
+                        original = original,
+                        segmentIds = segments.map { segment -> segment.id },
+                    )
+                }
+            }
+            if (updateRecognition && currentPageId == _activeRecognitionPageId.value) {
+                myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, restored)
+            }
+        }
+
+        fun replaceStrokes(
+            pageId: String,
+            replacement: List<Stroke>,
+            persist: Boolean,
+            updateRecognition: Boolean = true,
+        ) {
+            if (replacement.isEmpty()) {
+                return
+            }
+            val replacementById = replacement.associateBy { stroke -> stroke.id }
+            _strokes.value =
+                _strokes.value.map { stroke ->
+                    replacementById[stroke.id] ?: stroke
+                }
+            if (persist) {
+                enqueueStrokeWrite {
+                    repository.replaceStrokes(pageId, replacement)
+                }
+            }
+            if (updateRecognition && currentPageId == _activeRecognitionPageId.value) {
+                myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, _strokes.value)
             }
         }
 
@@ -323,6 +578,85 @@ internal class NoteEditorViewModel
             }
         }
 
+        fun splitStrokeForPage(
+            original: Stroke,
+            segments: List<Stroke>,
+            pageId: String,
+            persist: Boolean,
+            updateRecognition: Boolean = true,
+        ): Int? {
+            val currentCache = _pageStrokesCache.value.toMutableMap()
+            val currentPageStrokes = currentCache[pageId].orEmpty()
+            val mutation = applyStrokeSplit(currentPageStrokes, original, segments) ?: return null
+            currentCache[pageId] = mutation.strokes
+            _pageStrokesCache.value = currentCache
+            if (persist) {
+                enqueueStrokeWrite {
+                    repository.replaceStrokeWithSegments(pageId, original.id, segments)
+                }
+            }
+            if (updateRecognition && pageId == currentPageId) {
+                myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, mutation.strokes)
+            }
+            return mutation.insertionIndex
+        }
+
+        fun restoreSplitStrokeForPage(
+            original: Stroke,
+            segments: List<Stroke>,
+            pageId: String,
+            insertionIndex: Int,
+            persist: Boolean,
+            updateRecognition: Boolean = true,
+        ) {
+            val currentCache = _pageStrokesCache.value.toMutableMap()
+            val currentPageStrokes = currentCache[pageId].orEmpty()
+            val restored = restoreStrokeSplit(currentPageStrokes, original, segments, insertionIndex)
+            currentCache[pageId] = restored
+            _pageStrokesCache.value = currentCache
+            if (persist) {
+                enqueueStrokeWrite {
+                    repository.restoreSplitStroke(
+                        pageId = pageId,
+                        original = original,
+                        segmentIds = segments.map { segment -> segment.id },
+                    )
+                }
+            }
+            if (updateRecognition && pageId == currentPageId) {
+                myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, restored)
+            }
+        }
+
+        fun replaceStrokesForPage(
+            pageId: String,
+            replacement: List<Stroke>,
+            persist: Boolean,
+            updateRecognition: Boolean = true,
+        ) {
+            if (replacement.isEmpty()) {
+                return
+            }
+            val currentCache = _pageStrokesCache.value.toMutableMap()
+            val replacementById = replacement.associateBy { stroke -> stroke.id }
+            val updatedPageStrokes =
+                currentCache[pageId]
+                    .orEmpty()
+                    .map { stroke ->
+                        replacementById[stroke.id] ?: stroke
+                    }
+            currentCache[pageId] = updatedPageStrokes
+            _pageStrokesCache.value = currentCache
+            if (persist) {
+                enqueueStrokeWrite {
+                    repository.replaceStrokes(pageId, replacement)
+                }
+            }
+            if (updateRecognition && pageId == currentPageId) {
+                myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, updatedPageStrokes)
+            }
+        }
+
         /**
          * Load strokes for a range of pages (for pre-loading in multi-page mode).
          */
@@ -353,6 +687,9 @@ internal class NoteEditorViewModel
                 if (page != null && page.pageId != currentPageId) {
                     currentPageId = page.pageId
                     _currentPage.value = page
+                    _currentTemplateConfig.value =
+                        _templateConfigByPageId.value[page.pageId]
+                            ?: PageTemplateConfig.BLANK
                 }
             }
         }
@@ -472,6 +809,7 @@ internal class NoteEditorViewModel
                             val strokes = repository.getStrokesForPage(pageId)
                             currentCache[pageId] = strokes
                             Log.d(LOG_TAG, "Loaded ${strokes.size} strokes for page: $pageId")
+                            loadRecognitionArtifacts(pageId)
                         }
                     }
                     _pageStrokesCache.value = currentCache
@@ -493,6 +831,7 @@ internal class NoteEditorViewModel
                 val currentCache = _pageStrokesCache.value.toMutableMap()
                 currentCache[pageId] = strokes
                 _pageStrokesCache.value = currentCache
+                loadRecognitionArtifacts(pageId)
             }.onFailure { throwable ->
                 reportError("Failed to load strokes for page: $pageId", throwable)
             }
@@ -529,8 +868,10 @@ internal class NoteEditorViewModel
         ) {
             val pages = pageDao.getPagesForNote(noteId).first()
             _pages.value = pages
+            _templateConfigByPageId.value = repository.getTemplateConfigMapByPageId(pages)
             if (pages.isEmpty()) {
                 _currentPageIndex.value = 0
+                _currentTemplateConfig.value = PageTemplateConfig.BLANK
                 setCurrentPage(null)
                 return
             }
@@ -556,8 +897,17 @@ internal class NoteEditorViewModel
             }
             currentPageId = page?.pageId
             _currentPage.value = page
+            _currentTemplateConfig.value =
+                page
+                    ?.pageId
+                    ?.let { pageId ->
+                        _templateConfigByPageId.value[pageId]
+                    } ?: PageTemplateConfig.BLANK
             if (page?.kind == "pdf") {
                 _strokes.value = emptyList()
+                currentPageId?.let { pageId ->
+                    loadRecognitionArtifacts(pageId)
+                }
                 return
             }
             currentPageId?.let { pageId ->
@@ -573,13 +923,90 @@ internal class NoteEditorViewModel
                         myScriptPageManager?.addStroke(stroke)
                     }
                 }
+                loadRecognitionArtifacts(pageId)
             } ?: run {
                 _strokes.value = emptyList()
             }
         }
 
+        private fun normalizeTemplateConfig(config: PageTemplateConfig): PageTemplateConfig {
+            val normalizedKind =
+                when (config.backgroundKind) {
+                    PageTemplateConfig.KIND_GRID,
+                    PageTemplateConfig.KIND_LINED,
+                    PageTemplateConfig.KIND_DOTTED,
+                    PageTemplateConfig.KIND_BLANK,
+                    -> config.backgroundKind
+
+                    else -> PageTemplateConfig.KIND_GRID
+                }
+            val normalizedSpacing =
+                if (normalizedKind == PageTemplateConfig.KIND_BLANK) {
+                    0f
+                } else {
+                    config.spacing.coerceIn(8f, 80f)
+                }
+            return config.copy(backgroundKind = normalizedKind, spacing = normalizedSpacing)
+        }
+
+        private suspend fun loadRecognitionArtifacts(pageId: String) {
+            val recognitionText = repository.getRecognitionText(pageId).orEmpty()
+            val convertedBlocks = repository.getConvertedTextBlocks(pageId)
+            val textMap = _recognizedTextByPage.value.toMutableMap()
+            textMap[pageId] = recognitionText
+            _recognizedTextByPage.value = textMap
+            val blocksMap = _convertedTextBlocksByPage.value.toMutableMap()
+            blocksMap[pageId] = convertedBlocks
+            _convertedTextBlocksByPage.value = blocksMap
+        }
+
+        private fun mergeBounds(strokes: List<Stroke>): OverlayBounds {
+            val left = strokes.minOf { stroke -> stroke.bounds.x }
+            val top = strokes.minOf { stroke -> stroke.bounds.y }
+            val right = strokes.maxOf { stroke -> stroke.bounds.x + stroke.bounds.w }
+            val bottom = strokes.maxOf { stroke -> stroke.bounds.y + stroke.bounds.h }
+            return OverlayBounds(
+                x = left,
+                y = top,
+                w = (right - left).coerceAtLeast(1f),
+                h = (bottom - top).coerceAtLeast(1f),
+            )
+        }
+
+        private fun isStrokeCenterInsidePolygon(
+            stroke: Stroke,
+            polygon: List<Pair<Float, Float>>,
+        ): Boolean {
+            val centerX = stroke.bounds.x + (stroke.bounds.w / 2f)
+            val centerY = stroke.bounds.y + (stroke.bounds.h / 2f)
+            return pointInPolygon(centerX, centerY, polygon)
+        }
+
+        private fun pointInPolygon(
+            x: Float,
+            y: Float,
+            polygon: List<Pair<Float, Float>>,
+        ): Boolean {
+            var inside = false
+            var j = polygon.lastIndex
+            for (i in polygon.indices) {
+                val xi = polygon[i].first
+                val yi = polygon[i].second
+                val xj = polygon[j].first
+                val yj = polygon[j].second
+                val intersects =
+                    (yi > y) != (yj > y) &&
+                        x < (((xj - xi) * (y - yi)) / ((yj - yi).takeIf { delta -> delta != 0f } ?: 1f)) + xi
+                if (intersects) {
+                    inside = !inside
+                }
+                j = i
+            }
+            return inside
+        }
+
         override fun onCleared() {
-            myScriptPageManager?.closeCurrentPage()
+            myScriptPageManager?.shutdown()
             _activeRecognitionPageId.value = null
             strokeWriteQueue.close()
             super.onCleared()

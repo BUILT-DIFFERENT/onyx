@@ -11,6 +11,12 @@
 - Current Android dev phase policy: backward compatibility with older local app DB versions is not required.
 - Treat this as a super-greenfield project for now: do not optimize for preserving existing user data or migration compatibility; schema and data-model changes can be made directly and we will reconcile before ship.
 - Editor settings persistence note: `EditorSettingsEntity/Dao/Repository` may already exist in tree during partial work, but persistence is not complete until `OnyxDatabase` includes the entity+migration and `NoteEditorScreen` consumes `viewModel.editorSettings` instead of local-only `rememberBrushState` defaults.
+- Home screen architecture note: `HomeScreenViewModel` currently lives in `apps/android/app/src/main/java/com/onyx/android/ui/HomeScreen.kt` (same file), not in a separate `HomeViewModel.kt` file.
+- Android unit test suite note: `bun run android:test` currently has pre-existing failures in `apps/android/app/src/test/java/com/onyx/android/data/repository/NoteRepositoryTest.kt` (constructor/signature drift and unresolved fields); this is separate from editor overlay changes.
+- Android unit test targeting note: even `:app:testDebugUnitTest --tests ...` can fail before test execution due unrelated compile errors in `apps/android/app/src/test/java/com/onyx/android/ui/NoteEditorViewModelTest.kt` (`match` unresolved), so prefer `android:lint` as the verification gate unless those test sources are fixed.
+- Gradle wrapper helper note: `scripts/gradlew.js` resolves `gradlew` relative to the current working directory, so invoke it from `apps/android/` (or pass `cwd=apps/android`) rather than repo root.
+- Android instrumentation compile note: current `:app:compileDebugAndroidTestKotlin` failures may differ from older tracker entries; recent constructor drift is around `templateState`/`onTemplateChange` in `NoteEditor*` androidTests, and there can also be unrelated `InkCanvasTouchRoutingTest` `lassoSelection` callsite drift.
+- Android unit test stack clarification: app unit tests currently use JUnit 5 (`org.junit.jupiter`) + MockK and there are 38 files under `apps/android/app/src/test` (not the older 33-file JUnit4/Mockito snapshot).
 
 ## Context7 Library IDs (Project Stack)
 

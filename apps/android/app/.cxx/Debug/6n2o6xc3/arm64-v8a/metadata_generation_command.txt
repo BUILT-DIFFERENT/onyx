@@ -1,19 +1,19 @@
-                        -HC:\onyx\apps\android\app\src\main\cpp
+                        -H/home/gamer/onyx/apps/android/app/src/main/cpp
 -DCMAKE_SYSTEM_NAME=Android
 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 -DCMAKE_SYSTEM_VERSION=30
 -DANDROID_PLATFORM=android-30
 -DANDROID_ABI=arm64-v8a
 -DCMAKE_ANDROID_ARCH_ABI=arm64-v8a
--DANDROID_NDK=C:\Users\gamer\AppData\Local\Android\Sdk\ndk\27.0.12077973
--DCMAKE_ANDROID_NDK=C:\Users\gamer\AppData\Local\Android\Sdk\ndk\27.0.12077973
--DCMAKE_TOOLCHAIN_FILE=C:\Users\gamer\AppData\Local\Android\Sdk\ndk\27.0.12077973\build\cmake\android.toolchain.cmake
--DCMAKE_MAKE_PROGRAM=C:\Users\gamer\AppData\Local\Android\Sdk\cmake\3.22.1\bin\ninja.exe
+-DANDROID_NDK=/home/gamer/Android/Sdk/ndk/27.0.12077973
+-DCMAKE_ANDROID_NDK=/home/gamer/Android/Sdk/ndk/27.0.12077973
+-DCMAKE_TOOLCHAIN_FILE=/home/gamer/Android/Sdk/ndk/27.0.12077973/build/cmake/android.toolchain.cmake
+-DCMAKE_MAKE_PROGRAM=/home/gamer/Android/Sdk/cmake/3.22.1/bin/ninja
 -DCMAKE_CXX_FLAGS=-std=c++17
--DCMAKE_LIBRARY_OUTPUT_DIRECTORY=C:\onyx\apps\android\app\build\intermediates\cxx\Debug\6n2o6xc3\obj\arm64-v8a
--DCMAKE_RUNTIME_OUTPUT_DIRECTORY=C:\onyx\apps\android\app\build\intermediates\cxx\Debug\6n2o6xc3\obj\arm64-v8a
+-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/home/gamer/onyx/apps/android/app/build/intermediates/cxx/Debug/6n2o6xc3/obj/arm64-v8a
+-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/home/gamer/onyx/apps/android/app/build/intermediates/cxx/Debug/6n2o6xc3/obj/arm64-v8a
 -DCMAKE_BUILD_TYPE=Debug
--BC:\onyx\apps\android\app\.cxx\Debug\6n2o6xc3\arm64-v8a
+-B/home/gamer/onyx/apps/android/app/.cxx/Debug/6n2o6xc3/arm64-v8a
 -GNinja
                         Build command args: []
                         Version: 2

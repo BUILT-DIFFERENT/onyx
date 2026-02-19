@@ -8,6 +8,7 @@ import androidx.ink.authoring.InProgressStrokesView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.onyx.android.ink.model.Brush
+import com.onyx.android.ink.model.LassoSelection
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.StrokeBounds
 import com.onyx.android.ink.model.StrokePoint
@@ -372,6 +373,253 @@ class InkCanvasTouchRoutingTest {
         }
 
         assertTrue(runtime.pendingCommittedStrokes.isNotEmpty())
+    }
+
+    @Test
+    fun rapidPenUpDown_sequenceMaintainsConsistency() {
+        val view = InProgressStrokesView(context)
+        val runtime = createRuntime()
+        var strokeFinishedCount = 0
+        val renderFinishedStrokeIds = mutableListOf<InProgressStrokeId>()
+        val interaction =
+            createInteraction(
+                onStrokeFinished = { strokeFinishedCount += 1 },
+                onStrokeRenderFinished = { strokeId -> renderFinishedStrokeIds += strokeId },
+            )
+
+        var eventTime = 2600L
+        repeat(5) { cycle ->
+            val downTime = eventTime
+            val baseX = 40f + (cycle * 6f)
+            val baseY = 50f + (cycle * 4f)
+            val down =
+                singlePointerEvent(
+                    downTime = downTime,
+                    eventTime = eventTime,
+                    action = MotionEvent.ACTION_DOWN,
+                    x = baseX,
+                    y = baseY,
+                    toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                    source = InputDevice.SOURCE_STYLUS,
+                )
+            eventTime += 8L
+            val move =
+                singlePointerEvent(
+                    downTime = downTime,
+                    eventTime = eventTime,
+                    action = MotionEvent.ACTION_MOVE,
+                    x = baseX + 6f,
+                    y = baseY + 3f,
+                    toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                    source = InputDevice.SOURCE_STYLUS,
+                )
+            eventTime += 8L
+            val up =
+                singlePointerEvent(
+                    downTime = downTime,
+                    eventTime = eventTime,
+                    action = MotionEvent.ACTION_UP,
+                    x = baseX + 8f,
+                    y = baseY + 5f,
+                    toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                    source = InputDevice.SOURCE_STYLUS,
+                )
+            eventTime += 8L
+
+            try {
+                assertTrue(handleTouchEvent(view, down, interaction, runtime))
+                assertTrue(handleTouchEvent(view, move, interaction, runtime))
+                assertTrue(handleTouchEvent(view, up, interaction, runtime))
+            } finally {
+                down.recycle()
+                move.recycle()
+                up.recycle()
+            }
+        }
+
+        assertEquals(5, strokeFinishedCount)
+        assertEquals(5, renderFinishedStrokeIds.size)
+        assertTrue(runtime.activeStrokeIds.isEmpty())
+        assertTrue(runtime.activePointerModes.isEmpty())
+        assertTrue(runtime.activeStrokePoints.isEmpty())
+        assertTrue(runtime.activeStrokeBrushes.isEmpty())
+        assertTrue(runtime.activeStrokeStartTimes.isEmpty())
+    }
+
+    @Test
+    fun rapidStrokeSequence_noActiveStrokesLeaked() {
+        val view = InProgressStrokesView(context)
+        val runtime = createRuntime()
+        var strokeFinishedCount = 0
+        val interaction =
+            createInteraction(
+                onStrokeFinished = { strokeFinishedCount += 1 },
+            )
+
+        var eventTime = 3000L
+        repeat(10) { cycle ->
+            val downTime = eventTime
+            val baseX = 25f + (cycle * 3f)
+            val baseY = 35f + (cycle * 2f)
+            val down =
+                singlePointerEvent(
+                    downTime = downTime,
+                    eventTime = eventTime,
+                    action = MotionEvent.ACTION_DOWN,
+                    x = baseX,
+                    y = baseY,
+                    toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                    source = InputDevice.SOURCE_STYLUS,
+                )
+            eventTime += 6L
+            val move =
+                singlePointerEvent(
+                    downTime = downTime,
+                    eventTime = eventTime,
+                    action = MotionEvent.ACTION_MOVE,
+                    x = baseX + 4f,
+                    y = baseY + 4f,
+                    toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                    source = InputDevice.SOURCE_STYLUS,
+                )
+            eventTime += 6L
+            val up =
+                singlePointerEvent(
+                    downTime = downTime,
+                    eventTime = eventTime,
+                    action = MotionEvent.ACTION_UP,
+                    x = baseX + 7f,
+                    y = baseY + 6f,
+                    toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                    source = InputDevice.SOURCE_STYLUS,
+                )
+            eventTime += 6L
+
+            try {
+                assertTrue(handleTouchEvent(view, down, interaction, runtime))
+                assertTrue(handleTouchEvent(view, move, interaction, runtime))
+                assertTrue(handleTouchEvent(view, up, interaction, runtime))
+            } finally {
+                down.recycle()
+                move.recycle()
+                up.recycle()
+            }
+        }
+
+        assertEquals(10, strokeFinishedCount)
+        assertTrue(runtime.activeStrokeIds.isEmpty())
+        assertTrue(runtime.activePointerModes.isEmpty())
+        assertTrue(runtime.stylusPointerIds.isEmpty())
+        assertTrue(runtime.activeStrokePoints.isEmpty())
+        assertTrue(runtime.activeStrokeBrushes.isEmpty())
+        assertTrue(runtime.activeStrokeStartTimes.isEmpty())
+        assertFalse(runtime.hasActiveStrokeInputs())
+    }
+
+    @Test
+    fun strokeAfterCancel_clearsStateAndStartsFresh() {
+        val view = InProgressStrokesView(context)
+        val runtime = createRuntime()
+        var strokeFinishedCount = 0
+        val interaction =
+            createInteraction(
+                onStrokeFinished = { strokeFinishedCount += 1 },
+            )
+
+        val downTime = 3600L
+        val firstDown =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 60f,
+                y = 60f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val firstMove =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 12L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 68f,
+                y = 67f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val cancel =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 24L,
+                action = MotionEvent.ACTION_CANCEL,
+                x = 68f,
+                y = 67f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+
+        val secondDownTime = downTime + 40L
+        val secondDown =
+            singlePointerEvent(
+                downTime = secondDownTime,
+                eventTime = secondDownTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 75f,
+                y = 75f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val secondMove =
+            singlePointerEvent(
+                downTime = secondDownTime,
+                eventTime = secondDownTime + 12L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 84f,
+                y = 82f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val secondUp =
+            singlePointerEvent(
+                downTime = secondDownTime,
+                eventTime = secondDownTime + 24L,
+                action = MotionEvent.ACTION_UP,
+                x = 89f,
+                y = 86f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, firstDown, interaction, runtime))
+            assertTrue(handleTouchEvent(view, firstMove, interaction, runtime))
+            assertTrue(handleTouchEvent(view, cancel, interaction, runtime))
+            assertTrue(runtime.activeStrokeIds.isEmpty())
+            assertTrue(runtime.activePointerModes.isEmpty())
+            assertTrue(runtime.activeStrokePoints.isEmpty())
+            assertTrue(runtime.activeStrokeBrushes.isEmpty())
+            assertTrue(runtime.activeStrokeStartTimes.isEmpty())
+
+            assertTrue(handleTouchEvent(view, secondDown, interaction, runtime))
+            assertTrue(handleTouchEvent(view, secondMove, interaction, runtime))
+            assertTrue(handleTouchEvent(view, secondUp, interaction, runtime))
+        } finally {
+            firstDown.recycle()
+            firstMove.recycle()
+            cancel.recycle()
+            secondDown.recycle()
+            secondMove.recycle()
+            secondUp.recycle()
+        }
+
+        assertEquals(1, strokeFinishedCount)
+        assertTrue(runtime.activeStrokeIds.isEmpty())
+        assertTrue(runtime.activePointerModes.isEmpty())
+        assertTrue(runtime.stylusPointerIds.isEmpty())
+        assertTrue(runtime.activeStrokePoints.isEmpty())
+        assertTrue(runtime.activeStrokeBrushes.isEmpty())
+        assertTrue(runtime.activeStrokeStartTimes.isEmpty())
+        assertFalse(runtime.hasActiveStrokeInputs())
     }
 
     @Test
@@ -882,6 +1130,7 @@ private fun createRuntime(): InkCanvasRuntime =
         activeStrokeBrushes = mutableMapOf(),
         activeStrokeStartTimes = mutableMapOf(),
         predictedStrokeIds = mutableMapOf(),
+        eraserLastPagePoints = mutableMapOf(),
         pendingCommittedStrokes = mutableMapOf(),
         hoverPreviewState = HoverPreviewState(),
         finishedStrokePathCache = mutableMapOf(),
@@ -902,6 +1151,7 @@ private fun createInteraction(
 ): InkCanvasInteraction =
     InkCanvasInteraction(
         brush = Brush(tool = Tool.PEN),
+        lassoSelection = LassoSelection(),
         viewTransform = ViewTransform.DEFAULT,
         strokes = strokes,
         pageWidth = pageWidth,

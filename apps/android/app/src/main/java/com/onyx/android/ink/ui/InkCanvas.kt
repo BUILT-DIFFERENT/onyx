@@ -2,6 +2,7 @@
 
 package com.onyx.android.ink.ui
 
+import android.content.Context
 import android.view.MotionEvent
 import android.view.VelocityTracker
 import androidx.compose.foundation.Canvas
@@ -14,10 +15,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.ink.authoring.InProgressStrokeId
 import androidx.ink.authoring.InProgressStrokesView
+import com.onyx.android.config.FeatureFlag
+import com.onyx.android.config.FeatureFlagStore
 import com.onyx.android.ink.model.Brush
+import com.onyx.android.ink.model.LassoSelection
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.ViewTransform
@@ -28,6 +33,8 @@ internal enum class PointerMode {
     ERASE,
 }
 
+private const val HANDOFF_FRAME_DELAY = 2
+
 @Suppress("LongParameterList")
 internal class InkCanvasRuntime(
     val activeStrokeIds: MutableMap<Int, InProgressStrokeId>,
@@ -37,6 +44,7 @@ internal class InkCanvasRuntime(
     val activeStrokeBrushes: MutableMap<Int, Brush>,
     val activeStrokeStartTimes: MutableMap<Int, Long>,
     val predictedStrokeIds: MutableMap<Int, InProgressStrokeId>,
+    val eraserLastPagePoints: MutableMap<Int, Pair<Float, Float>>,
     val pendingCommittedStrokes: MutableMap<String, Stroke>,
     val hoverPreviewState: HoverPreviewState,
     val finishedStrokePathCache: MutableMap<String, StrokePathCacheEntry>,
@@ -65,12 +73,12 @@ internal class InkCanvasRuntime(
             activeStrokeStartTimes.isNotEmpty()
 }
 
-private const val ENABLE_MOTION_PREDICTION = true
-
 data class InkCanvasState(
     val strokes: List<Stroke>,
     val viewTransform: ViewTransform,
     val brush: Brush,
+    val lassoSelection: LassoSelection = LassoSelection(),
+    val isSegmentEraserEnabled: Boolean = false,
     val pageWidth: Float,
     val pageHeight: Float,
     val allowEditing: Boolean = true,
@@ -81,6 +89,8 @@ data class InkCanvasCallbacks(
     val onStrokeFinished: (Stroke) -> Unit,
     val onStrokeErased: (Stroke) -> Unit,
     val onStrokeSplit: (original: Stroke, segments: List<Stroke>) -> Unit = { _, _ -> },
+    val onLassoMove: (deltaX: Float, deltaY: Float) -> Unit = { _, _ -> },
+    val onLassoResize: (scale: Float, pivotPageX: Float, pivotPageY: Float) -> Unit = { _, _, _ -> },
     val onTransformGesture: (
         zoomChange: Float,
         panChangeX: Float,
@@ -103,6 +113,8 @@ fun InkCanvas(
     modifier: Modifier = Modifier,
 ) {
     val currentBrush by rememberUpdatedState(state.brush)
+    val currentSegmentEraserEnabled by rememberUpdatedState(state.isSegmentEraserEnabled)
+    val currentLassoSelection by rememberUpdatedState(state.lassoSelection)
     val currentTransform by rememberUpdatedState(state.viewTransform)
     val currentStrokes by rememberUpdatedState(state.strokes)
     val currentPageWidth by rememberUpdatedState(state.pageWidth)
@@ -110,6 +122,8 @@ fun InkCanvas(
     val currentAllowEditing by rememberUpdatedState(state.allowEditing)
     val currentAllowFingerGestures by rememberUpdatedState(state.allowFingerGestures)
     val currentCallbacks by rememberUpdatedState(callbacks)
+    val context = LocalContext.current
+    val flagStore = remember(context) { FeatureFlagStore.getInstance(context) }
     val hoverPreviewState = remember { HoverPreviewState() }
 
     val runtime =
@@ -122,6 +136,7 @@ fun InkCanvas(
                 activeStrokeBrushes = mutableMapOf(),
                 activeStrokeStartTimes = mutableMapOf(),
                 predictedStrokeIds = mutableMapOf(),
+                eraserLastPagePoints = mutableMapOf(),
                 pendingCommittedStrokes = mutableMapOf(),
                 hoverPreviewState = hoverPreviewState,
                 finishedStrokePathCache = mutableMapOf(),
@@ -154,16 +169,25 @@ fun InkCanvas(
                 transform = currentTransform,
                 pathCache = runtime.finishedStrokePathCache,
             )
+            drawSelectedStrokesHighlight(
+                strokes = mergedStrokes,
+                selectedIds = currentLassoSelection.selectedStrokeIds,
+                transform = currentTransform,
+                pathCache = runtime.finishedStrokePathCache,
+            )
+            drawLassoOverlay(
+                selection = currentLassoSelection,
+                transform = currentTransform,
+            )
         }
 
         AndroidView(
             factory = { context ->
-                runtime.motionPredictionAdapter =
-                    if (ENABLE_MOTION_PREDICTION) {
-                        MotionPredictionAdapter.create(context)
-                    } else {
-                        null
-                    }
+                syncMotionPredictionAdapter(
+                    runtime = runtime,
+                    context = context,
+                    enabled = flagStore.get(FeatureFlag.INK_PREDICTION_ENABLED),
+                )
                 InProgressStrokesView(context).apply {
                     // Keep this view for low-latency in-progress stroke rendering and touch input handling.
                     // Finished strokes are drawn in Compose using cached world-space paths.
@@ -174,29 +198,33 @@ fun InkCanvas(
                         currentCallbacks.onStrokeFinished(stroke)
                     }
                     val onErased = { stroke: Stroke ->
+                        runtime.eraserLastPagePoints.clear()
                         runtime.pendingCommittedStrokes.remove(stroke.id)
                         runtime.finishedStrokePathCache.remove(stroke.id)
                         currentCallbacks.onStrokeErased(stroke)
                     }
-                    // Use postOnAnimation to remove finished strokes synchronized with the display refresh.
-                    // This prevents ghosting by ensuring the stroke is removed from the
-                    // InProgressStrokesView at the same frame it appears in Compose's Canvas.
-                    val onStrokeRenderFinished = { strokeId: InProgressStrokeId ->
-                        postOnAnimation {
-                            removeFinishedStrokes(setOf(strokeId))
-                            // Fallback cleanup: only sweep residual finished ids when no active stroke exists.
-                            if (!runtime.hasActiveStrokeInputs()) {
-                                val residualFinishedIds = getFinishedStrokes().keys
-                                if (residualFinishedIds.isNotEmpty()) {
-                                    removeFinishedStrokes(residualFinishedIds.toSet())
-                                }
-                            }
+                    val onSplit = { original: Stroke, segments: List<Stroke> ->
+                        runtime.pendingCommittedStrokes.remove(original.id)
+                        runtime.finishedStrokePathCache.remove(original.id)
+                        segments.forEach { segment ->
+                            runtime.pendingCommittedStrokes[segment.id] = segment
                         }
+                        currentCallbacks.onStrokeSplit(original, segments)
+                    }
+                    val onStrokeRenderFinished = { strokeId: InProgressStrokeId ->
+                        scheduleFrameWaitedRemoval(
+                            view = this,
+                            strokeIds = setOf(strokeId),
+                            framesRemaining = HANDOFF_FRAME_DELAY,
+                            runtime = runtime,
+                        )
                     }
                     setOnTouchListener { _, event ->
                         val interaction =
                             InkCanvasInteraction(
                                 brush = currentBrush,
+                                isSegmentEraserEnabled = currentSegmentEraserEnabled,
+                                lassoSelection = currentLassoSelection,
                                 viewTransform = currentTransform,
                                 strokes = currentStrokes,
                                 pageWidth = currentPageWidth,
@@ -205,6 +233,9 @@ fun InkCanvas(
                                 allowFingerGestures = currentAllowFingerGestures,
                                 onStrokeFinished = onFinished,
                                 onStrokeErased = onErased,
+                                onStrokeSplit = onSplit,
+                                onLassoMove = currentCallbacks.onLassoMove,
+                                onLassoResize = currentCallbacks.onLassoResize,
                                 onTransformGesture = currentCallbacks.onTransformGesture,
                                 onPanGestureEnd = currentCallbacks.onPanGestureEnd,
                                 onStylusButtonEraserActiveChanged = currentCallbacks.onStylusButtonEraserActiveChanged,
@@ -226,6 +257,8 @@ fun InkCanvas(
                         val interaction =
                             InkCanvasInteraction(
                                 brush = currentBrush,
+                                isSegmentEraserEnabled = currentSegmentEraserEnabled,
+                                lassoSelection = currentLassoSelection,
                                 viewTransform = currentTransform,
                                 strokes = currentStrokes,
                                 pageWidth = currentPageWidth,
@@ -234,6 +267,9 @@ fun InkCanvas(
                                 allowFingerGestures = currentAllowFingerGestures,
                                 onStrokeFinished = onFinished,
                                 onStrokeErased = onErased,
+                                onStrokeSplit = onSplit,
+                                onLassoMove = currentCallbacks.onLassoMove,
+                                onLassoResize = currentCallbacks.onLassoResize,
                                 onTransformGesture = currentCallbacks.onTransformGesture,
                                 onPanGestureEnd = currentCallbacks.onPanGestureEnd,
                                 onStylusButtonEraserActiveChanged = currentCallbacks.onStylusButtonEraserActiveChanged,
@@ -244,6 +280,11 @@ fun InkCanvas(
                 }
             },
             update = { inProgressView ->
+                syncMotionPredictionAdapter(
+                    runtime = runtime,
+                    context = inProgressView.context,
+                    enabled = flagStore.get(FeatureFlag.INK_PREDICTION_ENABLED),
+                )
                 val persistedIds = currentStrokes.asSequence().map { it.id }.toHashSet()
                 inProgressView.maskPath =
                     buildOutsidePageMaskPath(
@@ -262,9 +303,12 @@ fun InkCanvas(
                     val staleFinishedStrokeIds = inProgressView.getFinishedStrokes().keys
                     if (staleFinishedStrokeIds.isNotEmpty()) {
                         // Guarded fallback cleanup to prevent ghost overlays without dropping active segments.
-                        inProgressView.postOnAnimation {
-                            inProgressView.removeFinishedStrokes(staleFinishedStrokeIds.toSet())
-                        }
+                        scheduleFrameWaitedRemoval(
+                            view = inProgressView,
+                            strokeIds = staleFinishedStrokeIds.toSet(),
+                            framesRemaining = HANDOFF_FRAME_DELAY,
+                            runtime = runtime,
+                        )
                     }
                 }
             },
@@ -329,3 +373,38 @@ private fun hasValidMaskDimensions(
     pageWidth: Float,
     pageHeight: Float,
 ): Boolean = pageWidth > 0f && pageHeight > 0f && viewWidth > 0f && viewHeight > 0f
+
+private fun syncMotionPredictionAdapter(
+    runtime: InkCanvasRuntime,
+    context: Context,
+    enabled: Boolean,
+) {
+    if (enabled) {
+        if (runtime.motionPredictionAdapter == null) {
+            runtime.motionPredictionAdapter = MotionPredictionAdapter.create(context)
+        }
+        return
+    }
+    runtime.motionPredictionAdapter = null
+}
+
+private fun scheduleFrameWaitedRemoval(
+    view: InProgressStrokesView,
+    strokeIds: Set<InProgressStrokeId>,
+    framesRemaining: Int,
+    runtime: InkCanvasRuntime,
+) {
+    if (framesRemaining <= 0) {
+        view.removeFinishedStrokes(strokeIds)
+        if (!runtime.hasActiveStrokeInputs()) {
+            val residualFinishedIds = view.getFinishedStrokes().keys
+            if (residualFinishedIds.isNotEmpty()) {
+                view.removeFinishedStrokes(residualFinishedIds.toSet())
+            }
+        }
+        return
+    }
+    view.postOnAnimation {
+        scheduleFrameWaitedRemoval(view, strokeIds, framesRemaining - 1, runtime)
+    }
+}

@@ -37,6 +37,13 @@ interface PageDao {
         updatedAt: Long = System.currentTimeMillis(),
     )
 
+    @Query("UPDATE pages SET templateId = :templateId, updatedAt = :updatedAt WHERE pageId = :pageId")
+    suspend fun updateTemplate(
+        pageId: String,
+        templateId: String?,
+        updatedAt: Long,
+    )
+
     @Query("DELETE FROM pages WHERE pageId = :pageId")
     suspend fun delete(pageId: String)
 }

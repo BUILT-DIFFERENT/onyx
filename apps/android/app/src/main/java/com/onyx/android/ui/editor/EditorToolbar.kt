@@ -46,6 +46,7 @@ import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Loupe
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -86,6 +87,7 @@ import com.onyx.android.ink.model.Tool
 import com.onyx.android.ui.NoteEditorToolbarState
 import com.onyx.android.ui.NoteEditorTopBarState
 import com.onyx.android.ui.PageTemplateState
+import com.onyx.android.ui.spacingRangeForTemplate
 
 internal const val HEX_COLOR_LENGTH_RGB = 7
 internal const val MIN_COLOR_CHANNEL = 0
@@ -101,7 +103,7 @@ private val NOTEWISE_ICON_MUTED = Color(0xFFA9B0C5)
 private val NOTEWISE_SELECTED = Color(0xFF136CC5)
 private val NOTEWISE_STROKE = Color(0xFF3B435B)
 private const val NOTEWISE_LEFT_GROUP_WIDTH_DP = 360
-private const val NOTEWISE_RIGHT_GROUP_WIDTH_DP = 82
+private const val NOTEWISE_RIGHT_GROUP_WIDTH_DP = 128
 private const val TITLE_INPUT_TEST_TAG = "note-title-input"
 internal const val TOOLBAR_ROW_HEIGHT_DP = 48
 internal const val TOOLBAR_VERTICAL_PADDING_DP = 8
@@ -445,8 +447,10 @@ internal fun EditorToolbar(
                         ToolSettingsPanel(
                             panelType = ToolPanelType.ERASER,
                             brush = brush,
+                            isSegmentEraserEnabled = toolbarState.isSegmentEraserEnabled,
                             onDismiss = { activeToolPanel = null },
                             onBrushChange = toolbarState.onBrushChange,
+                            onSegmentEraserEnabledChange = toolbarState.onSegmentEraserEnabledChange,
                         )
                     }
                 }
@@ -608,6 +612,24 @@ internal fun EditorToolbar(
                 contentDescription = "Mode controls",
                 modifier = Modifier.width(NOTEWISE_RIGHT_GROUP_WIDTH_DP.dp),
             ) {
+                IconButton(
+                    onClick = topBarState.onToggleRecognitionOverlay,
+                    modifier =
+                        Modifier.semantics {
+                            contentDescription =
+                                if (topBarState.isRecognitionOverlayEnabled) {
+                                    "Recognition overlay on"
+                                } else {
+                                    "Recognition overlay off"
+                                }
+                        },
+                ) {
+                    Icon(
+                        imageVector = if (topBarState.isRecognitionOverlayEnabled) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                        contentDescription = null,
+                        tint = if (topBarState.isRecognitionOverlayEnabled) NOTEWISE_SELECTED else NOTEWISE_ICON,
+                    )
+                }
                 IconButton(
                     onClick = topBarState.onToggleReadOnly,
                     modifier =
@@ -910,11 +932,14 @@ private fun TemplateSettingsPanel(
                     onClick = {
                         val newSpacing =
                             when (kind) {
-                                "blank" -> 0f
-                                "grid" -> 24f
-                                "lined" -> 24f
-                                "dotted" -> 24f
-                                else -> templateState.spacing
+                                "blank" -> {
+                                    0f
+                                }
+
+                                else -> {
+                                    val range = spacingRangeForTemplate(kind)
+                                    templateState.spacing.coerceIn(range.start, range.endInclusive)
+                                }
                             }
                         onTemplateChange(
                             templateState.copy(
@@ -947,14 +972,16 @@ private fun TemplateSettingsPanel(
             }
 
             if (templateState.backgroundKind != "blank") {
+                val spacingRange = spacingRangeForTemplate(templateState.backgroundKind)
                 HorizontalDivider()
-                Text(text = "Spacing", style = MaterialTheme.typography.bodyMedium)
+                Text(text = "Density", style = MaterialTheme.typography.bodyMedium)
                 Slider(
-                    value = templateState.spacing,
+                    value = templateState.spacing.coerceIn(spacingRange.start, spacingRange.endInclusive),
                     onValueChange = { spacing ->
-                        onTemplateChange(templateState.copy(spacing = spacing))
+                        val bounded = spacing.coerceIn(spacingRange.start, spacingRange.endInclusive)
+                        onTemplateChange(templateState.copy(spacing = bounded))
                     },
-                    valueRange = 12f..48f,
+                    valueRange = spacingRange,
                 )
             }
 

@@ -3,6 +3,7 @@
 package com.onyx.android.ui
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,6 +22,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,7 +54,6 @@ private const val THUMBNAIL_UNSELECTED_BORDER_WIDTH_DP = 1
  */
 data class ThumbnailItem(
     val pageIndex: Int,
-    val bitmap: Bitmap?,
     val aspectRatio: Float,
 )
 
@@ -68,6 +70,7 @@ fun ThumbnailStrip(
     thumbnails: List<ThumbnailItem>,
     currentPageIndex: Int,
     onPageSelected: (Int) -> Unit,
+    loadThumbnail: suspend (Int) -> Bitmap?,
     modifier: Modifier = Modifier,
 ) {
     if (thumbnails.isEmpty()) return
@@ -107,6 +110,7 @@ fun ThumbnailStrip(
                 ThumbnailItem(
                     thumbnail = thumbnail,
                     isSelected = thumbnail.pageIndex == currentPageIndex,
+                    loadThumbnail = loadThumbnail,
                     onClick = { onPageSelected(thumbnail.pageIndex) },
                 )
             }
@@ -121,6 +125,7 @@ fun ThumbnailStrip(
 private fun ThumbnailItem(
     thumbnail: ThumbnailItem,
     isSelected: Boolean,
+    loadThumbnail: suspend (Int) -> Bitmap?,
     onClick: () -> Unit,
 ) {
     val borderWidth = if (isSelected) THUMBNAIL_SELECTED_BORDER_WIDTH_DP.dp else THUMBNAIL_UNSELECTED_BORDER_WIDTH_DP.dp
@@ -128,6 +133,11 @@ private fun ThumbnailItem(
 
     val thumbnailHeight = THUMBNAIL_STRIP_HEIGHT_DP - 2 * THUMBNAIL_STRIP_VERTICAL_PADDING_DP
     val thumbnailWidth = (thumbnailHeight / thumbnail.aspectRatio).coerceAtLeast(30f)
+
+    val bitmap by
+        produceState<Bitmap?>(initialValue = null, key1 = thumbnail.pageIndex) {
+            value = loadThumbnail(thumbnail.pageIndex)
+        }
 
     Box(
         modifier =
@@ -140,18 +150,16 @@ private fun ThumbnailItem(
                     width = borderWidth,
                     color = borderColor,
                     shape = RoundedCornerShape(THUMBNAIL_CORNER_RADIUS_DP.dp),
-                )
-                .clickable(onClick = onClick)
+                ).clickable(onClick = onClick)
                 .semantics {
                     contentDescription = "Page ${thumbnail.pageIndex + 1}"
-                }
-                .padding(THUMBNAIL_PADDING_DP.dp),
+                }.padding(THUMBNAIL_PADDING_DP.dp),
         contentAlignment = Alignment.Center,
     ) {
-        thumbnail.bitmap?.let { bitmap ->
-            if (!bitmap.isRecycled) {
-                androidx.compose.foundation.Image(
-                    bitmap = bitmap.asImageBitmap(),
+        bitmap?.let { imageBitmap ->
+            if (!imageBitmap.isRecycled) {
+                Image(
+                    bitmap = imageBitmap.asImageBitmap(),
                     contentDescription = null,
                     modifier =
                         Modifier

@@ -1,1 +1,1 @@
-C:\onyx\apps\android\app\src\main\cpp\CMakeLists.txt
+/home/gamer/onyx/apps/android/app/src/main/cpp/CMakeLists.txt

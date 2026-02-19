@@ -47,7 +47,10 @@ class NoteEditorReadOnlyModeTest {
 
         composeRule.onNodeWithContentDescription("Editor viewport").performTouchInput {
             down(center)
-            moveBy(androidx.compose.ui.geometry.Offset(40f, 60f))
+            moveBy(
+                androidx.compose.ui.geometry
+                    .Offset(40f, 60f),
+            )
             up()
         }
 
@@ -79,6 +82,8 @@ private fun defaultTopBarState(): NoteEditorTopBarState =
         onRedo = {},
         onToggleReadOnly = {},
         onOpenOutline = {},
+        isRecognitionOverlayEnabled = false,
+        onToggleRecognitionOverlay = {},
     )
 
 private fun defaultToolbarState(): NoteEditorToolbarState =
@@ -86,7 +91,9 @@ private fun defaultToolbarState(): NoteEditorToolbarState =
         brush = Brush(tool = Tool.PEN),
         lastNonEraserTool = Tool.PEN,
         isStylusButtonEraserActive = false,
+        templateState = PageTemplateState.BLANK,
         onBrushChange = {},
+        onTemplateChange = {},
     )
 
 private fun defaultContentState(
@@ -117,6 +124,11 @@ private fun defaultContentState(
         interactionMode = InteractionMode.DRAW,
         thumbnails = emptyList(),
         currentPageIndex = 0,
+        templateState = PageTemplateState.BLANK,
+        isRecognitionOverlayEnabled = false,
+        recognitionText = null,
+        convertedTextBlocks = emptyList(),
+        onConvertedTextBlockSelected = {},
         onStrokeFinished = { onStrokeFinished() },
         onStrokeErased = { onStrokeErased() },
         onStylusButtonEraserActiveChanged = {},
@@ -124,4 +136,5 @@ private fun defaultContentState(
         onPanGestureEnd = { _, _ -> },
         onViewportSizeChanged = { _: IntSize -> },
         onPageSelected = {},
+        onTemplateChange = {},
     )

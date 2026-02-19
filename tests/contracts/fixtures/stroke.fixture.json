@@ -1,0 +1,20 @@
+{
+  "strokeId": "770e8400-e29b-41d4-a716-446655440002",
+  "pageId": "660e8400-e29b-41d4-a716-446655440001",
+  "style": {
+    "tool": "pen",
+    "color": "#000000",
+    "baseWidth": 2.0,
+    "minWidthFactor": 0.5,
+    "maxWidthFactor": 1.5,
+    "nibRotation": false
+  },
+  "bounds": {
+    "x": 100.5,
+    "y": 200.25,
+    "w": 150.0,
+    "h": 75.5
+  },
+  "createdAt": 1708387200000,
+  "createdLamport": 1
+}

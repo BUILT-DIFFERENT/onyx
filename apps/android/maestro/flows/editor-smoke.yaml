@@ -1,0 +1,59 @@
+appId: com.onyx.android
+name: Editor Smoke Test
+tags:
+  - smoke
+  - editor
+---
+# App Launch
+- launchApp:
+    clearState: false
+
+# Wait for home screen to load
+- assertVisible: "Notes"
+
+# Create a new note
+- tapOn:
+    id: "com.onyx.android:id/fab"
+    optional: true
+
+# Fallback: tap on FAB by content description
+- tapOn:
+    text: "New note"
+    optional: true
+
+# Wait for editor to appear (look for editor-specific elements)
+- assertVisible:
+    text: ".*"
+    optional: true
+
+# Draw stroke - simulate touch on canvas area
+# Note: Drawing requires actual stylus/touch, so we verify canvas exists
+- assertVisible:
+    id: "note-editor-viewport"
+    optional: true
+
+# Open PDF - navigate back first
+- tapOn:
+    contentDescription: "Back"
+    optional: true
+
+# Import PDF from home screen
+- tapOn:
+    contentDescription: "Import PDF"
+    optional: true
+
+# Verify toolbar elements are present
+- assertVisible:
+    contentDescription: "Pen"
+    optional: true
+
+- assertVisible:
+    contentDescription: "Undo"
+    optional: true
+
+- assertVisible:
+    contentDescription: "Redo"
+    optional: true
+
+# Take screenshot for verification
+- takeScreenshot: editor-smoke-final

@@ -1,0 +1,61 @@
+import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { NoteSchema, PageSchema, StrokeSchema } from '@onyx/validation';
+
+const fixturesDir = join(__dirname, '../fixtures');
+
+describe('Contract Fixtures Validation', () => {
+  describe('NoteSchema', () => {
+    it('validates note.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'note.fixture.json'), 'utf-8'));
+      // Using .parse() throws on invalid schema
+      const result = NoteSchema.parse(fixture);
+      expect(result.noteId).toBeDefined();
+      expect(result.ownerUserId).toBeDefined();
+      expect(result.title).toBeDefined();
+      expect(result.createdAt).toBeTypeOf('number');
+      expect(result.updatedAt).toBeTypeOf('number');
+      // deletedAt should be absent (not deleted)
+      expect(result.deletedAt).toBeUndefined();
+    });
+  });
+
+  describe('PageSchema', () => {
+    it('validates page.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'page.fixture.json'), 'utf-8'));
+      // Using .parse() throws on invalid schema
+      const result = PageSchema.parse(fixture);
+      expect(result.pageId).toBeDefined();
+      expect(result.noteId).toBeDefined();
+      expect(result.kind).toBe('ink');
+      expect(result.geometryKind).toBe('fixed');
+      expect(result.width).toBeTypeOf('number');
+      expect(result.height).toBeTypeOf('number');
+      expect(result.unit).toBe('pt');
+      expect(result.contentLamportMax).toBeTypeOf('number');
+      expect(result.updatedAt).toBeTypeOf('number');
+    });
+  });
+
+  describe('StrokeSchema', () => {
+    it('validates stroke.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'stroke.fixture.json'), 'utf-8'));
+      // Using .parse() throws on invalid schema
+      const result = StrokeSchema.parse(fixture);
+      expect(result.strokeId).toBeDefined();
+      expect(result.pageId).toBeDefined();
+      expect(result.style).toBeDefined();
+      expect(result.style.tool).toBe('pen');
+      expect(result.style.color).toBe('#000000');
+      expect(result.style.baseWidth).toBeTypeOf('number');
+      expect(result.bounds).toBeDefined();
+      expect(result.bounds.x).toBeTypeOf('number');
+      expect(result.bounds.y).toBeTypeOf('number');
+      expect(result.bounds.w).toBeTypeOf('number');
+      expect(result.bounds.h).toBeTypeOf('number');
+      expect(result.createdAt).toBeTypeOf('number');
+      expect(result.createdLamport).toBeTypeOf('number');
+    });
+  });
+});

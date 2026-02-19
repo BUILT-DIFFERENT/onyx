@@ -29,3 +29,30 @@ jobs:
         run: bun run e2e
       - name: Deploy (placeholder)
         run: echo "TODO: deploy Convex + web"
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses || true
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install dependencies
+        run: bun install
+      - name: Android Lint
+        run: bun run android:lint
+      - name: Android Unit Tests
+        run: bun run android:test
+      - name: ktlint
+        run: bun run ktlint
+      - name: detekt
+        run: bun run detekt

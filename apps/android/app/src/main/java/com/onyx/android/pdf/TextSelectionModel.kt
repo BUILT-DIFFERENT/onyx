@@ -8,6 +8,7 @@ import kotlin.math.min
 private const val EPSILON = 0.0001f
 private const val MIN_INDEX = 0
 private const val INDEX_OFFSET = 1
+private const val HANDLE_HIT_PADDING_POINTS = 3f
 
 data class PdfTextQuad(
     val p1: PointF,
@@ -27,9 +28,7 @@ data class PdfTextSelection(
     val text: String,
 )
 
-interface PdfTextExtractor {
-    suspend fun getCharacters(pageIndex: Int): List<PdfTextChar>
-}
+typealias PdfTextExtractor = PdfTextEngine
 
 internal fun findPdfTextCharIndexAtPagePoint(
     characters: List<PdfTextChar>,
@@ -41,6 +40,47 @@ internal fun findPdfTextCharIndexAtPagePoint(
             char.quad.contains(pageX, pageY)
         }
     return if (hitIndex >= MIN_INDEX) hitIndex else null
+}
+
+@Suppress("ReturnCount")
+internal fun findNearestPdfTextCharIndex(
+    characters: List<PdfTextChar>,
+    pageX: Float,
+    pageY: Float,
+): Int? {
+    if (characters.isEmpty()) {
+        return null
+    }
+
+    val directHit =
+        characters.indexOfFirst { char ->
+            char.quad.contains(pageX, pageY)
+        }
+    if (directHit >= MIN_INDEX) {
+        return directHit
+    }
+
+    val expandedHit =
+        characters.indexOfFirst { char ->
+            char.quad.containsWithPadding(pageX, pageY, HANDLE_HIT_PADDING_POINTS)
+        }
+    if (expandedHit >= MIN_INDEX) {
+        return expandedHit
+    }
+
+    var nearestIndex = MIN_INDEX
+    var nearestDistance = Float.MAX_VALUE
+    characters.forEachIndexed { index, char ->
+        val center = char.quad.center()
+        val dx = center.x - pageX
+        val dy = center.y - pageY
+        val distance = (dx * dx) + (dy * dy)
+        if (distance < nearestDistance) {
+            nearestDistance = distance
+            nearestIndex = index
+        }
+    }
+    return nearestIndex
 }
 
 internal fun buildPdfTextSelection(
@@ -87,3 +127,21 @@ internal fun PdfTextQuad.contains(
     }
     return true
 }
+
+private fun PdfTextQuad.containsWithPadding(
+    x: Float,
+    y: Float,
+    padding: Float,
+): Boolean {
+    val minX = minOf(p1.x, p2.x, p3.x, p4.x) - padding
+    val maxX = maxOf(p1.x, p2.x, p3.x, p4.x) + padding
+    val minY = minOf(p1.y, p2.y, p3.y, p4.y) - padding
+    val maxY = maxOf(p1.y, p2.y, p3.y, p4.y) + padding
+    return x in minX..maxX && y in minY..maxY
+}
+
+internal fun PdfTextQuad.center(): PointF =
+    pointF(
+        x = (p1.x + p2.x + p3.x + p4.x) * 0.25f,
+        y = (p1.y + p2.y + p3.y + p4.y) * 0.25f,
+    )

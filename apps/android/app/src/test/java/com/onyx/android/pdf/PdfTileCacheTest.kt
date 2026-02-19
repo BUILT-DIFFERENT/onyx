@@ -6,8 +6,10 @@ import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -227,6 +229,86 @@ class PdfTileCacheTest {
                     tile.getBitmapIfValid()
                 }
             }
+        }
+
+    @Test
+    fun `eviction waits for active draw lease before recycle`() =
+        runTest {
+            val recycledBitmaps = mutableListOf<Bitmap>()
+            val cache = PdfTileCache(maxSizeBytes = 180, recycleBitmap = { recycledBitmaps.add(it) })
+            val key1 = PdfTileKey(pageIndex = 0, tileX = 0, tileY = 0, scaleBucket = 1f)
+            val key2 = PdfTileKey(pageIndex = 0, tileX = 1, tileY = 0, scaleBucket = 1f)
+            val bitmap1 = fakeBitmap(byteCount = 100)
+            val bitmap2 = fakeBitmap(byteCount = 120)
+
+            val tile = cache.putTile(key1, bitmap1)
+            val lease = tile.acquireBitmapForUse()
+            assertNotNull(lease)
+
+            cache.putTile(key2, bitmap2)
+            assertFalse(recycledBitmaps.contains(bitmap1))
+
+            lease!!.close()
+            assertTrue(recycledBitmaps.contains(bitmap1))
+            assertTrue(cache.sizeBytes() <= cache.maxSizeBytes())
+        }
+
+    @Test
+    fun `concurrent eviction and cancellation overlap stays within budget without crashes`() =
+        runTest {
+            val recycledBitmaps = mutableListOf<Bitmap>()
+            val cache = PdfTileCache(maxSizeBytes = 1024, recycleBitmap = { recycledBitmaps.add(it) })
+
+            repeat(12) { i ->
+                val seedKey = PdfTileKey(pageIndex = 0, tileX = i, tileY = 0, scaleBucket = 1f)
+                cache.putTile(seedKey, fakeBitmap(byteCount = 90))
+            }
+
+            val workers =
+                (0 until 16).map { workerIndex ->
+                    launch {
+                        repeat(80) { step ->
+                            val key =
+                                PdfTileKey(
+                                    pageIndex = 0,
+                                    tileX = (workerIndex + step) % 24,
+                                    tileY = (workerIndex + step) / 12,
+                                    scaleBucket = 1f,
+                                )
+                            if (step % 3 == 0) {
+                                cache.putTile(key, fakeBitmap(byteCount = 96))
+                            } else {
+                                val tile = cache.getTile(key)
+                                val lease = tile?.acquireBitmapForUse()
+                                if (lease != null) {
+                                    try {
+                                        assertFalse(lease.bitmap.isRecycled)
+                                    } finally {
+                                        lease.close()
+                                    }
+                                }
+                            }
+                            if (step % 5 == 0) {
+                                yield()
+                            }
+                        }
+                    }
+                }
+
+            val cancellationJob =
+                launch {
+                    workers.forEachIndexed { index, job ->
+                        if (index % 2 == 0) {
+                            job.cancel()
+                        }
+                        yield()
+                    }
+                }
+
+            workers.joinAll()
+            cancellationJob.join()
+
+            assertTrue(cache.sizeBytes() <= cache.maxSizeBytes())
         }
 }
 

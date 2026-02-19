@@ -5,12 +5,15 @@ package com.onyx.android.ink.ui
 import android.view.MotionEvent
 import android.view.VelocityTracker
 import androidx.ink.authoring.InProgressStrokesView
+import com.onyx.android.ink.model.Tool
 import kotlin.math.hypot
 
 private const val MIN_ZOOM_CHANGE = 0.5f
 private const val MAX_ZOOM_CHANGE = 2.0f
 private const val PAN_FLING_MIN_VELOCITY_PX_PER_SECOND = 250f
 private const val PAN_VELOCITY_UNITS_PER_SECOND = 1000
+private const val LASSO_ZOOM_EPSILON = 0.001f
+private const val MIN_ZOOM_FOR_PAGE_DELTA = 0.001f
 
 private data class TwoPointerTransform(
     val centroidX: Float,
@@ -88,7 +91,9 @@ internal fun handleSingleFingerPanGesture(
             true
         }
 
-        else -> runtime.isSingleFingerPanning
+        else -> {
+            runtime.isSingleFingerPanning
+        }
     }
 
 internal fun handleTransformGesture(
@@ -140,7 +145,9 @@ internal fun handleTransformGesture(
             true
         }
 
-        else -> runtime.isTransforming
+        else -> {
+            runtime.isTransforming
+        }
     }
 
 private fun startTransformGesture(
@@ -172,13 +179,24 @@ private fun updateTransformGesture(
             )
         val panChangeX = transform.centroidX - runtime.previousTransformCentroidX
         val panChangeY = transform.centroidY - runtime.previousTransformCentroidY
-        interaction.onTransformGesture(
-            zoomChange,
-            panChangeX,
-            panChangeY,
-            transform.centroidX,
-            transform.centroidY,
-        )
+        if (interaction.brush.tool == Tool.LASSO && interaction.lassoSelection.hasSelection) {
+            val zoom = interaction.viewTransform.zoom.coerceAtLeast(MIN_ZOOM_FOR_PAGE_DELTA)
+            if (panChangeX != 0f || panChangeY != 0f) {
+                interaction.onLassoMove(panChangeX / zoom, panChangeY / zoom)
+            }
+            if (kotlin.math.abs(zoomChange - 1f) > LASSO_ZOOM_EPSILON) {
+                val pivot = interaction.lassoSelection.transformCenter
+                interaction.onLassoResize(zoomChange, pivot.first, pivot.second)
+            }
+        } else {
+            interaction.onTransformGesture(
+                zoomChange,
+                panChangeX,
+                panChangeY,
+                transform.centroidX,
+                transform.centroidY,
+            )
+        }
     }
     addCentroidMovementToVelocityTracker(transform, event.eventTime, runtime)
     runtime.previousTransformDistance = transform.distance
@@ -232,13 +250,18 @@ private fun updateSingleFingerPanGesture(
     val y = event.getY(pointerIndex)
     val panChangeX = x - runtime.previousSingleFingerPanX
     val panChangeY = y - runtime.previousSingleFingerPanY
-    interaction.onTransformGesture(
-        1f,
-        panChangeX,
-        panChangeY,
-        x,
-        y,
-    )
+    if (interaction.brush.tool == Tool.LASSO && interaction.lassoSelection.hasSelection) {
+        val zoom = interaction.viewTransform.zoom.coerceAtLeast(MIN_ZOOM_FOR_PAGE_DELTA)
+        interaction.onLassoMove(panChangeX / zoom, panChangeY / zoom)
+    } else {
+        interaction.onTransformGesture(
+            1f,
+            panChangeX,
+            panChangeY,
+            x,
+            y,
+        )
+    }
     runtime.previousSingleFingerPanX = x
     runtime.previousSingleFingerPanY = y
     runtime.panVelocityTracker?.addMovement(event)

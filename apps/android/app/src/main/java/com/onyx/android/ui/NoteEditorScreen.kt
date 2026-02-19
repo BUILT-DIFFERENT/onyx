@@ -34,10 +34,18 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.data.repository.EditorSettings
+import com.onyx.android.data.repository.PageTemplateConfig
 import com.onyx.android.ink.model.Brush
+import com.onyx.android.ink.model.LassoSelection
+import com.onyx.android.ink.model.SpatialIndex
+import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.TransformGesture
+import com.onyx.android.ink.ui.calculateSelectionBounds
+import com.onyx.android.ink.ui.findStrokesInLasso
+import com.onyx.android.ink.ui.moveStrokes
+import com.onyx.android.ink.ui.resizeStrokes
 import com.onyx.android.pdf.OutlineItem
 import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfDocumentRenderer
@@ -48,6 +56,7 @@ import com.onyx.android.pdf.openPdfDocumentRenderer
 import com.onyx.android.pdf.renderThumbnail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.exp
@@ -62,6 +71,10 @@ private const val PDF_PASSWORD_INCORRECT_MESSAGE = "Incorrect PDF password. Plea
 private const val ENABLE_STACKED_PAGES = true
 private const val STACKED_DOCUMENT_MIN_ZOOM = 1f
 private const val STACKED_DOCUMENT_MAX_ZOOM = 4f
+private const val SEARCH_HIGHLIGHT_CLEAR_DELAY_MS = 4000L
+private const val MIN_LASSO_POLYGON_POINTS = 3
+private const val MIN_LASSO_SCALE = 0.2f
+private const val MAX_LASSO_SCALE = 5f
 
 internal sealed interface PdfOpenFailureUiAction {
     data class PromptForPassword(
@@ -145,12 +158,17 @@ private fun NoteEditorScreenContent(
 ) {
     val errorMessage by viewModel.errorMessage.collectAsState()
     val editorSettings by viewModel.editorSettings.collectAsState()
+    val conversionDraft by viewModel.conversionDraft.collectAsState()
     var pdfPasswordPrompt by remember { mutableStateOf<EditorPdfPasswordPromptState?>(null) }
     var pdfPasswordInput by rememberSaveable { mutableStateOf("") }
     var pdfOpenErrorMessage by rememberSaveable { mutableStateOf<String?>(null) }
     var pdfOpenRetryNonce by rememberSaveable { mutableStateOf(0) }
     var showOutlineSheet by rememberSaveable { mutableStateOf(false) }
     var outlineItems by remember { mutableStateOf<List<OutlineItem>>(emptyList()) }
+    var conversionText by rememberSaveable { mutableStateOf("") }
+    LaunchedEffect(conversionDraft?.pageId, conversionDraft?.editingBlockId) {
+        conversionText = conversionDraft?.initialText.orEmpty()
+    }
     if (ENABLE_STACKED_PAGES) {
         val uiState =
             rememberMultiPageUiState(
@@ -265,6 +283,45 @@ private fun NoteEditorScreenContent(
             onDismiss = viewModel::clearError,
         )
     }
+    if (conversionDraft != null) {
+        NoteEditorTextConversionDialog(
+            text = conversionText,
+            onTextChange = { updated -> conversionText = updated },
+            onDismiss = viewModel::dismissConversionDraft,
+            onSave = { viewModel.commitConversionDraft(conversionText) },
+        )
+    }
+}
+
+@Composable
+private fun NoteEditorTextConversionDialog(
+    text: String,
+    onTextChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onSave: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Convert to text") },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = onTextChange,
+                label = { Text("Editable text") },
+                minLines = 3,
+            )
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        confirmButton = {
+            Button(onClick = onSave) {
+                Text("Save")
+            }
+        },
+    )
 }
 
 @Composable
@@ -345,13 +402,19 @@ private fun rememberNoteEditorUiState(
             onSettingsChange = onEditorSettingsChange,
         )
     val pageState = rememberPageState(viewModel)
+    val recognitionOverlayEnabled by viewModel.recognitionOverlayEnabled.collectAsState()
+    val recognizedTextByPage by viewModel.recognizedTextByPage.collectAsState()
+    val convertedTextBlocksByPage by viewModel.convertedTextBlocksByPage.collectAsState()
     val undoController = remember(viewModel) { UndoController(viewModel, MAX_UNDO_ACTIONS) }
     var isReadOnly by rememberSaveable { mutableStateOf(false) }
     var isTextSelectionMode by rememberSaveable { mutableStateOf(false) }
     var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
-    var templateState by rememberSaveable { mutableStateOf(PageTemplateState.BLANK) }
+    var isSegmentEraserEnabled by rememberSaveable { mutableStateOf(false) }
+    var lassoSelection by remember { mutableStateOf(LassoSelection()) }
+    val templateConfig by viewModel.currentTemplateConfig.collectAsState()
+    val templateState = remember(templateConfig) { templateConfig.toUiState() }
     var panFlingJob by remember { mutableStateOf<Job?>(null) }
     val coroutineScope = rememberCoroutineScope()
     val viewportWidth = viewportSize.width.toFloat()
@@ -405,6 +468,7 @@ private fun rememberNoteEditorUiState(
     LaunchedEffect(pageState.currentPage?.pageId) {
         isStylusButtonEraserActive = false
         isTextSelectionMode = false
+        lassoSelection = LassoSelection()
     }
     val topBarState =
         buildTopBarState(
@@ -434,15 +498,21 @@ private fun rememberNoteEditorUiState(
                     viewModel.navigateBy(offset)
                 }
             },
+            isRecognitionOverlayEnabled = recognitionOverlayEnabled,
+            onToggleRecognitionOverlay = viewModel::toggleRecognitionOverlay,
         )
     val toolbarState =
         buildToolbarState(
             brushState.activeBrush,
             brushState.lastNonEraserTool,
             isStylusButtonEraserActive,
+            isSegmentEraserEnabled,
             templateState,
             brushState.onBrushChange,
-            { templateState = it },
+            { isSegmentEraserEnabled = it },
+            {
+                viewModel.updateCurrentPageTemplate(it.toConfig())
+            },
         )
     val onTransformGesture: (Float, Float, Float, Float, Float) -> Unit =
         { zoomChange, panChangeX, panChangeY, centroidX, centroidY ->
@@ -561,21 +631,77 @@ private fun rememberNoteEditorUiState(
             strokes = pageState.strokes,
             brush = brushState.activeBrush,
             isStylusButtonEraserActive = isStylusButtonEraserActive,
+            isSegmentEraserEnabled = isSegmentEraserEnabled,
             interactionMode = if (isTextSelectionMode) InteractionMode.TEXT_SELECTION else InteractionMode.DRAW,
             allowCanvasFingerGestures = true,
             thumbnails = thumbnails,
             currentPageIndex = pageState.currentPageIndex,
             templateState = templateState,
+            lassoSelection = lassoSelection,
             isTextSelectionEnabled = isTextSelectionMode,
+            isRecognitionOverlayEnabled = recognitionOverlayEnabled,
+            recognitionText = pageState.currentPage?.pageId?.let { pageId -> recognizedTextByPage[pageId] },
+            convertedTextBlocks =
+                pageState.currentPage
+                    ?.pageId
+                    ?.let { pageId ->
+                        convertedTextBlocksByPage[pageId].orEmpty()
+                    }.orEmpty(),
+            onConvertedTextBlockSelected = { block ->
+                pageState.currentPage?.pageId?.let { pageId ->
+                    viewModel.startConversionDraftFromBlock(pageId, block)
+                }
+            },
             loadThumbnail = loadThumbnail,
-            onStrokeFinished = strokeCallbacks.onStrokeFinished,
+            onStrokeFinished = { stroke ->
+                pageState.currentPage?.pageId?.let { pageId ->
+                    if (stroke.style.tool == Tool.LASSO) {
+                        lassoSelection = resolveLassoSelection(stroke, pageState.strokes)
+                    } else {
+                        strokeCallbacks.onStrokeFinished(stroke)
+                    }
+                }
+            },
             onStrokeErased = strokeCallbacks.onStrokeErased,
+            onStrokeSplit = { original, segments ->
+                pageState.currentPage?.pageId?.let { pageId ->
+                    strokeCallbacks.onStrokeSplit(original, segments, pageId)
+                }
+            },
+            onSegmentEraserEnabledChange = { isSegmentEraserEnabled = it },
+            onLassoMove = { deltaX, deltaY ->
+                val pageId = pageState.currentPage?.pageId
+                if (pageId != null) {
+                    lassoSelection =
+                        applyLassoMove(
+                            undoController = undoController,
+                            pageId = pageId,
+                            pageStrokes = pageState.strokes,
+                            selection = lassoSelection,
+                            deltaX = deltaX,
+                            deltaY = deltaY,
+                        )
+                }
+            },
+            onLassoResize = { scale, _, _ ->
+                val pageId = pageState.currentPage?.pageId
+                if (pageId != null) {
+                    lassoSelection =
+                        applyLassoResize(
+                            undoController = undoController,
+                            pageId = pageId,
+                            pageStrokes = pageState.strokes,
+                            selection = lassoSelection,
+                            scale = scale,
+                        )
+                }
+            },
             onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
             onTransformGesture = onTransformGesture,
             onPanGestureEnd = onPanGestureEnd,
             onViewportSizeChanged = { viewportSize = it },
             onPageSelected = { targetIndex -> viewModel.navigateBy(targetIndex - pageState.currentPageIndex) },
-            onTemplateChange = { templateState = it },
+            onTemplateChange = { state -> viewModel.updateCurrentPageTemplate(state.toConfig()) },
         )
 
     return NoteEditorUiState(
@@ -626,7 +752,11 @@ private fun rememberMultiPageUiState(
     var isTextSelectionMode by rememberSaveable { mutableStateOf(false) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
-    var templateState by rememberSaveable { mutableStateOf(PageTemplateState.BLANK) }
+    var isSegmentEraserEnabled by rememberSaveable { mutableStateOf(false) }
+    val lassoSelectionsByPageId = remember { mutableStateMapOf<String, LassoSelection>() }
+    val templateConfigByPageId by viewModel.templateConfigByPageId.collectAsState()
+    val currentTemplateConfig by viewModel.currentTemplateConfig.collectAsState()
+    val templateState = remember(currentTemplateConfig) { currentTemplateConfig.toUiState() }
     var documentZoom by rememberSaveable { mutableStateOf(1f) }
     var documentPanX by rememberSaveable { mutableStateOf(0f) }
     var immediateVisibleRange by
@@ -634,6 +764,10 @@ private fun rememberMultiPageUiState(
             mutableStateOf(pageState.currentPageIndex..pageState.currentPageIndex)
         }
     val pageStrokesCache by viewModel.pageStrokesCache.collectAsState()
+    val recognitionOverlayEnabled by viewModel.recognitionOverlayEnabled.collectAsState()
+    val recognizedTextByPage by viewModel.recognizedTextByPage.collectAsState()
+    val convertedTextBlocksByPage by viewModel.convertedTextBlocksByPage.collectAsState()
+    val searchHighlightBounds by viewModel.searchHighlightBounds.collectAsState()
     val pageById = remember(pageState.pages) { pageState.pages.associateBy { it.pageId } }
     val viewportWidth = viewportSize.width.toFloat()
 
@@ -677,6 +811,12 @@ private fun rememberMultiPageUiState(
         isStylusButtonEraserActive = false
         isTextSelectionMode = false
     }
+    LaunchedEffect(searchHighlightBounds) {
+        if (searchHighlightBounds != null) {
+            delay(SEARCH_HIGHLIGHT_CLEAR_DELAY_MS)
+            viewModel.clearSearchHighlight()
+        }
+    }
 
     val pages =
         pageState.pages.mapIndexed { index, page ->
@@ -709,7 +849,25 @@ private fun rememberMultiPageUiState(
                 isPdfPage = page.kind == "pdf" || page.kind == "mixed",
                 isVisible = index in immediateVisibleRange,
                 renderTransform = renderTransform,
-                templateState = templateState,
+                templateState =
+                    templateConfigByPageId[page.pageId]
+                        ?.toUiState()
+                        ?: PageTemplateState.BLANK,
+                lassoSelection = lassoSelectionsByPageId[page.pageId] ?: LassoSelection(),
+                searchHighlightBounds =
+                    if (
+                        searchHighlightBounds != null &&
+                        (
+                            page.pageId == viewModel.searchHighlightPageId ||
+                                page.indexInNote == viewModel.searchHighlightPageIndex
+                        )
+                    ) {
+                        searchHighlightBounds
+                    } else {
+                        null
+                    },
+                recognitionText = recognizedTextByPage[page.pageId],
+                convertedTextBlocks = convertedTextBlocksByPage[page.pageId].orEmpty(),
             )
         }
 
@@ -739,15 +897,21 @@ private fun rememberMultiPageUiState(
                     viewModel.navigateBy(offset)
                 }
             },
+            isRecognitionOverlayEnabled = recognitionOverlayEnabled,
+            onToggleRecognitionOverlay = viewModel::toggleRecognitionOverlay,
         )
     val toolbarState =
         buildToolbarState(
             brushState.activeBrush,
             brushState.lastNonEraserTool,
             isStylusButtonEraserActive,
+            isSegmentEraserEnabled,
             templateState,
             brushState.onBrushChange,
-            { templateState = it },
+            { isSegmentEraserEnabled = it },
+            { state ->
+                viewModel.updateCurrentPageTemplate(state.toConfig())
+            },
         )
 
     val thumbnailCache = remember(pdfRenderer) { mutableStateMapOf<Int, android.graphics.Bitmap?>() }
@@ -788,6 +952,7 @@ private fun rememberMultiPageUiState(
             isReadOnly = isReadOnly,
             brush = brushState.activeBrush,
             isStylusButtonEraserActive = isStylusButtonEraserActive,
+            isSegmentEraserEnabled = isSegmentEraserEnabled,
             interactionMode = if (isTextSelectionMode) InteractionMode.TEXT_SELECTION else InteractionMode.SCROLL,
             pdfRenderer = pdfRenderer,
             firstVisiblePageIndex = pageState.currentPageIndex,
@@ -797,16 +962,58 @@ private fun rememberMultiPageUiState(
             maxDocumentZoom = STACKED_DOCUMENT_MAX_ZOOM,
             thumbnails = thumbnails,
             templateState = templateState,
+            lassoSelectionsByPageId = lassoSelectionsByPageId,
             isTextSelectionEnabled = isTextSelectionMode,
+            isRecognitionOverlayEnabled = recognitionOverlayEnabled,
+            onConvertedTextBlockSelected = { pageId, block ->
+                viewModel.startConversionDraftFromBlock(pageId, block)
+            },
             loadThumbnail = loadThumbnail,
             onStrokeFinished = { stroke, pageId ->
                 val page = pageById[pageId]
                 viewModel.setActiveRecognitionPage(pageId)
-                undoController.onStrokeFinished(stroke, page)
+                if (stroke.style.tool == Tool.LASSO) {
+                    lassoSelectionsByPageId[pageId] = resolveLassoSelection(stroke, pageStrokesCache[pageId].orEmpty())
+                } else {
+                    undoController.onStrokeFinished(stroke, page)
+                }
             },
             onStrokeErased = { stroke, pageId ->
                 undoController.onStrokeErased(stroke, pageId)
             },
+            onStrokeSplit = { original, segments, pageId ->
+                undoController.onStrokeSplit(original, segments, pageId)
+            },
+            onLassoMove = { pageId, deltaX, deltaY ->
+                val currentSelection = lassoSelectionsByPageId[pageId]
+                if (currentSelection != null) {
+                    val pageStrokes = pageStrokesCache[pageId].orEmpty()
+                    lassoSelectionsByPageId[pageId] =
+                        applyLassoMove(
+                            undoController = undoController,
+                            pageId = pageId,
+                            pageStrokes = pageStrokes,
+                            selection = currentSelection,
+                            deltaX = deltaX,
+                            deltaY = deltaY,
+                        )
+                }
+            },
+            onLassoResize = { pageId, scale, _, _ ->
+                val currentSelection = lassoSelectionsByPageId[pageId]
+                if (currentSelection != null) {
+                    val pageStrokes = pageStrokesCache[pageId].orEmpty()
+                    lassoSelectionsByPageId[pageId] =
+                        applyLassoResize(
+                            undoController = undoController,
+                            pageId = pageId,
+                            pageStrokes = pageStrokes,
+                            selection = currentSelection,
+                            scale = scale,
+                        )
+                }
+            },
+            onSegmentEraserEnabledChange = { isSegmentEraserEnabled = it },
             onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
             onTransformGesture = { _, _, _, _, _ -> },
             onPanGestureEnd = { _, _ -> },
@@ -841,7 +1048,7 @@ private fun rememberMultiPageUiState(
             onPageSelected = { targetIndex ->
                 viewModel.navigateBy(targetIndex - pageState.currentPageIndex)
             },
-            onTemplateChange = { templateState = it },
+            onTemplateChange = { state -> viewModel.updateCurrentPageTemplate(state.toConfig()) },
         )
 
     return MultiPageUiState(
@@ -900,7 +1107,7 @@ private fun rememberBrushState(
             }
 
             Tool.LASSO -> {
-                penBrush
+                penBrush.copy(tool = Tool.LASSO)
             }
         }
     return BrushState(
@@ -971,6 +1178,100 @@ private fun buildStrokeCallbacks(
             val pageId = currentPage?.pageId ?: return@StrokeCallbacks
             undoController.onStrokeErased(erasedStroke, pageId)
         },
+        onStrokeSplit = { original, segments, pageId ->
+            undoController.onStrokeSplit(original, segments, pageId)
+        },
+    )
+
+private fun resolveLassoSelection(
+    lassoStroke: Stroke,
+    pageStrokes: List<Stroke>,
+): LassoSelection {
+    val polygon = lassoStroke.points.map { point -> point.x to point.y }
+    if (polygon.size < MIN_LASSO_POLYGON_POINTS) {
+        return LassoSelection()
+    }
+    val selectableStrokes =
+        pageStrokes.filter { stroke ->
+            stroke.style.tool != Tool.LASSO
+        }
+    val spatialIndex = SpatialIndex().also { index -> selectableStrokes.forEach(index::insert) }
+    val selectedIds = findStrokesInLasso(polygon, selectableStrokes, spatialIndex)
+    val selectedStrokes = selectableStrokes.filter { stroke -> stroke.id in selectedIds }
+    val bounds = calculateSelectionBounds(selectedStrokes)
+    return LassoSelection().withSelection(selectedIds, bounds)
+}
+
+@Suppress("LongParameterList")
+private fun applyLassoMove(
+    undoController: UndoController,
+    pageId: String,
+    pageStrokes: List<Stroke>,
+    selection: LassoSelection,
+    deltaX: Float,
+    deltaY: Float,
+): LassoSelection {
+    val selected = pageStrokes.filter { stroke -> stroke.id in selection.selectedStrokeIds }
+    if (selected.isEmpty()) {
+        return selection.clear()
+    }
+    val transformed = moveStrokes(selected, deltaX = deltaX, deltaY = deltaY)
+    undoController.onStrokesTransformed(pageId = pageId, before = selected, after = transformed)
+    return selection.withSelection(
+        strokeIds = transformed.mapTo(mutableSetOf()) { stroke -> stroke.id },
+        bounds = calculateSelectionBounds(transformed),
+    )
+}
+
+private fun applyLassoResize(
+    undoController: UndoController,
+    pageId: String,
+    pageStrokes: List<Stroke>,
+    selection: LassoSelection,
+    scale: Float,
+): LassoSelection {
+    val selected = pageStrokes.filter { stroke -> stroke.id in selection.selectedStrokeIds }
+    if (selected.isEmpty()) {
+        return selection.clear()
+    }
+    val clampedScale = scale.coerceIn(MIN_LASSO_SCALE, MAX_LASSO_SCALE)
+    val pivot = selection.transformCenter
+    val transformed = resizeStrokes(selected, clampedScale, pivot.first, pivot.second)
+    undoController.onStrokesTransformed(pageId = pageId, before = selected, after = transformed)
+    return selection.withSelection(
+        strokeIds = transformed.mapTo(mutableSetOf()) { stroke -> stroke.id },
+        bounds = calculateSelectionBounds(transformed),
+    )
+}
+
+private fun PageTemplateConfig.toUiState(): PageTemplateState {
+    val normalizedKind =
+        when (backgroundKind) {
+            PageTemplateConfig.KIND_GRID,
+            PageTemplateConfig.KIND_LINED,
+            PageTemplateConfig.KIND_DOTTED,
+            -> backgroundKind
+
+            else -> PageTemplateConfig.KIND_BLANK
+        }
+    return if (normalizedKind == PageTemplateConfig.KIND_BLANK) {
+        PageTemplateState.BLANK
+    } else {
+        PageTemplateState(
+            templateId = templateId,
+            backgroundKind = normalizedKind,
+            spacing = spacing,
+            color = parseTemplateColor(colorHex),
+        )
+    }
+}
+
+private fun PageTemplateState.toConfig(): PageTemplateConfig =
+    PageTemplateConfig(
+        templateId = templateId,
+        backgroundKind = backgroundKind,
+        spacing = spacing,
+        colorHex = templateColorToHex(color),
     )
 
 @Composable
@@ -1110,15 +1411,19 @@ private fun buildToolbarState(
     brush: Brush,
     lastNonEraserTool: Tool,
     isStylusButtonEraserActive: Boolean,
+    isSegmentEraserEnabled: Boolean,
     templateState: PageTemplateState,
     onBrushChange: (Brush) -> Unit,
+    onSegmentEraserEnabledChange: (Boolean) -> Unit,
     onTemplateChange: (PageTemplateState) -> Unit,
 ): NoteEditorToolbarState =
     NoteEditorToolbarState(
         brush = brush,
         lastNonEraserTool = lastNonEraserTool,
         isStylusButtonEraserActive = isStylusButtonEraserActive,
+        isSegmentEraserEnabled = isSegmentEraserEnabled,
         templateState = templateState,
         onBrushChange = onBrushChange,
+        onSegmentEraserEnabledChange = onSegmentEraserEnabledChange,
         onTemplateChange = onTemplateChange,
     )

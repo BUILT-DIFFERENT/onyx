@@ -1,1 +1,7 @@
-export {};
+// Core entity schemas
+export { NoteSchema, type Note } from './schemas/note';
+export { PageSchema, type Page } from './schemas/page';
+export { StrokeSchema, type Stroke } from './schemas/stroke';
+
+// Supporting schemas
+export { StrokeStyleSchema, type StrokeStyle, BoundsSchema, type Bounds } from './schemas/common';

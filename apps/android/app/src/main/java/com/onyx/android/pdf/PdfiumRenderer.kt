@@ -2,6 +2,8 @@ package com.onyx.android.pdf
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.RectF
 import android.util.LruCache
 import java.io.File
 import kotlin.math.max
@@ -24,34 +26,7 @@ internal fun renderScaleCacheKey(renderScale: Float): Int =
         .roundToInt()
         .coerceAtLeast(MIN_RENDER_SCALE_CACHE_KEY)
 
-interface PdfDocumentRenderer : PdfTextExtractor, PdfTileRenderEngine {
-    fun getPageCount(): Int
-
-    fun getPageBounds(pageIndex: Int): Pair<Float, Float>
-
-    fun renderPage(
-        pageIndex: Int,
-        zoom: Float,
-    ): Bitmap
-
-    /**
-     * Renders a page at thumbnail resolution (10% scale).
-     * The result is cached separately from full-page renders.
-     *
-     * @param pageIndex The page index to render (0-based)
-     * @return A bitmap of the page at thumbnail resolution, or null if rendering fails
-     */
-    fun renderThumbnail(pageIndex: Int): Bitmap?
-
-    /**
-     * Retrieves the table of contents (bookmarks/outline) from the PDF.
-     * @return A list of top-level outline items, each potentially containing nested children.
-     */
-    fun getTableOfContents(): List<OutlineItem>
-
-    fun close()
-}
-
+@Suppress("TooManyFunctions")
 class PdfiumRenderer(
     context: Context,
     private val pdfFile: File,
@@ -98,19 +73,34 @@ class PdfiumRenderer(
             }
         }
 
-    override fun getPageCount(): Int {
-        return synchronized(lock) {
+    override fun getPageCount(): Int =
+        synchronized(lock) {
             documentSession.pageCount
         }
-    }
 
-    override fun getPageBounds(pageIndex: Int): Pair<Float, Float> {
-        return synchronized(lock) {
-            documentSession.getPageBounds(pageIndex)
+    override fun getPageBounds(pageIndex: Int): RectF =
+        synchronized(lock) {
+            val (pageWidth, pageHeight) = documentSession.getPageBounds(pageIndex)
+            RectF(0f, 0f, pageWidth, pageHeight)
+        }
+
+    override fun renderPage(
+        pageIndex: Int,
+        bitmap: Bitmap,
+        pageWidth: Int,
+        pageHeight: Int,
+    ) {
+        synchronized(lock) {
+            documentSession.renderPageBitmap(
+                pageIndex = pageIndex,
+                bitmap = bitmap,
+                region = PdfRenderRegion(startX = 0, startY = 0, width = pageWidth, height = pageHeight),
+                renderAnnotations = true,
+            )
         }
     }
 
-    override fun renderPage(
+    fun renderPage(
         pageIndex: Int,
         zoom: Float,
     ): Bitmap {
@@ -133,7 +123,41 @@ class PdfiumRenderer(
         }
     }
 
-    override fun renderThumbnail(pageIndex: Int): Bitmap? {
+    @Suppress("ComplexCondition")
+    override fun renderThumbnail(
+        pageIndex: Int,
+        bitmap: Bitmap,
+        thumbWidth: Int,
+        thumbHeight: Int,
+    ) {
+        val renderedThumbnail =
+            synchronized(lock) {
+                val cachedThumbnail = thumbnailCache.get(pageIndex)
+                if (
+                    cachedThumbnail != null &&
+                    !cachedThumbnail.isRecycled &&
+                    cachedThumbnail.width == thumbWidth &&
+                    cachedThumbnail.height == thumbHeight
+                ) {
+                    return@synchronized cachedThumbnail
+                }
+                if (cachedThumbnail?.isRecycled == true) {
+                    thumbnailCache.remove(pageIndex)
+                }
+
+                val thumbnail = renderThumbnailUncached(pageIndex, thumbWidth, thumbHeight)
+                if (thumbnail != null) {
+                    thumbnailCache.put(pageIndex, thumbnail)
+                }
+                thumbnail
+            }
+
+        if (renderedThumbnail != null && !renderedThumbnail.isRecycled) {
+            Canvas(bitmap).drawBitmap(renderedThumbnail, 0f, 0f, null)
+        }
+    }
+
+    fun renderThumbnail(pageIndex: Int): Bitmap? {
         return synchronized(lock) {
             val cachedThumbnail = thumbnailCache.get(pageIndex)
             if (cachedThumbnail != null && !cachedThumbnail.isRecycled) {
@@ -143,7 +167,10 @@ class PdfiumRenderer(
                 thumbnailCache.remove(pageIndex)
             }
 
-            val thumbnail = renderThumbnailUncached(pageIndex)
+            val (pageWidth, pageHeight) = documentSession.getPageBounds(pageIndex)
+            val thumbnailWidth = (pageWidth * THUMBNAIL_SCALE_DEFAULT).roundToInt().coerceAtLeast(1)
+            val thumbnailHeight = (pageHeight * THUMBNAIL_SCALE_DEFAULT).roundToInt().coerceAtLeast(1)
+            val thumbnail = renderThumbnailUncached(pageIndex, thumbnailWidth, thumbnailHeight)
             if (thumbnail != null) {
                 thumbnailCache.put(pageIndex, thumbnail)
             }
@@ -151,17 +178,15 @@ class PdfiumRenderer(
         }
     }
 
-    override suspend fun getCharacters(pageIndex: Int): List<PdfTextChar> {
-        return synchronized(lock) {
+    override fun getCharacters(pageIndex: Int): List<PdfTextChar> =
+        synchronized(lock) {
             documentSession.getTextCharacters(pageIndex)
         }
-    }
 
-    override fun getTableOfContents(): List<OutlineItem> {
-        return synchronized(lock) {
+    override fun getTableOfContents(): List<PdfTocItem> =
+        synchronized(lock) {
             documentSession.getTableOfContents()
         }
-    }
 
     override suspend fun renderTile(key: PdfTileKey): Bitmap = tileRenderer.renderTile(key)
 
@@ -202,11 +227,12 @@ class PdfiumRenderer(
         return bitmap
     }
 
-    private fun renderThumbnailUncached(pageIndex: Int): Bitmap? {
-        return runCatching {
-            val (pageWidth, pageHeight) = documentSession.getPageBounds(pageIndex)
-            val thumbnailWidth = (pageWidth * THUMBNAIL_SCALE_DEFAULT).roundToInt().coerceAtLeast(1)
-            val thumbnailHeight = (pageHeight * THUMBNAIL_SCALE_DEFAULT).roundToInt().coerceAtLeast(1)
+    private fun renderThumbnailUncached(
+        pageIndex: Int,
+        thumbnailWidth: Int,
+        thumbnailHeight: Int,
+    ): Bitmap? =
+        runCatching {
             val bitmap = Bitmap.createBitmap(thumbnailWidth, thumbnailHeight, Bitmap.Config.ARGB_8888)
             documentSession.renderPageBitmap(
                 pageIndex = pageIndex,
@@ -222,5 +248,10 @@ class PdfiumRenderer(
             )
             bitmap
         }.getOrNull()
-    }
 }
+
+fun openPdfDocumentRenderer(
+    context: Context,
+    pdfFile: File,
+    password: String? = null,
+): PdfDocumentRenderer = PdfiumRenderer(context = context, pdfFile = pdfFile, password = password)

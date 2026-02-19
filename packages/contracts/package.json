@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "lint:quick": "oxlint .",
     "lint:fix": "eslint . --fix",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "format": "prettier . --write",
     "format:check": "prettier . --check"
   }

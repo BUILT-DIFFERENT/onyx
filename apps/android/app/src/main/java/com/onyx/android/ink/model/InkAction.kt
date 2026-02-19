@@ -10,4 +10,17 @@ sealed class InkAction {
         val stroke: Stroke,
         val pageId: String,
     ) : InkAction()
+
+    data class SplitStroke(
+        val original: Stroke,
+        val segments: List<Stroke>,
+        val pageId: String,
+        val insertionIndex: Int,
+    ) : InkAction()
+
+    data class TransformStrokes(
+        val pageId: String,
+        val before: List<Stroke>,
+        val after: List<Stroke>,
+    ) : InkAction()
 }

@@ -9,11 +9,16 @@
 
 package com.onyx.android.ink.ui
 
+import android.content.Context
 import android.view.MotionEvent
 import androidx.ink.authoring.InProgressStrokeId
 import androidx.ink.authoring.InProgressStrokesView
 import androidx.ink.strokes.StrokeInput
+import com.onyx.android.config.FeatureFlag
+import com.onyx.android.config.FeatureFlagStore
+import com.onyx.android.ink.algorithm.computeStrokeSplitCandidates
 import com.onyx.android.ink.model.Brush
+import com.onyx.android.ink.model.LassoSelection
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.Tool
@@ -24,11 +29,12 @@ private const val PREDICTED_STROKE_ALPHA = 0.2f
 private const val IN_PROGRESS_STROKE_ALPHA = 1f
 private const val EDGE_TOLERANCE_PX = 12f
 private const val MIN_TOLERANCE_ZOOM = 0.001f
-
-private const val ENABLE_PREDICTED_STROKES = true
+private const val SEGMENT_ERASER_RADIUS_PX = 10f
 
 internal data class InkCanvasInteraction(
     val brush: Brush,
+    val isSegmentEraserEnabled: Boolean = false,
+    val lassoSelection: LassoSelection,
     val viewTransform: ViewTransform,
     val strokes: List<Stroke>,
     val pageWidth: Float,
@@ -37,6 +43,9 @@ internal data class InkCanvasInteraction(
     val allowFingerGestures: Boolean,
     val onStrokeFinished: (Stroke) -> Unit,
     val onStrokeErased: (Stroke) -> Unit,
+    val onStrokeSplit: (original: Stroke, segments: List<Stroke>) -> Unit = { _, _ -> },
+    val onLassoMove: (deltaX: Float, deltaY: Float) -> Unit = { _, _ -> },
+    val onLassoResize: (scale: Float, pivotPageX: Float, pivotPageY: Float) -> Unit = { _, _, _ -> },
     val onTransformGesture: (
         zoomChange: Float,
         panChangeX: Float,
@@ -66,17 +75,25 @@ internal fun handleTouchEvent(
         return when (event.actionMasked) {
             MotionEvent.ACTION_DOWN,
             MotionEvent.ACTION_POINTER_DOWN,
-            -> handlePointerDown(view, event, interaction, runtime)
+            -> {
+                handlePointerDown(view, event, interaction, runtime)
+            }
 
-            MotionEvent.ACTION_MOVE -> handlePointerMove(view, event, interaction, runtime)
+            MotionEvent.ACTION_MOVE -> {
+                handlePointerMove(view, event, interaction, runtime)
+            }
 
             MotionEvent.ACTION_UP,
             MotionEvent.ACTION_POINTER_UP,
-            -> handlePointerUp(view, event, interaction, runtime)
+            -> {
+                handlePointerUp(view, event, interaction, runtime)
+            }
 
             MotionEvent.ACTION_HOVER_ENTER,
             MotionEvent.ACTION_HOVER_MOVE,
-            -> handleHover(event, interaction, runtime)
+            -> {
+                handleHover(event, interaction, runtime)
+            }
 
             MotionEvent.ACTION_HOVER_EXIT -> {
                 runtime.hoverPreviewState.hide()
@@ -84,9 +101,13 @@ internal fun handleTouchEvent(
                 true
             }
 
-            MotionEvent.ACTION_CANCEL -> handleCancel(view, event, interaction, runtime)
+            MotionEvent.ACTION_CANCEL -> {
+                handleCancel(view, event, interaction, runtime)
+            }
 
-            else -> false
+            else -> {
+                false
+            }
         }
     }
     return when {
@@ -98,21 +119,29 @@ internal fun handleTouchEvent(
             handleSingleFingerPanGesture(view, event, interaction, runtime)
         }
 
-        else ->
+        else -> {
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN,
                 MotionEvent.ACTION_POINTER_DOWN,
-                -> handlePointerDown(view, event, interaction, runtime)
+                -> {
+                    handlePointerDown(view, event, interaction, runtime)
+                }
 
-                MotionEvent.ACTION_MOVE -> handlePointerMove(view, event, interaction, runtime)
+                MotionEvent.ACTION_MOVE -> {
+                    handlePointerMove(view, event, interaction, runtime)
+                }
 
                 MotionEvent.ACTION_UP,
                 MotionEvent.ACTION_POINTER_UP,
-                -> handlePointerUp(view, event, interaction, runtime)
+                -> {
+                    handlePointerUp(view, event, interaction, runtime)
+                }
 
                 MotionEvent.ACTION_HOVER_ENTER,
                 MotionEvent.ACTION_HOVER_MOVE,
-                -> handleHover(event, interaction, runtime)
+                -> {
+                    handleHover(event, interaction, runtime)
+                }
 
                 MotionEvent.ACTION_HOVER_EXIT -> {
                     runtime.hoverPreviewState.hide()
@@ -120,10 +149,15 @@ internal fun handleTouchEvent(
                     true
                 }
 
-                MotionEvent.ACTION_CANCEL -> handleCancel(view, event, interaction, runtime)
+                MotionEvent.ACTION_CANCEL -> {
+                    handleCancel(view, event, interaction, runtime)
+                }
 
-                else -> false
+                else -> {
+                    false
+                }
             }
+        }
     }
 }
 
@@ -136,7 +170,9 @@ internal fun handleGenericMotionEvent(
     return when (event.actionMasked) {
         MotionEvent.ACTION_HOVER_ENTER,
         MotionEvent.ACTION_HOVER_MOVE,
-        -> handleHover(event, interaction, runtime)
+        -> {
+            handleHover(event, interaction, runtime)
+        }
 
         MotionEvent.ACTION_HOVER_EXIT -> {
             runtime.hoverPreviewState.hide()
@@ -154,7 +190,9 @@ internal fun handleGenericMotionEvent(
             }
         }
 
-        else -> false
+        else -> {
+            false
+        }
     }
 }
 
@@ -265,7 +303,9 @@ private fun handlePointerDown(
     }
     runtime.hoverPreviewState.hide()
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
-    runtime.motionPredictionAdapter?.record(event)
+    if (isPredictionEnabled(view.context)) {
+        runtime.motionPredictionAdapter?.record(event)
+    }
     val startTime = event.eventTime
     runtime.activeStrokeStartTimes[pointerId] = startTime
     val strokeInput =
@@ -318,7 +358,10 @@ private fun handlePointerMove(
         runtime.hoverPreviewState.hide()
         return true
     }
-    runtime.motionPredictionAdapter?.record(event)
+    val predictedStrokesEnabled = isPredictionEnabled(view.context)
+    if (predictedStrokesEnabled) {
+        runtime.motionPredictionAdapter?.record(event)
+    }
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
     val pointerCount = event.pointerCount
     var handled = false
@@ -359,10 +402,12 @@ private fun handlePointerMove(
                 }
             }
 
-            null -> Unit
+            null -> {
+                Unit
+            }
         }
     }
-    if (ENABLE_PREDICTED_STROKES) {
+    if (predictedStrokesEnabled) {
         handlePredictedStrokes(view, event, interaction, runtime)
     }
     return handled
@@ -374,11 +419,45 @@ private fun handleEraserAtPointer(
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
 ): Boolean {
+    val pointerId = event.getPointerId(pointerIndex)
+    val currentPagePoint =
+        Pair(
+            interaction.viewTransform.screenToPageX(event.getX(pointerIndex)),
+            interaction.viewTransform.screenToPageY(event.getY(pointerIndex)),
+        )
+    val previousPagePoint = runtime.eraserLastPagePoints[pointerId]
+    runtime.eraserLastPagePoints[pointerId] = currentPagePoint
+
     val allStrokes = interaction.strokes + runtime.pendingCommittedStrokes.values
     val dedupedStrokes =
-        LinkedHashMap<String, Stroke>(allStrokes.size).apply {
-            allStrokes.forEach { stroke -> put(stroke.id, stroke) }
-        }.values.toList()
+        LinkedHashMap<String, Stroke>(allStrokes.size)
+            .apply {
+                allStrokes.forEach { stroke -> put(stroke.id, stroke) }
+            }.values
+            .toList()
+
+    if (interaction.isSegmentEraserEnabled) {
+        val eraserPathPoints =
+            if (previousPagePoint != null) {
+                listOf(previousPagePoint, currentPagePoint)
+            } else {
+                listOf(currentPagePoint)
+            }
+        val eraserRadius =
+            SEGMENT_ERASER_RADIUS_PX /
+                interaction.viewTransform.zoom.coerceAtLeast(MIN_TOLERANCE_ZOOM)
+        val splitCandidates =
+            computeStrokeSplitCandidates(
+                strokes = dedupedStrokes,
+                eraserPathPoints = eraserPathPoints,
+                eraserRadius = eraserRadius,
+            )
+        splitCandidates.forEach { candidate ->
+            interaction.onStrokeSplit(candidate.original, candidate.segments)
+        }
+        return true
+    }
+
     val erasedStroke =
         findStrokeToErase(
             screenX = event.getX(pointerIndex),
@@ -466,6 +545,7 @@ private fun handlePointerUp(
         runtime.hoverPreviewState.hide()
         handled = true
     } else if (pointerMode == PointerMode.ERASE) {
+        runtime.eraserLastPagePoints.remove(pointerId)
         runtime.hoverPreviewState.hide()
         handled = true
     } else {
@@ -487,7 +567,9 @@ private fun handlePointerUp(
             val effectiveBrush =
                 runtime.activeStrokeBrushes[pointerId] ?: interaction.brush.withToolType(actionToolType)
             cancelPredictedStroke(view, event, pointerId, runtime.predictedStrokeIds)
-            runtime.motionPredictionAdapter?.record(event)
+            if (isPredictionEnabled(view.context)) {
+                runtime.motionPredictionAdapter?.record(event)
+            }
             view.finishStroke(strokeInput, strokeId)
             val points = runtime.activeStrokePoints[pointerId].orEmpty().toMutableList()
             appendHistoricalStrokePoints(
@@ -522,6 +604,7 @@ private fun handlePointerUp(
             handled = true
         }
     }
+    runtime.eraserLastPagePoints.remove(pointerId)
     return handled
 }
 
@@ -611,6 +694,7 @@ private fun handleCancel(
     }
     runtime.activeStrokeIds.clear()
     runtime.activePointerModes.clear()
+    runtime.eraserLastPagePoints.clear()
     runtime.activeStrokeBrushes.clear()
     runtime.activeStrokePoints.clear()
     runtime.activeStrokeStartTimes.clear()
@@ -743,3 +827,8 @@ private fun clampPageCoordinate(
     }
     return coordinate.coerceIn(0f, pageDimension)
 }
+
+private fun isPredictionEnabled(context: Context): Boolean =
+    FeatureFlagStore
+        .getInstance(context)
+        .get(FeatureFlag.INK_PREDICTION_ENABLED)

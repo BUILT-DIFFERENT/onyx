@@ -212,7 +212,7 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6
   - [ ] Flag state persists across restart.
   - [ ] Rollback to safe path possible without reinstall.
   - [ ] `ENABLE_*` hardcoded constants removed from ink/editor runtime paths.
-  - [ ] Canonical flag table committed to `.sisyphus/notepads/feature-flags-catalog.md`.
+  - [ ] Canonical flag table committed to `.sisyphus/notepads/comprehensive-app-overhaul/feature-flags-catalog.md`.
   - [ ] `bun run android:test` passes after flag refactor.
 
   **Commit**: YES

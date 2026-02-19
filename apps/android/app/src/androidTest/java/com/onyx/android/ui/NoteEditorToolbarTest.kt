@@ -50,6 +50,7 @@ class NoteEditorToolbarTest {
                             brush = currentBrush,
                             lastNonEraserTool = lastNonEraserTool,
                             isStylusButtonEraserActive = false,
+                            templateState = PageTemplateState.BLANK,
                             onBrushChange = { brush ->
                                 latestBrush = brush
                                 currentBrush = brush
@@ -57,6 +58,7 @@ class NoteEditorToolbarTest {
                                     lastNonEraserTool = brush.tool
                                 }
                             },
+                            onTemplateChange = {},
                         ),
                     contentState = defaultContentState(),
                     transformState = rememberTransformableState { _, _, _ -> },
@@ -84,7 +86,9 @@ class NoteEditorToolbarTest {
                     brush = Brush(tool = Tool.ERASER),
                     lastNonEraserTool = Tool.PEN,
                     isStylusButtonEraserActive = false,
+                    templateState = PageTemplateState.BLANK,
                     onBrushChange = { brush -> updatedBrush = brush },
+                    onTemplateChange = {},
                 ),
         )
 
@@ -107,7 +111,9 @@ class NoteEditorToolbarTest {
                     brush = Brush(tool = Tool.PEN),
                     lastNonEraserTool = Tool.PEN,
                     isStylusButtonEraserActive = false,
+                    templateState = PageTemplateState.BLANK,
                     onBrushChange = {},
+                    onTemplateChange = {},
                 ),
         )
 
@@ -129,7 +135,9 @@ class NoteEditorToolbarTest {
                     brush = Brush(tool = Tool.PEN, color = "#111111"),
                     lastNonEraserTool = Tool.PEN,
                     isStylusButtonEraserActive = false,
+                    templateState = PageTemplateState.BLANK,
                     onBrushChange = {},
+                    onTemplateChange = {},
                 ),
         )
 
@@ -151,7 +159,9 @@ class NoteEditorToolbarTest {
                     brush = Brush(tool = Tool.ERASER, color = "#111111"),
                     lastNonEraserTool = Tool.PEN,
                     isStylusButtonEraserActive = false,
+                    templateState = PageTemplateState.BLANK,
                     onBrushChange = { brush -> updatedBrush = brush },
+                    onTemplateChange = {},
                 ),
         )
 
@@ -171,7 +181,9 @@ class NoteEditorToolbarTest {
                     brush = Brush(tool = Tool.ERASER),
                     lastNonEraserTool = Tool.PEN,
                     isStylusButtonEraserActive = false,
+                    templateState = PageTemplateState.BLANK,
                     onBrushChange = {},
+                    onTemplateChange = {},
                 ),
         )
 
@@ -221,6 +233,8 @@ private fun defaultTopBarState(): NoteEditorTopBarState =
         onRedo = {},
         onToggleReadOnly = {},
         onOpenOutline = {},
+        isRecognitionOverlayEnabled = false,
+        onToggleRecognitionOverlay = {},
     )
 
 private fun defaultContentState(): NoteEditorContentState =
@@ -246,6 +260,11 @@ private fun defaultContentState(): NoteEditorContentState =
         interactionMode = InteractionMode.DRAW,
         thumbnails = emptyList(),
         currentPageIndex = 0,
+        templateState = PageTemplateState.BLANK,
+        isRecognitionOverlayEnabled = false,
+        recognitionText = null,
+        convertedTextBlocks = emptyList(),
+        onConvertedTextBlockSelected = {},
         onStrokeFinished = {},
         onStrokeErased = {},
         onStylusButtonEraserActiveChanged = {},
@@ -253,4 +272,5 @@ private fun defaultContentState(): NoteEditorContentState =
         onPanGestureEnd = { _, _ -> },
         onViewportSizeChanged = { _: IntSize -> },
         onPageSelected = {},
+        onTemplateChange = {},
     )

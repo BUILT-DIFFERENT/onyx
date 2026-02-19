@@ -4,6 +4,7 @@ import android.content.Context
 import com.onyx.android.data.OnyxDatabase
 import com.onyx.android.data.dao.EditorSettingsDao
 import com.onyx.android.data.dao.NoteDao
+import com.onyx.android.data.dao.OperationLogDao
 import com.onyx.android.data.dao.PageDao
 import com.onyx.android.data.dao.PageTemplateDao
 import com.onyx.android.data.repository.NoteRepository
@@ -67,14 +68,19 @@ object AppModule {
             thumbnailDao = database.thumbnailDao(),
             noteDao = database.noteDao(),
             pageDao = database.pageDao(),
+            pageTemplateDao = database.pageTemplateDao(),
             pdfAssetStorage = pdfAssetStorage,
         )
 
     @Provides
     @Singleton
+    @Suppress("LongParameterList")
     fun provideNoteRepository(
+        @ApplicationContext context: Context,
         database: OnyxDatabase,
         deviceIdentity: DeviceIdentity,
+        pdfAssetStorage: PdfAssetStorage,
+        pdfPasswordStore: PdfPasswordStore,
         thumbnailGenerator: ThumbnailGenerator,
     ): NoteRepository =
         NoteRepository(
@@ -83,9 +89,13 @@ object AppModule {
             strokeDao = database.strokeDao(),
             recognitionDao = database.recognitionDao(),
             folderDao = database.folderDao(),
+            pageTemplateDao = database.pageTemplateDao(),
             tagDao = database.tagDao(),
             deviceIdentity = deviceIdentity,
             strokeSerializer = StrokeSerializer,
+            appContext = context,
+            pdfAssetStorage = pdfAssetStorage,
+            pdfPasswordStore = pdfPasswordStore,
             thumbnailGenerator = thumbnailGenerator,
         )
 
@@ -99,15 +109,11 @@ object AppModule {
     fun provideMyScriptPageManager(
         myScriptEngine: MyScriptEngine,
         @ApplicationContext context: Context,
-    ): MyScriptPageManager? =
-        if (myScriptEngine.isInitialized()) {
-            MyScriptPageManager(
-                engine = myScriptEngine.getEngine(),
-                context = context,
-            )
-        } else {
-            null
-        }
+    ): MyScriptPageManager =
+        MyScriptPageManager(
+            myScriptEngine = myScriptEngine,
+            context = context,
+        )
 
     @Provides
     fun provideNoteDao(database: OnyxDatabase): NoteDao = database.noteDao()
@@ -120,4 +126,7 @@ object AppModule {
 
     @Provides
     fun provideEditorSettingsDao(database: OnyxDatabase): EditorSettingsDao = database.editorSettingsDao()
+
+    @Provides
+    fun provideOperationLogDao(database: OnyxDatabase): OperationLogDao = database.operationLogDao()
 }

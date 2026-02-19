@@ -13,4 +13,5 @@ data class FolderEntity(
     val name: String,
     val parentId: String? = null,
     val createdAt: Long,
+    val updatedAt: Long,
 )

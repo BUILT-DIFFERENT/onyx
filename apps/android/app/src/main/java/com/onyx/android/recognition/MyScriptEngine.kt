@@ -24,6 +24,7 @@ import java.io.File
  *
  * Reference: myscript-examples/samples/offscreen-interactivity/
  */
+@Suppress("TooManyFunctions")
 class MyScriptEngine(
     private val context: Context,
 ) {
@@ -49,6 +50,8 @@ class MyScriptEngine(
 
     fun initialize(): Result<Unit> =
         runCatching {
+            close()
+
             // Create engine with certificate (v4.x uses Java class, not bytes)
             engine = Engine.create(MyCertificate.getBytes())
 
@@ -79,6 +82,23 @@ class MyScriptEngine(
             engine?.close()
             engine = null
         }
+
+    @Synchronized
+    fun restart(): Result<Unit> {
+        Log.w("MyScript", "Restarting MyScript engine")
+        return initialize()
+    }
+
+    @Synchronized
+    fun ensureInitialized(): Result<Engine> {
+        if (engine == null) {
+            val result = initialize()
+            if (result.isFailure) {
+                return Result.failure(checkNotNull(result.exceptionOrNull()))
+            }
+        }
+        return Result.success(getEngine())
+    }
 
     fun close() {
         engine?.close()
@@ -137,7 +157,9 @@ class MyScriptEngine(
     }
 
     private fun hasRecognitionConfig(path: File): Boolean {
-        return File(path, "conf").isDirectory && File(path, "resources").isDirectory
+        val hasConfDir = File(path, "conf").isDirectory
+        val hasResourcesDir = File(path, "resources").isDirectory
+        return hasConfDir && hasResourcesDir
     }
 
     private fun copyAssetFile(

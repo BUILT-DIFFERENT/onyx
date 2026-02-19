@@ -14,6 +14,7 @@ package com.onyx.android.ui.editor
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.TransformableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,12 +23,15 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,9 +53,11 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
@@ -61,6 +67,7 @@ import com.onyx.android.pdf.DEFAULT_PDF_TILE_SIZE_PX
 import com.onyx.android.pdf.PdfDocumentRenderer
 import com.onyx.android.pdf.PdfTileKey
 import com.onyx.android.pdf.ValidatingTile
+import com.onyx.android.recognition.ConvertedTextBlock
 import com.onyx.android.ui.EDGE_GLOW_ALPHA_MAX
 import com.onyx.android.ui.EDGE_GLOW_WIDTH_DP
 import com.onyx.android.ui.InteractionMode
@@ -92,6 +99,8 @@ private val NOTE_PAPER = Color(0xFFFDFDFD)
 private val NOTE_PAPER_STROKE = Color(0xFFCBCED6)
 private val NOTE_PAPER_SHADOW = Color(0x15000000)
 private val EDGE_GLOW_COLOR = Color(0x40000000)
+private val SEARCH_HIGHLIGHT_FILL = Color(0x44FFEB3B)
+private val SEARCH_HIGHLIGHT_STROKE = Color(0xFFFFA000)
 private const val EDITOR_VIEWPORT_TEST_TAG = "note-editor-viewport"
 private const val PAGE_GAP_DP = 8
 private const val PAGE_TRACKING_DEBOUNCE_MS = 100L
@@ -330,11 +339,18 @@ private fun MultiPageEditorContent(
                         isReadOnly = contentState.isReadOnly,
                         brush = contentState.brush,
                         isStylusButtonEraserActive = contentState.isStylusButtonEraserActive,
+                        isSegmentEraserEnabled = contentState.isSegmentEraserEnabled,
                         interactionMode = contentState.interactionMode,
+                        isRecognitionOverlayEnabled = contentState.isRecognitionOverlayEnabled,
                         pdfRenderer = contentState.pdfRenderer,
                         onStrokeFinished = { stroke -> contentState.onStrokeFinished(stroke, pageState.page.pageId) },
                         onStrokeErased = { stroke -> contentState.onStrokeErased(stroke, pageState.page.pageId) },
                         onStrokeSplit = { original, segments -> contentState.onStrokeSplit(original, segments, pageState.page.pageId) },
+                        onLassoMove = { deltaX, deltaY -> contentState.onLassoMove(pageState.page.pageId, deltaX, deltaY) },
+                        onLassoResize = { scale, pivotX, pivotY ->
+                            contentState.onLassoResize(pageState.page.pageId, scale, pivotX, pivotY)
+                        },
+                        onConvertedTextBlockSelected = { block -> contentState.onConvertedTextBlockSelected(pageState.page.pageId, block) },
                         onStylusButtonEraserActiveChanged = contentState.onStylusButtonEraserActiveChanged,
                         onTransformGesture = contentState.onTransformGesture,
                         onPanGestureEnd = contentState.onPanGestureEnd,
@@ -365,11 +381,16 @@ private fun PageItem(
     isReadOnly: Boolean,
     brush: Brush,
     isStylusButtonEraserActive: Boolean,
+    isSegmentEraserEnabled: Boolean,
     interactionMode: InteractionMode,
+    isRecognitionOverlayEnabled: Boolean,
     pdfRenderer: PdfDocumentRenderer?,
     onStrokeFinished: (InkStroke) -> Unit,
     onStrokeErased: (InkStroke) -> Unit,
     onStrokeSplit: (InkStroke, List<InkStroke>) -> Unit,
+    onLassoMove: (Float, Float) -> Unit,
+    onLassoResize: (Float, Float, Float) -> Unit,
+    onConvertedTextBlockSelected: (ConvertedTextBlock) -> Unit,
     onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
     onTransformGesture: (Float, Float, Float, Float, Float) -> Unit,
     onPanGestureEnd: (Float, Float) -> Unit,
@@ -480,16 +501,21 @@ private fun PageItem(
                         strokes = pageState.strokes,
                         brush = brush,
                         isStylusButtonEraserActive = isStylusButtonEraserActive,
+                        isSegmentEraserEnabled = isSegmentEraserEnabled,
                         interactionMode = interactionMode,
                         allowCanvasFingerGestures = false,
                         thumbnails = emptyList(),
                         currentPageIndex = pageState.page.indexInNote,
                         templateState = pageState.templateState,
+                        lassoSelection = pageState.lassoSelection,
                         isTextSelectionEnabled = interactionMode == InteractionMode.TEXT_SELECTION,
                         loadThumbnail = { null },
                         onStrokeFinished = onStrokeFinished,
                         onStrokeErased = onStrokeErased,
                         onStrokeSplit = onStrokeSplit,
+                        onLassoMove = onLassoMove,
+                        onLassoResize = onLassoResize,
+                        onSegmentEraserEnabledChange = {},
                         onStylusButtonEraserActiveChanged = onStylusButtonEraserActiveChanged,
                         onTransformGesture = onTransformGesture,
                         onPanGestureEnd = onPanGestureEnd,
@@ -505,10 +531,12 @@ private fun PageItem(
                         strokes = pageState.strokes,
                         viewTransform = renderTransform,
                         brush = brush,
+                        lassoSelection = pageState.lassoSelection,
+                        isSegmentEraserEnabled = isSegmentEraserEnabled,
                         pageWidth = pageState.pageWidth,
                         pageHeight = pageState.pageHeight,
                         allowEditing = !isReadOnly,
-                        allowFingerGestures = false,
+                        allowFingerGestures = brush.tool == com.onyx.android.ink.model.Tool.LASSO,
                     )
                 }
             val inkCanvasCallbacks =
@@ -524,6 +552,8 @@ private fun PageItem(
                         onStrokeFinished = if (isReadOnly) ({}) else onStrokeFinished,
                         onStrokeErased = if (isReadOnly) ({}) else onStrokeErased,
                         onStrokeSplit = if (isReadOnly) ({ _, _ -> }) else onStrokeSplit,
+                        onLassoMove = if (isReadOnly) ({ _, _ -> }) else onLassoMove,
+                        onLassoResize = if (isReadOnly) ({ _, _, _ -> }) else onLassoResize,
                         onTransformGesture = onTransformGesture,
                         onPanGestureEnd = onPanGestureEnd,
                         onStylusButtonEraserActiveChanged = onStylusButtonEraserActiveChanged,
@@ -533,6 +563,34 @@ private fun PageItem(
                 state = inkCanvasState,
                 callbacks = inkCanvasCallbacks,
                 modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        pageState.searchHighlightBounds?.let { bounds ->
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val left = renderTransform.pageToScreenX(bounds.left)
+                val top = renderTransform.pageToScreenY(bounds.top)
+                val width = renderTransform.pageWidthToScreen(bounds.width).coerceAtLeast(1f)
+                val height = renderTransform.pageWidthToScreen(bounds.height).coerceAtLeast(1f)
+                drawRect(
+                    color = SEARCH_HIGHLIGHT_FILL,
+                    topLeft = Offset(left, top),
+                    size = Size(width, height),
+                )
+                drawRect(
+                    color = SEARCH_HIGHLIGHT_STROKE,
+                    topLeft = Offset(left, top),
+                    size = Size(width, height),
+                    style = Stroke(width = 2.dp.toPx()),
+                )
+            }
+        }
+        if (isRecognitionOverlayEnabled) {
+            RecognitionOverlayLayer(
+                viewTransform = renderTransform,
+                recognitionText = pageState.recognitionText,
+                convertedTextBlocks = pageState.convertedTextBlocks,
+                onConvertedTextBlockSelected = onConvertedTextBlockSelected,
             )
         }
     }
@@ -677,6 +735,8 @@ private fun NoteEditorContent(
                         strokes = contentState.strokes,
                         viewTransform = contentState.viewTransform,
                         brush = contentState.brush,
+                        lassoSelection = contentState.lassoSelection,
+                        isSegmentEraserEnabled = contentState.isSegmentEraserEnabled,
                         pageWidth = contentState.pageWidth,
                         pageHeight = contentState.pageHeight,
                         allowEditing = !contentState.isReadOnly,
@@ -695,6 +755,19 @@ private fun NoteEditorContent(
                             } else {
                                 contentState.onStrokeErased
                             },
+                        onStrokeSplit =
+                            if (contentState.isReadOnly) {
+                                { _, _ -> }
+                            } else {
+                                contentState.onStrokeSplit
+                            },
+                        onLassoMove = if (contentState.isReadOnly) ({ _, _ -> }) else contentState.onLassoMove,
+                        onLassoResize =
+                            if (contentState.isReadOnly) {
+                                { _, _, _ -> }
+                            } else {
+                                contentState.onLassoResize
+                            },
                         onTransformGesture = contentState.onTransformGesture,
                         onPanGestureEnd = contentState.onPanGestureEnd,
                         onStylusButtonEraserActiveChanged = contentState.onStylusButtonEraserActiveChanged,
@@ -703,6 +776,14 @@ private fun NoteEditorContent(
                     state = inkCanvasState,
                     callbacks = inkCanvasCallbacks,
                     modifier = Modifier.fillMaxSize(),
+                )
+            }
+            if (contentState.isRecognitionOverlayEnabled) {
+                RecognitionOverlayLayer(
+                    viewTransform = contentState.viewTransform,
+                    recognitionText = contentState.recognitionText,
+                    convertedTextBlocks = contentState.convertedTextBlocks,
+                    onConvertedTextBlockSelected = contentState.onConvertedTextBlockSelected,
                 )
             }
         }
@@ -715,6 +796,57 @@ private fun NoteEditorContent(
                 onPageSelected = contentState.onPageSelected,
                 loadThumbnail = contentState.loadThumbnail,
                 modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecognitionOverlayLayer(
+    viewTransform: ViewTransform,
+    recognitionText: String?,
+    convertedTextBlocks: List<ConvertedTextBlock>,
+    onConvertedTextBlockSelected: (ConvertedTextBlock) -> Unit,
+) {
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    Box(modifier = Modifier.fillMaxSize()) {
+        recognitionText
+            ?.trim()
+            ?.takeIf { text -> text.isNotBlank() }
+            ?.let { text ->
+                val left = viewTransform.pageToScreenX(12f)
+                val top = viewTransform.pageToScreenY(12f)
+                Text(
+                    text = text,
+                    color = Color(0xFF273043),
+                    fontSize = 12.sp,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier =
+                        Modifier
+                            .offset { IntOffset(left.roundToInt(), top.roundToInt()) }
+                            .background(Color(0xCCFFF7D6))
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                )
+            }
+        convertedTextBlocks.forEach { block ->
+            val bounds = block.bounds
+            val left = viewTransform.pageToScreenX(bounds.x)
+            val top = viewTransform.pageToScreenY(bounds.y)
+            val widthPx = viewTransform.pageWidthToScreen(bounds.w).coerceAtLeast(56f)
+            Text(
+                text = block.text,
+                color = Color(0xFF1E293B),
+                fontSize = 13.sp,
+                maxLines = 6,
+                overflow = TextOverflow.Ellipsis,
+                modifier =
+                    Modifier
+                        .offset { IntOffset(left.roundToInt(), top.roundToInt()) }
+                        .width(with(density) { widthPx.toDp() })
+                        .background(Color(0xE6FFFBEB))
+                        .clickable { onConvertedTextBlockSelected(block) }
+                        .padding(horizontal = 6.dp, vertical = 4.dp),
             )
         }
     }

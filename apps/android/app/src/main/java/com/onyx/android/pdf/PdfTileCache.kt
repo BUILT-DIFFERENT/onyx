@@ -24,16 +24,98 @@ data class PdfTileKey(
 
 class ValidatingTile(
     val bitmap: Bitmap,
+    private val recycleBitmap: (Bitmap) -> Unit = { candidate ->
+        if (!candidate.isRecycled) {
+            candidate.recycle()
+        }
+    },
 ) {
+    private val lifecycleLock = Any()
     private val valid = AtomicBoolean(true)
+    private val recycleRequested = AtomicBoolean(false)
+    private val hasRecycled = AtomicBoolean(false)
+    private var activeUsers = 0
+
+    class BitmapLease internal constructor(
+        val bitmap: Bitmap,
+        private val onClose: () -> Unit,
+    ) : AutoCloseable {
+        private val closed = AtomicBoolean(false)
+
+        override fun close() {
+            if (closed.compareAndSet(false, true)) {
+                onClose()
+            }
+        }
+    }
 
     fun isValid(): Boolean = valid.get() && !bitmap.isRecycled
 
     fun invalidate() {
-        valid.set(false)
+        invalidateAndRecycleWhenUnused()
     }
 
     fun getBitmapIfValid(): Bitmap? = if (isValid()) bitmap else null
+
+    fun acquireBitmapForUse(): BitmapLease? {
+        var lease: BitmapLease? = null
+        var canAcquire = false
+        synchronized(lifecycleLock) {
+            if (isValid()) {
+                activeUsers += 1
+                canAcquire = true
+            }
+        }
+        if (canAcquire && bitmap.isRecycled) {
+            releaseBitmapUse()
+        } else if (canAcquire) {
+            lease = BitmapLease(bitmap = bitmap, onClose = ::releaseBitmapUse)
+        }
+        return lease
+    }
+
+    inline fun withBitmapIfValid(block: (Bitmap) -> Unit): Boolean {
+        val lease = acquireBitmapForUse() ?: return false
+        return try {
+            if (lease.bitmap.isRecycled) {
+                false
+            } else {
+                block(lease.bitmap)
+                true
+            }
+        } finally {
+            lease.close()
+        }
+    }
+
+    fun invalidateAndRecycleWhenUnused() {
+        valid.set(false)
+        recycleRequested.set(true)
+        val shouldRecycleNow =
+            synchronized(lifecycleLock) {
+                activeUsers == 0
+            }
+        if (shouldRecycleNow) {
+            recycleIfNeeded()
+        }
+    }
+
+    private fun releaseBitmapUse() {
+        val remaining =
+            synchronized(lifecycleLock) {
+                activeUsers = (activeUsers - 1).coerceAtLeast(0)
+                activeUsers
+            }
+        if (remaining == 0 && recycleRequested.get()) {
+            recycleIfNeeded()
+        }
+    }
+
+    private fun recycleIfNeeded() {
+        if (hasRecycled.compareAndSet(false, true) && !bitmap.isRecycled) {
+            recycleBitmap(bitmap)
+        }
+    }
 }
 
 interface PdfTileStore {
@@ -57,24 +139,21 @@ class PdfTileCache(
     },
 ) : PdfTileStore {
     private val cacheMutex = Mutex()
-    private val tileWrappers = mutableMapOf<Bitmap, ValidatingTile>()
     private val cache =
-        object : LruCache<PdfTileKey, Bitmap>(maxSizeBytes.coerceAtLeast(MIN_CACHE_SIZE_BYTES)) {
+        object : LruCache<PdfTileKey, ValidatingTile>(maxSizeBytes.coerceAtLeast(MIN_CACHE_SIZE_BYTES)) {
             override fun sizeOf(
                 key: PdfTileKey,
-                value: Bitmap,
-            ): Int = value.allocationByteCount.coerceAtLeast(MIN_CACHE_SIZE_BYTES)
+                value: ValidatingTile,
+            ): Int = value.bitmap.allocationByteCount.coerceAtLeast(MIN_CACHE_SIZE_BYTES)
 
             override fun entryRemoved(
                 evicted: Boolean,
                 key: PdfTileKey,
-                oldValue: Bitmap,
-                newValue: Bitmap?,
+                oldValue: ValidatingTile,
+                newValue: ValidatingTile?,
             ) {
                 if (oldValue !== newValue) {
-                    val wrapper = tileWrappers.remove(oldValue)
-                    wrapper?.invalidate()
-                    recycleBitmap(oldValue)
+                    oldValue.invalidateAndRecycleWhenUnused()
                 }
             }
         }
@@ -85,47 +164,36 @@ class PdfTileCache(
 
     override suspend fun getTile(key: PdfTileKey): ValidatingTile? =
         cacheMutex.withLock {
-            val bitmap = cache.get(key) ?: return@withLock null
-            if (bitmap.isRecycled) {
+            val tile = cache.get(key) ?: return@withLock null
+            if (!tile.isValid()) {
                 cache.remove(key)
-                tileWrappers.remove(bitmap)
                 return@withLock null
             }
-            tileWrappers.getOrPut(bitmap) { ValidatingTile(bitmap) }
+            tile
         }
 
     override suspend fun putTile(
         key: PdfTileKey,
         bitmap: Bitmap,
-    ): ValidatingTile {
-        val existing = getTile(key)
-        if (existing != null) {
-            if (existing.bitmap !== bitmap) {
-                recycleBitmap(bitmap)
-            }
-            return existing
-        }
-        return cacheMutex.withLock {
-            val lockedExisting = cache.get(key)
-            if (lockedExisting != null && !lockedExisting.isRecycled) {
-                if (lockedExisting !== bitmap) {
+    ): ValidatingTile =
+        cacheMutex.withLock {
+            val existing = cache.get(key)
+            if (existing != null && existing.isValid()) {
+                if (existing.bitmap !== bitmap) {
                     recycleBitmap(bitmap)
                 }
-                return@withLock tileWrappers.getOrPut(lockedExisting) { ValidatingTile(lockedExisting) }
+                return@withLock existing
             }
-            if (lockedExisting?.isRecycled == true) {
+            if (existing != null && !existing.isValid()) {
                 cache.remove(key)
-                tileWrappers.remove(lockedExisting)
             }
-            cache.put(key, bitmap)
-            tileWrappers.getOrPut(bitmap) { ValidatingTile(bitmap) }
+            val tile = ValidatingTile(bitmap = bitmap, recycleBitmap = recycleBitmap)
+            cache.put(key, tile)
+            tile
         }
-    }
 
     override suspend fun clear() {
         cacheMutex.withLock {
-            tileWrappers.values.forEach { it.invalidate() }
-            tileWrappers.clear()
             cache.evictAll()
         }
     }
@@ -135,9 +203,9 @@ class PdfTileCache(
             cache
                 .snapshot()
                 .filterKeys { key -> key.pageIndex == pageIndex }
-                .filterValues { bitmap -> !bitmap.isRecycled }
-                .mapValues { (_, bitmap) ->
-                    tileWrappers.getOrPut(bitmap) { ValidatingTile(bitmap) }
+                .filterValues { tile -> tile.isValid() }
+                .mapValues { (_, tile) ->
+                    tile
                 }
         }
 
@@ -149,9 +217,9 @@ class PdfTileCache(
             cache
                 .snapshot()
                 .filterKeys { key -> key.pageIndex == pageIndex && key.scaleBucket == scaleBucket }
-                .filterValues { bitmap -> !bitmap.isRecycled }
-                .mapValues { (_, bitmap) ->
-                    tileWrappers.getOrPut(bitmap) { ValidatingTile(bitmap) }
+                .filterValues { tile -> tile.isValid() }
+                .mapValues { (_, tile) ->
+                    tile
                 }
         }
 
@@ -166,9 +234,9 @@ class PdfTileCache(
                 snapshot
                     .filterKeys { key ->
                         key.pageIndex == pageIndex && key.scaleBucket == currentBucket
-                    }.filterValues { bitmap -> !bitmap.isRecycled }
-                    .mapValues { (_, bitmap) ->
-                        tileWrappers.getOrPut(bitmap) { ValidatingTile(bitmap) }
+                    }.filterValues { tile -> tile.isValid() }
+                    .mapValues { (_, tile) ->
+                        tile
                     }
 
             if (previousBucket == null || previousBucket == currentBucket) {
@@ -182,9 +250,9 @@ class PdfTileCache(
                         key.pageIndex == pageIndex &&
                             key.scaleBucket == previousBucket &&
                             (key.tileX to key.tileY) !in currentTilePositions
-                    }.filterValues { bitmap -> !bitmap.isRecycled }
-                    .mapValues { (_, bitmap) ->
-                        tileWrappers.getOrPut(bitmap) { ValidatingTile(bitmap) }
+                    }.filterValues { tile -> tile.isValid() }
+                    .mapValues { (_, tile) ->
+                        tile
                     }
 
             currentBucketTiles + previousBucketTiles

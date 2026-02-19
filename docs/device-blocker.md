@@ -322,7 +322,7 @@ cd /home/gamer/onyx/apps/android
 # 6. Relaunch: adb shell am start -n com.onyx.android/.MainActivity
 # 7. Verify note still exists with all strokes
 # 8. Query DB:
-adb shell "sqlite3 /data/data/com.onyx.android/databases/onyx.db 'SELECT recognizedText FROM recognition_index'"
+adb shell "sqlite3 /data/data/com.onyx.android/databases/onyx_notes.db 'SELECT recognizedText FROM recognition_index'"
 # Expected: "hello world" or similar
 ```
 

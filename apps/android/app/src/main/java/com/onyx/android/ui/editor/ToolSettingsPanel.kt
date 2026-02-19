@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,11 +31,14 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 @Composable
+@Suppress("LongParameterList")
 internal fun ToolSettingsPanel(
     panelType: ToolPanelType,
     brush: Brush,
+    isSegmentEraserEnabled: Boolean = false,
     onDismiss: () -> Unit,
     onBrushChange: (Brush) -> Unit,
+    onSegmentEraserEnabledChange: (Boolean) -> Unit = {},
 ) {
     val title =
         when (panelType) {
@@ -138,10 +142,31 @@ internal fun ToolSettingsPanel(
                 ToolPanelType.ERASER -> {
                     Text(text = "Stroke eraser", style = MaterialTheme.typography.bodyMedium)
                     Text(
-                        text = "Erases entire strokes until segment eraser support is added.",
+                        text = "Erases whole strokes on touch.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(text = "Segment eraser", style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                text = "Split strokes where the eraser path intersects.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Switch(
+                            checked = isSegmentEraserEnabled,
+                            onCheckedChange = onSegmentEraserEnabledChange,
+                        )
+                    }
                 }
 
                 ToolPanelType.LASSO -> {

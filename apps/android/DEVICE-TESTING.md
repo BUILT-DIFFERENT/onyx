@@ -107,7 +107,7 @@ Verify strokes still visible.
 
 ### 5. Check Database
 ```bash
-adb shell "run-as com.onyx.android sqlite3 /data/data/com.onyx.android/databases/onyx.db 'SELECT recognizedText FROM recognition_index;'"
+adb shell "run-as com.onyx.android sqlite3 /data/data/com.onyx.android/databases/onyx_notes.db 'SELECT recognizedText FROM recognition_index;'"
 ```
 
 Should show recognized text.

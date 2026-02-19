@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Onyx</string>
     <string name="pdf_selection_copy">Copy</string>
+    <string name="pdf_selection_copied">Selection copied</string>
 </resources>

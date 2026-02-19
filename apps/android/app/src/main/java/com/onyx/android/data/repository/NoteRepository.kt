@@ -1,8 +1,12 @@
 package com.onyx.android.data.repository
 
+import android.content.Context
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import com.onyx.android.data.dao.FolderDao
 import com.onyx.android.data.dao.NoteDao
 import com.onyx.android.data.dao.PageDao
+import com.onyx.android.data.dao.PageTemplateDao
 import com.onyx.android.data.dao.RecognitionDao
 import com.onyx.android.data.dao.StrokeDao
 import com.onyx.android.data.dao.TagDao
@@ -18,17 +22,41 @@ import com.onyx.android.data.serialization.StrokeSerializer
 import com.onyx.android.data.thumbnail.ThumbnailGenerator
 import com.onyx.android.device.DeviceIdentity
 import com.onyx.android.ink.model.Stroke
+import com.onyx.android.pdf.PdfAssetStorage
+import com.onyx.android.pdf.PdfPasswordStore
+import com.onyx.android.pdf.PdfTextChar
+import com.onyx.android.pdf.PdfiumRenderer
+import com.onyx.android.recognition.ConvertedTextBlock
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
+import java.util.Locale
 import java.util.UUID
+import kotlin.math.max
+import kotlin.math.min
 
-data class SearchResultItem(
+enum class SearchSourceType {
+    INK,
+    PDF,
+    NOTE_METADATA,
+    PAGE_METADATA,
+}
+
+data class SearchResult(
+    val resultId: String,
     val noteId: String,
     val noteTitle: String,
-    val pageId: String,
-    val pageNumber: Int,
-    val snippetText: String,
-    val matchScore: Double,
+    val pageId: String?,
+    val sourceType: SearchSourceType,
+    val matchedText: String,
+    val contextSnippet: String,
+    val bounds: Rect?,
+    val pageIndex: Int?,
+    val highlightColor: Color,
 )
 
 /**
@@ -71,23 +99,54 @@ data class FilterState(
 /**
  * Exception thrown when attempting to create a tag with a name that already exists.
  */
-class DuplicateTagNameException(tagName: String) : Exception("Tag with name '$tagName' already exists")
+class DuplicateTagNameException(
+    tagName: String,
+) : Exception("Tag with name '$tagName' already exists")
 
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions", "LongParameterList", "LargeClass")
 class NoteRepository(
     private val noteDao: NoteDao,
     private val pageDao: PageDao,
     private val strokeDao: StrokeDao,
     private val recognitionDao: RecognitionDao,
     private val folderDao: FolderDao,
+    private val pageTemplateDao: PageTemplateDao,
     private val tagDao: TagDao,
     private val deviceIdentity: DeviceIdentity,
     private val strokeSerializer: StrokeSerializer,
+    private val appContext: Context,
+    private val pdfAssetStorage: PdfAssetStorage,
+    private val pdfPasswordStore: PdfPasswordStore,
     private val thumbnailGenerator: ThumbnailGenerator?,
 ) {
     companion object {
         private const val SNIPPET_LENGTH = 100
+        private const val CONTEXT_RADIUS = 40
+        private const val MAX_SEARCH_RESULTS = 50
+        private const val SCORE_WEIGHT_INK = 8.0
+        private const val SCORE_WEIGHT_PDF = 7.0
+        private const val SCORE_WEIGHT_PAGE_METADATA = 5.0
+        private const val SCORE_WEIGHT_NOTE_METADATA = 4.0
+        private const val SCORE_METADATA_PENALTY = -4.0
+        private const val SCORE_EXACT_BOOST = 25.0
+        private const val SCORE_PREFIX_BOOST = 8.0
+        private const val PAGE_TEMPLATE_ID_SUFFIX = "template"
+        private const val TEMPLATE_MIN_SPACING = 8f
+        private const val TEMPLATE_MAX_SPACING = 80f
+        private const val RGB_MASK = 0xFFFFFF
+        private val INK_RESULT_COLOR = Color(0xFF0A84FF)
+        private val PDF_RESULT_COLOR = Color(0xFFF2994A)
+        private val NOTE_METADATA_RESULT_COLOR = Color(0xFF34A853)
+        private val PAGE_METADATA_RESULT_COLOR = Color(0xFF7E57C2)
     }
+
+    private data class RankedResult(
+        val result: SearchResult,
+        val score: Double,
+        val updatedAt: Long,
+    )
+
+    private val overlayJson = Json { ignoreUnknownKeys = true }
 
     suspend fun createNote(): NoteWithFirstPage {
         val now = System.currentTimeMillis()
@@ -172,6 +231,69 @@ class NoteRepository(
         return page
     }
 
+    suspend fun getTemplateConfig(templateId: String?): PageTemplateConfig {
+        if (templateId.isNullOrBlank()) {
+            return PageTemplateConfig.BLANK
+        }
+        val template = pageTemplateDao.getById(templateId)
+        return template?.toConfig() ?: PageTemplateConfig.BLANK
+    }
+
+    suspend fun getTemplateConfigMapByPageId(pages: List<PageEntity>): Map<String, PageTemplateConfig> {
+        if (pages.isEmpty()) {
+            return emptyMap()
+        }
+        val templateIds = pages.mapNotNull { page -> page.templateId }.toSet()
+        val templateById =
+            if (templateIds.isEmpty()) {
+                emptyMap()
+            } else {
+                pageTemplateDao
+                    .getByIds(templateIds)
+                    .associateBy { template -> template.templateId }
+            }
+        return pages.associate { page ->
+            val config =
+                page.templateId
+                    ?.let { templateId -> templateById[templateId]?.toConfig() }
+                    ?: PageTemplateConfig.BLANK
+            page.pageId to config
+        }
+    }
+
+    suspend fun saveTemplateForPage(
+        pageId: String,
+        backgroundKind: String,
+        spacing: Float,
+        colorHex: String,
+    ) {
+        val now = System.currentTimeMillis()
+        val page = pageDao.getById(pageId) ?: return
+        if (backgroundKind == PageTemplateConfig.KIND_BLANK) {
+            pageDao.updateTemplate(pageId = pageId, templateId = null, updatedAt = now)
+            noteDao.updateTimestamp(page.noteId, now)
+            return
+        }
+
+        val normalizedKind = normalizeBackgroundKind(backgroundKind)
+        val normalizedSpacing = spacing.coerceIn(TEMPLATE_MIN_SPACING, TEMPLATE_MAX_SPACING)
+        val normalizedColor = normalizeColorHex(colorHex)
+        val templateId = "$pageId-$PAGE_TEMPLATE_ID_SUFFIX"
+        pageTemplateDao.insert(
+            com.onyx.android.data.entity.PageTemplateEntity(
+                templateId = templateId,
+                name = templateName(normalizedKind, normalizedSpacing),
+                backgroundKind = normalizedKind,
+                spacing = normalizedSpacing,
+                color = normalizedColor,
+                isBuiltIn = false,
+                createdAt = now,
+            ),
+        )
+        pageDao.updateTemplate(pageId = pageId, templateId = templateId, updatedAt = now)
+        noteDao.updateTimestamp(page.noteId, now)
+    }
+
     @Suppress("LongParameterList")
     suspend fun createPageFromPdf(
         noteId: String,
@@ -217,16 +339,7 @@ class NoteRepository(
         stroke: Stroke,
     ) {
         val now = System.currentTimeMillis()
-        val entity =
-            StrokeEntity(
-                strokeId = stroke.id,
-                pageId = pageId,
-                strokeData = strokeSerializer.serializePoints(stroke.points),
-                style = strokeSerializer.serializeStyle(stroke.style),
-                bounds = strokeSerializer.serializeBounds(stroke.bounds),
-                createdAt = stroke.createdAt,
-                createdLamport = stroke.createdLamport,
-            )
+        val entity = stroke.toEntity(pageId)
         strokeDao.insert(entity)
 
         pageDao.updateTimestamp(pageId, now)
@@ -244,6 +357,85 @@ class NoteRepository(
         noteDao.updateTimestamp(page.noteId, now)
     }
 
+    suspend fun replaceStrokeWithSegments(
+        pageId: String,
+        originalStrokeId: String,
+        segments: List<Stroke>,
+    ) {
+        val now = System.currentTimeMillis()
+        strokeDao.delete(originalStrokeId)
+        if (segments.isNotEmpty()) {
+            strokeDao.insertAll(segments.map { segment -> segment.toEntity(pageId) })
+        }
+        pageDao.updateTimestamp(pageId, now)
+        val page = requireNotNull(pageDao.getById(pageId)) { "Page not found: $pageId" }
+        noteDao.updateTimestamp(page.noteId, now)
+    }
+
+    private fun com.onyx.android.data.entity.PageTemplateEntity.toConfig(): PageTemplateConfig =
+        PageTemplateConfig(
+            templateId = templateId,
+            backgroundKind = normalizeBackgroundKind(backgroundKind),
+            spacing =
+                spacing?.coerceIn(TEMPLATE_MIN_SPACING, TEMPLATE_MAX_SPACING)
+                    ?: PageTemplateConfig.DEFAULT_SPACING,
+            colorHex = normalizeColorHex(color),
+        )
+
+    private fun normalizeBackgroundKind(backgroundKind: String): String =
+        when (backgroundKind) {
+            PageTemplateConfig.KIND_GRID,
+            PageTemplateConfig.KIND_LINED,
+            PageTemplateConfig.KIND_DOTTED,
+            -> backgroundKind
+
+            else -> PageTemplateConfig.KIND_GRID
+        }
+
+    private fun templateName(
+        kind: String,
+        spacing: Float,
+    ): String = "${kind.replaceFirstChar { value -> value.uppercase() }} ${spacing.toInt()}pt"
+
+    private fun normalizeColorHex(colorHex: String?): String {
+        if (colorHex.isNullOrBlank()) {
+            return PageTemplateConfig.DEFAULT_COLOR_HEX
+        }
+        return runCatching {
+            val colorInt = android.graphics.Color.parseColor(colorHex)
+            String.format(Locale.US, "#%06X", (RGB_MASK and colorInt))
+        }.getOrDefault(PageTemplateConfig.DEFAULT_COLOR_HEX)
+    }
+
+    suspend fun restoreSplitStroke(
+        pageId: String,
+        original: Stroke,
+        segmentIds: List<String>,
+    ) {
+        val now = System.currentTimeMillis()
+        if (segmentIds.isNotEmpty()) {
+            strokeDao.deleteByIds(segmentIds)
+        }
+        strokeDao.insert(original.toEntity(pageId))
+        pageDao.updateTimestamp(pageId, now)
+        val page = requireNotNull(pageDao.getById(pageId)) { "Page not found: $pageId" }
+        noteDao.updateTimestamp(page.noteId, now)
+    }
+
+    suspend fun replaceStrokes(
+        pageId: String,
+        strokes: List<Stroke>,
+    ) {
+        if (strokes.isEmpty()) {
+            return
+        }
+        val now = System.currentTimeMillis()
+        strokeDao.insertAll(strokes.map { stroke -> stroke.toEntity(pageId) })
+        pageDao.updateTimestamp(pageId, now)
+        val page = requireNotNull(pageDao.getById(pageId)) { "Page not found: $pageId" }
+        noteDao.updateTimestamp(page.noteId, now)
+    }
+
     suspend fun getStrokesForPage(pageId: String): List<Stroke> =
         strokeDao.getByPageId(pageId).map { entity ->
             Stroke(
@@ -255,6 +447,17 @@ class NoteRepository(
                 createdLamport = entity.createdLamport,
             )
         }
+
+    private fun Stroke.toEntity(pageId: String): StrokeEntity =
+        StrokeEntity(
+            strokeId = id,
+            pageId = pageId,
+            strokeData = strokeSerializer.serializePoints(points),
+            style = strokeSerializer.serializeStyle(style),
+            bounds = strokeSerializer.serializeBounds(bounds),
+            createdAt = createdAt,
+            createdLamport = createdLamport,
+        )
 
     /**
      * Load strokes for multiple pages in a single transaction.
@@ -287,6 +490,30 @@ class NoteRepository(
         )
 
         updatePageTimestamp(pageId)
+    }
+
+    suspend fun getRecognitionText(pageId: String): String? = recognitionDao.getByPageId(pageId)?.recognizedText
+
+    suspend fun getConvertedTextBlocks(pageId: String): List<ConvertedTextBlock> =
+        withContext(Dispatchers.IO) {
+            val file = conversionOverlayFile(pageId)
+            if (!file.exists()) {
+                return@withContext emptyList()
+            }
+            runCatching {
+                overlayJson.decodeFromString(ListSerializer(ConvertedTextBlock.serializer()), file.readText())
+            }.getOrElse { emptyList() }
+        }
+
+    suspend fun saveConvertedTextBlocks(
+        pageId: String,
+        blocks: List<ConvertedTextBlock>,
+    ) {
+        withContext(Dispatchers.IO) {
+            val file = conversionOverlayFile(pageId)
+            file.parentFile?.mkdirs()
+            file.writeText(overlayJson.encodeToString(ListSerializer(ConvertedTextBlock.serializer()), blocks))
+        }
     }
 
     suspend fun upgradePageToMixed(pageId: String) {
@@ -329,26 +556,332 @@ class NoteRepository(
         noteDao.updateTitle(noteId = noteId, title = title, updatedAt = now)
     }
 
-    fun searchNotes(query: String): Flow<List<SearchResultItem>> {
-        return recognitionDao.search(query).map { recognitionHits ->
-            recognitionHits
-                .mapNotNull { recognition ->
-                    val page = pageDao.getById(recognition.pageId) ?: return@mapNotNull null
-                    val note = noteDao.getById(page.noteId) ?: return@mapNotNull null
-
-                    val snippet = recognition.recognizedText.orEmpty().take(SNIPPET_LENGTH)
-
-                    SearchResultItem(
-                        noteId = note.noteId,
-                        noteTitle = note.title.ifEmpty { "Untitled Note" },
-                        pageId = recognition.pageId,
-                        pageNumber = page.indexInNote + 1,
-                        snippetText = snippet,
-                        matchScore = 1.0,
-                    )
-                }.distinctBy { it.noteId }
-                .sortedByDescending { it.matchScore }
+    @Suppress("LongMethod", "NestedBlockDepth", "CyclomaticComplexMethod")
+    fun searchNotes(query: String): Flow<List<SearchResult>> {
+        val normalizedQuery = query.trim()
+        if (normalizedQuery.isBlank()) {
+            return flowOf(emptyList())
         }
+        return noteDao.getAllNotes().map { notes ->
+            val folderNameCache = mutableMapOf<String, String?>()
+            val templateNameCache = mutableMapOf<String, String?>()
+            val pdfRendererCache = mutableMapOf<String, PdfiumRenderer?>()
+            val ranked = mutableListOf<RankedResult>()
+
+            try {
+                notes.forEach { note ->
+                    val noteTitle = note.title.ifEmpty { "Untitled Note" }
+                    val folderName =
+                        note.folderId?.let { folderId ->
+                            folderNameCache.getOrPut(folderId) {
+                                folderDao.getById(folderId)?.name
+                            }
+                        }
+
+                    if (noteTitle.contains(normalizedQuery, ignoreCase = true)) {
+                        ranked +=
+                            buildRankedResult(
+                                noteId = note.noteId,
+                                noteTitle = noteTitle,
+                                pageId = null,
+                                sourceType = SearchSourceType.NOTE_METADATA,
+                                matchedText = noteTitle,
+                                contextSnippet = buildSnippet(noteTitle, normalizedQuery),
+                                bounds = null,
+                                pageIndex = null,
+                                updatedAt = note.updatedAt,
+                                query = normalizedQuery,
+                            )
+                    }
+
+                    if (!folderName.isNullOrBlank() && folderName.contains(normalizedQuery, ignoreCase = true)) {
+                        ranked +=
+                            buildRankedResult(
+                                noteId = note.noteId,
+                                noteTitle = noteTitle,
+                                pageId = null,
+                                sourceType = SearchSourceType.NOTE_METADATA,
+                                matchedText = folderName,
+                                contextSnippet = "Folder: $folderName",
+                                bounds = null,
+                                pageIndex = null,
+                                updatedAt = note.updatedAt,
+                                query = normalizedQuery,
+                            )
+                    }
+
+                    val pages = pageDao.getPagesForNoteSync(note.noteId)
+                    pages.forEach { page ->
+                        val templateName =
+                            page.templateId?.let { templateId ->
+                                templateNameCache.getOrPut(templateId) {
+                                    pageTemplateDao.getById(templateId)?.name
+                                }
+                            }
+
+                        if (
+                            page.kind.contains(normalizedQuery, ignoreCase = true) ||
+                            (!templateName.isNullOrBlank() && templateName.contains(normalizedQuery, ignoreCase = true))
+                        ) {
+                            val matchedText =
+                                when {
+                                    page.kind.contains(normalizedQuery, ignoreCase = true) -> page.kind
+                                    else -> templateName.orEmpty()
+                                }
+                            val snippet =
+                                if (templateName.isNullOrBlank()) {
+                                    "Page type: ${page.kind}"
+                                } else {
+                                    "Page type: ${page.kind}, template: $templateName"
+                                }
+                            ranked +=
+                                buildRankedResult(
+                                    noteId = note.noteId,
+                                    noteTitle = noteTitle,
+                                    pageId = page.pageId,
+                                    sourceType = SearchSourceType.PAGE_METADATA,
+                                    matchedText = matchedText,
+                                    contextSnippet = snippet,
+                                    bounds = null,
+                                    pageIndex = page.indexInNote,
+                                    updatedAt = note.updatedAt,
+                                    query = normalizedQuery,
+                                )
+                        }
+
+                        val recognitionText = recognitionDao.getByPageId(page.pageId)?.recognizedText
+                        if (
+                            !recognitionText.isNullOrBlank() &&
+                            recognitionText.contains(normalizedQuery, ignoreCase = true)
+                        ) {
+                            ranked +=
+                                buildRankedResult(
+                                    noteId = note.noteId,
+                                    noteTitle = noteTitle,
+                                    pageId = page.pageId,
+                                    sourceType = SearchSourceType.INK,
+                                    matchedText = extractMatchedText(recognitionText, normalizedQuery),
+                                    contextSnippet = buildSnippet(recognitionText, normalizedQuery),
+                                    bounds = computeInkBounds(page.pageId),
+                                    pageIndex = page.indexInNote,
+                                    updatedAt = note.updatedAt,
+                                    query = normalizedQuery,
+                                )
+                        }
+
+                        val pdfAssetId = page.pdfAssetId
+                        if (pdfAssetId != null) {
+                            val renderer =
+                                pdfRendererCache.getOrPut(pdfAssetId) {
+                                    runCatching {
+                                        PdfiumRenderer(
+                                            context = appContext,
+                                            pdfFile = pdfAssetStorage.getFileForAsset(pdfAssetId),
+                                            password = pdfPasswordStore.getPassword(pdfAssetId),
+                                        )
+                                    }.getOrNull()
+                                }
+                            if (renderer != null) {
+                                val pageIndex = page.pdfPageNo?.minus(1)?.coerceAtLeast(0) ?: page.indexInNote
+                                val pdfMatch =
+                                    runCatching {
+                                        findPdfMatch(renderer.getCharacters(pageIndex), normalizedQuery)
+                                    }.getOrNull()
+                                if (pdfMatch != null) {
+                                    ranked +=
+                                        buildRankedResult(
+                                            noteId = note.noteId,
+                                            noteTitle = noteTitle,
+                                            pageId = page.pageId,
+                                            sourceType = SearchSourceType.PDF,
+                                            matchedText = pdfMatch.first,
+                                            contextSnippet = pdfMatch.second,
+                                            bounds = pdfMatch.third,
+                                            pageIndex = page.indexInNote,
+                                            updatedAt = note.updatedAt,
+                                            query = normalizedQuery,
+                                        )
+                                }
+                            }
+                        }
+                    }
+                }
+            } finally {
+                pdfRendererCache.values.forEach { renderer ->
+                    if (renderer != null) {
+                        runCatching { renderer.close() }
+                    }
+                }
+            }
+
+            ranked
+                .distinctBy { rankedResult ->
+                    val result = rankedResult.result
+                    val boundsKey =
+                        result.bounds?.let { bounds ->
+                            "${bounds.left}:${bounds.top}:${bounds.right}:${bounds.bottom}"
+                        } ?: "none"
+                    "${result.noteId}|${result.pageId}|${result.sourceType}|${result.matchedText}|$boundsKey"
+                }.sortedWith(
+                    compareByDescending<RankedResult> { rankedResult -> rankedResult.score }
+                        .thenByDescending { rankedResult -> rankedResult.updatedAt },
+                ).take(MAX_SEARCH_RESULTS)
+                .map { rankedResult -> rankedResult.result }
+        }
+    }
+
+    private fun buildRankedResult(
+        noteId: String,
+        noteTitle: String,
+        pageId: String?,
+        sourceType: SearchSourceType,
+        matchedText: String,
+        contextSnippet: String,
+        bounds: Rect?,
+        pageIndex: Int?,
+        updatedAt: Long,
+        query: String,
+    ): RankedResult {
+        val isExact = matchedText.equals(query, ignoreCase = true)
+        val normalizedMatched = matchedText.trim().lowercase()
+        val normalizedQuery = query.trim().lowercase()
+        val sourceWeight =
+            when (sourceType) {
+                SearchSourceType.INK -> SCORE_WEIGHT_INK
+                SearchSourceType.PDF -> SCORE_WEIGHT_PDF
+                SearchSourceType.PAGE_METADATA -> SCORE_WEIGHT_PAGE_METADATA
+                SearchSourceType.NOTE_METADATA -> SCORE_WEIGHT_NOTE_METADATA
+            }
+        val metadataPenalty =
+            if (sourceType == SearchSourceType.NOTE_METADATA || sourceType == SearchSourceType.PAGE_METADATA) {
+                SCORE_METADATA_PENALTY
+            } else {
+                0.0
+            }
+        val exactBoost = if (isExact) SCORE_EXACT_BOOST else 0.0
+        val prefixBoost = if (normalizedMatched.startsWith(normalizedQuery)) SCORE_PREFIX_BOOST else 0.0
+        val score = sourceWeight + exactBoost + prefixBoost + metadataPenalty
+        val boundedSnippet = contextSnippet.take(SNIPPET_LENGTH)
+
+        return RankedResult(
+            result =
+                SearchResult(
+                    resultId = UUID.randomUUID().toString(),
+                    noteId = noteId,
+                    noteTitle = noteTitle,
+                    pageId = pageId,
+                    sourceType = sourceType,
+                    matchedText = matchedText,
+                    contextSnippet = boundedSnippet,
+                    bounds = bounds,
+                    pageIndex = pageIndex,
+                    highlightColor = highlightColorFor(sourceType),
+                ),
+            score = score,
+            updatedAt = updatedAt,
+        )
+    }
+
+    private fun highlightColorFor(sourceType: SearchSourceType): Color =
+        when (sourceType) {
+            SearchSourceType.INK -> INK_RESULT_COLOR
+            SearchSourceType.PDF -> PDF_RESULT_COLOR
+            SearchSourceType.NOTE_METADATA -> NOTE_METADATA_RESULT_COLOR
+            SearchSourceType.PAGE_METADATA -> PAGE_METADATA_RESULT_COLOR
+        }
+
+    private fun buildSnippet(
+        text: String,
+        query: String,
+    ): String {
+        val index = text.indexOf(query, ignoreCase = true)
+        if (index < 0) {
+            return text.take(SNIPPET_LENGTH)
+        }
+        val start = max(0, index - CONTEXT_RADIUS)
+        val end = min(text.length, index + query.length + CONTEXT_RADIUS)
+        return text.substring(start, end).trim()
+    }
+
+    private fun extractMatchedText(
+        text: String,
+        query: String,
+    ): String {
+        val index = text.indexOf(query, ignoreCase = true)
+        if (index < 0) {
+            return query
+        }
+        val end = (index + query.length).coerceAtMost(text.length)
+        return text.substring(index, end)
+    }
+
+    private suspend fun computeInkBounds(pageId: String): Rect? {
+        val strokeBounds =
+            strokeDao
+                .getByPageId(pageId)
+                .mapNotNull { stroke ->
+                    runCatching { strokeSerializer.deserializeBounds(stroke.bounds) }.getOrNull()
+                }
+        if (strokeBounds.isEmpty()) {
+            return null
+        }
+        val minX = strokeBounds.minOf { bounds -> bounds.x }
+        val minY = strokeBounds.minOf { bounds -> bounds.y }
+        val maxX = strokeBounds.maxOf { bounds -> bounds.x + bounds.w }
+        val maxY = strokeBounds.maxOf { bounds -> bounds.y + bounds.h }
+        return Rect(
+            left = minX,
+            top = minY,
+            right = maxX,
+            bottom = maxY,
+        )
+    }
+
+    @Suppress("ReturnCount", "ComplexCondition")
+    private fun findPdfMatch(
+        characters: List<PdfTextChar>,
+        query: String,
+    ): Triple<String, String, Rect>? {
+        if (characters.isEmpty()) {
+            return null
+        }
+        val documentText = characters.joinToString(separator = "") { character -> character.char }
+        val startIndex = documentText.indexOf(query, ignoreCase = true)
+        if (startIndex < 0) {
+            return null
+        }
+        val endExclusive = (startIndex + query.length).coerceAtMost(characters.size)
+        val matchedChars = characters.subList(startIndex, endExclusive)
+        if (matchedChars.isEmpty()) {
+            return null
+        }
+
+        var left = Float.POSITIVE_INFINITY
+        var top = Float.POSITIVE_INFINITY
+        var right = Float.NEGATIVE_INFINITY
+        var bottom = Float.NEGATIVE_INFINITY
+        matchedChars.forEach { matchedChar ->
+            val quad = matchedChar.quad
+            left = min(left, min(min(quad.p1.x, quad.p2.x), min(quad.p3.x, quad.p4.x)))
+            top = min(top, min(min(quad.p1.y, quad.p2.y), min(quad.p3.y, quad.p4.y)))
+            right = max(right, max(max(quad.p1.x, quad.p2.x), max(quad.p3.x, quad.p4.x)))
+            bottom = max(bottom, max(max(quad.p1.y, quad.p2.y), max(quad.p3.y, quad.p4.y)))
+        }
+
+        if (!left.isFinite() || !top.isFinite() || !right.isFinite() || !bottom.isFinite()) {
+            return null
+        }
+
+        return Triple(
+            documentText.substring(startIndex, endExclusive),
+            buildSnippet(documentText, query),
+            Rect(
+                left = left,
+                top = top,
+                right = right,
+                bottom = bottom,
+            ),
+        )
     }
 
     private suspend fun updatePageTimestamp(pageId: String) {
@@ -357,6 +890,9 @@ class NoteRepository(
         val page = requireNotNull(pageDao.getById(pageId)) { "Page not found: $pageId" }
         noteDao.updateTimestamp(page.noteId, now)
     }
+
+    private fun conversionOverlayFile(pageId: String): java.io.File =
+        java.io.File(appContext.filesDir, "recognition/overlays/page_$pageId.json")
 
     // Thumbnail operations
 
@@ -374,19 +910,17 @@ class NoteRepository(
      * @param noteId The ID of the note
      * @return The generated ThumbnailEntity, or null if generation failed
      */
-    suspend fun generateThumbnail(noteId: String): ThumbnailEntity? {
-        return thumbnailGenerator?.generateThumbnail(noteId)
-    }
+    suspend fun generateThumbnail(noteId: String): ThumbnailEntity? = thumbnailGenerator?.generateThumbnail(noteId)
 
     /**
      * Regenerate a thumbnail if it's missing from storage.
      *
      * @param noteId The ID of the note
-     * @return The regenerated ThumbnailEntity, or null if regeneration failed
+     * @return The regenerated ThumbnailEntity,
+     * or null if regeneration failed
      */
-    suspend fun regenerateThumbnailIfMissing(noteId: String): ThumbnailEntity? {
-        return thumbnailGenerator?.regenerateIfMissing(noteId)
-    }
+    @Suppress("MaxLineLength")
+    suspend fun regenerateThumbnailIfMissing(noteId: String): ThumbnailEntity? = thumbnailGenerator?.regenerateIfMissing(noteId)
 
     /**
      * Delete a thumbnail for a note.
@@ -413,6 +947,7 @@ class NoteRepository(
                 name = name,
                 parentId = null,
                 createdAt = now,
+                updatedAt = now,
             )
         folderDao.insert(folder)
         return folder
@@ -477,8 +1012,8 @@ class NoteRepository(
         folderId: String?,
         sortOption: SortOption,
         sortDirection: SortDirection,
-    ): Flow<List<NoteEntity>> {
-        return when (folderId) {
+    ): Flow<List<NoteEntity>> =
+        when (folderId) {
             null -> {
                 // Root notes
                 when (sortOption) {
@@ -489,6 +1024,7 @@ class NoteRepository(
                             noteDao.getRootNotesSortedByNameDesc()
                         }
                     }
+
                     SortOption.CREATED -> {
                         if (sortDirection == SortDirection.ASC) {
                             noteDao.getRootNotesSortedByCreatedAsc()
@@ -496,6 +1032,7 @@ class NoteRepository(
                             noteDao.getRootNotesSortedByCreatedDesc()
                         }
                     }
+
                     SortOption.MODIFIED -> {
                         if (sortDirection == SortDirection.ASC) {
                             noteDao.getRootNotesSortedByModifiedAsc()
@@ -505,6 +1042,7 @@ class NoteRepository(
                     }
                 }
             }
+
             else -> {
                 // Folder notes
                 when (sortOption) {
@@ -515,6 +1053,7 @@ class NoteRepository(
                             noteDao.getNotesByFolderSortedByNameDesc(folderId)
                         }
                     }
+
                     SortOption.CREATED -> {
                         if (sortDirection == SortDirection.ASC) {
                             noteDao.getNotesByFolderSortedByCreatedAsc(folderId)
@@ -522,6 +1061,7 @@ class NoteRepository(
                             noteDao.getNotesByFolderSortedByCreatedDesc(folderId)
                         }
                     }
+
                     SortOption.MODIFIED -> {
                         if (sortDirection == SortDirection.ASC) {
                             noteDao.getNotesByFolderSortedByModifiedAsc(folderId)
@@ -532,7 +1072,6 @@ class NoteRepository(
                 }
             }
         }
-    }
 
     /**
      * Get notes filtered by date range.
@@ -554,6 +1093,7 @@ class NoteRepository(
                     noteDao.getRootNotesByDateRange(startTime, endTime)
                 }
             }
+
             else -> {
                 if (dateRange == DateRange.OLDER) {
                     noteDao.getNotesByFolderOlderThan(folderId, endTime)
@@ -584,6 +1124,7 @@ class NoteRepository(
                 val endTime = calendar.timeInMillis
                 Pair(startTime, endTime)
             }
+
             DateRange.THIS_WEEK -> {
                 calendar.set(java.util.Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek())
                 calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
@@ -595,6 +1136,7 @@ class NoteRepository(
                 val endTime = calendar.timeInMillis
                 Pair(startTime, endTime)
             }
+
             DateRange.THIS_MONTH -> {
                 calendar.set(java.util.Calendar.DAY_OF_MONTH, 1)
                 calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
@@ -606,6 +1148,7 @@ class NoteRepository(
                 val endTime = calendar.timeInMillis
                 Pair(startTime, endTime)
             }
+
             DateRange.THIS_YEAR -> {
                 calendar.set(java.util.Calendar.DAY_OF_YEAR, 1)
                 calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
@@ -617,6 +1160,7 @@ class NoteRepository(
                 val endTime = calendar.timeInMillis
                 Pair(startTime, endTime)
             }
+
             DateRange.OLDER -> {
                 // For OLDER, we use endTime as the cutoff (1 year ago)
                 calendar.set(java.util.Calendar.DAY_OF_YEAR, 1)

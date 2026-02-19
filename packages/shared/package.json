@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "lint:quick": "oxlint .",
     "lint:fix": "eslint . --fix",
-    "test": "vitest run --passWithNoTests",
+    "test": "echo 'ERROR: No tests implemented for this package yet' && exit 1",
     "format": "prettier . --write",
     "format:check": "prettier . --check"
   }

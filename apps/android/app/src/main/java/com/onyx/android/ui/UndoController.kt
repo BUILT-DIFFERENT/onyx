@@ -22,18 +22,57 @@ internal class UndoController(
     fun undo() {
         val action = undoStack.removeLastOrNull() ?: return
         when (action) {
-            is InkAction.AddStroke ->
+            is InkAction.AddStroke -> {
                 if (useMultiPage) {
                     viewModel.removeStrokeForPage(action.stroke, action.pageId, persist = true)
                 } else {
                     viewModel.removeStroke(action.stroke, persist = true)
                 }
-            is InkAction.RemoveStroke ->
+            }
+
+            is InkAction.RemoveStroke -> {
                 if (useMultiPage) {
                     viewModel.addStrokeForPage(action.stroke, action.pageId, persist = true)
                 } else {
                     viewModel.addStroke(action.stroke, persist = true)
                 }
+            }
+
+            is InkAction.SplitStroke -> {
+                if (useMultiPage) {
+                    viewModel.restoreSplitStrokeForPage(
+                        original = action.original,
+                        segments = action.segments,
+                        pageId = action.pageId,
+                        insertionIndex = action.insertionIndex,
+                        persist = true,
+                    )
+                } else {
+                    viewModel.restoreSplitStroke(
+                        original = action.original,
+                        segments = action.segments,
+                        pageId = action.pageId,
+                        insertionIndex = action.insertionIndex,
+                        persist = true,
+                    )
+                }
+            }
+
+            is InkAction.TransformStrokes -> {
+                if (useMultiPage) {
+                    viewModel.replaceStrokesForPage(
+                        pageId = action.pageId,
+                        replacement = action.before,
+                        persist = true,
+                    )
+                } else {
+                    viewModel.replaceStrokes(
+                        pageId = action.pageId,
+                        replacement = action.before,
+                        persist = true,
+                    )
+                }
+            }
         }
         redoStack.add(action)
     }
@@ -41,18 +80,55 @@ internal class UndoController(
     fun redo() {
         val action = redoStack.removeLastOrNull() ?: return
         when (action) {
-            is InkAction.AddStroke ->
+            is InkAction.AddStroke -> {
                 if (useMultiPage) {
                     viewModel.addStrokeForPage(action.stroke, action.pageId, persist = true)
                 } else {
                     viewModel.addStroke(action.stroke, persist = true)
                 }
-            is InkAction.RemoveStroke ->
+            }
+
+            is InkAction.RemoveStroke -> {
                 if (useMultiPage) {
                     viewModel.removeStrokeForPage(action.stroke, action.pageId, persist = true)
                 } else {
                     viewModel.removeStroke(action.stroke, persist = true)
                 }
+            }
+
+            is InkAction.SplitStroke -> {
+                if (useMultiPage) {
+                    viewModel.splitStrokeForPage(
+                        original = action.original,
+                        segments = action.segments,
+                        pageId = action.pageId,
+                        persist = true,
+                    )
+                } else {
+                    viewModel.splitStroke(
+                        original = action.original,
+                        segments = action.segments,
+                        pageId = action.pageId,
+                        persist = true,
+                    )
+                }
+            }
+
+            is InkAction.TransformStrokes -> {
+                if (useMultiPage) {
+                    viewModel.replaceStrokesForPage(
+                        pageId = action.pageId,
+                        replacement = action.after,
+                        persist = true,
+                    )
+                } else {
+                    viewModel.replaceStrokes(
+                        pageId = action.pageId,
+                        replacement = action.after,
+                        persist = true,
+                    )
+                }
+            }
         }
         undoStack.add(action)
         trimUndoStack()
@@ -90,6 +166,64 @@ internal class UndoController(
             viewModel.removeStroke(stroke, persist = true)
         }
         undoStack.add(InkAction.RemoveStroke(stroke, pageId))
+        trimUndoStack()
+        redoStack.clear()
+    }
+
+    fun onStrokeSplit(
+        original: Stroke,
+        segments: List<Stroke>,
+        pageId: String,
+    ) {
+        val insertionIndex =
+            if (useMultiPage) {
+                viewModel.splitStrokeForPage(original, segments, pageId, persist = true)
+            } else {
+                viewModel.splitStroke(original, segments, pageId, persist = true)
+            }
+        if (insertionIndex == null) {
+            return
+        }
+        undoStack.add(
+            InkAction.SplitStroke(
+                original = original,
+                segments = segments,
+                pageId = pageId,
+                insertionIndex = insertionIndex,
+            ),
+        )
+        trimUndoStack()
+        redoStack.clear()
+    }
+
+    fun onStrokesTransformed(
+        pageId: String,
+        before: List<Stroke>,
+        after: List<Stroke>,
+    ) {
+        if (before.isEmpty() || after.isEmpty() || before.size != after.size) {
+            return
+        }
+        if (useMultiPage) {
+            viewModel.replaceStrokesForPage(
+                pageId = pageId,
+                replacement = after,
+                persist = true,
+            )
+        } else {
+            viewModel.replaceStrokes(
+                pageId = pageId,
+                replacement = after,
+                persist = true,
+            )
+        }
+        undoStack.add(
+            InkAction.TransformStrokes(
+                pageId = pageId,
+                before = before,
+                after = after,
+            ),
+        )
         trimUndoStack()
         redoStack.clear()
     }

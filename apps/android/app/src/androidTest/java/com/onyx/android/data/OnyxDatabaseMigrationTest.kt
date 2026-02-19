@@ -667,4 +667,90 @@ class OnyxDatabaseMigrationTest {
                 }
         }
     }
+
+    @Test
+    fun migration_5_to_6_creates_operation_log_table_and_indexes() {
+        runBlocking {
+            migrationTestHelper.createDatabase(testDatabaseName, 5).close()
+
+            migrationTestHelper
+                .runMigrationsAndValidate(
+                    testDatabaseName,
+                    6,
+                    true,
+                    com.onyx.android.data.migrations.MIGRATION_5_6,
+                ).use { db ->
+                    val tableCursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='operation_log'")
+                    tableCursor.use { cursor ->
+                        assertTrue("operation_log table should exist", cursor.moveToFirst())
+                    }
+
+                    val noteIdIndexCursor =
+                        db
+                            .query("SELECT name FROM sqlite_master WHERE type='index' AND name='index_operation_log_noteId'")
+                    noteIdIndexCursor.use { cursor ->
+                        assertTrue("index_operation_log_noteId should exist", cursor.moveToFirst())
+                    }
+
+                    val lamportIndexCursor =
+                        db
+                            .query("SELECT name FROM sqlite_master WHERE type='index' AND name='index_operation_log_lamportClock'")
+                    lamportIndexCursor.use { cursor ->
+                        assertTrue("index_operation_log_lamportClock should exist", cursor.moveToFirst())
+                    }
+
+                    val noteLamportIndexCursor =
+                        db.query(
+                            "SELECT name FROM sqlite_master WHERE type='index' AND name='index_operation_log_noteId_lamportClock'",
+                        )
+                    noteLamportIndexCursor.use { cursor ->
+                        assertTrue("index_operation_log_noteId_lamportClock should exist", cursor.moveToFirst())
+                    }
+                }
+        }
+    }
+
+    @Test
+    fun migration_5_to_6_operation_log_orders_by_lamport_monotonically() {
+        runBlocking {
+            val noteId = "note-lamport"
+            migrationTestHelper.createDatabase(testDatabaseName, 5).close()
+
+            migrationTestHelper
+                .runMigrationsAndValidate(
+                    testDatabaseName,
+                    6,
+                    true,
+                    com.onyx.android.data.migrations.MIGRATION_5_6,
+                ).use { db ->
+                    db.execSQL(
+                        "INSERT INTO operation_log (opId, noteId, deviceId, lamportClock, operationType, payload, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        arrayOf("op-3", noteId, "device-a", 3L, "stroke_add", "{}", testTimestamp + 30),
+                    )
+                    db.execSQL(
+                        "INSERT INTO operation_log (opId, noteId, deviceId, lamportClock, operationType, payload, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        arrayOf("op-1", noteId, "device-a", 1L, "stroke_add", "{}", testTimestamp + 10),
+                    )
+                    db.execSQL(
+                        "INSERT INTO operation_log (opId, noteId, deviceId, lamportClock, operationType, payload, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        arrayOf("op-2", noteId, "device-a", 2L, "stroke_add", "{}", testTimestamp + 20),
+                    )
+
+                    val cursor =
+                        db
+                            .query("SELECT lamportClock FROM operation_log WHERE noteId = ? ORDER BY lamportClock ASC", arrayOf(noteId))
+                    cursor.use {
+                        assertTrue(it.moveToFirst())
+                        val first = it.getLong(0)
+                        assertTrue(it.moveToNext())
+                        val second = it.getLong(0)
+                        assertTrue(it.moveToNext())
+                        val third = it.getLong(0)
+                        assertEquals(1L, first)
+                        assertEquals(2L, second)
+                        assertEquals(3L, third)
+                    }
+                }
+        }
+    }
 }

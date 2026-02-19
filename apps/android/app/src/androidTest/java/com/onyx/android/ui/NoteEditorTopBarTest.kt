@@ -232,6 +232,8 @@ private fun defaultTopBarState(): NoteEditorTopBarState =
         onRedo = {},
         onToggleReadOnly = {},
         onOpenOutline = {},
+        isRecognitionOverlayEnabled = false,
+        onToggleRecognitionOverlay = {},
     )
 
 private fun defaultToolbarState(
@@ -242,7 +244,9 @@ private fun defaultToolbarState(
         brush = brush,
         lastNonEraserTool = Tool.PEN,
         isStylusButtonEraserActive = false,
+        templateState = PageTemplateState.BLANK,
         onBrushChange = onBrushChange,
+        onTemplateChange = {},
     )
 
 private fun defaultContentState(): NoteEditorContentState =
@@ -268,6 +272,11 @@ private fun defaultContentState(): NoteEditorContentState =
         interactionMode = InteractionMode.DRAW,
         thumbnails = emptyList(),
         currentPageIndex = 0,
+        templateState = PageTemplateState.BLANK,
+        isRecognitionOverlayEnabled = false,
+        recognitionText = null,
+        convertedTextBlocks = emptyList(),
+        onConvertedTextBlockSelected = {},
         onStrokeFinished = {},
         onStrokeErased = {},
         onStylusButtonEraserActiveChanged = {},
@@ -275,4 +284,5 @@ private fun defaultContentState(): NoteEditorContentState =
         onPanGestureEnd = { _, _ -> },
         onViewportSizeChanged = { _: IntSize -> },
         onPageSelected = {},
+        onTemplateChange = {},
     )

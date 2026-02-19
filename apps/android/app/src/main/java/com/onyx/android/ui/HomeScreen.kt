@@ -42,6 +42,7 @@ import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DoneAll
@@ -72,15 +73,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.onyx.android.BuildConfig
 import com.onyx.android.data.entity.FolderEntity
 import com.onyx.android.data.entity.NoteEntity
 import com.onyx.android.data.entity.TagEntity
@@ -88,7 +88,8 @@ import com.onyx.android.data.repository.DateRange
 import com.onyx.android.data.repository.DuplicateTagNameException
 import com.onyx.android.data.repository.FilterState
 import com.onyx.android.data.repository.NoteRepository
-import com.onyx.android.data.repository.SearchResultItem
+import com.onyx.android.data.repository.SearchResult
+import com.onyx.android.data.repository.SearchSourceType
 import com.onyx.android.data.repository.SortDirection
 import com.onyx.android.data.repository.SortOption
 import com.onyx.android.pdf.PdfAssetStorage
@@ -97,8 +98,7 @@ import com.onyx.android.pdf.PdfIncorrectPasswordException
 import com.onyx.android.pdf.PdfPageInfo
 import com.onyx.android.pdf.PdfPasswordRequiredException
 import com.onyx.android.pdf.PdfPasswordStore
-import com.onyx.android.pdf.PdfiumDocumentInfoReader
-import com.onyx.android.requireAppContainer
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -117,6 +117,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.DateFormat
 import java.util.Date
+import javax.inject.Inject
 
 private const val HOME_LOG_TAG = "HomeScreen"
 private const val PDF_MIME_TYPE = "application/pdf"
@@ -147,14 +148,13 @@ object TagColors {
 
     val DEFAULT_COLOR: String get() = PALETTE.first()
 
-    fun parseColor(hex: String): Color {
-        return try {
+    fun parseColor(hex: String): Color =
+        try {
             val hexValue = hex.removePrefix("#").toLong(16)
             Color(hexValue)
         } catch (e: Exception) {
             Color.Gray
         }
-    }
 }
 
 private data class PdfPasswordPromptState(
@@ -164,7 +164,7 @@ private data class PdfPasswordPromptState(
 
 private data class HomeScreenState(
     val searchQuery: String,
-    val searchResults: List<SearchResultItem>,
+    val searchResults: List<SearchResult>,
     val notes: List<NoteEntity>,
     val folders: List<FolderEntity>,
     val currentFolder: FolderEntity?,
@@ -193,7 +193,7 @@ private data class HomeScreenState(
     val showSortFilterDropdown: Boolean = false,
 )
 
-private data class PdfImportCallbacks(
+internal data class PdfImportCallbacks(
     val onPasswordRequired: (Uri) -> Unit,
     val onWarning: (String) -> Unit,
     val onError: (String) -> Unit,
@@ -207,12 +207,14 @@ private data class HomeScreenActions(
     val onPasswordChange: (String) -> Unit,
     val onConfirmPasswordPrompt: () -> Unit,
     val onSearchQueryChange: (String) -> Unit,
+    val onNavigateToSearchResult: (SearchResult) -> Unit,
     val onImportPdf: () -> Unit,
     val onCreateNote: () -> Unit,
     val onRequestDeleteNote: (NoteEntity) -> Unit,
     val onConfirmDeleteNote: (String) -> Unit,
     val onDismissDeleteNote: () -> Unit,
     val onNavigateToEditor: (String, String?) -> Unit,
+    val onNavigateToDeveloperFlags: () -> Unit,
     val onSelectFolder: (FolderEntity?) -> Unit,
     val onShowCreateFolderDialog: () -> Unit,
     val onDismissCreateFolderDialog: () -> Unit,
@@ -260,24 +262,12 @@ private data class HomeScreenActions(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Suppress("LongMethod")
-fun HomeScreen(onNavigateToEditor: (String, String?) -> Unit) {
-    val appContext = LocalContext.current.applicationContext
-    val appContainer = appContext.requireAppContainer()
-    val repository = appContainer.noteRepository
-    val pdfPasswordStore = appContainer.pdfPasswordStore
-    val pdfAssetStorage = remember { PdfAssetStorage(appContext) }
-    val pdfDocumentInfoReader = remember { PdfiumDocumentInfoReader(appContext) }
-    val viewModel: HomeScreenViewModel =
-        viewModel(
-            key = "HomeScreenViewModel",
-            factory =
-                HomeScreenViewModelFactory(
-                    repository = repository,
-                    pdfAssetStorage = pdfAssetStorage,
-                    pdfDocumentInfoReader = pdfDocumentInfoReader,
-                    pdfPasswordStore = pdfPasswordStore,
-                ),
-        )
+fun HomeScreen(
+    onNavigateToEditor: (String, String?) -> Unit,
+    onNavigateToSearchResult: (SearchResult) -> Unit,
+    onNavigateToDeveloperFlags: () -> Unit,
+) {
+    val viewModel: HomeScreenViewModel = hiltViewModel()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
     val notes by viewModel.notes.collectAsState()
@@ -377,6 +367,7 @@ fun HomeScreen(onNavigateToEditor: (String, String?) -> Unit) {
                 }
             },
             onSearchQueryChange = viewModel::onSearchQueryChange,
+            onNavigateToSearchResult = onNavigateToSearchResult,
             onImportPdf = { openPdfLauncher.launch(arrayOf(PDF_MIME_TYPE)) },
             onCreateNote = {
                 viewModel.createNote(
@@ -395,6 +386,7 @@ fun HomeScreen(onNavigateToEditor: (String, String?) -> Unit) {
             },
             onDismissDeleteNote = { notePendingDelete = null },
             onNavigateToEditor = onNavigateToEditor,
+            onNavigateToDeveloperFlags = onNavigateToDeveloperFlags,
             onSelectFolder = { folder -> viewModel.selectFolder(folder) },
             onShowCreateFolderDialog = { showCreateFolderDialog = true },
             onDismissCreateFolderDialog = { showCreateFolderDialog = false },
@@ -569,7 +561,16 @@ private fun HomeScreenContent(
                 )
             } else {
                 TopAppBar(
-                    title = { Text(text = "Notes") },
+                    title = {
+                        OutlinedTextField(
+                            value = state.searchQuery,
+                            onValueChange = actions.onSearchQueryChange,
+                            placeholder = { Text(text = "Search notes...") },
+                            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    },
                     actions = {
                         // Sort/Filter dropdown
                         Box {
@@ -597,6 +598,14 @@ private fun HomeScreenContent(
                                 imageVector = Icons.Default.PictureAsPdf,
                                 contentDescription = "Import PDF",
                             )
+                        }
+                        if (BuildConfig.DEBUG) {
+                            IconButton(onClick = actions.onNavigateToDeveloperFlags) {
+                                Icon(
+                                    imageVector = Icons.Default.Build,
+                                    contentDescription = "Developer flags",
+                                )
+                            }
                         }
                     },
                 )
@@ -1490,17 +1499,6 @@ private fun HomeContentBody(
                 .fillMaxSize()
                 .padding(paddingValues),
     ) {
-        OutlinedTextField(
-            value = state.searchQuery,
-            onValueChange = actions.onSearchQueryChange,
-            placeholder = { Text(text = "Search notes...") },
-            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-        )
-
         // Show folder chips when at root level
         if (state.currentFolder == null && state.searchQuery.length < MIN_SEARCH_QUERY_LENGTH) {
             FolderSection(
@@ -1554,6 +1552,7 @@ private fun HomeContentBody(
         HomeListContent(
             state = state,
             onNavigateToEditor = actions.onNavigateToEditor,
+            onNavigateToSearchResult = actions.onNavigateToSearchResult,
             onRequestDeleteNote = actions.onRequestDeleteNote,
             onMoveNote = actions.onShowMoveNoteDialog,
             onManageTags = actions.onShowManageTagsDialog,
@@ -1568,6 +1567,7 @@ private fun HomeContentBody(
 private fun HomeListContent(
     state: HomeScreenState,
     onNavigateToEditor: (String, String?) -> Unit,
+    onNavigateToSearchResult: (SearchResult) -> Unit,
     onRequestDeleteNote: (NoteEntity) -> Unit,
     onMoveNote: (NoteEntity) -> Unit,
     onManageTags: (NoteEntity) -> Unit,
@@ -1579,7 +1579,7 @@ private fun HomeListContent(
         state.searchQuery.length >= MIN_SEARCH_QUERY_LENGTH -> {
             SearchResultsContent(
                 searchResults = state.searchResults,
-                onNavigateToEditor = onNavigateToEditor,
+                onNavigateToSearchResult = onNavigateToSearchResult,
                 modifier = modifier,
             )
         }
@@ -1600,14 +1600,16 @@ private fun HomeListContent(
             )
         }
 
-        else -> EmptyNotesMessage(modifier)
+        else -> {
+            EmptyNotesMessage(modifier)
+        }
     }
 }
 
 @Composable
 private fun SearchResultsContent(
-    searchResults: List<SearchResultItem>,
-    onNavigateToEditor: (String, String?) -> Unit,
+    searchResults: List<SearchResult>,
+    onNavigateToSearchResult: (SearchResult) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (searchResults.isEmpty()) {
@@ -1636,7 +1638,7 @@ private fun SearchResultsContent(
         items(searchResults) { result ->
             SearchResultRow(
                 result = result,
-                onClick = { onNavigateToEditor(result.noteId, result.pageId) },
+                onClick = { onNavigateToSearchResult(result) },
             )
         }
     }
@@ -1816,7 +1818,7 @@ private fun NoteRow(
 
 @Composable
 private fun SearchResultRow(
-    result: SearchResultItem,
+    result: SearchResult,
     onClick: () -> Unit,
 ) {
     Surface(
@@ -1834,12 +1836,38 @@ private fun SearchResultRow(
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(
-                text = "Page ${result.pageNumber}",
+                text =
+                    when (result.sourceType) {
+                        SearchSourceType.NOTE_METADATA -> "Note metadata"
+                        SearchSourceType.PAGE_METADATA -> "Page ${result.pageIndex?.plus(1) ?: "-"} - page metadata"
+                        SearchSourceType.INK -> "Page ${result.pageIndex?.plus(1) ?: "-"} - ink"
+                        SearchSourceType.PDF -> "Page ${result.pageIndex?.plus(1) ?: "-"} - PDF"
+                    },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 6.dp),
+            ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(result.highlightColor),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = result.matchedText,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             Text(
-                text = result.snippetText,
+                text = result.contextSnippet,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
@@ -2079,465 +2107,454 @@ private fun FolderBreadcrumb(
 }
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-private class HomeScreenViewModel(
-    private val repository: NoteRepository,
-    private val pdfAssetStorage: PdfAssetStorage,
-    private val pdfDocumentInfoReader: PdfDocumentInfoReader,
-    private val pdfPasswordStore: PdfPasswordStore,
-) : ViewModel() {
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+@HiltViewModel
+internal class HomeScreenViewModel
+    @Inject
+    constructor(
+        private val repository: NoteRepository,
+        private val pdfAssetStorage: PdfAssetStorage,
+        private val pdfDocumentInfoReader: PdfDocumentInfoReader,
+        private val pdfPasswordStore: PdfPasswordStore,
+    ) : ViewModel() {
+        private val _searchQuery = MutableStateFlow("")
+        val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    private val _currentFolder = MutableStateFlow<FolderEntity?>(null)
-    val currentFolder: StateFlow<FolderEntity?> = _currentFolder.asStateFlow()
+        private val _currentFolder = MutableStateFlow<FolderEntity?>(null)
+        val currentFolder: StateFlow<FolderEntity?> = _currentFolder.asStateFlow()
 
-    private val _selectedTagFilter = MutableStateFlow<TagEntity?>(null)
-    val selectedTagFilter: StateFlow<TagEntity?> = _selectedTagFilter.asStateFlow()
+        private val _selectedTagFilter = MutableStateFlow<TagEntity?>(null)
+        val selectedTagFilter: StateFlow<TagEntity?> = _selectedTagFilter.asStateFlow()
 
-    // Sort/Filter state
-    private val _sortOption = MutableStateFlow(SortOption.MODIFIED)
-    val sortOption: StateFlow<SortOption> = _sortOption.asStateFlow()
+        // Sort/Filter state
+        private val _sortOption = MutableStateFlow(SortOption.MODIFIED)
+        val sortOption: StateFlow<SortOption> = _sortOption.asStateFlow()
 
-    private val _sortDirection = MutableStateFlow(SortDirection.DESC)
-    val sortDirection: StateFlow<SortDirection> = _sortDirection.asStateFlow()
+        private val _sortDirection = MutableStateFlow(SortDirection.DESC)
+        val sortDirection: StateFlow<SortDirection> = _sortDirection.asStateFlow()
 
-    private val _dateRangeFilter = MutableStateFlow<DateRange?>(null)
-    val dateRangeFilter: StateFlow<DateRange?> = _dateRangeFilter.asStateFlow()
+        private val _dateRangeFilter = MutableStateFlow<DateRange?>(null)
+        val dateRangeFilter: StateFlow<DateRange?> = _dateRangeFilter.asStateFlow()
 
-    val searchResults: StateFlow<List<SearchResultItem>> =
-        _searchQuery
-            .debounce(SEARCH_DEBOUNCE_MS)
-            .flatMapLatest { query ->
-                if (query.length < MIN_SEARCH_QUERY_LENGTH) {
-                    Log.d(HOME_LOG_TAG, "Search query='$query' results=0")
-                    flowOf(emptyList())
-                } else {
-                    repository.searchNotes(query).onEach { results ->
-                        Log.d(HOME_LOG_TAG, "Search query='$query' results=${results.size}")
+        val searchResults: StateFlow<List<SearchResult>> =
+            _searchQuery
+                .debounce(SEARCH_DEBOUNCE_MS)
+                .flatMapLatest { query ->
+                    if (query.length < MIN_SEARCH_QUERY_LENGTH) {
+                        Log.d(HOME_LOG_TAG, "Search query='$query' results=0")
+                        flowOf(emptyList())
+                    } else {
+                        repository.searchNotes(query).onEach { results ->
+                            Log.d(HOME_LOG_TAG, "Search query='$query' results=${results.size}")
+                        }
                     }
+                }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        val notes: StateFlow<List<NoteEntity>> =
+            combine(
+                _currentFolder,
+                _selectedTagFilter,
+                _sortOption,
+                _sortDirection,
+                _dateRangeFilter,
+            ) { folder, tag, sort, direction, dateRange ->
+                Triple(folder, tag, Pair(sort, direction) to dateRange)
+            }.flatMapLatest { (folder, tag, sortAndFilter) ->
+                val (sortPair, dateRange) = sortAndFilter
+                val (sort, direction) = sortPair
+
+                when {
+                    // Tag filter takes precedence
+                    tag != null -> repository.getNotesByTag(tag.tagId)
+
+                    // Date range filter
+                    dateRange != null -> repository.getNotesByDateRange(folder?.folderId, dateRange)
+
+                    // Sorted notes
+                    else -> repository.getNotesInFolderSorted(folder?.folderId, sort, direction)
                 }
             }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    val notes: StateFlow<List<NoteEntity>> =
-        combine(
-            _currentFolder,
-            _selectedTagFilter,
-            _sortOption,
-            _sortDirection,
-            _dateRangeFilter,
-        ) { folder, tag, sort, direction, dateRange ->
-            Triple(folder, tag, Pair(sort, direction) to dateRange)
-        }.flatMapLatest { (folder, tag, sortAndFilter) ->
-            val (sortPair, dateRange) = sortAndFilter
-            val (sort, direction) = sortPair
+        val folders: StateFlow<List<FolderEntity>> =
+            repository
+                .getFolders()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-            when {
-                // Tag filter takes precedence
-                tag != null -> repository.getNotesByTag(tag.tagId)
-                // Date range filter
-                dateRange != null -> repository.getNotesByDateRange(folder?.folderId, dateRange)
-                // Sorted notes
-                else -> repository.getNotesInFolderSorted(folder?.folderId, sort, direction)
-            }
-        }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        val tags: StateFlow<List<TagEntity>> =
+            repository
+                .getTags()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    val folders: StateFlow<List<FolderEntity>> =
-        repository
-            .getFolders()
-            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        val noteTags: StateFlow<Map<String, List<TagEntity>>> =
+            notes
+                .flatMapLatest { noteList ->
+                    if (noteList.isEmpty()) {
+                        flowOf(emptyMap())
+                    } else {
+                        kotlinx.coroutines.flow.combine(
+                            noteList.map { note ->
+                                repository.getTagsForNote(note.noteId)
+                            },
+                        ) { tagLists ->
+                            noteList
+                                .mapIndexed { index, note ->
+                                    note.noteId to tagLists[index]
+                                }.toMap()
+                        }
+                    }
+                }.stateIn(viewModelScope, SharingStarted.Lazily, emptyMap())
 
-    val tags: StateFlow<List<TagEntity>> =
-        repository
-            .getTags()
-            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-
-    val noteTags: StateFlow<Map<String, List<TagEntity>>> =
-        notes.flatMapLatest { noteList ->
-            if (noteList.isEmpty()) {
-                flowOf(emptyMap())
-            } else {
-                kotlinx.coroutines.flow.combine(
-                    noteList.map { note ->
-                        repository.getTagsForNote(note.noteId)
-                    },
-                ) { tagLists ->
-                    noteList.mapIndexed { index, note ->
-                        note.noteId to tagLists[index]
-                    }.toMap()
-                }
-            }
-        }.stateIn(viewModelScope, SharingStarted.Lazily, emptyMap())
-
-    fun onSearchQueryChange(query: String) {
-        _searchQuery.value = query
-    }
-
-    fun selectFolder(folder: FolderEntity?) {
-        _currentFolder.value = folder
-    }
-
-    fun selectTagFilter(tag: TagEntity?) {
-        _selectedTagFilter.value = tag
-    }
-
-    fun setSortOption(option: SortOption) {
-        _sortOption.value = option
-    }
-
-    fun setSortDirection(direction: SortDirection) {
-        _sortDirection.value = direction
-    }
-
-    fun setDateRangeFilter(dateRange: DateRange?) {
-        _dateRangeFilter.value = dateRange
-    }
-
-    fun clearFilters() {
-        _dateRangeFilter.value = null
-        _selectedTagFilter.value = null
-    }
-
-    fun createNote(
-        currentFolderId: String?,
-        onNavigateToEditor: (String, String?) -> Unit,
-        onError: (String) -> Unit,
-    ) {
-        viewModelScope.launch {
-            runCatching {
-                val noteWithPage = repository.createNote()
-                // Move note to current folder if we're in one
-                if (currentFolderId != null) {
-                    repository.moveNoteToFolder(noteWithPage.note.noteId, currentFolderId)
-                }
-                noteWithPage
-            }.onSuccess { noteWithPage ->
-                onNavigateToEditor(noteWithPage.note.noteId, null)
-            }.onFailure { throwable ->
-                if (throwable is CancellationException) {
-                    throw throwable
-                }
-                Log.e(HOME_LOG_TAG, "Create note failed", throwable)
-                onError("Unable to create note. Please try again.")
-            }
+        fun onSearchQueryChange(query: String) {
+            _searchQuery.value = query
         }
-    }
 
-    fun deleteNote(
-        noteId: String,
-        onError: (String) -> Unit,
-    ) {
-        viewModelScope.launch {
-            runCatching {
-                repository.deleteNote(noteId)
-            }.onFailure { throwable ->
-                if (throwable is CancellationException) {
-                    throw throwable
-                }
-                Log.e(HOME_LOG_TAG, "Delete note failed", throwable)
-                onError("Unable to delete note. Please try again.")
-            }
+        fun selectFolder(folder: FolderEntity?) {
+            _currentFolder.value = folder
         }
-    }
 
-    fun createFolder(
-        name: String,
-        onError: (String) -> Unit,
-    ) {
-        viewModelScope.launch {
-            runCatching {
-                repository.createFolder(name)
-            }.onFailure { throwable ->
-                if (throwable is CancellationException) {
-                    throw throwable
-                }
-                Log.e(HOME_LOG_TAG, "Create folder failed", throwable)
-                onError("Unable to create folder. Please try again.")
-            }
+        fun selectTagFilter(tag: TagEntity?) {
+            _selectedTagFilter.value = tag
         }
-    }
 
-    fun deleteFolder(
-        folderId: String,
-        onError: (String) -> Unit,
-    ) {
-        viewModelScope.launch {
-            runCatching {
-                repository.deleteFolder(folderId)
-                // If we were in the deleted folder, go back to root
-                if (_currentFolder.value?.folderId == folderId) {
-                    _currentFolder.value = null
-                }
-            }.onFailure { throwable ->
-                if (throwable is CancellationException) {
-                    throw throwable
-                }
-                Log.e(HOME_LOG_TAG, "Delete folder failed", throwable)
-                onError("Unable to delete folder. Please try again.")
-            }
+        fun setSortOption(option: SortOption) {
+            _sortOption.value = option
         }
-    }
 
-    fun moveNoteToFolder(
-        noteId: String,
-        folderId: String?,
-        onError: (String) -> Unit,
-    ) {
-        viewModelScope.launch {
-            runCatching {
-                repository.moveNoteToFolder(noteId, folderId)
-            }.onFailure { throwable ->
-                if (throwable is CancellationException) {
-                    throw throwable
-                }
-                Log.e(HOME_LOG_TAG, "Move note failed", throwable)
-                onError("Unable to move note. Please try again.")
-            }
+        fun setSortDirection(direction: SortDirection) {
+            _sortDirection.value = direction
         }
-    }
 
-    fun createTag(
-        name: String,
-        color: String,
-        onError: (String) -> Unit,
-    ) {
-        viewModelScope.launch {
-            runCatching {
-                repository.createTag(name, color)
-            }.onFailure { throwable ->
-                if (throwable is CancellationException) {
-                    throw throwable
-                }
-                if (throwable is DuplicateTagNameException) {
-                    onError("A tag with name '$name' already exists.")
-                } else {
-                    Log.e(HOME_LOG_TAG, "Create tag failed", throwable)
-                    onError("Unable to create tag. Please try again.")
-                }
-            }
+        fun setDateRangeFilter(dateRange: DateRange?) {
+            _dateRangeFilter.value = dateRange
         }
-    }
 
-    fun deleteTag(
-        tagId: String,
-        onError: (String) -> Unit,
-    ) {
-        viewModelScope.launch {
-            runCatching {
-                repository.deleteTag(tagId)
-                // Clear filter if we deleted the selected tag
-                if (_selectedTagFilter.value?.tagId == tagId) {
-                    _selectedTagFilter.value = null
-                }
-            }.onFailure { throwable ->
-                if (throwable is CancellationException) {
-                    throw throwable
-                }
-                Log.e(HOME_LOG_TAG, "Delete tag failed", throwable)
-                onError("Unable to delete tag. Please try again.")
-            }
+        fun clearFilters() {
+            _dateRangeFilter.value = null
+            _selectedTagFilter.value = null
         }
-    }
 
-    fun addTagToNote(
-        noteId: String,
-        tagId: String,
-        onError: (String) -> Unit,
-    ) {
-        viewModelScope.launch {
-            runCatching {
-                repository.addTagToNote(noteId, tagId)
-            }.onFailure { throwable ->
-                if (throwable is CancellationException) {
-                    throw throwable
-                }
-                Log.e(HOME_LOG_TAG, "Add tag to note failed", throwable)
-                onError("Unable to add tag to note. Please try again.")
-            }
-        }
-    }
-
-    fun removeTagFromNote(
-        noteId: String,
-        tagId: String,
-        onError: (String) -> Unit,
-    ) {
-        viewModelScope.launch {
-            runCatching {
-                repository.removeTagFromNote(noteId, tagId)
-            }.onFailure { throwable ->
-                if (throwable is CancellationException) {
-                    throw throwable
-                }
-                Log.e(HOME_LOG_TAG, "Remove tag from note failed", throwable)
-                onError("Unable to remove tag from note. Please try again.")
-            }
-        }
-    }
-
-    // Batch operations for multi-select
-    fun deleteNotes(
-        noteIds: Set<String>,
-        onError: (String) -> Unit,
-    ) {
-        viewModelScope.launch {
-            runCatching {
-                repository.deleteNotes(noteIds)
-            }.onFailure { throwable ->
-                if (throwable is CancellationException) {
-                    throw throwable
-                }
-                Log.e(HOME_LOG_TAG, "Batch delete notes failed", throwable)
-                onError("Unable to delete notes. Please try again.")
-            }
-        }
-    }
-
-    fun moveNotesToFolder(
-        noteIds: Set<String>,
-        folderId: String?,
-        onError: (String) -> Unit,
-    ) {
-        viewModelScope.launch {
-            runCatching {
-                repository.moveNotesToFolder(noteIds, folderId)
-            }.onFailure { throwable ->
-                if (throwable is CancellationException) {
-                    throw throwable
-                }
-                Log.e(HOME_LOG_TAG, "Batch move notes failed", throwable)
-                onError("Unable to move notes. Please try again.")
-            }
-        }
-    }
-
-    fun addTagToNotes(
-        noteIds: Set<String>,
-        tagId: String,
-        onError: (String) -> Unit,
-    ) {
-        viewModelScope.launch {
-            runCatching {
-                repository.addTagToNotes(noteIds, tagId)
-            }.onFailure { throwable ->
-                if (throwable is CancellationException) {
-                    throw throwable
-                }
-                Log.e(HOME_LOG_TAG, "Batch add tag to notes failed", throwable)
-                onError("Unable to add tag to notes. Please try again.")
-            }
-        }
-    }
-
-    fun importPdf(
-        uri: Uri,
-        password: String?,
-        callbacks: PdfImportCallbacks,
-    ) {
-        viewModelScope.launch {
-            runCatching {
-                importPdfInternal(
-                    uri = uri,
-                    password = password,
-                )
-            }.onSuccess { (noteId, warningMessage) ->
-                if (warningMessage != null) {
-                    callbacks.onWarning(warningMessage)
-                }
-                callbacks.onNavigateToEditor(noteId, null)
-            }.onFailure { throwable ->
-                if (throwable is CancellationException) {
-                    throw throwable
-                }
-                if (throwable is PdfPasswordRequiredException) {
-                    callbacks.onPasswordRequired(uri)
-                    return@onFailure
-                }
-                if (throwable is PdfIncorrectPasswordException) {
-                    callbacks.onError("Incorrect PDF password. Please try again.")
-                    return@onFailure
-                }
-                Log.e(HOME_LOG_TAG, "PDF import failed", throwable)
-                callbacks.onError("PDF import failed. Please try again.")
-            }
-        }
-    }
-
-    private suspend fun importPdfInternal(
-        uri: Uri,
-        password: String?,
-    ): Pair<String, String?> =
-        withContext(Dispatchers.IO) {
-            val pdfAssetId = pdfAssetStorage.importPdf(uri)
-            val pdfFile = pdfAssetStorage.getFileForAsset(pdfAssetId)
-            val documentInfo =
+        fun createNote(
+            currentFolderId: String?,
+            onNavigateToEditor: (String, String?) -> Unit,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
                 runCatching {
-                    pdfDocumentInfoReader.read(pdfFile, password)
+                    val noteWithPage = repository.createNote()
+                    // Move note to current folder if we're in one
+                    if (currentFolderId != null) {
+                        repository.moveNoteToFolder(noteWithPage.note.noteId, currentFolderId)
+                    }
+                    noteWithPage
+                }.onSuccess { noteWithPage ->
+                    onNavigateToEditor(noteWithPage.note.noteId, null)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Create note failed", throwable)
+                    onError("Unable to create note. Please try again.")
+                }
+            }
+        }
+
+        fun deleteNote(
+            noteId: String,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.deleteNote(noteId)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Delete note failed", throwable)
+                    onError("Unable to delete note. Please try again.")
+                }
+            }
+        }
+
+        fun createFolder(
+            name: String,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.createFolder(name)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Create folder failed", throwable)
+                    onError("Unable to create folder. Please try again.")
+                }
+            }
+        }
+
+        fun deleteFolder(
+            folderId: String,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.deleteFolder(folderId)
+                    // If we were in the deleted folder, go back to root
+                    if (_currentFolder.value?.folderId == folderId) {
+                        _currentFolder.value = null
+                    }
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Delete folder failed", throwable)
+                    onError("Unable to delete folder. Please try again.")
+                }
+            }
+        }
+
+        fun moveNoteToFolder(
+            noteId: String,
+            folderId: String?,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.moveNoteToFolder(noteId, folderId)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Move note failed", throwable)
+                    onError("Unable to move note. Please try again.")
+                }
+            }
+        }
+
+        fun createTag(
+            name: String,
+            color: String,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.createTag(name, color)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    if (throwable is DuplicateTagNameException) {
+                        onError("A tag with name '$name' already exists.")
+                    } else {
+                        Log.e(HOME_LOG_TAG, "Create tag failed", throwable)
+                        onError("Unable to create tag. Please try again.")
+                    }
+                }
+            }
+        }
+
+        fun deleteTag(
+            tagId: String,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.deleteTag(tagId)
+                    // Clear filter if we deleted the selected tag
+                    if (_selectedTagFilter.value?.tagId == tagId) {
+                        _selectedTagFilter.value = null
+                    }
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Delete tag failed", throwable)
+                    onError("Unable to delete tag. Please try again.")
+                }
+            }
+        }
+
+        fun addTagToNote(
+            noteId: String,
+            tagId: String,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.addTagToNote(noteId, tagId)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Add tag to note failed", throwable)
+                    onError("Unable to add tag to note. Please try again.")
+                }
+            }
+        }
+
+        fun removeTagFromNote(
+            noteId: String,
+            tagId: String,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.removeTagFromNote(noteId, tagId)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Remove tag from note failed", throwable)
+                    onError("Unable to remove tag from note. Please try again.")
+                }
+            }
+        }
+
+        // Batch operations for multi-select
+        fun deleteNotes(
+            noteIds: Set<String>,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.deleteNotes(noteIds)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Batch delete notes failed", throwable)
+                    onError("Unable to delete notes. Please try again.")
+                }
+            }
+        }
+
+        fun moveNotesToFolder(
+            noteIds: Set<String>,
+            folderId: String?,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.moveNotesToFolder(noteIds, folderId)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Batch move notes failed", throwable)
+                    onError("Unable to move notes. Please try again.")
+                }
+            }
+        }
+
+        fun addTagToNotes(
+            noteIds: Set<String>,
+            tagId: String,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.addTagToNotes(noteIds, tagId)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Batch add tag to notes failed", throwable)
+                    onError("Unable to add tag to notes. Please try again.")
+                }
+            }
+        }
+
+        fun importPdf(
+            uri: Uri,
+            password: String?,
+            callbacks: PdfImportCallbacks,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    importPdfInternal(
+                        uri = uri,
+                        password = password,
+                    )
+                }.onSuccess { (noteId, warningMessage) ->
+                    if (warningMessage != null) {
+                        callbacks.onWarning(warningMessage)
+                    }
+                    callbacks.onNavigateToEditor(noteId, null)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    if (throwable is PdfPasswordRequiredException) {
+                        callbacks.onPasswordRequired(uri)
+                        return@onFailure
+                    }
+                    if (throwable is PdfIncorrectPasswordException) {
+                        callbacks.onError("Incorrect PDF password. Please try again.")
+                        return@onFailure
+                    }
+                    Log.e(HOME_LOG_TAG, "PDF import failed", throwable)
+                    callbacks.onError("PDF import failed. Please try again.")
+                }
+            }
+        }
+
+        private suspend fun importPdfInternal(
+            uri: Uri,
+            password: String?,
+        ): Pair<String, String?> =
+            withContext(Dispatchers.IO) {
+                val pdfAssetId = pdfAssetStorage.importPdf(uri)
+                val pdfFile = pdfAssetStorage.getFileForAsset(pdfAssetId)
+                val documentInfo =
+                    runCatching {
+                        pdfDocumentInfoReader.read(pdfFile, password)
+                    }.getOrElse { error ->
+                        pdfAssetStorage.deleteAsset(pdfAssetId)
+                        throw error
+                    }
+                val warning = buildPdfWarning(documentInfo.pageCount, pdfFile.length())
+                val noteWithPage = repository.createNote()
+                runCatching {
+                    repository.deletePage(noteWithPage.firstPageId)
+                    createPagesFromPdf(
+                        noteId = noteWithPage.note.noteId,
+                        pdfAssetId = pdfAssetId,
+                        pages = documentInfo.pages,
+                    )
                 }.getOrElse { error ->
                     pdfAssetStorage.deleteAsset(pdfAssetId)
+                    repository.deleteNote(noteWithPage.note.noteId)
                     throw error
                 }
-            val warning = buildPdfWarning(documentInfo.pageCount, pdfFile.length())
-            val noteWithPage = repository.createNote()
-            runCatching {
-                repository.deletePage(noteWithPage.firstPageId)
-                createPagesFromPdf(
-                    noteId = noteWithPage.note.noteId,
-                    pdfAssetId = pdfAssetId,
-                    pages = documentInfo.pages,
-                )
-            }.getOrElse { error ->
-                pdfAssetStorage.deleteAsset(pdfAssetId)
-                repository.deleteNote(noteWithPage.note.noteId)
-                throw error
+                pdfPasswordStore.rememberPassword(pdfAssetId, password)
+                noteWithPage.note.noteId to warning
             }
-            pdfPasswordStore.rememberPassword(pdfAssetId, password)
-            noteWithPage.note.noteId to warning
+
+        private fun buildPdfWarning(
+            pageCount: Int,
+            fileSizeBytes: Long,
+        ): String? {
+            val shouldWarn = fileSizeBytes > MAX_PDF_FILE_SIZE_BYTES || pageCount > MAX_PDF_PAGE_COUNT
+            if (!shouldWarn) {
+                return null
+            }
+            val sizeMb = (fileSizeBytes / BYTES_PER_MB).coerceAtLeast(MIN_WARNING_MB)
+            return "This PDF has $pageCount pages and is ${sizeMb}MB. Performance may be affected."
         }
 
-    private fun buildPdfWarning(
-        pageCount: Int,
-        fileSizeBytes: Long,
-    ): String? {
-        val shouldWarn = fileSizeBytes > MAX_PDF_FILE_SIZE_BYTES || pageCount > MAX_PDF_PAGE_COUNT
-        if (!shouldWarn) {
-            return null
-        }
-        val sizeMb = (fileSizeBytes / BYTES_PER_MB).coerceAtLeast(MIN_WARNING_MB)
-        return "This PDF has $pageCount pages and is ${sizeMb}MB. Performance may be affected."
-    }
-
-    private suspend fun createPagesFromPdf(
-        noteId: String,
-        pdfAssetId: String,
-        pages: List<PdfPageInfo>,
-    ) {
-        pages.forEachIndexed { pageIndex, pageInfo ->
-            repository.createPageFromPdf(
-                noteId = noteId,
-                indexInNote = pageIndex,
-                pdfAssetId = pdfAssetId,
-                pdfPageNo = pageIndex,
-                pdfWidth = pageInfo.widthPoints,
-                pdfHeight = pageInfo.heightPoints,
-            )
+        private suspend fun createPagesFromPdf(
+            noteId: String,
+            pdfAssetId: String,
+            pages: List<PdfPageInfo>,
+        ) {
+            pages.forEachIndexed { pageIndex, pageInfo ->
+                repository.createPageFromPdf(
+                    noteId = noteId,
+                    indexInNote = pageIndex,
+                    pdfAssetId = pdfAssetId,
+                    pdfPageNo = pageIndex,
+                    pdfWidth = pageInfo.widthPoints,
+                    pdfHeight = pageInfo.heightPoints,
+                )
+            }
         }
     }
-}
-
-private class HomeScreenViewModelFactory(
-    private val repository: NoteRepository,
-    private val pdfAssetStorage: PdfAssetStorage,
-    private val pdfDocumentInfoReader: PdfDocumentInfoReader,
-    private val pdfPasswordStore: PdfPasswordStore,
-) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        require(modelClass.isAssignableFrom(HomeScreenViewModel::class.java))
-        return HomeScreenViewModel(
-            repository = repository,
-            pdfAssetStorage = pdfAssetStorage,
-            pdfDocumentInfoReader = pdfDocumentInfoReader,
-            pdfPasswordStore = pdfPasswordStore,
-        ) as T
-    }
-}

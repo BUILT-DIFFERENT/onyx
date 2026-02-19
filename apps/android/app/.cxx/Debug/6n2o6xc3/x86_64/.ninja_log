@@ -1,3 +1,3 @@
 # ninja log v5
-2	1061	7929239183109441	CMakeFiles/onyx_pdfium_text.dir/pdfium_text_jni.cpp.o	7419403db1dc06ab
-1066	1179	7929239184417383	C:/onyx/apps/android/app/build/intermediates/cxx/Debug/6n2o6xc3/obj/x86_64/libonyx_pdfium_text.so	65c23b85a508d857
+0	517	1771465554745065912	CMakeFiles/onyx_pdfium_text.dir/pdfium_text_jni.cpp.o	73f60ba4aa9ec2f4
+517	675	1771465554905066745	/home/gamer/onyx/apps/android/app/build/intermediates/cxx/Debug/6n2o6xc3/obj/x86_64/libonyx_pdfium_text.so	75c676a4990f7b8b

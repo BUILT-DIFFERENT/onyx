@@ -1,15 +1,8 @@
 {
-  "active_plan": "/home/gamer/onyx/.sisyphus/plans/milestone-canvas-rendering-overhaul.md",
-  "started_at": "2026-02-13T15:52:32.867Z",
-  "session_ids": ["ses_3a84bceafffeq9AcLXH5kMXuR8"],
-  "plan_name": "milestone-canvas-rendering-overhaul",
-  "status": "in_progress",
-  "completion": "10/10 (100%)",
-  "tasks_complete": 10,
-  "tasks_total": 10,
-  "previous_plan": {
-    "name": "milestone-a-offline-ink-myscript",
-    "status": "complete",
-    "completed_at": "2026-02-05T06:15:00Z"
-  }
+  "active_plan": "/home/gamer/onyx/.sisyphus/plans/comprehensive-app-overhaul-gap-closure.md",
+  "started_at": "2026-02-19T05:19:56.267Z",
+  "session_ids": [
+    "ses_38ba8d2c2ffeazo6QqfSQf9QGM"
+  ],
+  "plan_name": "comprehensive-app-overhaul-gap-closure"
 }

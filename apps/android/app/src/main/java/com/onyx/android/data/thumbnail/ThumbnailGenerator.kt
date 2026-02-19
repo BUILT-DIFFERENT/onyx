@@ -8,11 +8,13 @@ import android.graphics.Paint
 import android.util.Log
 import com.onyx.android.data.dao.NoteDao
 import com.onyx.android.data.dao.PageDao
+import com.onyx.android.data.dao.PageTemplateDao
 import com.onyx.android.data.dao.ThumbnailDao
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.data.entity.ThumbnailEntity
 import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfiumRenderer
+import com.onyx.android.ui.computeTemplatePattern
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -34,6 +36,11 @@ private const val STARTUP_RATE_LIMIT_PER_MINUTE = 10
 private const val STARTUP_RATE_LIMIT_WINDOW_MS = 60_000L
 private const val INK_THUMBNAIL_GRID_DIVISIONS = 8f
 private const val CONTENT_HASH_BUFFER_SIZE_BYTES = 8192
+private const val TEMPLATE_MIN_SPACING = 8f
+private const val TEMPLATE_MAX_SPACING = 80f
+private const val TEMPLATE_DOT_RADIUS_RATIO = 0.08f
+private const val TEMPLATE_DOT_MIN_RADIUS = 0.8f
+private const val TEMPLATE_DEFAULT_COLOR = "#E0E0E0"
 
 /**
  * Generates and manages thumbnails for notes.
@@ -50,8 +57,17 @@ class ThumbnailGenerator(
     private val thumbnailDao: ThumbnailDao,
     private val noteDao: NoteDao,
     private val pageDao: PageDao,
+    private val pageTemplateDao: PageTemplateDao,
     private val pdfAssetStorage: PdfAssetStorage,
 ) {
+    private data class ThumbnailTemplateRenderContext(
+        val left: Float,
+        val top: Float,
+        val scale: Float,
+        val color: Int,
+        val spacing: Float,
+    )
+
     private val thumbnailDir: File
         get() = File(context.filesDir, "thumbnails").also { it.mkdirs() }
 
@@ -166,8 +182,7 @@ class ThumbnailGenerator(
             noteIds
                 .map { noteId ->
                     async { noteId to generateThumbnail(noteId) }
-                }
-                .awaitAll()
+                }.awaitAll()
                 .filter { it.second != null }
                 .associate { it.first to it.second!! }
         }
@@ -188,8 +203,14 @@ class ThumbnailGenerator(
 
         val bitmap =
             when (firstPage.kind) {
-                "pdf", "mixed" -> renderPdfThumbnail(firstPage)
-                "ink" -> renderInkThumbnail(firstPage)
+                "pdf", "mixed" -> {
+                    renderPdfThumbnail(firstPage)
+                }
+
+                "ink" -> {
+                    renderInkThumbnail(firstPage)
+                }
+
                 else -> {
                     Log.d(TAG, "Unknown page kind: ${firstPage.kind}")
                     null
@@ -221,8 +242,8 @@ class ThumbnailGenerator(
             val renderer = PdfiumRenderer(context, pdfFile)
             try {
                 val pageBounds = renderer.getPageBounds(pdfPageNo)
-                val pageWidth = pageBounds.first
-                val pageHeight = pageBounds.second
+                val pageWidth = pageBounds.width()
+                val pageHeight = pageBounds.height()
 
                 // Calculate scale to fit in THUMBNAIL_SIZE x THUMBNAIL_SIZE
                 val scale =
@@ -260,10 +281,7 @@ class ThumbnailGenerator(
         }
     }
 
-    @Suppress("UNUSED_PARAMETER")
     private suspend fun renderInkThumbnail(page: PageEntity): Bitmap? {
-        // For ink pages, create a placeholder thumbnail
-        // In a full implementation, this would render the strokes
         val bitmap =
             Bitmap.createBitmap(
                 THUMBNAIL_SIZE,
@@ -273,24 +291,92 @@ class ThumbnailGenerator(
         val canvas = Canvas(bitmap)
         canvas.drawColor(Color.WHITE)
 
-        // Draw a simple placeholder pattern
-        val paint =
-            Paint().apply {
-                color = Color.LTGRAY
-                style = Paint.Style.STROKE
-                strokeWidth = 2f
-            }
+        val pageWidth = page.width.coerceAtLeast(1f)
+        val pageHeight = page.height.coerceAtLeast(1f)
+        val scale = min(THUMBNAIL_SIZE.toFloat() / pageWidth, THUMBNAIL_SIZE.toFloat() / pageHeight)
+        val pageRenderWidth = pageWidth * scale
+        val pageRenderHeight = pageHeight * scale
+        val left = (THUMBNAIL_SIZE - pageRenderWidth) / 2f
+        val top = (THUMBNAIL_SIZE - pageRenderHeight) / 2f
 
-        // Draw grid lines to indicate it's a blank note
-        val gridSpacing = THUMBNAIL_SIZE / INK_THUMBNAIL_GRID_DIVISIONS
-        val lineCount = INK_THUMBNAIL_GRID_DIVISIONS.toInt()
-        for (i in 1 until lineCount) {
-            val pos = i * gridSpacing
-            canvas.drawLine(pos, 0f, pos, THUMBNAIL_SIZE.toFloat(), paint)
-            canvas.drawLine(0f, pos, THUMBNAIL_SIZE.toFloat(), pos, paint)
-        }
+        val template = page.templateId?.let { templateId -> pageTemplateDao.getById(templateId) }
+        val templateKind = template?.backgroundKind ?: "blank"
+        val templateSpacing =
+            template?.spacing?.coerceIn(TEMPLATE_MIN_SPACING, TEMPLATE_MAX_SPACING)
+                ?: (pageWidth / INK_THUMBNAIL_GRID_DIVISIONS)
+        val templateColor = parseTemplatePreviewColor(template?.color)
+
+        val pattern =
+            computeTemplatePattern(
+                backgroundKind = templateKind,
+                pageWidth = pageWidth,
+                pageHeight = pageHeight,
+                spacing = templateSpacing,
+            )
+
+        drawTemplatePatternOnThumbnail(
+            canvas = canvas,
+            pattern = pattern,
+            context =
+                ThumbnailTemplateRenderContext(
+                    left = left,
+                    top = top,
+                    scale = scale,
+                    color = templateColor,
+                    spacing = templateSpacing,
+                ),
+        )
 
         return bitmap
+    }
+
+    private fun parseTemplatePreviewColor(rawColor: String?): Int =
+        runCatching { Color.parseColor(rawColor ?: TEMPLATE_DEFAULT_COLOR) }
+            .getOrDefault(Color.LTGRAY)
+
+    private fun drawTemplatePatternOnThumbnail(
+        canvas: Canvas,
+        pattern: com.onyx.android.ui.TemplatePattern,
+        context: ThumbnailTemplateRenderContext,
+    ) {
+        val linePaint =
+            Paint().apply {
+                this.color = context.color
+                style = Paint.Style.STROKE
+                strokeWidth = 1f
+                isAntiAlias = true
+            }
+        pattern.lines.forEach { line ->
+            canvas.drawLine(
+                context.left + (line.start.x * context.scale),
+                context.top + (line.start.y * context.scale),
+                context.left + (line.end.x * context.scale),
+                context.top + (line.end.y * context.scale),
+                linePaint,
+            )
+        }
+        if (pattern.dots.isEmpty()) {
+            return
+        }
+        val dotPaint =
+            Paint().apply {
+                this.color = context.color
+                style = Paint.Style.FILL
+                isAntiAlias = true
+            }
+        val dotRadius =
+            maxOf(
+                (context.spacing * TEMPLATE_DOT_RADIUS_RATIO * context.scale),
+                TEMPLATE_DOT_MIN_RADIUS,
+            )
+        pattern.dots.forEach { dot ->
+            canvas.drawCircle(
+                context.left + (dot.center.x * context.scale),
+                context.top + (dot.center.y * context.scale),
+                dotRadius,
+                dotPaint,
+            )
+        }
     }
 
     private suspend fun saveThumbnail(
@@ -352,7 +438,12 @@ class ThumbnailGenerator(
     suspend fun cleanupOrphanedThumbnails() =
         withContext(Dispatchers.IO) {
             val thumbnailFiles = thumbnailDir.listFiles()?.toList() ?: emptyList()
-            val noteIds = noteDao.getAllNotes().first().map { it.noteId }.toSet()
+            val noteIds =
+                noteDao
+                    .getAllNotes()
+                    .first()
+                    .map { it.noteId }
+                    .toSet()
 
             thumbnailFiles.forEach { file ->
                 val noteId = file.nameWithoutExtension

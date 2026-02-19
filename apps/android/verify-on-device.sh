@@ -109,7 +109,7 @@ echo ""
 
 # Check database
 echo "Step 7: Verifying recognition in database..."
-adb shell "run-as com.onyx.android sqlite3 /data/data/com.onyx.android/databases/onyx.db 'SELECT recognizedText FROM recognition_index;'" 2>&1 | tee recognition-output.txt
+adb shell "run-as com.onyx.android sqlite3 /data/data/com.onyx.android/databases/onyx_notes.db 'SELECT recognizedText FROM recognition_index;'" 2>&1 | tee recognition-output.txt
 
 if grep -q "hello" recognition-output.txt || grep -q "Hello" recognition-output.txt; then
     echo "✅ Recognition text found in database"

@@ -1,10 +1,12 @@
 package com.onyx.android.ui
 
 import androidx.compose.foundation.gestures.TransformableState
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.Brush
+import com.onyx.android.ink.model.LassoSelection
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
@@ -13,9 +15,11 @@ import com.onyx.android.pdf.PdfTextChar
 import com.onyx.android.pdf.PdfTextSelection
 import com.onyx.android.pdf.PdfTileKey
 import com.onyx.android.pdf.ValidatingTile
+import com.onyx.android.recognition.ConvertedTextBlock
 
 internal enum class InteractionMode {
     DRAW,
+    TEXT_SELECTION,
     PAN,
     SCROLL,
 }
@@ -53,14 +57,21 @@ internal data class NoteEditorTopBarState(
     val onRedo: () -> Unit,
     val onToggleReadOnly: () -> Unit,
     val onOpenOutline: () -> Unit,
+    val isTextSelectionMode: Boolean = false,
+    val onToggleTextSelectionMode: () -> Unit = {},
+    val onJumpToPage: (Int) -> Unit = {},
+    val isRecognitionOverlayEnabled: Boolean = false,
+    val onToggleRecognitionOverlay: () -> Unit = {},
 )
 
 internal data class NoteEditorToolbarState(
     val brush: Brush,
     val lastNonEraserTool: Tool,
     val isStylusButtonEraserActive: Boolean,
+    val isSegmentEraserEnabled: Boolean = false,
     val templateState: PageTemplateState,
     val onBrushChange: (Brush) -> Unit,
+    val onSegmentEraserEnabledChange: (Boolean) -> Unit = {},
     val onTemplateChange: (PageTemplateState) -> Unit,
 )
 
@@ -83,13 +94,25 @@ internal data class NoteEditorContentState(
     val strokes: List<Stroke>,
     val brush: Brush,
     val isStylusButtonEraserActive: Boolean,
+    val isSegmentEraserEnabled: Boolean = false,
     val interactionMode: InteractionMode,
+    val allowCanvasFingerGestures: Boolean = true,
     val thumbnails: List<ThumbnailItem>,
     val currentPageIndex: Int,
     val templateState: PageTemplateState,
+    val lassoSelection: LassoSelection = LassoSelection(),
+    val isTextSelectionEnabled: Boolean = false,
+    val isRecognitionOverlayEnabled: Boolean = false,
+    val recognitionText: String? = null,
+    val convertedTextBlocks: List<ConvertedTextBlock> = emptyList(),
+    val onConvertedTextBlockSelected: (ConvertedTextBlock) -> Unit = {},
+    val loadThumbnail: suspend (Int) -> android.graphics.Bitmap? = { null },
     val onStrokeFinished: (Stroke) -> Unit,
     val onStrokeErased: (Stroke) -> Unit,
     val onStrokeSplit: (Stroke, List<Stroke>) -> Unit = { _, _ -> },
+    val onLassoMove: (Float, Float) -> Unit = { _, _ -> },
+    val onLassoResize: (Float, Float, Float) -> Unit = { _, _, _ -> },
+    val onSegmentEraserEnabledChange: (Boolean) -> Unit = {},
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
     val onTransformGesture: (
         zoomChange: Float,
@@ -121,6 +144,10 @@ internal data class PageItemState(
     val isVisible: Boolean,
     val renderTransform: ViewTransform,
     val templateState: PageTemplateState,
+    val lassoSelection: LassoSelection = LassoSelection(),
+    val searchHighlightBounds: Rect? = null,
+    val recognitionText: String? = null,
+    val convertedTextBlocks: List<ConvertedTextBlock> = emptyList(),
 )
 
 /**
@@ -131,6 +158,7 @@ internal data class MultiPageContentState(
     val isReadOnly: Boolean,
     val brush: Brush,
     val isStylusButtonEraserActive: Boolean,
+    val isSegmentEraserEnabled: Boolean = false,
     val interactionMode: InteractionMode,
     val pdfRenderer: PdfDocumentRenderer?,
     val firstVisiblePageIndex: Int,
@@ -140,9 +168,17 @@ internal data class MultiPageContentState(
     val maxDocumentZoom: Float,
     val thumbnails: List<ThumbnailItem>,
     val templateState: PageTemplateState,
+    val lassoSelectionsByPageId: Map<String, LassoSelection> = emptyMap(),
+    val isTextSelectionEnabled: Boolean = false,
+    val isRecognitionOverlayEnabled: Boolean = false,
+    val onConvertedTextBlockSelected: (pageId: String, block: ConvertedTextBlock) -> Unit = { _, _ -> },
+    val loadThumbnail: suspend (Int) -> android.graphics.Bitmap? = { null },
     val onStrokeFinished: (Stroke, String) -> Unit,
     val onStrokeErased: (Stroke, String) -> Unit,
     val onStrokeSplit: (Stroke, List<Stroke>, String) -> Unit = { _, _, _ -> },
+    val onLassoMove: (String, Float, Float) -> Unit = { _, _, _ -> },
+    val onLassoResize: (String, Float, Float, Float) -> Unit = { _, _, _, _ -> },
+    val onSegmentEraserEnabledChange: (Boolean) -> Unit = {},
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
     val onTransformGesture: (
         zoomChange: Float,
@@ -215,4 +251,5 @@ internal data class BrushState(
 internal data class StrokeCallbacks(
     val onStrokeFinished: (Stroke) -> Unit,
     val onStrokeErased: (Stroke) -> Unit,
+    val onStrokeSplit: (Stroke, List<Stroke>, String) -> Unit,
 )
