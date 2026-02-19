@@ -168,7 +168,7 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6
   - `.sisyphus/plans/milestone-ui-overhaul-samsung-notes.md` - UI capability targets.
 
   **Acceptance Criteria**
-  - [ ] Supersession mapping documented.
+  - [x] Supersession mapping documented.
   - [ ] Scope guardrails approved and visible.
 
   **Commit**: NO (documentation-only alignment)
@@ -242,8 +242,8 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6
   - `docs/device-blocker.md` - physical-device pending items.
 
   **Acceptance Criteria**
-  - [ ] Baseline report committed.
-  - [ ] SLOs recorded with numeric thresholds.
+  - [x] Baseline report committed.
+  - [x] SLOs recorded with numeric thresholds.
   - [ ] Report includes raw samples, p50/p95, sample counts, and exact command/journey definitions.
 
   **Commit**: YES
@@ -287,10 +287,10 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6
   **Acceptance Criteria**
   - [ ] Screenshot, E2E, and macrobenchmark jobs run in CI or local reproducibly.
   - [ ] `bun run android:lint` and `bun run android:test` are required CI steps in `.github/workflows/ci.yml`.
-  - [ ] `apps/android/maestro/flows/editor-smoke.yaml` exists and is runnable with Maestro CLI.
+  - [x] `apps/android/maestro/flows/editor-smoke.yaml` exists and is runnable with Maestro CLI.
   - [ ] First screenshot golden is checked in and verified by test output.
-  - [ ] Instrumentation gate command is documented and runnable: `cd apps/android && node ../../scripts/gradlew.js :app:connectedDebugAndroidTest`.
-  - [ ] CI topology documented: PR-required gates vs optional/nightly instrumentation/perf gates.
+  - [x] Instrumentation gate command is documented and runnable: `cd apps/android && node ../../scripts/gradlew.js :app:connectedDebugAndroidTest`.
+  - [x] CI topology documented: PR-required gates vs optional/nightly instrumentation/perf gates.
   - [ ] Failing golden diff produces actionable artifact output.
 
   **Commit**: YES
@@ -501,8 +501,8 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6
   **Acceptance Criteria**
   - [ ] In-flight queue remains bounded in stress scroll.
   - [ ] p95 tile-visible latency meets target.
-  - [ ] `bun run android:test` passes including `AsyncPdfPipelineTest` and `PdfTileRendererMathTest`.
-  - [ ] Perf logs captured in `.sisyphus/notepads/pdf-scheduler-baseline.md` with before/after comparison.
+  - [x] `bun run android:test` passes including `AsyncPdfPipelineTest` and `PdfTileRendererMathTest`.
+  - [x] Perf logs captured in `.sisyphus/notepads/pdf-scheduler-baseline.md` with before/after comparison.
 
   **Commit**: YES
   - Message: `perf(pdf): frame-align tile scheduling and bound request churn`
@@ -527,7 +527,7 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6
   **Acceptance Criteria**
   - [ ] No recycle/draw crash in stress tests.
   - [ ] Memory remains inside budget under repeated open/close/zoom.
-  - [ ] `bun run android:test` passes including `PdfTileCacheTest`.
+  - [x] `bun run android:test` passes including `PdfTileCacheTest`.
   - [ ] `cd apps/android && node ../../scripts/gradlew.js :app:connectedDebugAndroidTest --tests "*PdfiumIntegrationSmokeTest"` passes on at least one physical device.
 
   **Commit**: YES
@@ -552,7 +552,7 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6
   **Acceptance Criteria**
   - [ ] No black/blank transition in navigation journey.
   - [ ] Zoom-in does not remain blurry beyond one settle window.
-  - [ ] `apps/android/app/src/androidTest/java/com/onyx/android/ui/` contains an instrumentation assertion for bucket crossfade continuity.
+  - [x] `apps/android/app/src/androidTest/java/com/onyx/android/ui/` contains an instrumentation assertion for bucket crossfade continuity.
 
   **Commit**: YES
   - Message: `feat(pdf): add stable bucket hysteresis and continuity crossfade`
