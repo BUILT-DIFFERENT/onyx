@@ -1,6 +1,7 @@
 package com.onyx.android.data
 
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.onyx.android.data.migrations.MIGRATION_4_5
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -57,5 +58,41 @@ class OnyxDatabaseTest {
         assert(executedSql.any { it.contains("index_folders_parentId") })
         assert(executedSql.any { it.contains("index_NoteTagCrossRef_noteId") })
         assert(executedSql.any { it.contains("index_NoteTagCrossRef_tagId") })
+    }
+
+    @Test
+    fun `migration 3 to 4 is registered with expected versions`() {
+        assertEquals(3, OnyxDatabase.MIGRATION_3_4.startVersion)
+        assertEquals(4, OnyxDatabase.MIGRATION_3_4.endVersion)
+    }
+
+    @Test
+    fun `migration 3 to 4 adds template metadata and integrity triggers`() {
+        val database = mockk<SupportSQLiteDatabase>(relaxed = true)
+        val executedSql = mutableListOf<String>()
+        every { database.execSQL(capture(executedSql)) } returns Unit
+
+        OnyxDatabase.MIGRATION_3_4.migrate(database)
+
+        assert(executedSql.any { it.contains("ALTER TABLE folders ADD COLUMN updatedAt") })
+        assert(executedSql.any { it.contains("ALTER TABLE pages ADD COLUMN templateId") })
+        assert(executedSql.any { it.contains("CREATE TABLE IF NOT EXISTS page_templates") })
+        assert(executedSql.any { it.contains("index_pages_noteId") })
+        assert(executedSql.any { it.contains("index_pages_templateId") })
+        assert(executedSql.any { it.contains("CREATE TRIGGER IF NOT EXISTS notes_folder_insert_check") })
+        assert(executedSql.any { it.contains("CREATE TRIGGER IF NOT EXISTS folders_parent_insert_check") })
+        assert(executedSql.any { it.contains("CREATE TRIGGER IF NOT EXISTS pages_template_insert_check") })
+    }
+
+    @Test
+    fun `migration 4 to 5 creates editor settings table and seeds default row`() {
+        val database = mockk<SupportSQLiteDatabase>(relaxed = true)
+        val executedSql = mutableListOf<String>()
+        every { database.execSQL(capture(executedSql)) } returns Unit
+
+        MIGRATION_4_5.migrate(database)
+
+        assert(executedSql.any { it.contains("CREATE TABLE IF NOT EXISTS editor_settings") })
+        assert(executedSql.any { it.contains("INSERT OR IGNORE INTO editor_settings") })
     }
 }

@@ -1,0 +1,315 @@
+import { describe, it, expect } from 'vitest';
+import { NoteSchema } from '../schemas/note';
+import { PageSchema } from '../schemas/page';
+import { StrokeSchema } from '../schemas/stroke';
+
+// ============================================================================
+// NoteSchema Tests
+// ============================================================================
+
+describe('NoteSchema', () => {
+  const validNote = {
+    noteId: '550e8400-e29b-41d4-a716-446655440000',
+    ownerUserId: 'user_123',
+    title: 'Test Note',
+    createdAt: 1708300800000,
+    updatedAt: 1708300800000,
+  };
+
+  it('parses valid note data', () => {
+    const result = NoteSchema.parse(validNote);
+    expect(result.noteId).toBe(validNote.noteId);
+    expect(result.ownerUserId).toBe(validNote.ownerUserId);
+    expect(result.title).toBe(validNote.title);
+    expect(result.createdAt).toBe(validNote.createdAt);
+    expect(result.updatedAt).toBe(validNote.updatedAt);
+  });
+
+  it('rejects invalid UUID for noteId', () => {
+    const invalidNote = { ...validNote, noteId: 'not-a-uuid' };
+    expect(() => NoteSchema.parse(invalidNote)).toThrow();
+  });
+
+  it('rejects missing required fields', () => {
+    const { noteId: removedNoteId, ...missingNoteId } = validNote;
+    expect(removedNoteId).toBeDefined();
+    expect(() => NoteSchema.parse(missingNoteId)).toThrow();
+
+    const { ownerUserId: removedOwnerUserId, ...missingOwner } = validNote;
+    expect(removedOwnerUserId).toBeDefined();
+    expect(() => NoteSchema.parse(missingOwner)).toThrow();
+
+    const { title: removedTitle, ...missingTitle } = validNote;
+    expect(removedTitle).toBeDefined();
+    expect(() => NoteSchema.parse(missingTitle)).toThrow();
+  });
+
+  it('rejects extra fields like folderId (strict mode)', () => {
+    const noteWithExtraField = {
+      ...validNote,
+      folderId: 'folder_123', // This is a local-only field, should be rejected
+    };
+    expect(() => NoteSchema.parse(noteWithExtraField)).toThrow();
+  });
+
+  it('handles deletedAt optional field - absent means not deleted', () => {
+    const result = NoteSchema.parse(validNote);
+    expect(result.deletedAt).toBeUndefined();
+  });
+
+  it('handles deletedAt optional field - present means deleted', () => {
+    const deletedNote = {
+      ...validNote,
+      deletedAt: 1708387200000,
+    };
+    const result = NoteSchema.parse(deletedNote);
+    expect(result.deletedAt).toBe(1708387200000);
+  });
+
+  it('rejects non-integer timestamps', () => {
+    const invalidNote = { ...validNote, createdAt: 1708300800.5 };
+    expect(() => NoteSchema.parse(invalidNote)).toThrow();
+  });
+
+  it('rejects non-string title', () => {
+    const invalidNote = { ...validNote, title: 123 };
+    expect(() => NoteSchema.parse(invalidNote)).toThrow();
+  });
+});
+
+// ============================================================================
+// PageSchema Tests
+// ============================================================================
+
+describe('PageSchema', () => {
+  const validPage = {
+    pageId: '660e8400-e29b-41d4-a716-446655440001',
+    noteId: '550e8400-e29b-41d4-a716-446655440000',
+    kind: 'ink' as const,
+    geometryKind: 'fixed' as const,
+    width: 612,
+    height: 792,
+    unit: 'pt' as const,
+    contentLamportMax: 0,
+    updatedAt: 1708300800000,
+  };
+
+  it('parses valid page data', () => {
+    const result = PageSchema.parse(validPage);
+    expect(result.pageId).toBe(validPage.pageId);
+    expect(result.noteId).toBe(validPage.noteId);
+    expect(result.kind).toBe('ink');
+    expect(result.geometryKind).toBe('fixed');
+    expect(result.width).toBe(validPage.width);
+    expect(result.height).toBe(validPage.height);
+    expect(result.unit).toBe('pt');
+  });
+
+  it('accepts all valid kind enum values', () => {
+    const kinds = ['ink', 'pdf', 'mixed', 'infinite'] as const;
+    for (const kind of kinds) {
+      const page = { ...validPage, kind };
+      const result = PageSchema.parse(page);
+      expect(result.kind).toBe(kind);
+    }
+  });
+
+  it('accepts all valid geometryKind enum values', () => {
+    const geometryKinds = ['fixed', 'infinite'] as const;
+    for (const geometryKind of geometryKinds) {
+      const page = { ...validPage, geometryKind };
+      const result = PageSchema.parse(page);
+      expect(result.geometryKind).toBe(geometryKind);
+    }
+  });
+
+  it('rejects invalid kind enum value', () => {
+    const invalidPage = { ...validPage, kind: 'invalid' };
+    expect(() => PageSchema.parse(invalidPage)).toThrow();
+  });
+
+  it('rejects invalid geometryKind enum value', () => {
+    const invalidPage = { ...validPage, geometryKind: 'invalid' };
+    expect(() => PageSchema.parse(invalidPage)).toThrow();
+  });
+
+  it('rejects extra fields like indexInNote (strict mode)', () => {
+    const pageWithExtraField = {
+      ...validPage,
+      indexInNote: 0, // This is a local-only field, should be rejected
+    };
+    expect(() => PageSchema.parse(pageWithExtraField)).toThrow();
+  });
+
+  it('handles optional nullable pdfAssetId - absent', () => {
+    const result = PageSchema.parse(validPage);
+    expect(result.pdfAssetId).toBeUndefined();
+  });
+
+  it('handles optional nullable pdfAssetId - null', () => {
+    const pageWithNullPdf = { ...validPage, pdfAssetId: null };
+    const result = PageSchema.parse(pageWithNullPdf);
+    expect(result.pdfAssetId).toBeNull();
+  });
+
+  it('handles optional nullable pdfAssetId - present', () => {
+    const pdfPage = {
+      ...validPage,
+      kind: 'pdf' as const,
+      pdfAssetId: 'asset_123',
+      pdfPageNo: 1,
+    };
+    const result = PageSchema.parse(pdfPage);
+    expect(result.pdfAssetId).toBe('asset_123');
+    expect(result.pdfPageNo).toBe(1);
+  });
+
+  it('rejects non-literal unit value', () => {
+    const invalidPage = { ...validPage, unit: 'in' };
+    expect(() => PageSchema.parse(invalidPage)).toThrow();
+  });
+
+  it('rejects missing required fields', () => {
+    const { pageId: removedPageId, ...missingPageId } = validPage;
+    expect(removedPageId).toBeDefined();
+    expect(() => PageSchema.parse(missingPageId)).toThrow();
+
+    const { noteId: removedNoteId, ...missingNoteId } = validPage;
+    expect(removedNoteId).toBeDefined();
+    expect(() => PageSchema.parse(missingNoteId)).toThrow();
+  });
+});
+
+// ============================================================================
+// StrokeSchema Tests
+// ============================================================================
+
+describe('StrokeSchema', () => {
+  const validStyle = {
+    tool: 'pen' as const,
+    color: '#000000',
+    baseWidth: 1.5,
+    minWidthFactor: 0.85,
+    maxWidthFactor: 1.15,
+    nibRotation: false,
+  };
+
+  const validBounds = {
+    x: 100,
+    y: 200,
+    w: 50,
+    h: 30,
+  };
+
+  const validStroke = {
+    strokeId: '770e8400-e29b-41d4-a716-446655440002',
+    pageId: '660e8400-e29b-41d4-a716-446655440001',
+    style: validStyle,
+    bounds: validBounds,
+    createdAt: 1708300800000,
+    createdLamport: 1,
+  };
+
+  it('parses valid stroke data', () => {
+    const result = StrokeSchema.parse(validStroke);
+    expect(result.strokeId).toBe(validStroke.strokeId);
+    expect(result.pageId).toBe(validStroke.pageId);
+    expect(result.style.tool).toBe('pen');
+    expect(result.bounds.x).toBe(100);
+    expect(result.createdAt).toBe(validStroke.createdAt);
+    expect(result.createdLamport).toBe(1);
+  });
+
+  it('accepts all valid tool enum values', () => {
+    const tools = ['pen', 'highlighter', 'eraser'] as const;
+    for (const tool of tools) {
+      const stroke = {
+        ...validStroke,
+        style: { ...validStyle, tool },
+      };
+      const result = StrokeSchema.parse(stroke);
+      expect(result.style.tool).toBe(tool);
+    }
+  });
+
+  it('rejects invalid tool enum value', () => {
+    const invalidStroke = {
+      ...validStroke,
+      style: { ...validStyle, tool: 'invalid' },
+    };
+    expect(() => StrokeSchema.parse(invalidStroke)).toThrow();
+  });
+
+  it('rejects extra fields like strokeData (strict mode)', () => {
+    const strokeWithExtraField = {
+      ...validStroke,
+      strokeData: new Uint8Array([1, 2, 3]), // ByteArray, not JSON-serializable
+    };
+    expect(() => StrokeSchema.parse(strokeWithExtraField)).toThrow();
+  });
+
+  it('rejects extra fields like points (strict mode)', () => {
+    const strokeWithExtraField = {
+      ...validStroke,
+      points: [{ x: 0, y: 0 }], // Deferred to sync implementation
+    };
+    expect(() => StrokeSchema.parse(strokeWithExtraField)).toThrow();
+  });
+
+  it('validates nested style object', () => {
+    const strokeWithInvalidStyle = {
+      ...validStroke,
+      style: { ...validStyle, baseWidth: 'not-a-number' },
+    };
+    expect(() => StrokeSchema.parse(strokeWithInvalidStyle)).toThrow();
+  });
+
+  it('validates nested bounds object', () => {
+    const strokeWithInvalidBounds = {
+      ...validStroke,
+      bounds: { x: 100, y: 200 }, // Missing w and h
+    };
+    expect(() => StrokeSchema.parse(strokeWithInvalidBounds)).toThrow();
+  });
+
+  it('handles optional color in style', () => {
+    const styleWithoutColor = {
+      tool: 'pen' as const,
+      baseWidth: 1.5,
+      minWidthFactor: 0.85,
+      maxWidthFactor: 1.15,
+      nibRotation: false,
+    };
+    const stroke = { ...validStroke, style: styleWithoutColor };
+    const result = StrokeSchema.parse(stroke);
+    expect(result.style.color).toBeUndefined();
+  });
+
+  it('rejects missing required fields', () => {
+    const { strokeId: removedStrokeId, ...missingStrokeId } = validStroke;
+    expect(removedStrokeId).toBeDefined();
+    expect(() => StrokeSchema.parse(missingStrokeId)).toThrow();
+
+    const { pageId: removedPageId, ...missingPageId } = validStroke;
+    expect(removedPageId).toBeDefined();
+    expect(() => StrokeSchema.parse(missingPageId)).toThrow();
+
+    const { style: removedStyle, ...missingStyle } = validStroke;
+    expect(removedStyle).toBeDefined();
+    expect(() => StrokeSchema.parse(missingStyle)).toThrow();
+
+    const { bounds: removedBounds, ...missingBounds } = validStroke;
+    expect(removedBounds).toBeDefined();
+    expect(() => StrokeSchema.parse(missingBounds)).toThrow();
+  });
+
+  it('rejects invalid UUID for strokeId', () => {
+    const invalidStroke = { ...validStroke, strokeId: 'not-a-uuid' };
+    expect(() => StrokeSchema.parse(invalidStroke)).toThrow();
+  });
+
+  it('rejects non-integer createdLamport', () => {
+    const invalidStroke = { ...validStroke, createdLamport: 1.5 };
+    expect(() => StrokeSchema.parse(invalidStroke)).toThrow();
+  });
+});

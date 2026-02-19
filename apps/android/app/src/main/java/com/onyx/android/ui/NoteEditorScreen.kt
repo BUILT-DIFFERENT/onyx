@@ -16,6 +16,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -30,22 +31,25 @@ import androidx.compose.ui.unit.IntSize
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.onyx.android.data.entity.PageEntity
+import com.onyx.android.data.repository.EditorSettings
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.TransformGesture
 import com.onyx.android.pdf.OutlineItem
 import com.onyx.android.pdf.PdfAssetStorage
+import com.onyx.android.pdf.PdfDocumentRenderer
 import com.onyx.android.pdf.PdfIncorrectPasswordException
 import com.onyx.android.pdf.PdfPasswordRequiredException
 import com.onyx.android.pdf.PdfPasswordStore
-import com.onyx.android.pdf.PdfiumRenderer
-import com.onyx.android.recognition.MyScriptPageManager
-import com.onyx.android.requireAppContainer
+import com.onyx.android.pdf.openPdfDocumentRenderer
+import com.onyx.android.pdf.renderThumbnail
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.exp
 import kotlin.math.hypot
 
@@ -58,7 +62,6 @@ private const val PDF_PASSWORD_INCORRECT_MESSAGE = "Incorrect PDF password. Plea
 private const val ENABLE_STACKED_PAGES = true
 private const val STACKED_DOCUMENT_MIN_ZOOM = 1f
 private const val STACKED_DOCUMENT_MAX_ZOOM = 4f
-private const val DEFAULT_STACKED_HIGHLIGHTER_BASE_WIDTH = 6.5f
 
 internal sealed interface PdfOpenFailureUiAction {
     data class PromptForPassword(
@@ -95,48 +98,15 @@ internal fun mapPdfOpenFailureToUiAction(error: Throwable): PdfOpenFailureUiActi
 @Composable
 fun NoteEditorScreen(
     noteId: String,
-    initialPageId: String? = null,
     onNavigateBack: () -> Unit,
 ) {
     NoteEditorStatusBarEffect()
-    val appContext = LocalContext.current.applicationContext
-    val appContainer = appContext.requireAppContainer()
-    val repository = appContainer.noteRepository
-    val noteDao = appContainer.database.noteDao()
-    val pageDao = appContainer.database.pageDao()
-    val pdfPasswordStore = appContainer.pdfPasswordStore
-    val pdfAssetStorage = remember { PdfAssetStorage(appContext) }
-
-    val myScriptPageManager =
-        remember {
-            if (appContainer.myScriptEngine.isInitialized()) {
-                MyScriptPageManager(
-                    engine = appContainer.myScriptEngine.getEngine(),
-                    context = appContext,
-                )
-            } else {
-                null
-            }
-        }
-
-    val viewModel: NoteEditorViewModel =
-        viewModel(
-            key = "NoteEditorViewModel_$noteId",
-            factory =
-                NoteEditorViewModelFactory(
-                    noteId,
-                    repository,
-                    noteDao,
-                    pageDao,
-                    myScriptPageManager,
-                    initialPageId,
-                ),
-        )
+    val viewModel: NoteEditorViewModel = hiltViewModel()
     NoteEditorScreenContent(
         noteId = noteId,
         viewModel = viewModel,
-        pdfAssetStorage = pdfAssetStorage,
-        pdfPasswordStore = pdfPasswordStore,
+        pdfAssetStorage = viewModel.pdfAssetStorage,
+        pdfPasswordStore = viewModel.pdfPasswordStore,
         onNavigateBack = onNavigateBack,
     )
 }
@@ -174,6 +144,7 @@ private fun NoteEditorScreenContent(
     onNavigateBack: () -> Unit,
 ) {
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val editorSettings by viewModel.editorSettings.collectAsState()
     var pdfPasswordPrompt by remember { mutableStateOf<EditorPdfPasswordPromptState?>(null) }
     var pdfPasswordInput by rememberSaveable { mutableStateOf("") }
     var pdfOpenErrorMessage by rememberSaveable { mutableStateOf<String?>(null) }
@@ -202,6 +173,8 @@ private fun NoteEditorScreenContent(
                 onNavigateBack = onNavigateBack,
                 onOpenOutline = { showOutlineSheet = true },
                 onLoadOutline = { renderer -> outlineItems = renderer.getTableOfContents() },
+                editorSettings = editorSettings,
+                onEditorSettingsChange = viewModel::updateEditorSettings,
             )
         MultiPageEditorScaffold(
             topBarState = uiState.topBarState,
@@ -242,6 +215,8 @@ private fun NoteEditorScreenContent(
                 onNavigateBack = onNavigateBack,
                 onOpenOutline = { showOutlineSheet = true },
                 onLoadOutline = { renderer -> outlineItems = renderer.getTableOfContents() },
+                editorSettings = editorSettings,
+                onEditorSettingsChange = viewModel::updateEditorSettings,
             )
         NoteEditorScaffold(
             topBarState = uiState.topBarState,
@@ -348,7 +323,7 @@ private fun NoteEditorErrorDialog(
 }
 
 @Composable
-@Suppress("LongMethod", "LongParameterList")
+@Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod")
 private fun rememberNoteEditorUiState(
     noteId: String,
     viewModel: NoteEditorViewModel,
@@ -359,13 +334,20 @@ private fun rememberNoteEditorUiState(
     onPdfOpenError: (String) -> Unit,
     onNavigateBack: () -> Unit,
     onOpenOutline: () -> Unit,
-    onLoadOutline: (PdfiumRenderer) -> Unit,
+    onLoadOutline: (PdfDocumentRenderer) -> Unit,
+    editorSettings: EditorSettings,
+    onEditorSettingsChange: (EditorSettings) -> Unit,
 ): NoteEditorUiState {
     val appContext = LocalContext.current.applicationContext
-    val brushState = rememberBrushState()
+    val brushState =
+        rememberBrushState(
+            editorSettings = editorSettings,
+            onSettingsChange = onEditorSettingsChange,
+        )
     val pageState = rememberPageState(viewModel)
     val undoController = remember(viewModel) { UndoController(viewModel, MAX_UNDO_ACTIONS) }
     var isReadOnly by rememberSaveable { mutableStateOf(false) }
+    var isTextSelectionMode by rememberSaveable { mutableStateOf(false) }
     var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
@@ -422,6 +404,7 @@ private fun rememberNoteEditorUiState(
     }
     LaunchedEffect(pageState.currentPage?.pageId) {
         isStylusButtonEraserActive = false
+        isTextSelectionMode = false
     }
     val topBarState =
         buildTopBarState(
@@ -432,13 +415,25 @@ private fun rememberNoteEditorUiState(
             isPdfDocument = pdfState.isPdfPage,
             onOpenOutline = {
                 pdfState.pdfRenderer?.let { renderer ->
-                    onLoadOutline(renderer as PdfiumRenderer)
+                    onLoadOutline(renderer)
                 }
                 onOpenOutline()
             },
         ).copy(
             isReadOnly = isReadOnly,
             onToggleReadOnly = { isReadOnly = !isReadOnly },
+            isTextSelectionMode = isTextSelectionMode,
+            onToggleTextSelectionMode = {
+                if (pdfState.isPdfPage) {
+                    isTextSelectionMode = !isTextSelectionMode
+                }
+            },
+            onJumpToPage = { targetPageIndex ->
+                val offset = targetPageIndex - pageState.currentPageIndex
+                if (offset != 0) {
+                    viewModel.navigateBy(offset)
+                }
+            },
         )
     val toolbarState =
         buildToolbarState(
@@ -513,7 +508,9 @@ private fun rememberNoteEditorUiState(
                     }
                 }
         }
-    // Generate thumbnails for PDF documents
+    val thumbnailCache = remember(pdfState.pdfRenderer) { mutableStateMapOf<Int, android.graphics.Bitmap?>() }
+
+    // Build thumbnail metadata for PDF documents. Bitmaps load lazily.
     val thumbnails =
         remember(pdfState.pdfRenderer, pdfState.isPdfPage) {
             val renderer = pdfState.pdfRenderer
@@ -521,15 +518,26 @@ private fun rememberNoteEditorUiState(
                 val pageCount = renderer.getPageCount()
                 (0 until pageCount).map { pageIndex ->
                     val bounds = renderer.getPageBounds(pageIndex)
-                    val aspectRatio = bounds.first / bounds.second.coerceAtLeast(1f)
+                    val aspectRatio = bounds.width() / bounds.height().coerceAtLeast(1f)
                     ThumbnailItem(
                         pageIndex = pageIndex,
-                        bitmap = renderer.renderThumbnail(pageIndex),
                         aspectRatio = aspectRatio,
                     )
                 }
             } else {
                 emptyList()
+            }
+        }
+
+    val loadThumbnail: suspend (Int) -> android.graphics.Bitmap? =
+        remember(pdfState.pdfRenderer) {
+            { pageIndex ->
+                thumbnailCache[pageIndex]
+                    ?: withContext(Dispatchers.Default) {
+                        pdfState.pdfRenderer?.renderThumbnail(pageIndex)
+                    }?.also { bitmap ->
+                        thumbnailCache[pageIndex] = bitmap
+                    }
             }
         }
 
@@ -553,10 +561,13 @@ private fun rememberNoteEditorUiState(
             strokes = pageState.strokes,
             brush = brushState.activeBrush,
             isStylusButtonEraserActive = isStylusButtonEraserActive,
-            interactionMode = InteractionMode.DRAW,
+            interactionMode = if (isTextSelectionMode) InteractionMode.TEXT_SELECTION else InteractionMode.DRAW,
+            allowCanvasFingerGestures = true,
             thumbnails = thumbnails,
             currentPageIndex = pageState.currentPageIndex,
             templateState = templateState,
+            isTextSelectionEnabled = isTextSelectionMode,
+            loadThumbnail = loadThumbnail,
             onStrokeFinished = strokeCallbacks.onStrokeFinished,
             onStrokeErased = strokeCallbacks.onStrokeErased,
             onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
@@ -598,14 +609,21 @@ private fun rememberMultiPageUiState(
     onPdfOpenError: (String) -> Unit,
     onNavigateBack: () -> Unit,
     onOpenOutline: () -> Unit,
-    onLoadOutline: (PdfiumRenderer) -> Unit,
+    onLoadOutline: (PdfDocumentRenderer) -> Unit,
+    editorSettings: EditorSettings,
+    onEditorSettingsChange: (EditorSettings) -> Unit,
 ): MultiPageUiState {
     val appContext = LocalContext.current.applicationContext
     val density = LocalDensity.current
-    val brushState = rememberBrushState()
+    val brushState =
+        rememberBrushState(
+            editorSettings = editorSettings,
+            onSettingsChange = onEditorSettingsChange,
+        )
     val pageState = rememberPageState(viewModel)
     val undoController = remember(viewModel) { UndoController(viewModel, MAX_UNDO_ACTIONS, useMultiPage = true) }
     var isReadOnly by rememberSaveable { mutableStateOf(false) }
+    var isTextSelectionMode by rememberSaveable { mutableStateOf(false) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
     var templateState by rememberSaveable { mutableStateOf(PageTemplateState.BLANK) }
@@ -625,7 +643,7 @@ private fun rememberMultiPageUiState(
         remember(pdfAssetId, pdfOpenRetryNonce) {
             pdfAssetId?.let { assetId ->
                 runCatching {
-                    PdfiumRenderer(
+                    openPdfDocumentRenderer(
                         context = appContext,
                         pdfFile = pdfAssetStorage.getFileForAsset(assetId),
                         password = pdfPasswordStore.getPassword(assetId),
@@ -657,6 +675,7 @@ private fun rememberMultiPageUiState(
     )
     LaunchedEffect(pageState.currentPage?.pageId) {
         isStylusButtonEraserActive = false
+        isTextSelectionMode = false
     }
 
     val pages =
@@ -708,6 +727,18 @@ private fun rememberMultiPageUiState(
         ).copy(
             isReadOnly = isReadOnly,
             onToggleReadOnly = { isReadOnly = !isReadOnly },
+            isTextSelectionMode = isTextSelectionMode,
+            onToggleTextSelectionMode = {
+                if (pdfRenderer != null) {
+                    isTextSelectionMode = !isTextSelectionMode
+                }
+            },
+            onJumpToPage = { targetPageIndex ->
+                val offset = targetPageIndex - pageState.currentPageIndex
+                if (offset != 0) {
+                    viewModel.navigateBy(offset)
+                }
+            },
         )
     val toolbarState =
         buildToolbarState(
@@ -719,6 +750,8 @@ private fun rememberMultiPageUiState(
             { templateState = it },
         )
 
+    val thumbnailCache = remember(pdfRenderer) { mutableStateMapOf<Int, android.graphics.Bitmap?>() }
+
     val thumbnails =
         remember(pdfRenderer) {
             val renderer = pdfRenderer
@@ -726,15 +759,26 @@ private fun rememberMultiPageUiState(
                 val pageCount = renderer.getPageCount()
                 (0 until pageCount).map { pageIndex ->
                     val bounds = renderer.getPageBounds(pageIndex)
-                    val aspectRatio = bounds.first / bounds.second.coerceAtLeast(1f)
+                    val aspectRatio = bounds.width() / bounds.height().coerceAtLeast(1f)
                     ThumbnailItem(
                         pageIndex = pageIndex,
-                        bitmap = renderer.renderThumbnail(pageIndex),
                         aspectRatio = aspectRatio,
                     )
                 }
             } else {
                 emptyList()
+            }
+        }
+
+    val loadThumbnail: suspend (Int) -> android.graphics.Bitmap? =
+        remember(pdfRenderer) {
+            { pageIndex ->
+                thumbnailCache[pageIndex]
+                    ?: withContext(Dispatchers.Default) {
+                        pdfRenderer?.renderThumbnail(pageIndex)
+                    }?.also { bitmap ->
+                        thumbnailCache[pageIndex] = bitmap
+                    }
             }
         }
 
@@ -744,7 +788,7 @@ private fun rememberMultiPageUiState(
             isReadOnly = isReadOnly,
             brush = brushState.activeBrush,
             isStylusButtonEraserActive = isStylusButtonEraserActive,
-            interactionMode = InteractionMode.SCROLL,
+            interactionMode = if (isTextSelectionMode) InteractionMode.TEXT_SELECTION else InteractionMode.SCROLL,
             pdfRenderer = pdfRenderer,
             firstVisiblePageIndex = pageState.currentPageIndex,
             documentZoom = documentZoom,
@@ -753,6 +797,8 @@ private fun rememberMultiPageUiState(
             maxDocumentZoom = STACKED_DOCUMENT_MAX_ZOOM,
             thumbnails = thumbnails,
             templateState = templateState,
+            isTextSelectionEnabled = isTextSelectionMode,
+            loadThumbnail = loadThumbnail,
             onStrokeFinished = { stroke, pageId ->
                 val page = pageById[pageId]
                 viewModel.setActiveRecognitionPage(pageId)
@@ -807,20 +853,35 @@ private fun rememberMultiPageUiState(
 
 @Composable
 @Suppress("LongMethod")
-private fun rememberBrushState(): BrushState {
-    var penBrush by remember { mutableStateOf(Brush(tool = Tool.PEN)) }
-    var highlighterBrush by
-        remember {
-            mutableStateOf(
-                Brush(
-                    tool = Tool.HIGHLIGHTER,
-                    color = "#B31E88E5",
-                    baseWidth = DEFAULT_STACKED_HIGHLIGHTER_BASE_WIDTH,
-                ),
-            )
-        }
-    var selectedTool by remember { mutableStateOf(Tool.PEN) }
-    var lastNonEraserTool by remember { mutableStateOf(Tool.PEN) }
+private fun rememberBrushState(
+    editorSettings: EditorSettings,
+    onSettingsChange: (EditorSettings) -> Unit,
+): BrushState {
+    var penBrush by remember { mutableStateOf(editorSettings.penBrush.copy(tool = Tool.PEN)) }
+    var highlighterBrush by remember {
+        mutableStateOf(editorSettings.highlighterBrush.copy(tool = Tool.HIGHLIGHTER))
+    }
+    var selectedTool by remember { mutableStateOf(editorSettings.selectedTool) }
+    var lastNonEraserTool by remember { mutableStateOf(editorSettings.lastNonEraserTool) }
+
+    LaunchedEffect(editorSettings) {
+        penBrush = editorSettings.penBrush.copy(tool = Tool.PEN)
+        highlighterBrush = editorSettings.highlighterBrush.copy(tool = Tool.HIGHLIGHTER)
+        selectedTool = editorSettings.selectedTool
+        lastNonEraserTool = editorSettings.lastNonEraserTool
+    }
+
+    fun persistSettings() {
+        onSettingsChange(
+            EditorSettings(
+                selectedTool = selectedTool,
+                penBrush = penBrush.copy(tool = Tool.PEN),
+                highlighterBrush = highlighterBrush.copy(tool = Tool.HIGHLIGHTER),
+                lastNonEraserTool = lastNonEraserTool,
+            ),
+        )
+    }
+
     val activeBrush =
         when (selectedTool) {
             Tool.PEN -> {
@@ -853,12 +914,14 @@ private fun rememberBrushState(): BrushState {
                     selectedTool = Tool.PEN
                     lastNonEraserTool = Tool.PEN
                     penBrush = updatedBrush
+                    persistSettings()
                 }
 
                 Tool.HIGHLIGHTER -> {
                     selectedTool = Tool.HIGHLIGHTER
                     lastNonEraserTool = Tool.HIGHLIGHTER
                     highlighterBrush = updatedBrush
+                    persistSettings()
                 }
 
                 Tool.ERASER -> {
@@ -868,11 +931,13 @@ private fun rememberBrushState(): BrushState {
                     } else {
                         penBrush = penBrush.copy(tool = Tool.PEN)
                     }
+                    persistSettings()
                 }
 
                 Tool.LASSO -> {
                     selectedTool = Tool.LASSO
                     lastNonEraserTool = Tool.LASSO
+                    persistSettings()
                 }
             }
         },
@@ -945,7 +1010,7 @@ private fun rememberPdfState(
         remember(pdfAssetId, pdfOpenRetryNonce) {
             pdfAssetId?.let { assetId ->
                 runCatching {
-                    PdfiumRenderer(
+                    openPdfDocumentRenderer(
                         context = appContext,
                         pdfFile = pdfAssetStorage.getFileForAsset(assetId),
                         password = pdfPasswordStore.getPassword(assetId),

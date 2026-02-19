@@ -19,6 +19,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -180,71 +181,72 @@ class OnyxDatabaseMigrationTest {
             }
 
             // Step 2: Run migration to v3
-            migrationTestHelper.runMigrationsAndValidate(
-                testDatabaseName,
-                3,
-                true,
-                OnyxDatabase.MIGRATION_2_3,
-            ).use { db ->
-                // Step 3: Verify all notes preserved
-                val noteCursor = db.query("SELECT * FROM notes ORDER BY noteId")
-                noteCursor.use { cursor ->
-                    assertEquals("All notes should be preserved", 2, cursor.count)
+            migrationTestHelper
+                .runMigrationsAndValidate(
+                    testDatabaseName,
+                    3,
+                    true,
+                    OnyxDatabase.MIGRATION_2_3,
+                ).use { db ->
+                    // Step 3: Verify all notes preserved
+                    val noteCursor = db.query("SELECT * FROM notes ORDER BY noteId")
+                    noteCursor.use { cursor ->
+                        assertEquals("All notes should be preserved", 2, cursor.count)
 
-                    assertTrue(cursor.moveToFirst())
-                    assertEquals(note1Id, cursor.getString(cursor.getColumnIndexOrThrow("noteId")))
-                    assertEquals("Test Note 1", cursor.getString(cursor.getColumnIndexOrThrow("title")))
-                    assertNull("folderId should be null for migrated notes", cursor.getString(cursor.getColumnIndexOrThrow("folderId")))
+                        assertTrue(cursor.moveToFirst())
+                        assertEquals(note1Id, cursor.getString(cursor.getColumnIndexOrThrow("noteId")))
+                        assertEquals("Test Note 1", cursor.getString(cursor.getColumnIndexOrThrow("title")))
+                        assertNull("folderId should be null for migrated notes", cursor.getString(cursor.getColumnIndexOrThrow("folderId")))
 
-                    assertTrue(cursor.moveToNext())
-                    assertEquals(note2Id, cursor.getString(cursor.getColumnIndexOrThrow("noteId")))
-                    assertEquals("Test Note 2", cursor.getString(cursor.getColumnIndexOrThrow("title")))
+                        assertTrue(cursor.moveToNext())
+                        assertEquals(note2Id, cursor.getString(cursor.getColumnIndexOrThrow("noteId")))
+                        assertEquals("Test Note 2", cursor.getString(cursor.getColumnIndexOrThrow("title")))
+                    }
+
+                    // Verify all pages preserved
+                    val pageCursor = db.query("SELECT * FROM pages ORDER BY pageId")
+                    pageCursor.use { cursor ->
+                        assertEquals("All pages should be preserved", 3, cursor.count)
+
+                        assertTrue(cursor.moveToFirst())
+                        assertEquals(page1Id, cursor.getString(cursor.getColumnIndexOrThrow("pageId")))
+                        assertEquals(note1Id, cursor.getString(cursor.getColumnIndexOrThrow("noteId")))
+
+                        assertTrue(cursor.moveToNext())
+                        assertEquals(page2Id, cursor.getString(cursor.getColumnIndexOrThrow("pageId")))
+                        assertEquals(note1Id, cursor.getString(cursor.getColumnIndexOrThrow("noteId")))
+
+                        assertTrue(cursor.moveToNext())
+                        assertEquals(page3Id, cursor.getString(cursor.getColumnIndexOrThrow("pageId")))
+                        assertEquals(note2Id, cursor.getString(cursor.getColumnIndexOrThrow("noteId")))
+                    }
+
+                    // Verify all strokes preserved
+                    val strokeCursor = db.query("SELECT * FROM strokes ORDER BY strokeId")
+                    strokeCursor.use { cursor ->
+                        assertEquals("All strokes should be preserved", 5, cursor.count)
+
+                        // Verify stroke data is intact
+                        assertTrue(cursor.moveToFirst())
+                        assertEquals(stroke1Id, cursor.getString(cursor.getColumnIndexOrThrow("strokeId")))
+                        assertEquals(page1Id, cursor.getString(cursor.getColumnIndexOrThrow("pageId")))
+                        assertNotNull(cursor.getBlob(cursor.getColumnIndexOrThrow("strokeData")))
+
+                        assertTrue(cursor.moveToNext())
+                        assertEquals(stroke2Id, cursor.getString(cursor.getColumnIndexOrThrow("strokeId")))
+
+                        assertTrue(cursor.moveToNext())
+                        assertEquals(stroke3Id, cursor.getString(cursor.getColumnIndexOrThrow("strokeId")))
+
+                        assertTrue(cursor.moveToNext())
+                        assertEquals(stroke4Id, cursor.getString(cursor.getColumnIndexOrThrow("strokeId")))
+                        assertEquals(page2Id, cursor.getString(cursor.getColumnIndexOrThrow("pageId")))
+
+                        assertTrue(cursor.moveToNext())
+                        assertEquals(stroke5Id, cursor.getString(cursor.getColumnIndexOrThrow("strokeId")))
+                        assertEquals(page3Id, cursor.getString(cursor.getColumnIndexOrThrow("pageId")))
+                    }
                 }
-
-                // Verify all pages preserved
-                val pageCursor = db.query("SELECT * FROM pages ORDER BY pageId")
-                pageCursor.use { cursor ->
-                    assertEquals("All pages should be preserved", 3, cursor.count)
-
-                    assertTrue(cursor.moveToFirst())
-                    assertEquals(page1Id, cursor.getString(cursor.getColumnIndexOrThrow("pageId")))
-                    assertEquals(note1Id, cursor.getString(cursor.getColumnIndexOrThrow("noteId")))
-
-                    assertTrue(cursor.moveToNext())
-                    assertEquals(page2Id, cursor.getString(cursor.getColumnIndexOrThrow("pageId")))
-                    assertEquals(note1Id, cursor.getString(cursor.getColumnIndexOrThrow("noteId")))
-
-                    assertTrue(cursor.moveToNext())
-                    assertEquals(page3Id, cursor.getString(cursor.getColumnIndexOrThrow("pageId")))
-                    assertEquals(note2Id, cursor.getString(cursor.getColumnIndexOrThrow("noteId")))
-                }
-
-                // Verify all strokes preserved
-                val strokeCursor = db.query("SELECT * FROM strokes ORDER BY strokeId")
-                strokeCursor.use { cursor ->
-                    assertEquals("All strokes should be preserved", 5, cursor.count)
-
-                    // Verify stroke data is intact
-                    assertTrue(cursor.moveToFirst())
-                    assertEquals(stroke1Id, cursor.getString(cursor.getColumnIndexOrThrow("strokeId")))
-                    assertEquals(page1Id, cursor.getString(cursor.getColumnIndexOrThrow("pageId")))
-                    assertNotNull(cursor.getBlob(cursor.getColumnIndexOrThrow("strokeData")))
-
-                    assertTrue(cursor.moveToNext())
-                    assertEquals(stroke2Id, cursor.getString(cursor.getColumnIndexOrThrow("strokeId")))
-
-                    assertTrue(cursor.moveToNext())
-                    assertEquals(stroke3Id, cursor.getString(cursor.getColumnIndexOrThrow("strokeId")))
-
-                    assertTrue(cursor.moveToNext())
-                    assertEquals(stroke4Id, cursor.getString(cursor.getColumnIndexOrThrow("strokeId")))
-                    assertEquals(page2Id, cursor.getString(cursor.getColumnIndexOrThrow("pageId")))
-
-                    assertTrue(cursor.moveToNext())
-                    assertEquals(stroke5Id, cursor.getString(cursor.getColumnIndexOrThrow("strokeId")))
-                    assertEquals(page3Id, cursor.getString(cursor.getColumnIndexOrThrow("pageId")))
-                }
-            }
         }
     }
 
@@ -256,36 +258,37 @@ class OnyxDatabaseMigrationTest {
         runBlocking {
             migrationTestHelper.createDatabase(testDatabaseName, 2).close()
 
-            migrationTestHelper.runMigrationsAndValidate(
-                testDatabaseName,
-                3,
-                true,
-                OnyxDatabase.MIGRATION_2_3,
-            ).use { db ->
-                // Verify folders table exists with correct schema
-                val foldersCursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='folders'")
-                foldersCursor.use { cursor ->
-                    assertTrue("folders table should exist", cursor.moveToFirst())
-                }
+            migrationTestHelper
+                .runMigrationsAndValidate(
+                    testDatabaseName,
+                    3,
+                    true,
+                    OnyxDatabase.MIGRATION_2_3,
+                ).use { db ->
+                    // Verify folders table exists with correct schema
+                    val foldersCursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='folders'")
+                    foldersCursor.use { cursor ->
+                        assertTrue("folders table should exist", cursor.moveToFirst())
+                    }
 
-                // Verify tags table exists
-                val tagsCursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='tags'")
-                tagsCursor.use { cursor ->
-                    assertTrue("tags table should exist", cursor.moveToFirst())
-                }
+                    // Verify tags table exists
+                    val tagsCursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='tags'")
+                    tagsCursor.use { cursor ->
+                        assertTrue("tags table should exist", cursor.moveToFirst())
+                    }
 
-                // Verify NoteTagCrossRef table exists
-                val crossRefCursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='NoteTagCrossRef'")
-                crossRefCursor.use { cursor ->
-                    assertTrue("NoteTagCrossRef table should exist", cursor.moveToFirst())
-                }
+                    // Verify NoteTagCrossRef table exists
+                    val crossRefCursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='NoteTagCrossRef'")
+                    crossRefCursor.use { cursor ->
+                        assertTrue("NoteTagCrossRef table should exist", cursor.moveToFirst())
+                    }
 
-                // Verify thumbnails table exists
-                val thumbnailsCursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='thumbnails'")
-                thumbnailsCursor.use { cursor ->
-                    assertTrue("thumbnails table should exist", cursor.moveToFirst())
+                    // Verify thumbnails table exists
+                    val thumbnailsCursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='thumbnails'")
+                    thumbnailsCursor.use { cursor ->
+                        assertTrue("thumbnails table should exist", cursor.moveToFirst())
+                    }
                 }
-            }
         }
     }
 
@@ -297,41 +300,42 @@ class OnyxDatabaseMigrationTest {
         runBlocking {
             migrationTestHelper.createDatabase(testDatabaseName, 2).close()
 
-            migrationTestHelper.runMigrationsAndValidate(
-                testDatabaseName,
-                3,
-                true,
-                OnyxDatabase.MIGRATION_2_3,
-            ).use { db ->
-                // Verify index on notes.folderId
-                val notesIndexCursor = db.query("SELECT name FROM sqlite_master WHERE type='index' AND name='index_notes_folderId'")
-                notesIndexCursor.use { cursor ->
-                    assertTrue("index_notes_folderId should exist", cursor.moveToFirst())
-                }
+            migrationTestHelper
+                .runMigrationsAndValidate(
+                    testDatabaseName,
+                    3,
+                    true,
+                    OnyxDatabase.MIGRATION_2_3,
+                ).use { db ->
+                    // Verify index on notes.folderId
+                    val notesIndexCursor = db.query("SELECT name FROM sqlite_master WHERE type='index' AND name='index_notes_folderId'")
+                    notesIndexCursor.use { cursor ->
+                        assertTrue("index_notes_folderId should exist", cursor.moveToFirst())
+                    }
 
-                // Verify index on folders.parentId
-                val foldersIndexCursor = db.query("SELECT name FROM sqlite_master WHERE type='index' AND name='index_folders_parentId'")
-                foldersIndexCursor.use { cursor ->
-                    assertTrue("index_folders_parentId should exist", cursor.moveToFirst())
-                }
+                    // Verify index on folders.parentId
+                    val foldersIndexCursor = db.query("SELECT name FROM sqlite_master WHERE type='index' AND name='index_folders_parentId'")
+                    foldersIndexCursor.use { cursor ->
+                        assertTrue("index_folders_parentId should exist", cursor.moveToFirst())
+                    }
 
-                // Verify indexes on NoteTagCrossRef
-                val noteTagNoteIndexCursor =
-                    db.query(
-                        "SELECT name FROM sqlite_master WHERE type='index' AND name='index_NoteTagCrossRef_noteId'",
-                    )
-                noteTagNoteIndexCursor.use { cursor ->
-                    assertTrue("index_NoteTagCrossRef_noteId should exist", cursor.moveToFirst())
-                }
+                    // Verify indexes on NoteTagCrossRef
+                    val noteTagNoteIndexCursor =
+                        db.query(
+                            "SELECT name FROM sqlite_master WHERE type='index' AND name='index_NoteTagCrossRef_noteId'",
+                        )
+                    noteTagNoteIndexCursor.use { cursor ->
+                        assertTrue("index_NoteTagCrossRef_noteId should exist", cursor.moveToFirst())
+                    }
 
-                val noteTagTagIndexCursor =
-                    db.query(
-                        "SELECT name FROM sqlite_master WHERE type='index' AND name='index_NoteTagCrossRef_tagId'",
-                    )
-                noteTagTagIndexCursor.use { cursor ->
-                    assertTrue("index_NoteTagCrossRef_tagId should exist", cursor.moveToFirst())
+                    val noteTagTagIndexCursor =
+                        db.query(
+                            "SELECT name FROM sqlite_master WHERE type='index' AND name='index_NoteTagCrossRef_tagId'",
+                        )
+                    noteTagTagIndexCursor.use { cursor ->
+                        assertTrue("index_NoteTagCrossRef_tagId should exist", cursor.moveToFirst())
+                    }
                 }
-            }
         }
     }
 
@@ -356,29 +360,30 @@ class OnyxDatabaseMigrationTest {
                 )
             }
 
-            migrationTestHelper.runMigrationsAndValidate(
-                testDatabaseName,
-                3,
-                true,
-                OnyxDatabase.MIGRATION_2_3,
-            ).use { db ->
-                val cursor = db.query("SELECT strokeData FROM strokes WHERE strokeId = ?", arrayOf(stroke1Id))
-                cursor.use { c ->
-                    assertTrue("Stroke should exist", c.moveToFirst())
-                    val retrievedData = c.getBlob(0)
+            migrationTestHelper
+                .runMigrationsAndValidate(
+                    testDatabaseName,
+                    3,
+                    true,
+                    OnyxDatabase.MIGRATION_2_3,
+                ).use { db ->
+                    val cursor = db.query("SELECT strokeData FROM strokes WHERE strokeId = ?", arrayOf(stroke1Id))
+                    cursor.use { c ->
+                        assertTrue("Stroke should exist", c.moveToFirst())
+                        val retrievedData = c.getBlob(0)
 
-                    // Deserialize and verify
-                    val deserializedPoints = StrokeSerializer.deserializePoints(retrievedData)
-                    assertEquals("All points should be preserved", originalPoints.size, deserializedPoints.size)
+                        // Deserialize and verify
+                        val deserializedPoints = StrokeSerializer.deserializePoints(retrievedData)
+                        assertEquals("All points should be preserved", originalPoints.size, deserializedPoints.size)
 
-                    for (i in originalPoints.indices) {
-                        assertEquals(originalPoints[i].x, deserializedPoints[i].x, 0.001f)
-                        assertEquals(originalPoints[i].y, deserializedPoints[i].y, 0.001f)
-                        assertEquals(originalPoints[i].t, deserializedPoints[i].t)
-                        assertEquals(originalPoints[i].p!!, deserializedPoints[i].p!!, 0.001f)
+                        for (i in originalPoints.indices) {
+                            assertEquals(originalPoints[i].x, deserializedPoints[i].x, 0.001f)
+                            assertEquals(originalPoints[i].y, deserializedPoints[i].y, 0.001f)
+                            assertEquals(originalPoints[i].t, deserializedPoints[i].t)
+                            assertEquals(originalPoints[i].p!!, deserializedPoints[i].p!!, 0.001f)
+                        }
                     }
                 }
-            }
         }
     }
 
@@ -395,18 +400,19 @@ class OnyxDatabaseMigrationTest {
                 )
             }
 
-            migrationTestHelper.runMigrationsAndValidate(
-                testDatabaseName,
-                3,
-                true,
-                OnyxDatabase.MIGRATION_2_3,
-            ).use { db ->
-                val cursor = db.query("SELECT folderId FROM notes WHERE noteId = ?", arrayOf(note1Id))
-                cursor.use { c ->
-                    assertTrue("Note should exist", c.moveToFirst())
-                    assertNull("folderId should be NULL for existing notes", c.getString(0))
+            migrationTestHelper
+                .runMigrationsAndValidate(
+                    testDatabaseName,
+                    3,
+                    true,
+                    OnyxDatabase.MIGRATION_2_3,
+                ).use { db ->
+                    val cursor = db.query("SELECT folderId FROM notes WHERE noteId = ?", arrayOf(note1Id))
+                    cursor.use { c ->
+                        assertTrue("Note should exist", c.moveToFirst())
+                        assertNull("folderId should be NULL for existing notes", c.getString(0))
+                    }
                 }
-            }
         }
     }
 
@@ -451,12 +457,13 @@ class OnyxDatabaseMigrationTest {
             }
 
             // Run migration
-            migrationTestHelper.runMigrationsAndValidate(
-                testDatabaseName,
-                3,
-                true,
-                OnyxDatabase.MIGRATION_2_3,
-            ).close()
+            migrationTestHelper
+                .runMigrationsAndValidate(
+                    testDatabaseName,
+                    3,
+                    true,
+                    OnyxDatabase.MIGRATION_2_3,
+                ).close()
 
             // Open with Room and verify data integrity
             val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -500,6 +507,164 @@ class OnyxDatabaseMigrationTest {
             } finally {
                 database.close()
             }
+        }
+    }
+
+    @Test
+    fun migration_3_to_4_adds_template_schema_and_folder_timestamps() {
+        runBlocking {
+            val folderId = "folder-001"
+            val noteId = "note-001"
+            val pageId = "page-001"
+
+            migrationTestHelper.createDatabase(testDatabaseName, 3).use { db ->
+                db.execSQL(
+                    "INSERT INTO folders (folderId, name, parentId, createdAt) VALUES (?, ?, ?, ?)",
+                    arrayOf(folderId, "Root", null, testTimestamp),
+                )
+                db.execSQL(
+                    "INSERT INTO notes (noteId, ownerUserId, title, createdAt, updatedAt, deletedAt, folderId) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    arrayOf(noteId, "user-001", "Test Note", testTimestamp, testTimestamp, null, folderId),
+                )
+                db.execSQL(
+                    "INSERT INTO pages (pageId, noteId, kind, geometryKind, indexInNote, width, height, unit, pdfAssetId, pdfPageNo, updatedAt, contentLamportMax) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    arrayOf(pageId, noteId, "CANVAS", "A4", 0, 595.0, 842.0, "pt", null, null, testTimestamp, 0L),
+                )
+            }
+
+            migrationTestHelper
+                .runMigrationsAndValidate(
+                    testDatabaseName,
+                    4,
+                    true,
+                    OnyxDatabase.MIGRATION_3_4,
+                ).use { db ->
+                    val folderCursor = db.query("SELECT createdAt, updatedAt FROM folders WHERE folderId = ?", arrayOf(folderId))
+                    folderCursor.use { cursor ->
+                        assertTrue(cursor.moveToFirst())
+                        assertEquals(
+                            cursor.getLong(cursor.getColumnIndexOrThrow("createdAt")),
+                            cursor
+                                .getLong(cursor.getColumnIndexOrThrow("updatedAt")),
+                        )
+                    }
+
+                    val templateTableCursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='page_templates'")
+                    templateTableCursor.use { cursor ->
+                        assertTrue("page_templates table should exist", cursor.moveToFirst())
+                    }
+
+                    val templateColumnCursor = db.query("PRAGMA table_info(pages)")
+                    templateColumnCursor.use { cursor ->
+                        var hasTemplateId = false
+                        while (cursor.moveToNext()) {
+                            if (cursor.getString(cursor.getColumnIndexOrThrow("name")) == "templateId") {
+                                hasTemplateId = true
+                            }
+                        }
+                        assertTrue("pages.templateId column should exist", hasTemplateId)
+                    }
+                }
+        }
+    }
+
+    @Test
+    fun migration_3_to_4_enforces_folder_and_template_referential_integrity() {
+        runBlocking {
+            val folderId = "folder-001"
+            val noteId = "note-001"
+            val pageId = "page-001"
+            val templateId = "template-001"
+
+            migrationTestHelper.createDatabase(testDatabaseName, 3).use { db ->
+                db.execSQL(
+                    "INSERT INTO folders (folderId, name, parentId, createdAt) VALUES (?, ?, ?, ?)",
+                    arrayOf(folderId, "Root", null, testTimestamp),
+                )
+                db.execSQL(
+                    "INSERT INTO notes (noteId, ownerUserId, title, createdAt, updatedAt, deletedAt, folderId) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    arrayOf(noteId, "user-001", "Test Note", testTimestamp, testTimestamp, null, folderId),
+                )
+                db.execSQL(
+                    "INSERT INTO pages (pageId, noteId, kind, geometryKind, indexInNote, width, height, unit, pdfAssetId, pdfPageNo, updatedAt, contentLamportMax) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    arrayOf(pageId, noteId, "CANVAS", "A4", 0, 595.0, 842.0, "pt", null, null, testTimestamp, 0L),
+                )
+            }
+
+            migrationTestHelper
+                .runMigrationsAndValidate(
+                    testDatabaseName,
+                    4,
+                    true,
+                    OnyxDatabase.MIGRATION_3_4,
+                ).use { db ->
+                    db.execSQL(
+                        "INSERT INTO page_templates (templateId, name, backgroundKind, spacing, color, isBuiltIn, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        arrayOf(templateId, "Grid", "grid", 24f, "#E0E0E0", 1, testTimestamp),
+                    )
+                    db.execSQL("UPDATE pages SET templateId = ? WHERE pageId = ?", arrayOf(templateId, pageId))
+
+                    db.execSQL("DELETE FROM folders WHERE folderId = ?", arrayOf(folderId))
+                    val noteCursor = db.query("SELECT folderId FROM notes WHERE noteId = ?", arrayOf(noteId))
+                    noteCursor.use { cursor ->
+                        assertTrue(cursor.moveToFirst())
+                        assertNull("note.folderId should be nulled when folder is deleted", cursor.getString(0))
+                    }
+
+                    db.execSQL("DELETE FROM page_templates WHERE templateId = ?", arrayOf(templateId))
+                    val pageCursor = db.query("SELECT templateId FROM pages WHERE pageId = ?", arrayOf(pageId))
+                    pageCursor.use { cursor ->
+                        assertTrue(cursor.moveToFirst())
+                        assertNull("page.templateId should be nulled when template is deleted", cursor.getString(0))
+                    }
+
+                    try {
+                        db.execSQL("UPDATE notes SET folderId = ? WHERE noteId = ?", arrayOf("missing-folder", noteId))
+                        fail("Expected folder integrity trigger to reject invalid folderId")
+                    } catch (_: Exception) {
+                        // Expected: trigger aborts invalid reference writes
+                    }
+
+                    try {
+                        db.execSQL("UPDATE pages SET templateId = ? WHERE pageId = ?", arrayOf("missing-template", pageId))
+                        fail("Expected template integrity trigger to reject invalid templateId")
+                    } catch (_: Exception) {
+                        // Expected: trigger aborts invalid reference writes
+                    }
+                }
+        }
+    }
+
+    @Test
+    fun migration_4_to_5_creates_editor_settings_with_default_row() {
+        runBlocking {
+            migrationTestHelper.createDatabase(testDatabaseName, 4).close()
+
+            migrationTestHelper
+                .runMigrationsAndValidate(
+                    testDatabaseName,
+                    5,
+                    true,
+                    com.onyx.android.data.migrations.MIGRATION_4_5,
+                ).use { db ->
+                    val tableCursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='editor_settings'")
+                    tableCursor.use { cursor ->
+                        assertTrue("editor_settings table should exist", cursor.moveToFirst())
+                    }
+
+                    val settingsCursor =
+                        db.query(
+                            "SELECT settingsId, selectedTool, penColor, highlighterColor FROM editor_settings WHERE settingsId = ?",
+                            arrayOf("default"),
+                        )
+                    settingsCursor.use { cursor ->
+                        assertTrue("default editor settings row should exist", cursor.moveToFirst())
+                        assertEquals("default", cursor.getString(cursor.getColumnIndexOrThrow("settingsId")))
+                        assertEquals("PEN", cursor.getString(cursor.getColumnIndexOrThrow("selectedTool")))
+                        assertEquals("#000000", cursor.getString(cursor.getColumnIndexOrThrow("penColor")))
+                        assertEquals("#B31E88E5", cursor.getString(cursor.getColumnIndexOrThrow("highlighterColor")))
+                    }
+                }
         }
     }
 }
