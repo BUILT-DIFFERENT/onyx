@@ -11,12 +11,13 @@ package com.onyx.android.ink.ui
 
 import android.content.Context
 import android.view.MotionEvent
-import androidx.ink.authoring.InProgressStrokeId
-import androidx.ink.authoring.InProgressStrokesView
-import androidx.ink.strokes.StrokeInput
 import com.onyx.android.config.FeatureFlag
 import com.onyx.android.config.FeatureFlagStore
 import com.onyx.android.ink.algorithm.computeStrokeSplitCandidates
+import com.onyx.android.ink.gl.GlHoverOverlay
+import com.onyx.android.ink.gl.GlInkSurfaceView
+import com.onyx.android.ink.gl.GlOverlayState
+import com.onyx.android.ink.gl.GlStrokeInput
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.LassoSelection
 import com.onyx.android.ink.model.Stroke
@@ -30,6 +31,10 @@ private const val IN_PROGRESS_STROKE_ALPHA = 1f
 private const val EDGE_TOLERANCE_PX = 12f
 private const val MIN_TOLERANCE_ZOOM = 0.001f
 private const val SEGMENT_ERASER_RADIUS_PX = 10f
+private const val HOVER_ERASER_COLOR = 0xFF6B6B6B.toInt()
+private const val HOVER_ERASER_ALPHA = 0.6f
+private const val HOVER_PEN_ALPHA = 0.35f
+private const val MIN_HOVER_RADIUS = 0.1f
 
 internal data class InkCanvasInteraction(
     val brush: Brush,
@@ -58,11 +63,11 @@ internal data class InkCanvasInteraction(
         velocityY: Float,
     ) -> Unit,
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
-    val onStrokeRenderFinished: (InProgressStrokeId) -> Unit,
+    val onStrokeRenderFinished: (Long) -> Unit,
 )
 
 internal fun handleTouchEvent(
-    view: InProgressStrokesView,
+    view: GlInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -92,12 +97,13 @@ internal fun handleTouchEvent(
             MotionEvent.ACTION_HOVER_ENTER,
             MotionEvent.ACTION_HOVER_MOVE,
             -> {
-                handleHover(event, interaction, runtime)
+                handleHover(view, event, interaction, runtime)
             }
 
             MotionEvent.ACTION_HOVER_EXIT -> {
                 runtime.hoverPreviewState.hide()
                 updateStylusButtonEraserState(false, interaction, runtime)
+                pushOverlayState(view, interaction, runtime)
                 true
             }
 
@@ -140,12 +146,13 @@ internal fun handleTouchEvent(
                 MotionEvent.ACTION_HOVER_ENTER,
                 MotionEvent.ACTION_HOVER_MOVE,
                 -> {
-                    handleHover(event, interaction, runtime)
+                    handleHover(view, event, interaction, runtime)
                 }
 
                 MotionEvent.ACTION_HOVER_EXIT -> {
                     runtime.hoverPreviewState.hide()
                     updateStylusButtonEraserState(false, interaction, runtime)
+                    pushOverlayState(view, interaction, runtime)
                     true
                 }
 
@@ -162,6 +169,7 @@ internal fun handleTouchEvent(
 }
 
 internal fun handleGenericMotionEvent(
+    view: GlInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -171,12 +179,13 @@ internal fun handleGenericMotionEvent(
         MotionEvent.ACTION_HOVER_ENTER,
         MotionEvent.ACTION_HOVER_MOVE,
         -> {
-            handleHover(event, interaction, runtime)
+            handleHover(view, event, interaction, runtime)
         }
 
         MotionEvent.ACTION_HOVER_EXIT -> {
             runtime.hoverPreviewState.hide()
             updateStylusButtonEraserState(false, interaction, runtime)
+            pushOverlayState(view, interaction, runtime)
             true
         }
 
@@ -184,7 +193,7 @@ internal fun handleGenericMotionEvent(
         MotionEvent.ACTION_BUTTON_RELEASE,
         -> {
             if (eventHasStylusStream(event, runtime)) {
-                handleHover(event, interaction, runtime)
+                handleHover(view, event, interaction, runtime)
             } else {
                 false
             }
@@ -257,7 +266,7 @@ private fun resolvePointerMode(
 }
 
 private fun handlePointerDown(
-    view: InProgressStrokesView,
+    view: GlInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -313,6 +322,9 @@ private fun handlePointerDown(
             event = event,
             pointerIndex = actionIndex,
             startTime = startTime,
+            viewTransform = interaction.viewTransform,
+            pageWidth = interaction.pageWidth,
+            pageHeight = interaction.pageHeight,
             resolvedToolType =
                 if (actionToolType == MotionEvent.TOOL_TYPE_UNKNOWN && pointerIsStylusStream) {
                     MotionEvent.TOOL_TYPE_STYLUS
@@ -324,11 +336,9 @@ private fun handlePointerDown(
     val strokeId =
         view.startStroke(
             strokeInput,
-            effectiveBrush.toInkBrush(
-                interaction.viewTransform,
-                alphaMultiplier = inProgressAlphaForBrush(effectiveBrush),
-            ),
+            effectiveBrush.toGlBrush(alphaMultiplier = inProgressAlphaForBrush(effectiveBrush)),
         )
+    view.setStrokeRenderingActive(true)
     runtime.activeStrokeIds[pointerId] = strokeId
     runtime.activeStrokeBrushes[pointerId] = effectiveBrush
     val points = mutableListOf<StrokePoint>()
@@ -347,7 +357,7 @@ private fun handlePointerDown(
 }
 
 private fun handlePointerMove(
-    view: InProgressStrokesView,
+    view: GlInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -355,6 +365,7 @@ private fun handlePointerMove(
     if (event.isCanceledEvent()) {
         cancelActiveStrokes(view, event, runtime)
         cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
+        view.setStrokeRenderingActive(false)
         runtime.hoverPreviewState.hide()
         return true
     }
@@ -376,7 +387,17 @@ private fun handlePointerMove(
             PointerMode.DRAW -> {
                 val strokeId = runtime.activeStrokeIds[movePointerId]
                 if (strokeId != null) {
-                    view.addToStroke(event, movePointerId, strokeId)
+                    val startTime = runtime.activeStrokeStartTimes[movePointerId] ?: event.eventTime
+                    val strokeInput =
+                        createStrokeInput(
+                            event = event,
+                            pointerIndex = index,
+                            startTime = startTime,
+                            viewTransform = interaction.viewTransform,
+                            pageWidth = interaction.pageWidth,
+                            pageHeight = interaction.pageHeight,
+                        )
+                    view.addToStroke(strokeInput, strokeId)
                     runtime.activeStrokePoints[movePointerId]?.let { points ->
                         appendHistoricalStrokePoints(
                             event = event,
@@ -472,7 +493,7 @@ private fun handleEraserAtPointer(
 }
 
 private fun handlePredictedStrokes(
-    view: InProgressStrokesView,
+    view: GlInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -496,6 +517,9 @@ private fun handlePredictedStrokes(
                     event = event,
                     pointerIndex = startIndex,
                     startTime = event.eventTime,
+                    viewTransform = interaction.viewTransform,
+                    pageWidth = interaction.pageWidth,
+                    pageHeight = interaction.pageHeight,
                     resolvedToolType =
                         if (toolType == MotionEvent.TOOL_TYPE_UNKNOWN && predictedPointerIsStylus) {
                             MotionEvent.TOOL_TYPE_STYLUS
@@ -512,12 +536,24 @@ private fun handlePredictedStrokes(
             val predictedStrokeId =
                 view.startStroke(
                     startInput,
-                    effectiveBrush.toInkBrush(
-                        interaction.viewTransform,
-                        alphaMultiplier = predictedAlphaForBrush(effectiveBrush),
-                    ),
+                    effectiveBrush.toGlBrush(alphaMultiplier = predictedAlphaForBrush(effectiveBrush)),
                 )
-            view.addToStroke(predictedEvent, predictedPointerId, predictedStrokeId)
+            val predictedInput =
+                createStrokeInput(
+                    event = predictedEvent,
+                    pointerIndex = index,
+                    startTime = event.eventTime,
+                    viewTransform = interaction.viewTransform,
+                    pageWidth = interaction.pageWidth,
+                    pageHeight = interaction.pageHeight,
+                    resolvedToolType =
+                        if (toolType == MotionEvent.TOOL_TYPE_UNKNOWN && predictedPointerIsStylus) {
+                            MotionEvent.TOOL_TYPE_STYLUS
+                        } else {
+                            toolType
+                        },
+                )
+            view.addToStroke(predictedInput, predictedStrokeId)
             runtime.predictedStrokeIds[predictedPointerId] = predictedStrokeId
         }
     }
@@ -525,7 +561,7 @@ private fun handlePredictedStrokes(
 }
 
 private fun handlePointerUp(
-    view: InProgressStrokesView,
+    view: GlInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -542,6 +578,7 @@ private fun handlePointerUp(
     if (event.isCanceledEvent()) {
         cancelActiveStroke(view, event, pointerId, runtime)
         cancelPredictedStroke(view, event, pointerId, runtime.predictedStrokeIds)
+        view.setStrokeRenderingActive(runtime.activeStrokeIds.isNotEmpty())
         runtime.hoverPreviewState.hide()
         handled = true
     } else if (pointerMode == PointerMode.ERASE) {
@@ -557,6 +594,9 @@ private fun handlePointerUp(
                     event = event,
                     pointerIndex = actionIndex,
                     startTime = startTime,
+                    viewTransform = interaction.viewTransform,
+                    pageWidth = interaction.pageWidth,
+                    pageHeight = interaction.pageHeight,
                     resolvedToolType =
                         if (actionToolType == MotionEvent.TOOL_TYPE_UNKNOWN && pointerWasStylusStream) {
                             MotionEvent.TOOL_TYPE_STYLUS
@@ -599,12 +639,14 @@ private fun handlePointerUp(
             runtime.activeStrokeBrushes.remove(pointerId)
             runtime.activeStrokePoints.remove(pointerId)
             runtime.activeStrokeStartTimes.remove(pointerId)
+            view.setStrokeRenderingActive(runtime.activeStrokeIds.isNotEmpty())
             runtime.invalidateActiveStrokeRender()
             runtime.hoverPreviewState.hide()
             handled = true
         }
     }
     runtime.eraserLastPagePoints.remove(pointerId)
+    view.setStrokeRenderingActive(runtime.activeStrokeIds.isNotEmpty())
     return handled
 }
 
@@ -653,6 +695,7 @@ private fun addPointDeduped(
 }
 
 private fun handleHover(
+    view: GlInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -661,6 +704,7 @@ private fun handleHover(
     val actionToolType = event.getToolType(actionIndex)
     if (!isStylusToolType(actionToolType) && !isPointerStylusStream(event, actionIndex, runtime)) {
         runtime.hoverPreviewState.hide()
+        pushOverlayState(view, interaction, runtime)
         return false
     }
     val distance = event.getAxisValue(MotionEvent.AXIS_DISTANCE, actionIndex)
@@ -679,11 +723,12 @@ private fun handleHover(
     } else {
         runtime.hoverPreviewState.hide()
     }
+    pushOverlayState(view, interaction, runtime)
     return true
 }
 
 private fun handleCancel(
-    view: InProgressStrokesView,
+    view: GlInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -701,8 +746,11 @@ private fun handleCancel(
     runtime.stylusPointerIds.clear()
     runtime.panVelocityTracker?.recycle()
     runtime.panVelocityTracker = null
+    view.setStrokeRenderingActive(false)
+    view.setGestureRenderingActive(false)
     runtime.invalidateActiveStrokeRender()
     runtime.hoverPreviewState.hide()
+    pushOverlayState(view, interaction, runtime)
     updateStylusButtonEraserState(false, interaction, runtime)
     return true
 }
@@ -711,18 +759,21 @@ private fun createStrokeInput(
     event: MotionEvent,
     pointerIndex: Int,
     startTime: Long,
+    viewTransform: ViewTransform,
+    pageWidth: Float,
+    pageHeight: Float,
     resolvedToolType: Int = event.getToolType(pointerIndex),
-): StrokeInput {
-    val toolType = resolvedToolType.toInputToolType()
+): GlStrokeInput {
     val pressure = applyPressureGamma(event.getPressure(pointerIndex))
     val tilt = event.getAxisValue(MotionEvent.AXIS_TILT, pointerIndex)
     val orientation = event.getOrientation(pointerIndex)
-    return StrokeInput.create(
-        x = event.getX(pointerIndex),
-        y = event.getY(pointerIndex),
-        elapsedTimeMillis = (event.eventTime - startTime).coerceAtLeast(0L),
-        toolType = toolType,
-        strokeUnitLengthCm = 0.0f,
+    val pageX = clampPageCoordinate(viewTransform.screenToPageX(event.getX(pointerIndex)), pageWidth)
+    val pageY = clampPageCoordinate(viewTransform.screenToPageY(event.getY(pointerIndex)), pageHeight)
+    return GlStrokeInput(
+        x = pageX,
+        y = pageY,
+        eventTimeMillis = (event.eventTime - startTime).coerceAtLeast(0L),
+        toolType = resolvedToolType,
         pressure = pressure,
         tiltRadians = tilt,
         orientationRadians = orientation,
@@ -832,3 +883,39 @@ private fun isPredictionEnabled(context: Context): Boolean =
     FeatureFlagStore
         .getInstance(context)
         .get(FeatureFlag.INK_PREDICTION_ENABLED)
+
+private fun pushOverlayState(
+    view: GlInkSurfaceView,
+    interaction: InkCanvasInteraction,
+    runtime: InkCanvasRuntime,
+) {
+    val hover = runtime.hoverPreviewState
+    val hoverOverlay =
+        if (hover.isVisible) {
+            val isEraser = hover.tool == Tool.ERASER
+            val color = if (isEraser) HOVER_ERASER_COLOR else ColorCache.resolve(interaction.brush.color)
+            val alpha = if (isEraser) HOVER_ERASER_ALPHA else HOVER_PEN_ALPHA
+            GlHoverOverlay(
+                isVisible = true,
+                screenX = hover.x,
+                screenY = hover.y,
+                screenRadius =
+                    (
+                        interaction.viewTransform
+                            .pageWidthToScreen(interaction.brush.baseWidth)
+                            .coerceAtLeast(MIN_HOVER_RADIUS)
+                    ) / 2f,
+                argbColor = color,
+                alpha = alpha,
+            )
+        } else {
+            GlHoverOverlay()
+        }
+    view.setOverlayState(
+        GlOverlayState(
+            selectedStrokeIds = interaction.lassoSelection.selectedStrokeIds,
+            lassoPath = interaction.lassoSelection.lassoPath,
+            hover = hoverOverlay,
+        ),
+    )
+}

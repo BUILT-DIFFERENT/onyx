@@ -1,12 +1,12 @@
 package com.onyx.android.ink.ui
 
 import android.view.MotionEvent
-import androidx.ink.authoring.InProgressStrokesView
+import com.onyx.android.ink.gl.GlInkSurfaceView
 
 internal fun MotionEvent.isCanceledEvent(): Boolean = (flags and MotionEvent.FLAG_CANCELED) != 0
 
 internal fun cancelActiveStroke(
-    view: InProgressStrokesView,
+    view: GlInkSurfaceView,
     event: MotionEvent,
     pointerId: Int,
     runtime: InkCanvasRuntime,
@@ -23,7 +23,7 @@ internal fun cancelActiveStroke(
 }
 
 internal fun cancelActiveStrokes(
-    view: InProgressStrokesView,
+    view: GlInkSurfaceView,
     event: MotionEvent,
     runtime: InkCanvasRuntime,
 ) {
@@ -40,10 +40,10 @@ internal fun cancelActiveStrokes(
 }
 
 internal fun cancelPredictedStroke(
-    view: InProgressStrokesView,
+    view: GlInkSurfaceView,
     event: MotionEvent,
     pointerId: Int,
-    predictedStrokeIds: MutableMap<Int, androidx.ink.authoring.InProgressStrokeId>,
+    predictedStrokeIds: MutableMap<Int, Long>,
 ) {
     val predictedStrokeId = predictedStrokeIds[pointerId] ?: return
     view.cancelStroke(predictedStrokeId, event)
@@ -51,9 +51,9 @@ internal fun cancelPredictedStroke(
 }
 
 internal fun cancelPredictedStrokes(
-    view: InProgressStrokesView,
+    view: GlInkSurfaceView,
     event: MotionEvent,
-    predictedStrokeIds: MutableMap<Int, androidx.ink.authoring.InProgressStrokeId>,
+    predictedStrokeIds: MutableMap<Int, Long>,
 ) {
     predictedStrokeIds.values.forEach { strokeId ->
         view.cancelStroke(strokeId, event)

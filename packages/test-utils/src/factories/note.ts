@@ -1,4 +1,4 @@
-import { NoteSchema, type Note } from '@onyx/validation';
+import { type Note } from '@onyx/validation';
 
 /**
  * Creates a test Note object with sensible defaults.

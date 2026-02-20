@@ -17,6 +17,8 @@
 - Gradle wrapper helper note: `scripts/gradlew.js` resolves `gradlew` relative to the current working directory, so invoke it from `apps/android/` (or pass `cwd=apps/android`) rather than repo root.
 - Android instrumentation compile note: current `:app:compileDebugAndroidTestKotlin` failures may differ from older tracker entries; recent constructor drift is around `templateState`/`onTemplateChange` in `NoteEditor*` androidTests, and there can also be unrelated `InkCanvasTouchRoutingTest` `lassoSelection` callsite drift.
 - Android unit test stack clarification: app unit tests currently use JUnit 5 (`org.junit.jupiter`) + MockK and there are 38 files under `apps/android/app/src/test` (not the older 33-file JUnit4/Mockito snapshot).
+- Android native build artifact note: `apps/android/app/.cxx/` is generated output and must remain ignored/untracked; if it appears in git, remove from index with `git rm -r --cached apps/android/app/.cxx`.
+- Ink renderer migration note: stroke rendering now flows through `apps/android/app/src/main/java/com/onyx/android/ink/gl/GlInkSurfaceView` + `InkGlRenderer` (OpenGL), while lasso/selection overlays remain Compose in `InkCanvas.kt`; do not reintroduce `androidx.ink` dependencies.
 
 ## Context7 Library IDs (Project Stack)
 

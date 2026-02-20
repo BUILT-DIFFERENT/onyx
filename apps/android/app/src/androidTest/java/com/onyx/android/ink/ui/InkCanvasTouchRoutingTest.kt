@@ -3,10 +3,9 @@ package com.onyx.android.ink.ui
 import android.content.Context
 import android.view.InputDevice
 import android.view.MotionEvent
-import androidx.ink.authoring.InProgressStrokeId
-import androidx.ink.authoring.InProgressStrokesView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.onyx.android.ink.gl.GlInkSurfaceView
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.LassoSelection
 import com.onyx.android.ink.model.Stroke
@@ -30,7 +29,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun oneFingerTouch_pansInsteadOfDrawing() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         val transformCalls = mutableListOf<TransformCall>()
         var strokeFinishedCount = 0
@@ -98,7 +97,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun stylusTouch_stillDrawsStroke() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         var finishedStrokeId: String? = null
@@ -166,7 +165,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun stylusSourceUnknownToolType_routesToDrawingNotPan() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         val transformCalls = mutableListOf<TransformCall>()
@@ -227,7 +226,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun readOnlyMode_blocksStylusEditingButKeepsPanGestures() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         val transformCalls = mutableListOf<TransformCall>()
@@ -323,7 +322,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun cancelEvent_clearsFinishedStrokeBridgeState() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         val interaction =
             createInteraction(
@@ -377,10 +376,10 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun rapidPenUpDown_sequenceMaintainsConsistency() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
-        val renderFinishedStrokeIds = mutableListOf<InProgressStrokeId>()
+        val renderFinishedStrokeIds = mutableListOf<Long>()
         val interaction =
             createInteraction(
                 onStrokeFinished = { strokeFinishedCount += 1 },
@@ -448,7 +447,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun rapidStrokeSequence_noActiveStrokesLeaked() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         val interaction =
@@ -518,7 +517,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun strokeAfterCancel_clearsStateAndStartsFresh() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         val interaction =
@@ -624,7 +623,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun fingerPan_transitionsToPinchZoom_whenSecondFingerAppears() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         val transformCalls = mutableListOf<TransformCall>()
         var strokeFinishedCount = 0
@@ -705,7 +704,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun stylusButtonEraser_latchesForCurrentPointerUntilLift() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         val erased = mutableListOf<Stroke>()
         val stylusButtonStates = mutableListOf<Boolean>()
@@ -772,7 +771,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun eraserErasesOnDown() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         val erased = mutableListOf<Stroke>()
         val interaction =
@@ -818,7 +817,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun offPageStrokeStart_isIgnored() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         val interaction =
@@ -877,7 +876,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun nearEdgeStrokeStart_isAccepted() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         val interaction =
@@ -934,7 +933,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun strokePoints_areClampedToPageBounds() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         val finishedStrokes = mutableListOf<Stroke>()
         val interaction =
@@ -1030,8 +1029,8 @@ class InkCanvasTouchRoutingTest {
             )
 
         try {
-            assertTrue(handleGenericMotionEvent(hoverDown, interaction, runtime))
-            assertTrue(handleGenericMotionEvent(hoverUp, interaction, runtime))
+            assertTrue(handleGenericMotionEvent(view, hoverDown, interaction, runtime))
+            assertTrue(handleGenericMotionEvent(view, hoverUp, interaction, runtime))
         } finally {
             hoverDown.recycle()
             hoverUp.recycle()
@@ -1043,7 +1042,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun predictedPoints_doNotLeakIntoCommittedStroke() {
-        val view = InProgressStrokesView(context)
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         val finishedStrokes = mutableListOf<Stroke>()
         val interaction =
@@ -1147,7 +1146,7 @@ private fun createInteraction(
     onTransformGesture: (Float, Float, Float, Float, Float) -> Unit = { _, _, _, _, _ -> },
     onPanGestureEnd: (Float, Float) -> Unit = { _, _ -> },
     onStylusButtonEraserActiveChanged: (Boolean) -> Unit = {},
-    onStrokeRenderFinished: (InProgressStrokeId) -> Unit = {},
+    onStrokeRenderFinished: (Long) -> Unit = {},
 ): InkCanvasInteraction =
     InkCanvasInteraction(
         brush = Brush(tool = Tool.PEN),

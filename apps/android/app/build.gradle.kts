@@ -139,13 +139,6 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 
-    // Jetpack Ink - Alpha (API may change in future releases)
-    implementation("androidx.ink:ink-authoring:1.0.0-alpha02")
-    implementation("androidx.ink:ink-brush:1.0.0-alpha02")
-    implementation("androidx.ink:ink-geometry:1.0.0-alpha02")
-    implementation("androidx.ink:ink-rendering:1.0.0-alpha02")
-    implementation("androidx.ink:ink-strokes:1.0.0-alpha02")
-
     // Room Database
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")

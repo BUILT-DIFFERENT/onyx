@@ -35,21 +35,19 @@ adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 echo "✅ Test APK installed"
 echo ""
 
-# Run Ink API compatibility test
-echo "Step 4: Running Ink API compatibility test..."
-echo "This test validates InProgressStrokesView works on your device"
-./gradlew :app:connectedDebugAndroidTest --tests "*.InkApiCompatTest" 2>&1 | tee ink-api-test-result.txt
+# Run GL renderer compatibility smoke test
+echo "Step 4: Running GL renderer compatibility test..."
+echo "This test validates GlInkSurfaceView works on your device"
+./gradlew :app:connectedDebugAndroidTest --tests "*.GlInkRendererCompatTest" 2>&1 | tee ink-api-test-result.txt
 
 if grep -q "PASSED" ink-api-test-result.txt; then
-    echo "✅ RESULT: InkApiCompatTest PASSED"
-    echo "✅ Decision: Use InProgressStrokesView (no fallback needed)"
+    echo "✅ RESULT: GlInkRendererCompatTest PASSED"
+    echo "✅ Decision: Use GlInkSurfaceView renderer"
     echo ""
     echo "Action: Mark Task 3.2a checkbox 2 as PASS in plan file"
 else
-    echo "❌ RESULT: InkApiCompatTest FAILED"
-    echo "⚠️  Decision: Implement LowLatencyInkView fallback required"
-    echo ""
-    echo "Action: Implement fallback per plan line 2197-2201"
+    echo "❌ RESULT: GlInkRendererCompatTest FAILED"
+    echo "⚠️  Decision: investigate GL renderer initialization/path issues"
     exit 1
 fi
 

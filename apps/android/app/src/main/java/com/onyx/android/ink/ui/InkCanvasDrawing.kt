@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.ink.brush.StockBrushes
+import com.onyx.android.ink.gl.GlBrush
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.StrokePoint
@@ -23,20 +23,13 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 import androidx.compose.ui.graphics.drawscope.Stroke as ComposeStroke
-import androidx.ink.brush.Brush as InkBrush
 
 private const val MIN_INK_BRUSH_SIZE = 0.1f
-private const val MIN_INK_BRUSH_EPSILON = 0.1f
-private const val INK_BRUSH_EPSILON_SCALE = 0.15f
 private const val PREVIEW_STROKE_WIDTH_SCALE = 0.12f
 private const val MIN_PREVIEW_STROKE_WIDTH = 1f
 private const val ERASER_PREVIEW_ALPHA = 0.6f
 private const val PEN_PREVIEW_ALPHA = 0.35f
 private const val ERASER_PREVIEW_COLOR: Long = 0xFF6B6B6B
-private const val ALPHA_SHIFT_BITS = 24
-private const val ALPHA_MASK = 0xFF
-private const val RGB_MASK = 0x00FFFFFF
-private const val MAX_ALPHA = 255
 internal const val PRESSURE_FALLBACK = 0.5f
 private const val MIN_STROKE_POINTS = 2
 private const val CENTRIPETAL_ALPHA = 0.5f
@@ -669,35 +662,11 @@ internal fun pressureWidth(
     return baseWidth * factor
 }
 
-internal fun Brush.toInkBrush(
-    viewTransform: ViewTransform,
-    alphaMultiplier: Float = 1f,
-): InkBrush {
-    val family =
-        when (tool) {
-            Tool.PEN -> StockBrushes.pressurePenLatest
-            Tool.HIGHLIGHTER -> StockBrushes.highlighterLatest
-            Tool.ERASER -> StockBrushes.markerLatest
-            Tool.LASSO -> StockBrushes.pressurePenLatest
-        }
-    val size = viewTransform.pageWidthToScreen(baseWidth).coerceAtLeast(MIN_INK_BRUSH_SIZE)
-    val epsilon = (size * INK_BRUSH_EPSILON_SCALE).coerceAtLeast(MIN_INK_BRUSH_EPSILON)
+internal fun Brush.toGlBrush(alphaMultiplier: Float = 1f): GlBrush {
     val baseColor = ColorCache.resolve(color)
-    val adjustedColor = applyAlpha(baseColor, alphaMultiplier)
-    return InkBrush.createWithColorIntArgb(
-        family,
-        adjustedColor,
-        size,
-        epsilon,
+    return GlBrush(
+        strokeStyle = toStrokeStyle(),
+        argbColor = baseColor,
+        alphaMultiplier = alphaMultiplier.coerceIn(0f, 1f),
     )
-}
-
-private fun applyAlpha(
-    colorInt: Int,
-    alphaMultiplier: Float,
-): Int {
-    val clampedMultiplier = alphaMultiplier.coerceIn(0f, 1f)
-    val baseAlpha = (colorInt ushr ALPHA_SHIFT_BITS) and ALPHA_MASK
-    val adjustedAlpha = (baseAlpha * clampedMultiplier).toInt().coerceIn(0, MAX_ALPHA)
-    return (adjustedAlpha shl ALPHA_SHIFT_BITS) or (colorInt and RGB_MASK)
 }

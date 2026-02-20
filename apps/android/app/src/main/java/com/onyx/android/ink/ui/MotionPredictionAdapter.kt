@@ -2,7 +2,6 @@ package com.onyx.android.ink.ui
 
 import android.content.Context
 import android.view.MotionEvent
-import androidx.ink.brush.InputToolType
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
 import java.lang.reflect.Method
@@ -49,15 +48,6 @@ internal class MotionPredictionAdapter private constructor(
         }
     }
 }
-
-internal fun Int.toInputToolType(): InputToolType =
-    when (this) {
-        MotionEvent.TOOL_TYPE_STYLUS -> InputToolType.STYLUS
-        MotionEvent.TOOL_TYPE_ERASER -> InputToolType.STYLUS
-        MotionEvent.TOOL_TYPE_FINGER -> InputToolType.TOUCH
-        MotionEvent.TOOL_TYPE_MOUSE -> InputToolType.MOUSE
-        else -> InputToolType.UNKNOWN
-    }
 
 internal fun isSupportedToolType(toolType: Int): Boolean =
     toolType == MotionEvent.TOOL_TYPE_STYLUS ||

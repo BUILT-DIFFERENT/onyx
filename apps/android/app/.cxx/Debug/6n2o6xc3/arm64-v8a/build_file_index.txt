@@ -1,1 +1,0 @@
-/home/gamer/onyx/apps/android/app/src/main/cpp/CMakeLists.txt

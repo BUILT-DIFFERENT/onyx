@@ -2,9 +2,6 @@ package com.onyx.android.recognition
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.snapshots.Snapshot
 import com.myscript.iink.ContentPackage
 import com.myscript.iink.ContentPart
 import com.myscript.iink.EditorError
@@ -20,7 +17,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import java.io.File
@@ -64,7 +63,12 @@ class MyScriptPageManager(
     private val activeStrokes = mutableListOf<Stroke>()
 
     private val recognitionScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val recognitionTriggerVersion = mutableIntStateOf(0)
+    private val recognitionTrigger =
+        MutableSharedFlow<Unit>(
+            replay = 0,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
     private val recognitionQueue = ArrayDeque<RecognitionRequest>()
     private val recognitionQueueLock = Any()
 
@@ -114,7 +118,7 @@ class MyScriptPageManager(
 
     init {
         recognitionScope.launch {
-            snapshotFlow { recognitionTriggerVersion.intValue }
+            recognitionTrigger
                 .debounce(recognitionPipelineConfig.frameDebounceMs)
                 .collect {
                     drainRecognitionQueue()
@@ -462,9 +466,7 @@ class MyScriptPageManager(
                     "strokes=$strokeCount, queue=${recognitionQueue.size}",
             )
         }
-        Snapshot.withMutableSnapshot {
-            recognitionTriggerVersion.intValue += 1
-        }
+        recognitionTrigger.tryEmit(Unit)
     }
 
     private suspend fun drainRecognitionQueue() {
