@@ -10,6 +10,9 @@ import com.onyx.android.ink.model.LassoSelection
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.objects.model.InsertAction
+import com.onyx.android.objects.model.PageObject
+import com.onyx.android.objects.model.ShapeType
 import com.onyx.android.pdf.PdfDocumentRenderer
 import com.onyx.android.pdf.PdfTextChar
 import com.onyx.android.pdf.PdfTextSelection
@@ -69,9 +72,11 @@ internal data class NoteEditorToolbarState(
     val lastNonEraserTool: Tool,
     val isStylusButtonEraserActive: Boolean,
     val isSegmentEraserEnabled: Boolean = false,
+    val activeInsertAction: InsertAction = InsertAction.NONE,
     val templateState: PageTemplateState,
     val onBrushChange: (Brush) -> Unit,
     val onSegmentEraserEnabledChange: (Boolean) -> Unit = {},
+    val onInsertActionSelected: (InsertAction) -> Unit = {},
     val onTemplateChange: (PageTemplateState) -> Unit,
 )
 
@@ -92,9 +97,12 @@ internal data class NoteEditorContentState(
     val pageWidth: Float,
     val pageHeight: Float,
     val strokes: List<Stroke>,
+    val pageObjects: List<PageObject> = emptyList(),
+    val selectedObjectId: String? = null,
     val brush: Brush,
     val isStylusButtonEraserActive: Boolean,
     val isSegmentEraserEnabled: Boolean = false,
+    val activeInsertAction: InsertAction = InsertAction.NONE,
     val interactionMode: InteractionMode,
     val allowCanvasFingerGestures: Boolean = true,
     val thumbnails: List<ThumbnailItem>,
@@ -112,6 +120,12 @@ internal data class NoteEditorContentState(
     val onStrokeSplit: (Stroke, List<Stroke>) -> Unit = { _, _ -> },
     val onLassoMove: (Float, Float) -> Unit = { _, _ -> },
     val onLassoResize: (Float, Float, Float) -> Unit = { _, _, _ -> },
+    val onInsertActionChanged: (InsertAction) -> Unit = {},
+    val onShapeObjectCreate: (ShapeType, Float, Float, Float, Float) -> Unit = { _, _, _, _, _ -> },
+    val onObjectSelected: (String?) -> Unit = {},
+    val onObjectTransformed: (PageObject, PageObject) -> Unit = { _, _ -> },
+    val onDuplicateObject: (PageObject) -> Unit = {},
+    val onDeleteObject: (PageObject) -> Unit = {},
     val onSegmentEraserEnabledChange: (Boolean) -> Unit = {},
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
     val onTransformGesture: (
@@ -140,11 +154,13 @@ internal data class PageItemState(
     val pageWidth: Float,
     val pageHeight: Float,
     val strokes: List<Stroke>,
+    val pageObjects: List<PageObject> = emptyList(),
     val isPdfPage: Boolean,
     val isVisible: Boolean,
     val renderTransform: ViewTransform,
     val templateState: PageTemplateState,
     val lassoSelection: LassoSelection = LassoSelection(),
+    val selectedObjectId: String? = null,
     val searchHighlightBounds: Rect? = null,
     val recognitionText: String? = null,
     val convertedTextBlocks: List<ConvertedTextBlock> = emptyList(),
@@ -159,6 +175,8 @@ internal data class MultiPageContentState(
     val brush: Brush,
     val isStylusButtonEraserActive: Boolean,
     val isSegmentEraserEnabled: Boolean = false,
+    val activeInsertAction: InsertAction = InsertAction.NONE,
+    val selectedObjectId: String? = null,
     val interactionMode: InteractionMode,
     val pdfRenderer: PdfDocumentRenderer?,
     val firstVisiblePageIndex: Int,
@@ -178,6 +196,12 @@ internal data class MultiPageContentState(
     val onStrokeSplit: (Stroke, List<Stroke>, String) -> Unit = { _, _, _ -> },
     val onLassoMove: (String, Float, Float) -> Unit = { _, _, _ -> },
     val onLassoResize: (String, Float, Float, Float) -> Unit = { _, _, _, _ -> },
+    val onInsertActionChanged: (InsertAction) -> Unit = {},
+    val onShapeObjectCreate: (String, ShapeType, Float, Float, Float, Float) -> Unit = { _, _, _, _, _, _ -> },
+    val onObjectSelected: (String?) -> Unit = {},
+    val onObjectTransformed: (String, PageObject, PageObject) -> Unit = { _, _, _ -> },
+    val onDuplicateObject: (String, PageObject) -> Unit = { _, _ -> },
+    val onDeleteObject: (String, PageObject) -> Unit = { _, _ -> },
     val onSegmentEraserEnabledChange: (Boolean) -> Unit = {},
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
     val onTransformGesture: (

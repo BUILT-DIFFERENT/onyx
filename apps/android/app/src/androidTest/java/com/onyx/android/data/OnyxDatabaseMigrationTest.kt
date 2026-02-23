@@ -711,6 +711,73 @@ class OnyxDatabaseMigrationTest {
     }
 
     @Test
+    fun migration_6_to_7_creates_page_objects_table_indexes_and_cleanup_trigger() {
+        runBlocking {
+            migrationTestHelper.createDatabase(testDatabaseName, 6).use { db ->
+                db.execSQL(
+                    "INSERT INTO notes (noteId, ownerUserId, title, createdAt, updatedAt, deletedAt, folderId) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    arrayOf("note-page-objects", "user-001", "Objects", testTimestamp, testTimestamp, null, null),
+                )
+                db.execSQL(
+                    "INSERT INTO pages (pageId, noteId, kind, geometryKind, indexInNote, width, height, unit, pdfAssetId, pdfPageNo, templateId, updatedAt, contentLamportMax) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    arrayOf("page-page-objects", "note-page-objects", "ink", "fixed", 0, 612.0, 792.0, "pt", null, null, null, testTimestamp, 0L),
+                )
+            }
+
+            migrationTestHelper
+                .runMigrationsAndValidate(
+                    testDatabaseName,
+                    7,
+                    true,
+                    com.onyx.android.data.migrations.MIGRATION_6_7,
+                ).use { db ->
+                    val tableCursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='page_objects'")
+                    tableCursor.use { cursor ->
+                        assertTrue("page_objects table should exist", cursor.moveToFirst())
+                    }
+
+                    val pageIndexCursor =
+                        db.query("SELECT name FROM sqlite_master WHERE type='index' AND name='index_page_objects_pageId'")
+                    pageIndexCursor.use { cursor ->
+                        assertTrue("index_page_objects_pageId should exist", cursor.moveToFirst())
+                    }
+
+                    val pageZIndexCursor =
+                        db.query("SELECT name FROM sqlite_master WHERE type='index' AND name='index_page_objects_pageId_zIndex'")
+                    pageZIndexCursor.use { cursor ->
+                        assertTrue("index_page_objects_pageId_zIndex should exist", cursor.moveToFirst())
+                    }
+
+                    db.execSQL(
+                        "INSERT INTO page_objects (objectId, pageId, noteId, kind, zIndex, x, y, width, height, rotationDeg, payloadJson, createdAt, updatedAt, deletedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        arrayOf(
+                            "object-001",
+                            "page-page-objects",
+                            "note-page-objects",
+                            "shape",
+                            0,
+                            10.0,
+                            20.0,
+                            100.0,
+                            120.0,
+                            0.0,
+                            "{\"shapeType\":\"rectangle\",\"strokeColor\":\"#1E88E5\",\"strokeWidth\":2.0}",
+                            testTimestamp,
+                            testTimestamp,
+                            null,
+                        ),
+                    )
+                    db.execSQL("DELETE FROM pages WHERE pageId = ?", arrayOf("page-page-objects"))
+                    val cleanupCursor = db.query("SELECT COUNT(*) FROM page_objects WHERE pageId = ?", arrayOf("page-page-objects"))
+                    cleanupCursor.use { cursor ->
+                        assertTrue(cursor.moveToFirst())
+                        assertEquals(0, cursor.getInt(0))
+                    }
+                }
+        }
+    }
+
+    @Test
     fun migration_5_to_6_operation_log_orders_by_lamport_monotonically() {
         runBlocking {
             val noteId = "note-lamport"

@@ -2,9 +2,9 @@ import { z } from 'zod';
 
 /**
  * PageSchema - JSON-serializable API contract for Page
- * See docs/schema-audit.md for canonical sync API contract
+ * Canonical sync contract lives in packages/validation + tests/contracts fixtures.
  *
- * Note: indexInNote is intentionally excluded - it's a local-only field (per schema-audit.md line 70)
+ * Note: indexInNote is intentionally excluded - it's a local-only field.
  */
 export const PageSchema = z
   .object({

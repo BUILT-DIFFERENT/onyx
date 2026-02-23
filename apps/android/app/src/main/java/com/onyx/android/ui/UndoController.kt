@@ -5,7 +5,9 @@ import androidx.compose.runtime.mutableStateListOf
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.InkAction
 import com.onyx.android.ink.model.Stroke
+import com.onyx.android.objects.model.PageObject
 
+@Suppress("LongMethod", "CyclomaticComplexMethod", "TooManyFunctions")
 internal class UndoController(
     private val viewModel: NoteEditorViewModel,
     private val maxUndoActions: Int,
@@ -73,6 +75,53 @@ internal class UndoController(
                     )
                 }
             }
+
+            is InkAction.AddObject -> {
+                if (useMultiPage) {
+                    viewModel.removePageObjectForPage(
+                        pageId = action.pageId,
+                        pageObject = action.pageObject,
+                        persist = true,
+                    )
+                } else {
+                    viewModel.removePageObject(
+                        pageObject = action.pageObject,
+                        persist = true,
+                    )
+                }
+            }
+
+            is InkAction.RemoveObject -> {
+                if (useMultiPage) {
+                    viewModel.addPageObjectForPage(
+                        pageId = action.pageId,
+                        pageObject = action.pageObject,
+                        persist = true,
+                    )
+                } else {
+                    viewModel.addPageObject(
+                        pageObject = action.pageObject,
+                        persist = true,
+                    )
+                }
+            }
+
+            is InkAction.TransformObject -> {
+                if (useMultiPage) {
+                    viewModel.transformPageObjectForPage(
+                        pageId = action.pageId,
+                        before = action.after,
+                        after = action.before,
+                        persist = true,
+                    )
+                } else {
+                    viewModel.transformPageObject(
+                        before = action.after,
+                        after = action.before,
+                        persist = true,
+                    )
+                }
+            }
         }
         redoStack.add(action)
     }
@@ -125,6 +174,53 @@ internal class UndoController(
                     viewModel.replaceStrokes(
                         pageId = action.pageId,
                         replacement = action.after,
+                        persist = true,
+                    )
+                }
+            }
+
+            is InkAction.AddObject -> {
+                if (useMultiPage) {
+                    viewModel.addPageObjectForPage(
+                        pageId = action.pageId,
+                        pageObject = action.pageObject,
+                        persist = true,
+                    )
+                } else {
+                    viewModel.addPageObject(
+                        pageObject = action.pageObject,
+                        persist = true,
+                    )
+                }
+            }
+
+            is InkAction.RemoveObject -> {
+                if (useMultiPage) {
+                    viewModel.removePageObjectForPage(
+                        pageId = action.pageId,
+                        pageObject = action.pageObject,
+                        persist = true,
+                    )
+                } else {
+                    viewModel.removePageObject(
+                        pageObject = action.pageObject,
+                        persist = true,
+                    )
+                }
+            }
+
+            is InkAction.TransformObject -> {
+                if (useMultiPage) {
+                    viewModel.transformPageObjectForPage(
+                        pageId = action.pageId,
+                        before = action.before,
+                        after = action.after,
+                        persist = true,
+                    )
+                } else {
+                    viewModel.transformPageObject(
+                        before = action.before,
+                        after = action.after,
                         persist = true,
                     )
                 }
@@ -224,6 +320,72 @@ internal class UndoController(
                 after = after,
             ),
         )
+        trimUndoStack()
+        redoStack.clear()
+    }
+
+    fun onObjectAdded(
+        pageId: String,
+        pageObject: PageObject,
+    ) {
+        if (useMultiPage) {
+            viewModel.addPageObjectForPage(
+                pageId = pageId,
+                pageObject = pageObject,
+                persist = true,
+            )
+        } else {
+            viewModel.addPageObject(
+                pageObject = pageObject,
+                persist = true,
+            )
+        }
+        undoStack.add(InkAction.AddObject(pageId = pageId, pageObject = pageObject))
+        trimUndoStack()
+        redoStack.clear()
+    }
+
+    fun onObjectRemoved(
+        pageId: String,
+        pageObject: PageObject,
+    ) {
+        if (useMultiPage) {
+            viewModel.removePageObjectForPage(
+                pageId = pageId,
+                pageObject = pageObject,
+                persist = true,
+            )
+        } else {
+            viewModel.removePageObject(
+                pageObject = pageObject,
+                persist = true,
+            )
+        }
+        undoStack.add(InkAction.RemoveObject(pageId = pageId, pageObject = pageObject))
+        trimUndoStack()
+        redoStack.clear()
+    }
+
+    fun onObjectTransformed(
+        pageId: String,
+        before: PageObject,
+        after: PageObject,
+    ) {
+        if (useMultiPage) {
+            viewModel.transformPageObjectForPage(
+                pageId = pageId,
+                before = before,
+                after = after,
+                persist = true,
+            )
+        } else {
+            viewModel.transformPageObject(
+                before = before,
+                after = after,
+                persist = true,
+            )
+        }
+        undoStack.add(InkAction.TransformObject(pageId = pageId, before = before, after = after))
         trimUndoStack()
         redoStack.clear()
     }

@@ -1,0 +1,19 @@
+{
+  "objectId": "880e8400-e29b-41d4-a716-446655440008",
+  "pageId": "660e8400-e29b-41d4-a716-446655440001",
+  "noteId": "550e8400-e29b-41d4-a716-446655440000",
+  "kind": "shape",
+  "zIndex": 1,
+  "x": 32,
+  "y": 64,
+  "width": 128,
+  "height": 72,
+  "rotationDeg": 0,
+  "payload": {
+    "shapeType": "rectangle",
+    "strokeColor": "#1E88E5",
+    "strokeWidth": 2
+  },
+  "createdAt": 1708300800000,
+  "updatedAt": 1708300800000
+}

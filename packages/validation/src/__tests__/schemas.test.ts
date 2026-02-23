@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { NoteSchema } from '../schemas/note';
 import { PageSchema } from '../schemas/page';
+import { PageObjectSchema } from '../schemas/pageObject';
 import { StrokeSchema } from '../schemas/stroke';
 
 // ============================================================================
@@ -183,6 +184,65 @@ describe('PageSchema', () => {
 // ============================================================================
 // StrokeSchema Tests
 // ============================================================================
+
+describe('PageObjectSchema', () => {
+  const validShapeObject = {
+    objectId: '880e8400-e29b-41d4-a716-446655440008',
+    pageId: '660e8400-e29b-41d4-a716-446655440001',
+    noteId: '550e8400-e29b-41d4-a716-446655440000',
+    kind: 'shape' as const,
+    zIndex: 3,
+    x: 40,
+    y: 80,
+    width: 120,
+    height: 90,
+    rotationDeg: 0,
+    payload: {
+      shapeType: 'rectangle' as const,
+      strokeColor: '#1E88E5',
+      strokeWidth: 2,
+    },
+    createdAt: 1708300800000,
+    updatedAt: 1708300800000,
+  };
+
+  it('parses valid shape object payload', () => {
+    const result = PageObjectSchema.parse(validShapeObject);
+    expect(result.kind).toBe('shape');
+    if (result.kind !== 'shape') {
+      throw new Error('Expected shape object');
+    }
+    expect(result.payload.shapeType).toBe('rectangle');
+  });
+
+  it('accepts image and text payload scaffolding', () => {
+    const imageResult = PageObjectSchema.parse({
+      ...validShapeObject,
+      objectId: '980e8400-e29b-41d4-a716-446655440009',
+      kind: 'image' as const,
+      payload: { assetId: null, mimeType: 'image/png' },
+    });
+    expect(imageResult.kind).toBe('image');
+
+    const textResult = PageObjectSchema.parse({
+      ...validShapeObject,
+      objectId: 'a80e8400-e29b-41d4-a716-446655440010',
+      kind: 'text' as const,
+      payload: { text: 'Hello' },
+    });
+    expect(textResult.kind).toBe('text');
+  });
+
+  it('rejects payload mismatch for kind', () => {
+    expect(() =>
+      PageObjectSchema.parse({
+        ...validShapeObject,
+        kind: 'shape' as const,
+        payload: { assetId: 'asset-1' },
+      }),
+    ).toThrow();
+  });
+});
 
 describe('StrokeSchema', () => {
   const validStyle = {

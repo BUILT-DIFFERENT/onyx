@@ -48,7 +48,7 @@ class NoteEditorTopBarTest {
         composeRule.onNodeWithContentDescription(BACK).assertIsDisplayed()
         composeRule.onNodeWithContentDescription(PREVIOUS_PAGE).assertIsDisplayed()
         composeRule.onNodeWithContentDescription(NEXT_PAGE).assertIsDisplayed()
-        composeRule.onNodeWithContentDescription(NEW_PAGE).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(INSERT_MENU).assertIsDisplayed()
         composeRule.onNodeWithContentDescription(UNDO).assertIsDisplayed()
         composeRule.onNodeWithContentDescription(REDO).assertIsDisplayed()
         composeRule.onNodeWithContentDescription(VIEW_MODE).assertIsDisplayed()
@@ -90,7 +90,8 @@ class NoteEditorTopBarTest {
         composeRule.onNodeWithContentDescription(BACK).performClick()
         composeRule.onNodeWithContentDescription(PREVIOUS_PAGE).performClick()
         composeRule.onNodeWithContentDescription(NEXT_PAGE).performClick()
-        composeRule.onNodeWithContentDescription(NEW_PAGE).performClick()
+        composeRule.onNodeWithContentDescription(MORE_ACTIONS).performClick()
+        composeRule.onNodeWithText(NEW_PAGE_MENU).performClick()
         composeRule.onNodeWithContentDescription(UNDO).performClick()
         composeRule.onNodeWithContentDescription(REDO).performClick()
         composeRule.onNodeWithContentDescription(VIEW_MODE).performClick()
@@ -180,7 +181,8 @@ class NoteEditorTopBarTest {
 
         composeRule.onNodeWithContentDescription(PREVIOUS_PAGE).assertIsNotEnabled()
         composeRule.onNodeWithContentDescription(NEXT_PAGE).assertIsNotEnabled()
-        composeRule.onNodeWithContentDescription(NEW_PAGE).assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription(MORE_ACTIONS).performClick()
+        composeRule.onNodeWithText(NEW_PAGE_MENU).assertIsNotEnabled()
         composeRule.onNodeWithContentDescription(UNDO).assertIsNotEnabled()
         composeRule.onNodeWithContentDescription(REDO).assertIsNotEnabled()
         composeRule.onNodeWithContentDescription("Note title").assertIsNotEnabled()
@@ -203,7 +205,8 @@ class NoteEditorTopBarTest {
 private const val BACK = "Back"
 private const val PREVIOUS_PAGE = "Previous page"
 private const val NEXT_PAGE = "Next page"
-private const val NEW_PAGE = "New page"
+private const val INSERT_MENU = "Insert menu"
+private const val NEW_PAGE_MENU = "New page"
 private const val UNDO = "Undo"
 private const val REDO = "Redo"
 private const val VIEW_MODE = "View mode"

@@ -3,7 +3,7 @@ import { StrokeStyleSchema, BoundsSchema } from './common';
 
 /**
  * StrokeSchema - JSON-serializable API contract for Stroke (METADATA ONLY)
- * See docs/schema-audit.md for canonical sync API contract
+ * Canonical sync contract lives in packages/validation + tests/contracts fixtures.
  *
  * Note: strokeData and points are intentionally excluded:
  * - strokeData is ByteArray (not JSON-serializable)

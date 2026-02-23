@@ -20,6 +20,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.objects.model.InsertAction
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -195,6 +196,36 @@ class NoteEditorToolbarTest {
         composeRule.onNodeWithText("Eraser options").assertIsDisplayed()
         composeRule.onNodeWithText("Stroke eraser").assertIsDisplayed()
         composeRule.onAllNodesWithText("Brush size").assertCountEquals(0)
+    }
+
+    @Test
+    fun insertMenu_exposesShapeActions_andDeferredPlaceholders() {
+        var selectedInsertAction = InsertAction.NONE
+        setEditorScaffold(
+            toolbarState =
+                NoteEditorToolbarState(
+                    brush = Brush(tool = Tool.PEN),
+                    lastNonEraserTool = Tool.PEN,
+                    isStylusButtonEraserActive = false,
+                    activeInsertAction = InsertAction.NONE,
+                    templateState = PageTemplateState.BLANK,
+                    onBrushChange = {},
+                    onInsertActionSelected = { action -> selectedInsertAction = action },
+                    onTemplateChange = {},
+                ),
+        )
+
+        composeRule.onNodeWithContentDescription("Insert menu").performClick()
+        composeRule.onNodeWithText("Line").assertIsDisplayed().performClick()
+        composeRule.runOnIdle {
+            assertEquals(InsertAction.LINE, selectedInsertAction)
+        }
+
+        composeRule.onNodeWithContentDescription("Insert menu").performClick()
+        composeRule.onNodeWithText("Rectangle").assertIsDisplayed()
+        composeRule.onNodeWithText("Ellipse").assertIsDisplayed()
+        composeRule.onNodeWithText("Image (coming next wave)").assertIsDisplayed()
+        composeRule.onNodeWithText("Text (coming next wave)").assertIsDisplayed()
     }
 
     private fun setEditorScaffold(toolbarState: NoteEditorToolbarState) {

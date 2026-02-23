@@ -63,6 +63,9 @@ import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
 import com.onyx.android.ink.ui.InkCanvasCallbacks
 import com.onyx.android.ink.ui.InkCanvasState
+import com.onyx.android.objects.model.InsertAction
+import com.onyx.android.objects.model.PageObject
+import com.onyx.android.objects.model.ShapeType
 import com.onyx.android.pdf.DEFAULT_PDF_TILE_SIZE_PX
 import com.onyx.android.pdf.PdfDocumentRenderer
 import com.onyx.android.pdf.PdfTileKey
@@ -340,6 +343,8 @@ private fun MultiPageEditorContent(
                         brush = contentState.brush,
                         isStylusButtonEraserActive = contentState.isStylusButtonEraserActive,
                         isSegmentEraserEnabled = contentState.isSegmentEraserEnabled,
+                        activeInsertAction = contentState.activeInsertAction,
+                        selectedObjectId = contentState.selectedObjectId,
                         interactionMode = contentState.interactionMode,
                         isRecognitionOverlayEnabled = contentState.isRecognitionOverlayEnabled,
                         pdfRenderer = contentState.pdfRenderer,
@@ -349,6 +354,20 @@ private fun MultiPageEditorContent(
                         onLassoMove = { deltaX, deltaY -> contentState.onLassoMove(pageState.page.pageId, deltaX, deltaY) },
                         onLassoResize = { scale, pivotX, pivotY ->
                             contentState.onLassoResize(pageState.page.pageId, scale, pivotX, pivotY)
+                        },
+                        onInsertActionChanged = contentState.onInsertActionChanged,
+                        onShapeObjectCreate = { shapeType, x, y, width, height ->
+                            contentState.onShapeObjectCreate(pageState.page.pageId, shapeType, x, y, width, height)
+                        },
+                        onObjectSelected = contentState.onObjectSelected,
+                        onObjectTransformed = { before, after ->
+                            contentState.onObjectTransformed(pageState.page.pageId, before, after)
+                        },
+                        onDuplicateObject = { pageObject ->
+                            contentState.onDuplicateObject(pageState.page.pageId, pageObject)
+                        },
+                        onDeleteObject = { pageObject ->
+                            contentState.onDeleteObject(pageState.page.pageId, pageObject)
                         },
                         onConvertedTextBlockSelected = { block -> contentState.onConvertedTextBlockSelected(pageState.page.pageId, block) },
                         onStylusButtonEraserActiveChanged = contentState.onStylusButtonEraserActiveChanged,
@@ -382,6 +401,8 @@ private fun PageItem(
     brush: Brush,
     isStylusButtonEraserActive: Boolean,
     isSegmentEraserEnabled: Boolean,
+    activeInsertAction: InsertAction,
+    selectedObjectId: String?,
     interactionMode: InteractionMode,
     isRecognitionOverlayEnabled: Boolean,
     pdfRenderer: PdfDocumentRenderer?,
@@ -390,6 +411,12 @@ private fun PageItem(
     onStrokeSplit: (InkStroke, List<InkStroke>) -> Unit,
     onLassoMove: (Float, Float) -> Unit,
     onLassoResize: (Float, Float, Float) -> Unit,
+    onInsertActionChanged: (InsertAction) -> Unit,
+    onShapeObjectCreate: (ShapeType, Float, Float, Float, Float) -> Unit,
+    onObjectSelected: (String?) -> Unit,
+    onObjectTransformed: (PageObject, PageObject) -> Unit,
+    onDuplicateObject: (PageObject) -> Unit,
+    onDeleteObject: (PageObject) -> Unit,
     onConvertedTextBlockSelected: (ConvertedTextBlock) -> Unit,
     onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
     onTransformGesture: (Float, Float, Float, Float, Float) -> Unit,
@@ -499,9 +526,12 @@ private fun PageItem(
                         pageWidth = pageState.pageWidth,
                         pageHeight = pageState.pageHeight,
                         strokes = pageState.strokes,
+                        pageObjects = pageState.pageObjects,
+                        selectedObjectId = pageState.selectedObjectId,
                         brush = brush,
                         isStylusButtonEraserActive = isStylusButtonEraserActive,
                         isSegmentEraserEnabled = isSegmentEraserEnabled,
+                        activeInsertAction = activeInsertAction,
                         interactionMode = interactionMode,
                         allowCanvasFingerGestures = false,
                         thumbnails = emptyList(),
@@ -515,6 +545,12 @@ private fun PageItem(
                         onStrokeSplit = onStrokeSplit,
                         onLassoMove = onLassoMove,
                         onLassoResize = onLassoResize,
+                        onInsertActionChanged = onInsertActionChanged,
+                        onShapeObjectCreate = onShapeObjectCreate,
+                        onObjectSelected = onObjectSelected,
+                        onObjectTransformed = onObjectTransformed,
+                        onDuplicateObject = onDuplicateObject,
+                        onDeleteObject = onDeleteObject,
                         onSegmentEraserEnabledChange = {},
                         onStylusButtonEraserActiveChanged = onStylusButtonEraserActiveChanged,
                         onTransformGesture = onTransformGesture,
@@ -535,7 +571,7 @@ private fun PageItem(
                         isSegmentEraserEnabled = isSegmentEraserEnabled,
                         pageWidth = pageState.pageWidth,
                         pageHeight = pageState.pageHeight,
-                        allowEditing = !isReadOnly,
+                        allowEditing = !isReadOnly && activeInsertAction == InsertAction.NONE,
                         allowFingerGestures = brush.tool == com.onyx.android.ink.model.Tool.LASSO,
                     )
                 }
@@ -565,6 +601,21 @@ private fun PageItem(
                 modifier = Modifier.fillMaxSize(),
             )
         }
+
+        PageObjectLayer(
+            pageObjects = pageState.pageObjects,
+            selectedObjectId = selectedObjectId,
+            activeInsertAction = activeInsertAction,
+            viewTransform = renderTransform,
+            isReadOnly = isReadOnly,
+            isInteractionBlocked = interactionMode == InteractionMode.TEXT_SELECTION,
+            onInsertActionChanged = onInsertActionChanged,
+            onShapeObjectCreate = onShapeObjectCreate,
+            onObjectSelected = onObjectSelected,
+            onObjectTransformed = onObjectTransformed,
+            onDuplicateObject = onDuplicateObject,
+            onDeleteObject = onDeleteObject,
+        )
 
         pageState.searchHighlightBounds?.let { bounds ->
             Canvas(modifier = Modifier.fillMaxSize()) {
@@ -739,7 +790,7 @@ private fun NoteEditorContent(
                         isSegmentEraserEnabled = contentState.isSegmentEraserEnabled,
                         pageWidth = contentState.pageWidth,
                         pageHeight = contentState.pageHeight,
-                        allowEditing = !contentState.isReadOnly,
+                        allowEditing = !contentState.isReadOnly && contentState.activeInsertAction == InsertAction.NONE,
                     )
                 val inkCanvasCallbacks =
                     InkCanvasCallbacks(
@@ -778,6 +829,20 @@ private fun NoteEditorContent(
                     modifier = Modifier.fillMaxSize(),
                 )
             }
+            PageObjectLayer(
+                pageObjects = contentState.pageObjects,
+                selectedObjectId = contentState.selectedObjectId,
+                activeInsertAction = contentState.activeInsertAction,
+                viewTransform = contentState.viewTransform,
+                isReadOnly = contentState.isReadOnly,
+                isInteractionBlocked = contentState.interactionMode == InteractionMode.TEXT_SELECTION,
+                onInsertActionChanged = contentState.onInsertActionChanged,
+                onShapeObjectCreate = contentState.onShapeObjectCreate,
+                onObjectSelected = contentState.onObjectSelected,
+                onObjectTransformed = contentState.onObjectTransformed,
+                onDuplicateObject = contentState.onDuplicateObject,
+                onDeleteObject = contentState.onDeleteObject,
+            )
             if (contentState.isRecognitionOverlayEnabled) {
                 RecognitionOverlayLayer(
                     viewTransform = contentState.viewTransform,

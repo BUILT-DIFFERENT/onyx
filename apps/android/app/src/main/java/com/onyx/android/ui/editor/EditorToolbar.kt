@@ -40,9 +40,12 @@ import androidx.compose.material.icons.filled.AutoFixOff
 import androidx.compose.material.icons.filled.BorderColor
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.CropSquare
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.HorizontalRule
 import androidx.compose.material.icons.filled.Loupe
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Visibility
@@ -84,6 +87,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.onyx.android.ink.model.Tool
+import com.onyx.android.objects.model.InsertAction
 import com.onyx.android.ui.NoteEditorToolbarState
 import com.onyx.android.ui.NoteEditorTopBarState
 import com.onyx.android.ui.PageTemplateState
@@ -169,6 +173,7 @@ internal fun EditorToolbar(
     var isTitleEditing by rememberSaveable { mutableStateOf(false) }
     var titleDraft by rememberSaveable { mutableStateOf(topBarState.noteTitle) }
     var isOverflowMenuExpanded by rememberSaveable { mutableStateOf(false) }
+    var isInsertMenuExpanded by rememberSaveable { mutableStateOf(false) }
     var isPageJumpDialogVisible by rememberSaveable { mutableStateOf(false) }
     var pageJumpInput by rememberSaveable { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
@@ -285,6 +290,16 @@ internal fun EditorToolbar(
                                 isOverflowMenuExpanded = false
                                 if (isEditingEnabled) {
                                     isTitleEditing = true
+                                }
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("New page") },
+                            enabled = isEditingEnabled,
+                            onClick = {
+                                isOverflowMenuExpanded = false
+                                if (isEditingEnabled) {
+                                    topBarState.onCreatePage()
                                 }
                             },
                         )
@@ -595,16 +610,73 @@ internal fun EditorToolbar(
                         )
                     }
                 }
-                IconButton(
-                    onClick = topBarState.onCreatePage,
-                    enabled = isEditingEnabled,
-                    modifier = Modifier.semantics { contentDescription = "New page" },
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = null,
-                        tint = if (isEditingEnabled) NOTEWISE_ICON else NOTEWISE_ICON_MUTED,
-                    )
+                Box {
+                    IconButton(
+                        onClick = { isInsertMenuExpanded = true },
+                        enabled = isEditingEnabled,
+                        modifier = Modifier.semantics { contentDescription = "Insert menu" },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = null,
+                            tint = if (isEditingEnabled) NOTEWISE_ICON else NOTEWISE_ICON_MUTED,
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = isInsertMenuExpanded,
+                        onDismissRequest = { isInsertMenuExpanded = false },
+                    ) {
+                        InsertMenuItem(
+                            text = "Line",
+                            icon = Icons.Filled.HorizontalRule,
+                            enabled = isEditingEnabled,
+                            active = toolbarState.activeInsertAction == InsertAction.LINE,
+                            testTag = "insert-line",
+                            onClick = {
+                                toolbarState.onInsertActionSelected(InsertAction.LINE)
+                                isInsertMenuExpanded = false
+                            },
+                        )
+                        InsertMenuItem(
+                            text = "Rectangle",
+                            icon = Icons.Filled.CropSquare,
+                            enabled = isEditingEnabled,
+                            active = toolbarState.activeInsertAction == InsertAction.RECTANGLE,
+                            testTag = "insert-rectangle",
+                            onClick = {
+                                toolbarState.onInsertActionSelected(InsertAction.RECTANGLE)
+                                isInsertMenuExpanded = false
+                            },
+                        )
+                        InsertMenuItem(
+                            text = "Ellipse",
+                            icon = Icons.Filled.Circle,
+                            enabled = isEditingEnabled,
+                            active = toolbarState.activeInsertAction == InsertAction.ELLIPSE,
+                            testTag = "insert-ellipse",
+                            onClick = {
+                                toolbarState.onInsertActionSelected(InsertAction.ELLIPSE)
+                                isInsertMenuExpanded = false
+                            },
+                        )
+                        HorizontalDivider()
+                        InsertMenuItem(
+                            text = "Image (coming next wave)",
+                            icon = Icons.Filled.BorderColor,
+                            enabled = false,
+                            active = false,
+                            testTag = "insert-image-disabled",
+                            onClick = {},
+                        )
+                        InsertMenuItem(
+                            text = "Text (coming next wave)",
+                            icon = Icons.Filled.Create,
+                            enabled = false,
+                            active = false,
+                            testTag = "insert-text-disabled",
+                            onClick = {},
+                        )
+                    }
                 }
             }
 
@@ -993,6 +1065,30 @@ private fun TemplateSettingsPanel(
             }
         }
     }
+}
+
+@Composable
+private fun InsertMenuItem(
+    text: String,
+    icon: ImageVector,
+    enabled: Boolean,
+    active: Boolean,
+    testTag: String,
+    onClick: () -> Unit,
+) {
+    DropdownMenuItem(
+        text = { Text(text) },
+        enabled = enabled,
+        onClick = onClick,
+        leadingIcon = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (active) NOTEWISE_SELECTED else NOTEWISE_ICON,
+            )
+        },
+        modifier = Modifier.testTag(testTag),
+    )
 }
 
 @Composable

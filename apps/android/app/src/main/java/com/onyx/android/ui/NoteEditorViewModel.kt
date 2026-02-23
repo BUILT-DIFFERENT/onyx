@@ -1,4 +1,4 @@
-@file:Suppress("TooManyFunctions", "LongParameterList", "ComplexCondition", "LargeClass", "MagicNumber")
+@file:Suppress("TooManyFunctions", "LongParameterList", "ComplexCondition", "LargeClass", "MagicNumber", "MaxLineLength")
 
 package com.onyx.android.ui
 
@@ -18,6 +18,10 @@ import com.onyx.android.ink.algorithm.applyStrokeSplit
 import com.onyx.android.ink.algorithm.restoreStrokeSplit
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.Tool
+import com.onyx.android.objects.model.PageObject
+import com.onyx.android.objects.model.PageObjectKind
+import com.onyx.android.objects.model.ShapePayload
+import com.onyx.android.objects.model.ShapeType
 import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfPasswordStore
 import com.onyx.android.recognition.ConvertedTextBlock
@@ -35,6 +39,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import java.util.UUID
 import javax.inject.Inject
 
@@ -87,8 +92,14 @@ internal class NoteEditorViewModel
             private const val SPLIT_RECOGNITION_REFRESH_STROKE_ID = "__segment_eraser_refresh__"
         }
 
+        private val objectJson = Json { ignoreUnknownKeys = true }
+
         private val _strokes = MutableStateFlow<List<Stroke>>(emptyList())
         val strokes: StateFlow<List<Stroke>> = _strokes.asStateFlow()
+        private val _pageObjects = MutableStateFlow<List<PageObject>>(emptyList())
+        val pageObjects: StateFlow<List<PageObject>> = _pageObjects.asStateFlow()
+        private val _selectedObjectId = MutableStateFlow<String?>(null)
+        val selectedObjectId: StateFlow<String?> = _selectedObjectId.asStateFlow()
         private val _pages = MutableStateFlow<List<PageEntity>>(emptyList())
         val pages: StateFlow<List<PageEntity>> = _pages.asStateFlow()
         private val _noteTitle = MutableStateFlow("")
@@ -122,6 +133,8 @@ internal class NoteEditorViewModel
         // Multi-page strokes cache: pageId -> strokes
         private val _pageStrokesCache = MutableStateFlow<Map<String, List<Stroke>>>(emptyMap())
         val pageStrokesCache: StateFlow<Map<String, List<Stroke>>> = _pageStrokesCache.asStateFlow()
+        private val _pageObjectsCache = MutableStateFlow<Map<String, List<PageObject>>>(emptyMap())
+        val pageObjectsCache: StateFlow<Map<String, List<PageObject>>> = _pageObjectsCache.asStateFlow()
 
         private val _recognitionOverlayEnabled = MutableStateFlow(false)
         val recognitionOverlayEnabled: StateFlow<Boolean> = _recognitionOverlayEnabled.asStateFlow()
@@ -657,20 +670,225 @@ internal class NoteEditorViewModel
             }
         }
 
+        fun selectObject(objectId: String?) {
+            _selectedObjectId.value = objectId
+        }
+
+        fun addPageObject(
+            pageObject: PageObject,
+            persist: Boolean,
+        ) {
+            _pageObjects.value = (_pageObjects.value + pageObject).sortedBy { objectItem -> objectItem.zIndex }
+            updatePageObjectCacheForPage(pageObject.pageId, _pageObjects.value)
+            if (persist) {
+                viewModelScope.launch {
+                    runCatching {
+                        repository.upsertPageObject(pageObject)
+                    }.onFailure { throwable ->
+                        reportError("Failed to save page object.", throwable)
+                    }
+                }
+            }
+        }
+
+        fun removePageObject(
+            pageObject: PageObject,
+            persist: Boolean,
+        ) {
+            _pageObjects.value = _pageObjects.value.filterNot { objectItem -> objectItem.objectId == pageObject.objectId }
+            updatePageObjectCacheForPage(pageObject.pageId, _pageObjects.value)
+            if (_selectedObjectId.value == pageObject.objectId) {
+                _selectedObjectId.value = null
+            }
+            if (persist) {
+                viewModelScope.launch {
+                    runCatching {
+                        repository.deletePageObject(pageObject.objectId, pageObject.pageId)
+                    }.onFailure { throwable ->
+                        reportError("Failed to delete page object.", throwable)
+                    }
+                }
+            }
+        }
+
+        fun transformPageObject(
+            before: PageObject,
+            after: PageObject,
+            persist: Boolean,
+        ) {
+            val updated =
+                _pageObjects.value.map { objectItem ->
+                    if (objectItem.objectId == before.objectId) {
+                        after
+                    } else {
+                        objectItem
+                    }
+                }
+            _pageObjects.value = updated
+            updatePageObjectCacheForPage(after.pageId, updated)
+            if (persist) {
+                viewModelScope.launch {
+                    runCatching {
+                        repository.updatePageObjectGeometry(after)
+                    }.onFailure { throwable ->
+                        reportError("Failed to update page object.", throwable)
+                    }
+                }
+            }
+        }
+
+        fun addPageObjectForPage(
+            pageId: String,
+            pageObject: PageObject,
+            persist: Boolean,
+        ) {
+            val currentCache = _pageObjectsCache.value.toMutableMap()
+            val pageObjects =
+                (currentCache[pageId].orEmpty() + pageObject)
+                    .sortedBy { objectItem -> objectItem.zIndex }
+            currentCache[pageId] = pageObjects
+            _pageObjectsCache.value = currentCache
+            if (pageId == currentPageId) {
+                _pageObjects.value = pageObjects
+            }
+            if (persist) {
+                viewModelScope.launch {
+                    runCatching {
+                        repository.upsertPageObject(pageObject)
+                    }.onFailure { throwable ->
+                        reportError("Failed to save page object.", throwable)
+                    }
+                }
+            }
+        }
+
+        fun removePageObjectForPage(
+            pageId: String,
+            pageObject: PageObject,
+            persist: Boolean,
+        ) {
+            val currentCache = _pageObjectsCache.value.toMutableMap()
+            val pageObjects = currentCache[pageId].orEmpty().filterNot { objectItem -> objectItem.objectId == pageObject.objectId }
+            currentCache[pageId] = pageObjects
+            _pageObjectsCache.value = currentCache
+            if (pageId == currentPageId) {
+                _pageObjects.value = pageObjects
+            }
+            if (_selectedObjectId.value == pageObject.objectId) {
+                _selectedObjectId.value = null
+            }
+            if (persist) {
+                viewModelScope.launch {
+                    runCatching {
+                        repository.deletePageObject(pageObject.objectId, pageObject.pageId)
+                    }.onFailure { throwable ->
+                        reportError("Failed to delete page object.", throwable)
+                    }
+                }
+            }
+        }
+
+        fun transformPageObjectForPage(
+            pageId: String,
+            before: PageObject,
+            after: PageObject,
+            persist: Boolean,
+        ) {
+            val currentCache = _pageObjectsCache.value.toMutableMap()
+            val pageObjects =
+                currentCache[pageId]
+                    .orEmpty()
+                    .map { objectItem ->
+                        if (objectItem.objectId == before.objectId) {
+                            after
+                        } else {
+                            objectItem
+                        }
+                    }.sortedBy { objectItem -> objectItem.zIndex }
+            currentCache[pageId] = pageObjects
+            _pageObjectsCache.value = currentCache
+            if (pageId == currentPageId) {
+                _pageObjects.value = pageObjects
+            }
+            if (persist) {
+                viewModelScope.launch {
+                    runCatching {
+                        repository.updatePageObjectGeometry(after)
+                    }.onFailure { throwable ->
+                        reportError("Failed to update page object.", throwable)
+                    }
+                }
+            }
+        }
+
+        fun createShapeObject(
+            pageId: String,
+            shapeType: ShapeType,
+            x: Float,
+            y: Float,
+            width: Float,
+            height: Float,
+        ): PageObject {
+            val now = System.currentTimeMillis()
+            val noteIdForPage =
+                _pages.value.firstOrNull { page -> page.pageId == pageId }?.noteId ?: noteId
+            val zIndex = _pageObjectsCache.value[pageId].orEmpty().maxOfOrNull { objectItem -> objectItem.zIndex }?.plus(1) ?: 0
+            val shapePayload = ShapePayload(shapeType = shapeType)
+            return PageObject(
+                objectId = UUID.randomUUID().toString(),
+                pageId = pageId,
+                noteId = noteIdForPage,
+                kind = PageObjectKind.SHAPE,
+                zIndex = zIndex,
+                x = x,
+                y = y,
+                width = width,
+                height = height,
+                rotationDeg = 0f,
+                payloadJson = objectJson.encodeToString(ShapePayload.serializer(), shapePayload),
+                shapePayload = shapePayload,
+                createdAt = now,
+                updatedAt = now,
+                deletedAt = null,
+            )
+        }
+
+        fun duplicatePageObject(
+            pageId: String,
+            pageObject: PageObject,
+        ): PageObject {
+            val now = System.currentTimeMillis()
+            return pageObject.copy(
+                objectId = UUID.randomUUID().toString(),
+                x = pageObject.x + 12f,
+                y = pageObject.y + 12f,
+                zIndex = (_pageObjectsCache.value[pageId].orEmpty().maxOfOrNull { objectItem -> objectItem.zIndex } ?: 0) + 1,
+                createdAt = now,
+                updatedAt = now,
+                deletedAt = null,
+            )
+        }
+
         /**
          * Load strokes for a range of pages (for pre-loading in multi-page mode).
          */
         fun loadStrokesForPages(pageIds: List<String>) {
             viewModelScope.launch {
                 runCatching {
-                    val currentCache = _pageStrokesCache.value.toMutableMap()
+                    val currentStrokeCache = _pageStrokesCache.value.toMutableMap()
+                    val currentObjectCache = _pageObjectsCache.value.toMutableMap()
                     for (pageId in pageIds) {
-                        if (!currentCache.containsKey(pageId)) {
+                        if (!currentStrokeCache.containsKey(pageId)) {
                             val strokes = repository.getStrokesForPage(pageId)
-                            currentCache[pageId] = strokes
+                            currentStrokeCache[pageId] = strokes
+                        }
+                        if (!currentObjectCache.containsKey(pageId)) {
+                            val pageObjects = repository.getPageObjectsForPage(pageId)
+                            currentObjectCache[pageId] = pageObjects
                         }
                     }
-                    _pageStrokesCache.value = currentCache
+                    _pageStrokesCache.value = currentStrokeCache
+                    _pageObjectsCache.value = currentObjectCache
                 }.onFailure { throwable ->
                     reportError("Failed to load strokes for pages.", throwable)
                 }
@@ -698,6 +916,8 @@ internal class NoteEditorViewModel
          * Get strokes for a specific page from cache or load if needed.
          */
         fun getStrokesForPage(pageId: String): List<Stroke> = _pageStrokesCache.value[pageId].orEmpty()
+
+        fun getPageObjectsForPage(pageId: String): List<PageObject> = _pageObjectsCache.value[pageId].orEmpty()
 
         /**
          * Set the active recognition page based on stylus interaction.
@@ -756,6 +976,9 @@ internal class NoteEditorViewModel
             if (pageIdsToUnload.isNotEmpty()) {
                 unloadPagesFromCache(pageIdsToUnload)
             }
+            if (pageIdsToUnload.isNotEmpty()) {
+                unloadPageObjectsFromCache(pageIdsToUnload)
+            }
 
             // Load strokes for pages in range that aren't already cached
             val pagesNotCached = pageIdsToLoad.filter { !_pageStrokesCache.value.containsKey(it) }
@@ -797,22 +1020,49 @@ internal class NoteEditorViewModel
             }
         }
 
+        private fun unloadPageObjectsFromCache(pageIds: Set<String>) {
+            val currentCache = _pageObjectsCache.value.toMutableMap()
+            var modified = false
+            for (pageId in pageIds) {
+                if (currentCache.remove(pageId) != null) {
+                    modified = true
+                }
+            }
+            if (modified) {
+                _pageObjectsCache.value = currentCache
+            }
+        }
+
+        private fun updatePageObjectCacheForPage(
+            pageId: String,
+            pageObjects: List<PageObject>,
+        ) {
+            val currentCache = _pageObjectsCache.value.toMutableMap()
+            currentCache[pageId] = pageObjects
+            _pageObjectsCache.value = currentCache
+        }
+
         /**
          * Load strokes for pages asynchronously (non-blocking).
          */
         private fun loadStrokesForPagesAsync(pageIds: List<String>) {
             viewModelScope.launch {
                 runCatching {
-                    val currentCache = _pageStrokesCache.value.toMutableMap()
+                    val currentStrokeCache = _pageStrokesCache.value.toMutableMap()
+                    val currentObjectCache = _pageObjectsCache.value.toMutableMap()
                     for (pageId in pageIds) {
-                        if (!currentCache.containsKey(pageId)) {
+                        if (!currentStrokeCache.containsKey(pageId)) {
                             val strokes = repository.getStrokesForPage(pageId)
-                            currentCache[pageId] = strokes
+                            currentStrokeCache[pageId] = strokes
                             Log.d(LOG_TAG, "Loaded ${strokes.size} strokes for page: $pageId")
                             loadRecognitionArtifacts(pageId)
                         }
+                        if (!currentObjectCache.containsKey(pageId)) {
+                            currentObjectCache[pageId] = repository.getPageObjectsForPage(pageId)
+                        }
                     }
-                    _pageStrokesCache.value = currentCache
+                    _pageStrokesCache.value = currentStrokeCache
+                    _pageObjectsCache.value = currentObjectCache
                 }.onFailure { throwable ->
                     reportError("Failed to load strokes for pages.", throwable)
                 }
@@ -828,9 +1078,13 @@ internal class NoteEditorViewModel
 
             runCatching {
                 val strokes = repository.getStrokesForPage(pageId)
-                val currentCache = _pageStrokesCache.value.toMutableMap()
-                currentCache[pageId] = strokes
-                _pageStrokesCache.value = currentCache
+                val pageObjects = repository.getPageObjectsForPage(pageId)
+                val currentStrokeCache = _pageStrokesCache.value.toMutableMap()
+                val currentObjectCache = _pageObjectsCache.value.toMutableMap()
+                currentStrokeCache[pageId] = strokes
+                currentObjectCache[pageId] = pageObjects
+                _pageStrokesCache.value = currentStrokeCache
+                _pageObjectsCache.value = currentObjectCache
                 loadRecognitionArtifacts(pageId)
             }.onFailure { throwable ->
                 reportError("Failed to load strokes for page: $pageId", throwable)
@@ -850,6 +1104,7 @@ internal class NoteEditorViewModel
             val loadedPages = _pageStrokesCache.value.keys
             commitStrokesForPages(loadedPages)
             _pageStrokesCache.value = emptyMap()
+            _pageObjectsCache.value = emptyMap()
             Log.d(LOG_TAG, "Cleared stroke cache for ${loadedPages.size} pages")
         }
 
@@ -903,22 +1158,23 @@ internal class NoteEditorViewModel
                     ?.let { pageId ->
                         _templateConfigByPageId.value[pageId]
                     } ?: PageTemplateConfig.BLANK
-            if (page?.kind == "pdf") {
-                _strokes.value = emptyList()
-                currentPageId?.let { pageId ->
-                    loadRecognitionArtifacts(pageId)
-                }
-                return
-            }
             currentPageId?.let { pageId ->
                 // Only initialize recognition if this is also the active recognition page
                 if (pageId == _activeRecognitionPageId.value) {
                     myScriptPageManager?.onPageEnter(pageId)
                 }
-                val loadedStrokes = repository.getStrokesForPage(pageId)
+                val loadedStrokes =
+                    if (page?.kind == "pdf") {
+                        emptyList()
+                    } else {
+                        repository.getStrokesForPage(pageId)
+                    }
                 _strokes.value = loadedStrokes
-                // Only add strokes to recognition if this is the active recognition page
-                if (pageId == _activeRecognitionPageId.value) {
+                val loadedPageObjects = repository.getPageObjectsForPage(pageId)
+                _pageObjects.value = loadedPageObjects
+                updatePageObjectCacheForPage(pageId, loadedPageObjects)
+                _selectedObjectId.value = null
+                if (page?.kind != "pdf" && pageId == _activeRecognitionPageId.value) {
                     loadedStrokes.forEach { stroke ->
                         myScriptPageManager?.addStroke(stroke)
                     }
@@ -926,6 +1182,8 @@ internal class NoteEditorViewModel
                 loadRecognitionArtifacts(pageId)
             } ?: run {
                 _strokes.value = emptyList()
+                _pageObjects.value = emptyList()
+                _selectedObjectId.value = null
             }
         }
 

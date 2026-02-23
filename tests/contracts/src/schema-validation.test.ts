@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { NoteSchema, PageSchema, StrokeSchema } from '@onyx/validation';
+import { NoteSchema, PageObjectSchema, PageSchema, StrokeSchema } from '@onyx/validation';
 
 const fixturesDir = join(__dirname, '../fixtures');
 
@@ -56,6 +56,16 @@ describe('Contract Fixtures Validation', () => {
       expect(result.bounds.h).toBeTypeOf('number');
       expect(result.createdAt).toBeTypeOf('number');
       expect(result.createdLamport).toBeTypeOf('number');
+    });
+  });
+
+  describe('PageObjectSchema', () => {
+    it('validates page-object-shape.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'page-object-shape.fixture.json'), 'utf-8'));
+      const result = PageObjectSchema.parse(fixture);
+      expect(result.kind).toBe('shape');
+      expect(result.payload.shapeType).toBe('rectangle');
+      expect(result.zIndex).toBeTypeOf('number');
     });
   });
 });

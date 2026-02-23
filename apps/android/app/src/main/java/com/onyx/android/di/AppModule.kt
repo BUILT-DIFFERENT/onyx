@@ -6,6 +6,7 @@ import com.onyx.android.data.dao.EditorSettingsDao
 import com.onyx.android.data.dao.NoteDao
 import com.onyx.android.data.dao.OperationLogDao
 import com.onyx.android.data.dao.PageDao
+import com.onyx.android.data.dao.PageObjectDao
 import com.onyx.android.data.dao.PageTemplateDao
 import com.onyx.android.data.repository.NoteRepository
 import com.onyx.android.data.serialization.StrokeSerializer
@@ -86,6 +87,7 @@ object AppModule {
         NoteRepository(
             noteDao = database.noteDao(),
             pageDao = database.pageDao(),
+            pageObjectDao = database.pageObjectDao(),
             strokeDao = database.strokeDao(),
             recognitionDao = database.recognitionDao(),
             folderDao = database.folderDao(),
@@ -120,6 +122,9 @@ object AppModule {
 
     @Provides
     fun providePageDao(database: OnyxDatabase): PageDao = database.pageDao()
+
+    @Provides
+    fun providePageObjectDao(database: OnyxDatabase): PageObjectDao = database.pageObjectDao()
 
     @Provides
     fun providePageTemplateDao(database: OnyxDatabase): PageTemplateDao = database.pageTemplateDao()

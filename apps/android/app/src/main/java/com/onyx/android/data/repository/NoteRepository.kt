@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 import com.onyx.android.data.dao.FolderDao
 import com.onyx.android.data.dao.NoteDao
 import com.onyx.android.data.dao.PageDao
+import com.onyx.android.data.dao.PageObjectDao
 import com.onyx.android.data.dao.PageTemplateDao
 import com.onyx.android.data.dao.RecognitionDao
 import com.onyx.android.data.dao.StrokeDao
@@ -14,6 +15,7 @@ import com.onyx.android.data.entity.FolderEntity
 import com.onyx.android.data.entity.NoteEntity
 import com.onyx.android.data.entity.NoteTagCrossRef
 import com.onyx.android.data.entity.PageEntity
+import com.onyx.android.data.entity.PageObjectEntity
 import com.onyx.android.data.entity.RecognitionIndexEntity
 import com.onyx.android.data.entity.StrokeEntity
 import com.onyx.android.data.entity.TagEntity
@@ -22,6 +24,9 @@ import com.onyx.android.data.serialization.StrokeSerializer
 import com.onyx.android.data.thumbnail.ThumbnailGenerator
 import com.onyx.android.device.DeviceIdentity
 import com.onyx.android.ink.model.Stroke
+import com.onyx.android.objects.model.PageObject
+import com.onyx.android.objects.model.PageObjectKind
+import com.onyx.android.objects.model.ShapePayload
 import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfPasswordStore
 import com.onyx.android.pdf.PdfTextChar
@@ -107,6 +112,7 @@ class DuplicateTagNameException(
 class NoteRepository(
     private val noteDao: NoteDao,
     private val pageDao: PageDao,
+    private val pageObjectDao: PageObjectDao,
     private val strokeDao: StrokeDao,
     private val recognitionDao: RecognitionDao,
     private val folderDao: FolderDao,
@@ -147,6 +153,7 @@ class NoteRepository(
     )
 
     private val overlayJson = Json { ignoreUnknownKeys = true }
+    private val objectJson = Json { ignoreUnknownKeys = true }
 
     suspend fun createNote(): NoteWithFirstPage {
         val now = System.currentTimeMillis()
@@ -459,6 +466,61 @@ class NoteRepository(
             createdLamport = createdLamport,
         )
 
+    private fun PageObjectEntity.toDomain(): PageObject {
+        val kind = PageObjectKind.fromStorageValue(kind)
+        val shapePayload =
+            if (kind == PageObjectKind.SHAPE) {
+                runCatching {
+                    objectJson.decodeFromString(ShapePayload.serializer(), payloadJson)
+                }.getOrNull()
+            } else {
+                null
+            }
+
+        return PageObject(
+            objectId = objectId,
+            pageId = pageId,
+            noteId = noteId,
+            kind = kind,
+            zIndex = zIndex,
+            x = x,
+            y = y,
+            width = width,
+            height = height,
+            rotationDeg = rotationDeg,
+            payloadJson = payloadJson,
+            shapePayload = shapePayload,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            deletedAt = deletedAt,
+        )
+    }
+
+    private fun PageObject.toEntity(): PageObjectEntity {
+        val resolvedPayloadJson =
+            if (kind == PageObjectKind.SHAPE && shapePayload != null) {
+                objectJson.encodeToString(ShapePayload.serializer(), shapePayload)
+            } else {
+                payloadJson
+            }
+        return PageObjectEntity(
+            objectId = objectId,
+            pageId = pageId,
+            noteId = noteId,
+            kind = kind.storageValue,
+            zIndex = zIndex,
+            x = x,
+            y = y,
+            width = width,
+            height = height,
+            rotationDeg = rotationDeg,
+            payloadJson = resolvedPayloadJson,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            deletedAt = deletedAt,
+        )
+    }
+
     /**
      * Load strokes for multiple pages in a single transaction.
      * More efficient than calling getStrokesForPage multiple times.
@@ -474,6 +536,67 @@ class NoteRepository(
             result[pageId] = getStrokesForPage(pageId)
         }
         return result
+    }
+
+    fun getPageObjectsFlow(pageId: String): Flow<List<PageObject>> =
+        pageObjectDao
+            .getByPageIdFlow(pageId)
+            .map { entities -> entities.map { entity -> entity.toDomain() } }
+
+    suspend fun getPageObjectsForPage(pageId: String): List<PageObject> =
+        pageObjectDao.getByPageId(pageId).map { entity -> entity.toDomain() }
+
+    suspend fun getPageObjectsForPages(pageIds: List<String>): Map<String, List<PageObject>> {
+        if (pageIds.isEmpty()) return emptyMap()
+
+        val result = mutableMapOf<String, List<PageObject>>()
+        for (pageId in pageIds) {
+            result[pageId] = getPageObjectsForPage(pageId)
+        }
+        return result
+    }
+
+    suspend fun getNextPageObjectZIndex(pageId: String): Int = pageObjectDao.getMaxZIndex(pageId) + 1
+
+    suspend fun upsertPageObject(pageObject: PageObject) {
+        pageObjectDao.insert(pageObject.toEntity())
+        updatePageTimestamp(pageObject.pageId)
+    }
+
+    suspend fun upsertPageObjects(pageObjects: List<PageObject>) {
+        if (pageObjects.isEmpty()) {
+            return
+        }
+        pageObjectDao.insertAll(pageObjects.map { pageObject -> pageObject.toEntity() })
+        val pageIds = pageObjects.mapTo(mutableSetOf()) { pageObject -> pageObject.pageId }
+        pageIds.forEach { pageId -> updatePageTimestamp(pageId) }
+    }
+
+    suspend fun updatePageObjectGeometry(pageObject: PageObject) {
+        val now = System.currentTimeMillis()
+        pageObjectDao.updateGeometry(
+            objectId = pageObject.objectId,
+            x = pageObject.x,
+            y = pageObject.y,
+            width = pageObject.width,
+            height = pageObject.height,
+            rotationDeg = pageObject.rotationDeg,
+            updatedAt = now,
+        )
+        updatePageTimestamp(pageObject.pageId)
+    }
+
+    suspend fun deletePageObject(
+        objectId: String,
+        pageId: String,
+    ) {
+        val now = System.currentTimeMillis()
+        pageObjectDao.markDeleted(
+            objectId = objectId,
+            deletedAt = now,
+            updatedAt = now,
+        )
+        updatePageTimestamp(pageId)
     }
 
     suspend fun updateRecognition(

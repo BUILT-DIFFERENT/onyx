@@ -11,6 +11,7 @@ import com.onyx.android.data.dao.FolderDao
 import com.onyx.android.data.dao.NoteDao
 import com.onyx.android.data.dao.OperationLogDao
 import com.onyx.android.data.dao.PageDao
+import com.onyx.android.data.dao.PageObjectDao
 import com.onyx.android.data.dao.PageTemplateDao
 import com.onyx.android.data.dao.RecognitionDao
 import com.onyx.android.data.dao.StrokeDao
@@ -22,6 +23,7 @@ import com.onyx.android.data.entity.NoteEntity
 import com.onyx.android.data.entity.NoteTagCrossRef
 import com.onyx.android.data.entity.OperationLogEntity
 import com.onyx.android.data.entity.PageEntity
+import com.onyx.android.data.entity.PageObjectEntity
 import com.onyx.android.data.entity.PageTemplateEntity
 import com.onyx.android.data.entity.RecognitionFtsEntity
 import com.onyx.android.data.entity.RecognitionIndexEntity
@@ -30,6 +32,7 @@ import com.onyx.android.data.entity.TagEntity
 import com.onyx.android.data.entity.ThumbnailEntity
 import com.onyx.android.data.migrations.MIGRATION_4_5
 import com.onyx.android.data.migrations.MIGRATION_5_6
+import com.onyx.android.data.migrations.MIGRATION_6_7
 
 @Database(
     entities = [
@@ -45,10 +48,12 @@ import com.onyx.android.data.migrations.MIGRATION_5_6
         PageTemplateEntity::class,
         EditorSettingsEntity::class,
         OperationLogEntity::class,
+        PageObjectEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
+@Suppress("TooManyFunctions")
 abstract class OnyxDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
 
@@ -69,6 +74,8 @@ abstract class OnyxDatabase : RoomDatabase() {
     abstract fun editorSettingsDao(): EditorSettingsDao
 
     abstract fun operationLogDao(): OperationLogDao
+
+    abstract fun pageObjectDao(): PageObjectDao
 
     companion object {
         const val DATABASE_NAME = "onyx_notes.db"
@@ -325,7 +332,7 @@ abstract class OnyxDatabase : RoomDatabase() {
         fun build(context: Context): OnyxDatabase =
             Room
                 .databaseBuilder(context, OnyxDatabase::class.java, DATABASE_NAME)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                 .build()
     }
 }

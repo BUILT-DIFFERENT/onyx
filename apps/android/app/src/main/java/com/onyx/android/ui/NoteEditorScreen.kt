@@ -1,4 +1,4 @@
-@file:Suppress("FunctionName", "TooManyFunctions")
+@file:Suppress("FunctionName", "TooManyFunctions", "MaxLineLength")
 
 package com.onyx.android.ui
 
@@ -46,6 +46,7 @@ import com.onyx.android.ink.ui.calculateSelectionBounds
 import com.onyx.android.ink.ui.findStrokesInLasso
 import com.onyx.android.ink.ui.moveStrokes
 import com.onyx.android.ink.ui.resizeStrokes
+import com.onyx.android.objects.model.InsertAction
 import com.onyx.android.pdf.OutlineItem
 import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfDocumentRenderer
@@ -402,6 +403,8 @@ private fun rememberNoteEditorUiState(
             onSettingsChange = onEditorSettingsChange,
         )
     val pageState = rememberPageState(viewModel)
+    val pageObjects by viewModel.pageObjects.collectAsState()
+    val selectedObjectId by viewModel.selectedObjectId.collectAsState()
     val recognitionOverlayEnabled by viewModel.recognitionOverlayEnabled.collectAsState()
     val recognizedTextByPage by viewModel.recognizedTextByPage.collectAsState()
     val convertedTextBlocksByPage by viewModel.convertedTextBlocksByPage.collectAsState()
@@ -412,6 +415,7 @@ private fun rememberNoteEditorUiState(
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
     var isSegmentEraserEnabled by rememberSaveable { mutableStateOf(false) }
+    var activeInsertAction by rememberSaveable { mutableStateOf(InsertAction.NONE) }
     var lassoSelection by remember { mutableStateOf(LassoSelection()) }
     val templateConfig by viewModel.currentTemplateConfig.collectAsState()
     val templateState = remember(templateConfig) { templateConfig.toUiState() }
@@ -469,6 +473,8 @@ private fun rememberNoteEditorUiState(
         isStylusButtonEraserActive = false
         isTextSelectionMode = false
         lassoSelection = LassoSelection()
+        activeInsertAction = InsertAction.NONE
+        viewModel.selectObject(null)
     }
     val topBarState =
         buildTopBarState(
@@ -507,9 +513,16 @@ private fun rememberNoteEditorUiState(
             brushState.lastNonEraserTool,
             isStylusButtonEraserActive,
             isSegmentEraserEnabled,
+            activeInsertAction,
             templateState,
             brushState.onBrushChange,
             { isSegmentEraserEnabled = it },
+            { action ->
+                activeInsertAction = action
+                if (action != InsertAction.NONE) {
+                    viewModel.selectObject(null)
+                }
+            },
             {
                 viewModel.updateCurrentPageTemplate(it.toConfig())
             },
@@ -629,9 +642,12 @@ private fun rememberNoteEditorUiState(
             pageWidth = pdfState.pageWidth,
             pageHeight = pdfState.pageHeight,
             strokes = pageState.strokes,
+            pageObjects = pageObjects,
+            selectedObjectId = selectedObjectId,
             brush = brushState.activeBrush,
             isStylusButtonEraserActive = isStylusButtonEraserActive,
             isSegmentEraserEnabled = isSegmentEraserEnabled,
+            activeInsertAction = activeInsertAction,
             interactionMode = if (isTextSelectionMode) InteractionMode.TEXT_SELECTION else InteractionMode.DRAW,
             allowCanvasFingerGestures = true,
             thumbnails = thumbnails,
@@ -696,6 +712,42 @@ private fun rememberNoteEditorUiState(
                         )
                 }
             },
+            onInsertActionChanged = { action ->
+                activeInsertAction = action
+            },
+            onShapeObjectCreate = { shapeType, x, y, width, height ->
+                val pageId = pageState.currentPage?.pageId
+                if (pageId != null) {
+                    val shapeObject =
+                        viewModel.createShapeObject(
+                            pageId = pageId,
+                            shapeType = shapeType,
+                            x = x,
+                            y = y,
+                            width = width,
+                            height = height,
+                        )
+                    undoController.onObjectAdded(pageId = pageId, pageObject = shapeObject)
+                    viewModel.selectObject(shapeObject.objectId)
+                    activeInsertAction = InsertAction.NONE
+                }
+            },
+            onObjectSelected = viewModel::selectObject,
+            onObjectTransformed = { before, after ->
+                undoController.onObjectTransformed(
+                    pageId = before.pageId,
+                    before = before,
+                    after = after,
+                )
+            },
+            onDuplicateObject = { pageObject ->
+                val duplicated = viewModel.duplicatePageObject(pageObject.pageId, pageObject)
+                undoController.onObjectAdded(pageId = duplicated.pageId, pageObject = duplicated)
+                viewModel.selectObject(duplicated.objectId)
+            },
+            onDeleteObject = { pageObject ->
+                undoController.onObjectRemoved(pageObject.pageId, pageObject)
+            },
             onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
             onTransformGesture = onTransformGesture,
             onPanGestureEnd = onPanGestureEnd,
@@ -753,6 +805,7 @@ private fun rememberMultiPageUiState(
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
     var isSegmentEraserEnabled by rememberSaveable { mutableStateOf(false) }
+    var activeInsertAction by rememberSaveable { mutableStateOf(InsertAction.NONE) }
     val lassoSelectionsByPageId = remember { mutableStateMapOf<String, LassoSelection>() }
     val templateConfigByPageId by viewModel.templateConfigByPageId.collectAsState()
     val currentTemplateConfig by viewModel.currentTemplateConfig.collectAsState()
@@ -764,6 +817,8 @@ private fun rememberMultiPageUiState(
             mutableStateOf(pageState.currentPageIndex..pageState.currentPageIndex)
         }
     val pageStrokesCache by viewModel.pageStrokesCache.collectAsState()
+    val pageObjectsCache by viewModel.pageObjectsCache.collectAsState()
+    val selectedObjectId by viewModel.selectedObjectId.collectAsState()
     val recognitionOverlayEnabled by viewModel.recognitionOverlayEnabled.collectAsState()
     val recognizedTextByPage by viewModel.recognizedTextByPage.collectAsState()
     val convertedTextBlocksByPage by viewModel.convertedTextBlocksByPage.collectAsState()
@@ -810,6 +865,8 @@ private fun rememberMultiPageUiState(
     LaunchedEffect(pageState.currentPage?.pageId) {
         isStylusButtonEraserActive = false
         isTextSelectionMode = false
+        activeInsertAction = InsertAction.NONE
+        viewModel.selectObject(null)
     }
     LaunchedEffect(searchHighlightBounds) {
         if (searchHighlightBounds != null) {
@@ -846,6 +903,7 @@ private fun rememberMultiPageUiState(
                 pageWidth = pageWidth,
                 pageHeight = pageHeight,
                 strokes = pageStrokesCache[page.pageId].orEmpty(),
+                pageObjects = pageObjectsCache[page.pageId].orEmpty(),
                 isPdfPage = page.kind == "pdf" || page.kind == "mixed",
                 isVisible = index in immediateVisibleRange,
                 renderTransform = renderTransform,
@@ -854,6 +912,12 @@ private fun rememberMultiPageUiState(
                         ?.toUiState()
                         ?: PageTemplateState.BLANK,
                 lassoSelection = lassoSelectionsByPageId[page.pageId] ?: LassoSelection(),
+                selectedObjectId =
+                    if (selectedObjectId in pageObjectsCache[page.pageId].orEmpty().map { it.objectId }) {
+                        selectedObjectId
+                    } else {
+                        null
+                    },
                 searchHighlightBounds =
                     if (
                         searchHighlightBounds != null &&
@@ -906,9 +970,16 @@ private fun rememberMultiPageUiState(
             brushState.lastNonEraserTool,
             isStylusButtonEraserActive,
             isSegmentEraserEnabled,
+            activeInsertAction,
             templateState,
             brushState.onBrushChange,
             { isSegmentEraserEnabled = it },
+            { action ->
+                activeInsertAction = action
+                if (action != InsertAction.NONE) {
+                    viewModel.selectObject(null)
+                }
+            },
             { state ->
                 viewModel.updateCurrentPageTemplate(state.toConfig())
             },
@@ -953,6 +1024,8 @@ private fun rememberMultiPageUiState(
             brush = brushState.activeBrush,
             isStylusButtonEraserActive = isStylusButtonEraserActive,
             isSegmentEraserEnabled = isSegmentEraserEnabled,
+            activeInsertAction = activeInsertAction,
+            selectedObjectId = selectedObjectId,
             interactionMode = if (isTextSelectionMode) InteractionMode.TEXT_SELECTION else InteractionMode.SCROLL,
             pdfRenderer = pdfRenderer,
             firstVisiblePageIndex = pageState.currentPageIndex,
@@ -1012,6 +1085,39 @@ private fun rememberMultiPageUiState(
                             scale = scale,
                         )
                 }
+            },
+            onInsertActionChanged = { action ->
+                activeInsertAction = action
+            },
+            onShapeObjectCreate = { pageId, shapeType, x, y, width, height ->
+                val shapeObject =
+                    viewModel.createShapeObject(
+                        pageId = pageId,
+                        shapeType = shapeType,
+                        x = x,
+                        y = y,
+                        width = width,
+                        height = height,
+                    )
+                undoController.onObjectAdded(pageId = pageId, pageObject = shapeObject)
+                viewModel.selectObject(shapeObject.objectId)
+                activeInsertAction = InsertAction.NONE
+            },
+            onObjectSelected = viewModel::selectObject,
+            onObjectTransformed = { pageId, before, after ->
+                undoController.onObjectTransformed(
+                    pageId = pageId,
+                    before = before,
+                    after = after,
+                )
+            },
+            onDuplicateObject = { pageId, pageObject ->
+                val duplicated = viewModel.duplicatePageObject(pageId, pageObject)
+                undoController.onObjectAdded(pageId = duplicated.pageId, pageObject = duplicated)
+                viewModel.selectObject(duplicated.objectId)
+            },
+            onDeleteObject = { pageId, pageObject ->
+                undoController.onObjectRemoved(pageId, pageObject)
             },
             onSegmentEraserEnabledChange = { isSegmentEraserEnabled = it },
             onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
@@ -1412,9 +1518,11 @@ private fun buildToolbarState(
     lastNonEraserTool: Tool,
     isStylusButtonEraserActive: Boolean,
     isSegmentEraserEnabled: Boolean,
+    activeInsertAction: InsertAction,
     templateState: PageTemplateState,
     onBrushChange: (Brush) -> Unit,
     onSegmentEraserEnabledChange: (Boolean) -> Unit,
+    onInsertActionSelected: (InsertAction) -> Unit,
     onTemplateChange: (PageTemplateState) -> Unit,
 ): NoteEditorToolbarState =
     NoteEditorToolbarState(
@@ -1422,8 +1530,10 @@ private fun buildToolbarState(
         lastNonEraserTool = lastNonEraserTool,
         isStylusButtonEraserActive = isStylusButtonEraserActive,
         isSegmentEraserEnabled = isSegmentEraserEnabled,
+        activeInsertAction = activeInsertAction,
         templateState = templateState,
         onBrushChange = onBrushChange,
         onSegmentEraserEnabledChange = onSegmentEraserEnabledChange,
+        onInsertActionSelected = onInsertActionSelected,
         onTemplateChange = onTemplateChange,
     )

@@ -28,6 +28,7 @@ class PageTemplatePersistenceTest {
                         OnyxDatabase.MIGRATION_3_4,
                         com.onyx.android.data.migrations.MIGRATION_4_5,
                         com.onyx.android.data.migrations.MIGRATION_5_6,
+                        com.onyx.android.data.migrations.MIGRATION_6_7,
                     ).build()
 
             val pageId = "page-template-test"
@@ -84,6 +85,7 @@ class PageTemplatePersistenceTest {
                         OnyxDatabase.MIGRATION_3_4,
                         com.onyx.android.data.migrations.MIGRATION_4_5,
                         com.onyx.android.data.migrations.MIGRATION_5_6,
+                        com.onyx.android.data.migrations.MIGRATION_6_7,
                     ).build()
 
             try {
