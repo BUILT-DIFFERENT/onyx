@@ -881,11 +881,11 @@ Proposed public API/interface/type updates to align with backlog items:
   - Validation gate: Contract fixture test suite and schema drift checks in CI.
 
 - [ ] `XSURF-02` Web implications tracking for view-only surface
-  - Status: `Strong Partial++ (fallback matrix expanded for feature metadata contracts)`
+  - Status: `Near Done (Wave W-WebDecodeFallbackRuntimeTests)`
   - Competitor behavior: Not competitor-visible directly; needed so web does not break on new Android-authored metadata.
-  - Current Onyx evidence: `C:\onyx\apps\web\README.md`, `C:\onyx\docs\architecture\web-object-fallback-matrix.md`
-  - What exists now: Fallback matrix now specifies decode/ignore semantics for object union kinds plus gesture/template/export/search metadata families.
-  - What is missing: Runtime web decode implementation tests and any user-facing unsupported-feature messaging.
+  - Current Onyx evidence: `C:\onyx\apps\web\src\contracts\decodeMetadata.ts`, `C:\onyx\apps\web\src\contracts\decodeMetadata.test.ts`, `C:\onyx\docs\architecture\web-object-fallback-matrix.md`
+  - What exists now: Web decode helper now enforces fallback-safe parsing for object + metadata families with runtime unit tests validating unknown-kind preserve/skip-invalid behavior.
+  - What is missing: Integrating decode helper into eventual web note data-loading path and adding optional user-facing unsupported-feature messaging.
   - Exact change needed: Define and implement web decode/fallback behavior for each new metadata field with explicit unsupported-feature affordances.
   - Surface impact: `Web`, `Convex`, `Docs/QA`
   - Priority wave: `Wave Foundation`

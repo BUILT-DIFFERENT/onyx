@@ -48,4 +48,6 @@ Web decode should also tolerate new metadata contracts that are not yet rendered
 
 1. Contract tests validate `shape`, `image`, `text`, `audio`, `sticky`, `scan`, and `file` fixtures.
 2. Contract tests include negative cases for payload-kind mismatch.
-3. Web decode tests should assert “skip invalid object, keep note payload alive” semantics.
+3. Web decode tests assert “skip invalid object, keep note payload alive” semantics in `C:/onyx/apps/web/src/contracts/decodeMetadata.test.ts`.
+4. Web decode tests assert unknown page-object kinds are preserved in raw metadata and omitted from renderable object sets.
+5. Web decode tests assert feature-metadata arrays (`gestureSettings`, `templateScopes`, `exportMetadata`, `searchIndexTokens`) decode valid entries and skip invalid entries without aborting note decode.

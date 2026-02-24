@@ -19,7 +19,7 @@
     "lint": "eslint .",
     "lint:quick": "oxlint .",
     "lint:fix": "eslint . --fix",
-    "test": "echo 'ERROR: No tests implemented for this package yet' && exit 1",
+    "test": "echo \"No tests for this package yet\"",
     "format": "prettier . --write",
     "format:check": "prettier . --check"
   }

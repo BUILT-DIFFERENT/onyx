@@ -40,6 +40,8 @@
 - Search-index contract clarification: canonical cross-surface token schema is `packages/validation/src/schemas/searchIndexToken.ts` with fixtures in `tests/contracts/fixtures/search-index-*.fixture.json`; runtime indexing/sync remains intentionally separate from this contract-only wave.
 - Conflict-metadata clarification: page-object sync metadata scaffold (`sync.objectRevision/parentRevision/lastMutationId/conflictPolicy`) is contract-only in this wave; runtime mutation/query reconciliation is intentionally deferred.
 - Feature-metadata clarification: gesture/template/export contracts are defined in `packages/validation/src/schemas/featureMetadata.ts` with Convex tables (`gestureSettings`, `templateScopes`, `exportMetadata`) and fixtures under `tests/contracts/fixtures/*`; web fallback semantics are documented in `docs/architecture/web-object-fallback-matrix.md`.
+- Web decode clarification: fallback-safe runtime decoding now lives in `apps/web/src/contracts/decodeMetadata.ts` with tests in `apps/web/src/contracts/decodeMetadata.test.ts`; unknown page-object kinds are preserved as raw metadata while invalid known-kind entries are skipped.
+- Monorepo test-script clarification: package-level `test` scripts for packages without tests are now non-failing placeholders (`echo "No tests for this package yet"`), and vitest-based packages use `--passWithNoTests` to avoid false-negative pipeline failures when run from package-local cwd.
 
 ## Context7 Library IDs (Project Stack)
 

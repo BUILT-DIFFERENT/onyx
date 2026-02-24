@@ -12,7 +12,7 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:quick": "tsgo -p tsconfig.json --noEmit || tsc -p tsconfig.json --noEmit",
-    "test": "echo 'ERROR: No tests implemented for this package yet' && exit 1",
+    "test": "vitest run",
     "e2e": "playwright test --pass-with-no-tests",
     "format": "prettier . --write",
     "format:check": "prettier . --check"
