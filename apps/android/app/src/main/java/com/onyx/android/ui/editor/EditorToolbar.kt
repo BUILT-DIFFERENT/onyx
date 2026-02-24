@@ -43,6 +43,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.CropSquare
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.HorizontalRule
@@ -103,6 +104,8 @@ import com.onyx.android.recognition.RecognitionMode
 import com.onyx.android.ui.NoteEditorToolbarState
 import com.onyx.android.ui.NoteEditorTopBarState
 import com.onyx.android.ui.PageTemplateState
+import com.onyx.android.ui.TemplateApplyScope
+import com.onyx.android.ui.TemplateOption
 import com.onyx.android.ui.spacingRangeForTemplate
 import java.util.Locale
 
@@ -605,9 +608,12 @@ internal fun EditorToolbar(
                 Box {
                     TemplateButton(
                         templateState = toolbarState.templateState,
+                        customTemplates = toolbarState.customTemplates,
                         enabled = isEditingEnabled,
                         onTemplateChange = toolbarState.onTemplateChange,
-                        onTemplateApplyToAllPages = toolbarState.onTemplateApplyToAllPages,
+                        onTemplateApply = toolbarState.onTemplateApply,
+                        onSaveCustomTemplate = toolbarState.onSaveCustomTemplate,
+                        onDeleteCustomTemplate = toolbarState.onDeleteCustomTemplate,
                     )
                 }
 
@@ -1389,9 +1395,12 @@ private fun LassoToggleButton(
 @Composable
 private fun TemplateButton(
     templateState: PageTemplateState,
+    customTemplates: List<TemplateOption>,
     enabled: Boolean,
     onTemplateChange: (PageTemplateState) -> Unit,
-    onTemplateApplyToAllPages: () -> Unit,
+    onTemplateApply: (TemplateApplyScope) -> Unit,
+    onSaveCustomTemplate: (String) -> Unit,
+    onDeleteCustomTemplate: (String) -> Unit,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val currentKind = templateState.backgroundKind
@@ -1414,9 +1423,12 @@ private fun TemplateButton(
         ) {
             TemplateSettingsPanel(
                 templateState = templateState,
+                customTemplates = customTemplates,
                 onDismiss = { isExpanded = false },
                 onTemplateChange = onTemplateChange,
-                onTemplateApplyToAllPages = onTemplateApplyToAllPages,
+                onTemplateApply = onTemplateApply,
+                onSaveCustomTemplate = onSaveCustomTemplate,
+                onDeleteCustomTemplate = onDeleteCustomTemplate,
             )
         }
     }
@@ -1425,15 +1437,21 @@ private fun TemplateButton(
 @Composable
 private fun TemplateSettingsPanel(
     templateState: PageTemplateState,
+    customTemplates: List<TemplateOption>,
     onDismiss: () -> Unit,
     onTemplateChange: (PageTemplateState) -> Unit,
-    onTemplateApplyToAllPages: () -> Unit,
+    onTemplateApply: (TemplateApplyScope) -> Unit,
+    onSaveCustomTemplate: (String) -> Unit,
+    onDeleteCustomTemplate: (String) -> Unit,
 ) {
     var showCustomPaperDialog by rememberSaveable { mutableStateOf(false) }
+    var templateSection by rememberSaveable { mutableStateOf("built_in") }
     var customWidthInput by rememberSaveable { mutableStateOf("612") }
     var customHeightInput by rememberSaveable { mutableStateOf("792") }
     var customPaperUnit by rememberSaveable { mutableStateOf(CUSTOM_PAPER_UNIT_PT) }
     var customPaperError by rememberSaveable { mutableStateOf<String?>(null) }
+    var customTemplateName by rememberSaveable { mutableStateOf("") }
+    var applyScope by rememberSaveable { mutableStateOf(TemplateApplyScope.CURRENT_PAGE) }
 
     Card(
         modifier =
@@ -1456,49 +1474,123 @@ private fun TemplateSettingsPanel(
                 fontWeight = FontWeight.SemiBold,
             )
 
-            val kinds = listOf("blank" to "Blank", "grid" to "Grid", "lined" to "Lined", "dotted" to "Dotted")
-            kinds.forEach { (kind, label) ->
-                val isSelected = templateState.backgroundKind == kind
-                TextButton(
-                    onClick = {
-                        val newSpacing =
-                            when (kind) {
-                                "blank" -> {
-                                    0f
-                                }
-
-                                else -> {
-                                    val range = spacingRangeForTemplate(kind)
-                                    templateState.spacing.coerceIn(range.start, range.endInclusive)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TextButton(onClick = { templateSection = "built_in" }) {
+                    Text(
+                        text = "Built-in",
+                        color = if (templateSection == "built_in") NOTEWISE_SELECTED else MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+                TextButton(onClick = { templateSection = "custom" }) {
+                    Text(
+                        text = "Custom",
+                        color = if (templateSection == "custom") NOTEWISE_SELECTED else MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
+            if (templateSection == "built_in") {
+                val templateCategories =
+                    listOf(
+                        "Basic" to listOf("blank" to "Blank", "grid" to "Grid", "lined" to "Lined", "dotted" to "Dotted"),
+                        "Study" to listOf("cornell" to "Cornell"),
+                        "Technical" to listOf("engineering" to "Engineering"),
+                        "Music" to listOf("music" to "Music staff"),
+                    )
+                templateCategories.forEachIndexed { index, (categoryLabel, kinds) ->
+                    Text(
+                        text = categoryLabel,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    kinds.forEach { (kind, label) ->
+                        val isSelected = templateState.backgroundKind == kind
+                        TextButton(
+                            onClick = {
+                                val newSpacing =
+                                    when (kind) {
+                                        "blank" -> 0f
+                                        else -> {
+                                            val range = spacingRangeForTemplate(kind)
+                                            templateState.spacing.coerceIn(range.start, range.endInclusive)
+                                        }
+                                    }
+                                onTemplateChange(
+                                    templateState.copy(
+                                        backgroundKind = kind,
+                                        spacing = newSpacing,
+                                    ),
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = label,
+                                    color = if (isSelected) NOTEWISE_SELECTED else MaterialTheme.colorScheme.onSurface,
+                                )
+                                if (isSelected) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Edit,
+                                        contentDescription = null,
+                                        tint = NOTEWISE_SELECTED,
+                                        modifier = Modifier.size(16.dp),
+                                    )
                                 }
                             }
-                        onTemplateChange(
-                            templateState.copy(
-                                backgroundKind = kind,
-                                spacing = newSpacing,
-                            ),
-                        )
+                        }
+                    }
+                    if (index != templateCategories.lastIndex) {
+                        HorizontalDivider()
+                    }
+                }
+            } else {
+                OutlinedTextField(
+                    value = customTemplateName,
+                    onValueChange = { customTemplateName = it },
+                    label = { Text("Template name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                TextButton(
+                    onClick = {
+                        onSaveCustomTemplate(customTemplateName)
+                        customTemplateName = ""
                     },
+                    enabled = customTemplateName.isNotBlank(),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
+                    Text("Save current as custom template")
+                }
+                customTemplates.forEach { option ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(
-                            text = label,
-                            color = if (isSelected) NOTEWISE_SELECTED else MaterialTheme.colorScheme.onSurface,
-                        )
-                        if (isSelected) {
-                            Icon(
-                                imageVector = Icons.Filled.Edit,
-                                contentDescription = null,
-                                tint = NOTEWISE_SELECTED,
-                                modifier = Modifier.size(16.dp),
-                            )
+                        TextButton(
+                            onClick = { onTemplateChange(option.config) },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(option.name)
+                        }
+                        IconButton(onClick = { onDeleteCustomTemplate(option.templateId) }) {
+                            Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete template")
                         }
                     }
+                }
+                if (customTemplates.isEmpty()) {
+                    Text(
+                        text = "No custom templates yet.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
 
@@ -1573,15 +1665,43 @@ private fun TemplateSettingsPanel(
                 )
             }
             Text(
-                text = "New pages will use this size preset. Custom size is scaffolded via template id.",
+                text = "New pages will use this size preset for this note.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Text(text = "Apply scope", style = MaterialTheme.typography.bodyMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TextButton(onClick = { applyScope = TemplateApplyScope.CURRENT_PAGE }) {
+                    Text(
+                        text = "Current page",
+                        color =
+                            if (applyScope == TemplateApplyScope.CURRENT_PAGE) {
+                                NOTEWISE_SELECTED
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                    )
+                }
+                TextButton(onClick = { applyScope = TemplateApplyScope.ALL_PAGES }) {
+                    Text(
+                        text = "All pages",
+                        color =
+                            if (applyScope == TemplateApplyScope.ALL_PAGES) {
+                                NOTEWISE_SELECTED
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                    )
+                }
+            }
             TextButton(
-                onClick = onTemplateApplyToAllPages,
+                onClick = { onTemplateApply(applyScope) },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(text = "Apply current template to all pages")
+                Text(text = "Apply template")
             }
 
             if (templateState.backgroundKind != "blank") {
@@ -1595,6 +1715,14 @@ private fun TemplateSettingsPanel(
                         onTemplateChange(templateState.copy(spacing = bounded))
                     },
                     valueRange = spacingRange,
+                )
+                Text(text = "Line width", style = MaterialTheme.typography.bodyMedium)
+                Slider(
+                    value = templateState.lineWidth.coerceIn(0.25f, 6f),
+                    onValueChange = { width ->
+                        onTemplateChange(templateState.copy(lineWidth = width.coerceIn(0.25f, 6f)))
+                    },
+                    valueRange = 0.25f..6f,
                 )
             }
 

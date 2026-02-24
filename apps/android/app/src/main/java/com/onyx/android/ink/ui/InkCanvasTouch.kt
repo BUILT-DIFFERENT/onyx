@@ -81,6 +81,9 @@ internal data class InkCanvasInteraction(
     ) -> Unit,
     val onUndoShortcut: () -> Unit = {},
     val onRedoShortcut: () -> Unit = {},
+    val onSwitchToPenShortcut: () -> Unit = {},
+    val onSwitchToEraserShortcut: () -> Unit = {},
+    val onSwitchToLastToolShortcut: () -> Unit = {},
     val onDoubleTapGesture: () -> Unit = {},
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
     val onStrokeRenderFinished: (Long) -> Unit,
@@ -1029,6 +1032,9 @@ internal fun dispatchMultiFingerTapShortcut(
         MultiFingerTapAction.NONE -> Unit
         MultiFingerTapAction.UNDO -> interaction.onUndoShortcut()
         MultiFingerTapAction.REDO -> interaction.onRedoShortcut()
+        MultiFingerTapAction.SWITCH_TO_PEN -> interaction.onSwitchToPenShortcut()
+        MultiFingerTapAction.SWITCH_TO_ERASER -> interaction.onSwitchToEraserShortcut()
+        MultiFingerTapAction.SWITCH_TO_LAST_TOOL -> interaction.onSwitchToLastToolShortcut()
     }
 }
 

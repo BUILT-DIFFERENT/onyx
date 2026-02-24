@@ -28,10 +28,31 @@ interface NoteDao {
         updatedAt: Long,
     )
 
-    @Query("UPDATE notes SET lastOpenedPageId = :pageId WHERE noteId = :noteId")
+    @Query("UPDATE notes SET lastOpenedPageId = :pageId, lastOpenedAt = :openedAt WHERE noteId = :noteId")
     suspend fun updateLastOpenedPage(
         noteId: String,
         pageId: String?,
+        openedAt: Long,
+    )
+
+    @Query("UPDATE notes SET lastOpenedAt = :openedAt WHERE noteId = :noteId")
+    suspend fun updateLastOpenedAt(
+        noteId: String,
+        openedAt: Long,
+    )
+
+    @Query(
+        """
+        UPDATE notes
+        SET isPinned = :isPinned,
+            updatedAt = :updatedAt
+        WHERE noteId = :noteId
+        """,
+    )
+    suspend fun updatePinnedState(
+        noteId: String,
+        isPinned: Boolean,
+        updatedAt: Long,
     )
 
     @Query(
@@ -127,6 +148,15 @@ interface NoteDao {
 
     @Query("SELECT * FROM notes WHERE deletedAt IS NULL AND folderId = :folderId ORDER BY updatedAt ASC, noteId ASC")
     fun getNotesByFolderSortedByModifiedAsc(folderId: String): Flow<List<NoteEntity>>
+
+    @Query(
+        """
+        SELECT * FROM notes
+        WHERE deletedAt IS NULL AND lastOpenedAt IS NOT NULL
+        ORDER BY lastOpenedAt DESC, updatedAt DESC
+        """,
+    )
+    fun getRecentNotes(): Flow<List<NoteEntity>>
 
     // Date range filtering for root notes
     @Query(

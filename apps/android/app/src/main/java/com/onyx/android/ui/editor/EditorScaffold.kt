@@ -101,6 +101,7 @@ import com.onyx.android.ui.PageItemState
 import com.onyx.android.ui.PageTemplateBackground
 import com.onyx.android.ui.PdfPageContent
 import com.onyx.android.ui.PdfTileRenderState
+import com.onyx.android.ui.RecognitionInlinePreview
 import com.onyx.android.ui.TOOLBAR_CONTENT_PADDING_DP
 import com.onyx.android.ui.ThumbnailStrip
 import com.onyx.android.ui.rememberPdfBitmap
@@ -411,6 +412,9 @@ private fun MultiPageEditorContent(
                         onPanGestureEnd = contentState.onPanGestureEnd,
                         onUndoShortcut = contentState.onUndoShortcut,
                         onRedoShortcut = contentState.onRedoShortcut,
+                        onSwitchToPenShortcut = contentState.onSwitchToPenShortcut,
+                        onSwitchToEraserShortcut = contentState.onSwitchToEraserShortcut,
+                        onSwitchToLastToolShortcut = contentState.onSwitchToLastToolShortcut,
                         onDoubleTapZoomRequested = contentState.onDoubleTapZoomRequested,
                     )
                 }
@@ -481,6 +485,9 @@ private fun PageItem(
     onPanGestureEnd: (Float, Float) -> Unit,
     onUndoShortcut: () -> Unit,
     onRedoShortcut: () -> Unit,
+    onSwitchToPenShortcut: () -> Unit,
+    onSwitchToEraserShortcut: () -> Unit,
+    onSwitchToLastToolShortcut: () -> Unit,
     onDoubleTapZoomRequested: () -> Unit,
 ) {
     val renderTransform = pageState.renderTransform
@@ -624,6 +631,9 @@ private fun PageItem(
                         onPanGestureEnd = onPanGestureEnd,
                         onUndoShortcut = onUndoShortcut,
                         onRedoShortcut = onRedoShortcut,
+                        onSwitchToPenShortcut = onSwitchToPenShortcut,
+                        onSwitchToEraserShortcut = onSwitchToEraserShortcut,
+                        onSwitchToLastToolShortcut = onSwitchToLastToolShortcut,
                         onViewportSizeChanged = {},
                         onPageSelected = {},
                         onTemplateChange = {},
@@ -655,6 +665,9 @@ private fun PageItem(
                     onPanGestureEnd,
                     onUndoShortcut,
                     onRedoShortcut,
+                    onSwitchToPenShortcut,
+                    onSwitchToEraserShortcut,
+                    onSwitchToLastToolShortcut,
                     onStylusButtonEraserActiveChanged,
                 ) {
                     InkCanvasCallbacks(
@@ -667,6 +680,9 @@ private fun PageItem(
                         onPanGestureEnd = onPanGestureEnd,
                         onUndoShortcut = onUndoShortcut,
                         onRedoShortcut = onRedoShortcut,
+                        onSwitchToPenShortcut = onSwitchToPenShortcut,
+                        onSwitchToEraserShortcut = onSwitchToEraserShortcut,
+                        onSwitchToLastToolShortcut = onSwitchToLastToolShortcut,
                         onDoubleTapGesture = onDoubleTapZoomRequested,
                         onStylusButtonEraserActiveChanged = onStylusButtonEraserActiveChanged,
                     )
@@ -719,6 +735,7 @@ private fun PageItem(
             RecognitionOverlayLayer(
                 viewTransform = renderTransform,
                 recognitionText = pageState.recognitionText,
+                recognitionInlinePreview = pageState.recognitionInlinePreview,
                 convertedTextBlocks = pageState.convertedTextBlocks,
                 onConvertedTextBlockSelected = onConvertedTextBlockSelected,
             )
@@ -911,6 +928,9 @@ private fun NoteEditorContent(
                         onPanGestureEnd = contentState.onPanGestureEnd,
                         onUndoShortcut = contentState.onUndoShortcut,
                         onRedoShortcut = contentState.onRedoShortcut,
+                        onSwitchToPenShortcut = contentState.onSwitchToPenShortcut,
+                        onSwitchToEraserShortcut = contentState.onSwitchToEraserShortcut,
+                        onSwitchToLastToolShortcut = contentState.onSwitchToLastToolShortcut,
                         onDoubleTapGesture = contentState.onDoubleTapZoomRequested,
                         onStylusButtonEraserActiveChanged = contentState.onStylusButtonEraserActiveChanged,
                     )
@@ -941,6 +961,7 @@ private fun NoteEditorContent(
                 RecognitionOverlayLayer(
                     viewTransform = contentState.viewTransform,
                     recognitionText = contentState.recognitionText,
+                    recognitionInlinePreview = contentState.recognitionInlinePreview,
                     convertedTextBlocks = contentState.convertedTextBlocks,
                     onConvertedTextBlockSelected = contentState.onConvertedTextBlockSelected,
                 )
@@ -1147,12 +1168,19 @@ private fun PageZoomPill(
 private fun RecognitionOverlayLayer(
     viewTransform: ViewTransform,
     recognitionText: String?,
+    recognitionInlinePreview: RecognitionInlinePreview,
     convertedTextBlocks: List<ConvertedTextBlock>,
     onConvertedTextBlockSelected: (ConvertedTextBlock) -> Unit,
 ) {
     val density = androidx.compose.ui.platform.LocalDensity.current
     Box(modifier = Modifier.fillMaxSize()) {
-        recognitionText
+        val previewText =
+            if (recognitionInlinePreview.isPending) {
+                recognitionInlinePreview.text.ifBlank { "Recognizing…" }
+            } else {
+                recognitionText.orEmpty()
+            }
+        previewText
             ?.trim()
             ?.takeIf { text -> text.isNotBlank() }
             ?.let { text ->
@@ -1167,7 +1195,7 @@ private fun RecognitionOverlayLayer(
                     modifier =
                         Modifier
                             .offset { IntOffset(left.roundToInt(), top.roundToInt()) }
-                            .background(Color(0xCCFFF7D6))
+                            .background(if (recognitionInlinePreview.isPending) Color(0xCCFFE7C2) else Color(0xCCFFF7D6))
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                 )
             }

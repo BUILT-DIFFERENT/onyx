@@ -103,6 +103,17 @@ private const val FIT_ZOOM_BASELINE = 1f
 private const val MIN_ZOOM_CHANGE_EPSILON = 0.001f
 private const val MIN_ERASER_BASE_WIDTH = 0.5f
 private const val MAX_ERASER_BASE_WIDTH = 20f
+private const val PAPER_TEMPLATE_LETTER = "paper:letter"
+private const val PAPER_TEMPLATE_A4 = "paper:a4"
+private const val PAPER_TEMPLATE_PHONE = "paper:phone"
+private const val PAPER_TEMPLATE_CUSTOM_PREFIX = "paper:custom:"
+private const val PAPER_DIMENSION_TOLERANCE_PT = 0.5f
+private const val LETTER_WIDTH_PT = 612f
+private const val LETTER_HEIGHT_PT = 792f
+private const val A4_WIDTH_PT = 595f
+private const val A4_HEIGHT_PT = 842f
+private const val PHONE_WIDTH_PT = 360f
+private const val PHONE_HEIGHT_PT = 640f
 
 @Suppress("MagicNumber")
 private val DOUBLE_TAP_ZOOM_PRESETS = listOf(50, 100, 200, 300, 400)
@@ -652,7 +663,9 @@ private fun rememberNoteEditorUiState(
     val recognitionOverlayEnabled by viewModel.recognitionOverlayEnabled.collectAsState()
     val recognitionMode by viewModel.recognitionMode.collectAsState()
     val recognizedTextByPage by viewModel.recognizedTextByPage.collectAsState()
+    val recognitionInlinePreviewByPage by viewModel.recognitionInlinePreviewByPage.collectAsState()
     val convertedTextBlocksByPage by viewModel.convertedTextBlocksByPage.collectAsState()
+    val customTemplates by viewModel.customTemplates.collectAsState()
     val undoController = remember(viewModel) { UndoController(viewModel, MAX_UNDO_ACTIONS) }
     var isReadOnly by rememberSaveable { mutableStateOf(false) }
     var isTextSelectionMode by rememberSaveable { mutableStateOf(false) }
@@ -670,7 +683,7 @@ private fun rememberNoteEditorUiState(
     var isPdfSearchRunning by remember { mutableStateOf(false) }
     var lassoSelection by remember { mutableStateOf(LassoSelection()) }
     val templateConfig by viewModel.currentTemplateConfig.collectAsState()
-    val templateState = remember(templateConfig) { templateConfig.toUiState() }
+    val templateState = remember(templateConfig, pageState.currentPage) { templateConfig.toUiState(pageState.currentPage) }
     var panFlingJob by remember { mutableStateOf<Job?>(null) }
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -886,6 +899,7 @@ private fun rememberNoteEditorUiState(
             activeInsertAction,
             brushState.inputSettings,
             templateState,
+            customTemplates,
             brushState.onBrushChange,
             brushState.onInputSettingsChange,
             { enabled -> eraserMode = if (enabled) EraserMode.SEGMENT else EraserMode.STROKE },
@@ -908,9 +922,14 @@ private fun rememberNoteEditorUiState(
             {
                 viewModel.updateCurrentPageTemplate(it.toConfig())
             },
-            {
-                viewModel.updateTemplateForAllPages(templateState.toConfig())
+            { scope ->
+                when (scope) {
+                    TemplateApplyScope.CURRENT_PAGE -> viewModel.updateCurrentPageTemplate(templateState.toConfig())
+                    TemplateApplyScope.ALL_PAGES -> viewModel.updateTemplateForAllPages(templateState.toConfig())
+                }
             },
+            { name -> viewModel.saveCurrentTemplateAsCustom(name) },
+            viewModel::deleteCustomTemplate,
         )
     val onTransformGesture: (Float, Float, Float, Float, Float) -> Unit =
         { zoomChange, panChangeX, panChangeY, centroidX, centroidY ->
@@ -1060,6 +1079,10 @@ private fun rememberNoteEditorUiState(
             isTextSelectionEnabled = isTextSelectionMode,
             isRecognitionOverlayEnabled = recognitionOverlayEnabled,
             recognitionText = pageState.currentPage?.pageId?.let { pageId -> recognizedTextByPage[pageId] },
+            recognitionInlinePreview =
+                pageState.currentPage?.pageId
+                    ?.let { pageId -> recognitionInlinePreviewByPage[pageId] }
+                    ?: RecognitionInlinePreview(),
             convertedTextBlocks =
                 pageState.currentPage
                     ?.pageId
@@ -1229,6 +1252,9 @@ private fun rememberNoteEditorUiState(
             onPanGestureEnd = onPanGestureEnd,
             onUndoShortcut = undoController::undo,
             onRedoShortcut = undoController::redo,
+            onSwitchToPenShortcut = { switchToPenShortcut(brushState) },
+            onSwitchToEraserShortcut = { switchToEraserShortcut(brushState) },
+            onSwitchToLastToolShortcut = { switchToLastToolShortcut(brushState) },
             onDoubleTapZoomRequested = {
                 if (isZoomLocked) {
                     return@NoteEditorContentState
@@ -1353,7 +1379,10 @@ private fun rememberMultiPageUiState(
     val lassoSelectionsByPageId = remember { mutableStateMapOf<String, LassoSelection>() }
     val templateConfigByPageId by viewModel.templateConfigByPageId.collectAsState()
     val currentTemplateConfig by viewModel.currentTemplateConfig.collectAsState()
-    val templateState = remember(currentTemplateConfig) { currentTemplateConfig.toUiState() }
+    val templateState =
+        remember(currentTemplateConfig, pageState.currentPage) {
+            currentTemplateConfig.toUiState(pageState.currentPage)
+        }
     var documentZoom by rememberSaveable { mutableStateOf(1f) }
     var documentPanX by rememberSaveable { mutableStateOf(0f) }
     var immediateVisibleRange by
@@ -1366,7 +1395,9 @@ private fun rememberMultiPageUiState(
     val recognitionOverlayEnabled by viewModel.recognitionOverlayEnabled.collectAsState()
     val recognitionMode by viewModel.recognitionMode.collectAsState()
     val recognizedTextByPage by viewModel.recognizedTextByPage.collectAsState()
+    val recognitionInlinePreviewByPage by viewModel.recognitionInlinePreviewByPage.collectAsState()
     val convertedTextBlocksByPage by viewModel.convertedTextBlocksByPage.collectAsState()
+    val customTemplates by viewModel.customTemplates.collectAsState()
     val searchHighlightBounds by viewModel.searchHighlightBounds.collectAsState()
     val searchHighlightPageId by viewModel.searchHighlightPageId.collectAsState()
     val searchHighlightPageIndex by viewModel.searchHighlightPageIndex.collectAsState()
@@ -1530,7 +1561,7 @@ private fun rememberMultiPageUiState(
                 renderTransform = renderTransform,
                 templateState =
                     templateConfigByPageId[page.pageId]
-                        ?.toUiState()
+                        ?.toUiState(page)
                         ?: PageTemplateState.BLANK,
                 lassoSelection = lassoSelectionsByPageId[page.pageId] ?: LassoSelection(),
                 selectedObjectId =
@@ -1552,6 +1583,7 @@ private fun rememberMultiPageUiState(
                         null
                     },
                 recognitionText = recognizedTextByPage[page.pageId],
+                recognitionInlinePreview = recognitionInlinePreviewByPage[page.pageId] ?: RecognitionInlinePreview(),
                 convertedTextBlocks = convertedTextBlocksByPage[page.pageId].orEmpty(),
             )
         }
@@ -1634,6 +1666,7 @@ private fun rememberMultiPageUiState(
             activeInsertAction,
             brushState.inputSettings,
             templateState,
+            customTemplates,
             brushState.onBrushChange,
             brushState.onInputSettingsChange,
             { enabled -> eraserMode = if (enabled) EraserMode.SEGMENT else EraserMode.STROKE },
@@ -1658,9 +1691,14 @@ private fun rememberMultiPageUiState(
             { state ->
                 viewModel.updateCurrentPageTemplate(state.toConfig())
             },
-            {
-                viewModel.updateTemplateForAllPages(templateState.toConfig())
+            { scope ->
+                when (scope) {
+                    TemplateApplyScope.CURRENT_PAGE -> viewModel.updateCurrentPageTemplate(templateState.toConfig())
+                    TemplateApplyScope.ALL_PAGES -> viewModel.updateTemplateForAllPages(templateState.toConfig())
+                }
             },
+            { name -> viewModel.saveCurrentTemplateAsCustom(name) },
+            viewModel::deleteCustomTemplate,
         )
 
     val thumbnailCache = remember(pdfRenderer) { mutableStateMapOf<Int, android.graphics.Bitmap?>() }
@@ -1721,6 +1759,7 @@ private fun rememberMultiPageUiState(
             lassoSelectionsByPageId = lassoSelectionsByPageId,
             isTextSelectionEnabled = isTextSelectionMode,
             isRecognitionOverlayEnabled = recognitionOverlayEnabled,
+            recognitionInlinePreviewByPageId = recognitionInlinePreviewByPage,
             onConvertedTextBlockSelected = { pageId, block ->
                 viewModel.startConversionDraftFromBlock(pageId, block)
             },
@@ -1863,6 +1902,9 @@ private fun rememberMultiPageUiState(
             onPanGestureEnd = { _, _ -> },
             onUndoShortcut = undoController::undo,
             onRedoShortcut = undoController::redo,
+            onSwitchToPenShortcut = { switchToPenShortcut(brushState) },
+            onSwitchToEraserShortcut = { switchToEraserShortcut(brushState) },
+            onSwitchToLastToolShortcut = { switchToLastToolShortcut(brushState) },
             onDoubleTapZoomRequested = {
                 if (isZoomLocked) {
                     return@MultiPageContentState
@@ -2037,6 +2079,7 @@ private fun rememberBrushState(
         activeBrush = activeBrush,
         penBrush = penBrush,
         highlighterBrush = highlighterBrush,
+        eraserBaseWidth = eraserBaseWidth,
         lastNonEraserTool = lastNonEraserTool,
         inputSettings = inputSettings,
         onBrushChange = { updatedBrush ->
@@ -2092,6 +2135,27 @@ private fun ObserveNoteEditorLifecycle(
     }
     LaunchedEffect(currentPageId) {
         undoController.clear()
+    }
+}
+
+private fun switchToPenShortcut(brushState: BrushState) {
+    brushState.onBrushChange(brushState.penBrush.copy(tool = Tool.PEN))
+}
+
+private fun switchToEraserShortcut(brushState: BrushState) {
+    brushState.onBrushChange(
+        brushState.penBrush.copy(
+            tool = Tool.ERASER,
+            baseWidth = brushState.eraserBaseWidth,
+        ),
+    )
+}
+
+private fun switchToLastToolShortcut(brushState: BrushState) {
+    when (brushState.lastNonEraserTool) {
+        Tool.HIGHLIGHTER -> brushState.onBrushChange(brushState.highlighterBrush.copy(tool = Tool.HIGHLIGHTER))
+        Tool.LASSO -> brushState.onBrushChange(brushState.penBrush.copy(tool = Tool.LASSO))
+        else -> brushState.onBrushChange(brushState.penBrush.copy(tool = Tool.PEN))
     }
 }
 
@@ -2173,33 +2237,56 @@ private fun applyLassoResize(
     )
 }
 
-private fun PageTemplateConfig.toUiState(): PageTemplateState {
+private fun PageTemplateConfig.toUiState(page: PageEntity?): PageTemplateState {
     val normalizedKind =
         when (backgroundKind) {
             PageTemplateConfig.KIND_GRID,
             PageTemplateConfig.KIND_LINED,
             PageTemplateConfig.KIND_DOTTED,
+            PageTemplateConfig.KIND_CORNELL,
+            PageTemplateConfig.KIND_ENGINEERING,
+            PageTemplateConfig.KIND_MUSIC,
             -> backgroundKind
 
             else -> PageTemplateConfig.KIND_BLANK
         }
+    val resolvedPaperTemplateId = resolvePaperTemplateIdForPage(page) ?: templateId
     return if (normalizedKind == PageTemplateConfig.KIND_BLANK) {
-        PageTemplateState.BLANK
+        PageTemplateState.BLANK.copy(templateId = resolvedPaperTemplateId)
     } else {
         PageTemplateState(
-            templateId = templateId,
+            templateId = resolvedPaperTemplateId,
             backgroundKind = normalizedKind,
             spacing = spacing,
+            lineWidth = lineWidth,
             color = parseTemplateColor(colorHex),
         )
     }
 }
+
+private fun resolvePaperTemplateIdForPage(page: PageEntity?): String? {
+    val currentPage = page ?: return null
+    val width = currentPage.width
+    val height = currentPage.height
+    return when {
+        width.approxEquals(LETTER_WIDTH_PT) && height.approxEquals(LETTER_HEIGHT_PT) -> PAPER_TEMPLATE_LETTER
+        width.approxEquals(A4_WIDTH_PT) && height.approxEquals(A4_HEIGHT_PT) -> PAPER_TEMPLATE_A4
+        width.approxEquals(PHONE_WIDTH_PT) && height.approxEquals(PHONE_HEIGHT_PT) -> PAPER_TEMPLATE_PHONE
+        else ->
+            "$PAPER_TEMPLATE_CUSTOM_PREFIX" +
+                "${String.format(java.util.Locale.US, "%.2f", width)}x" +
+                "${String.format(java.util.Locale.US, "%.2f", height)}:${currentPage.unit}"
+    }
+}
+
+private fun Float.approxEquals(other: Float): Boolean = kotlin.math.abs(this - other) <= PAPER_DIMENSION_TOLERANCE_PT
 
 private fun PageTemplateState.toConfig(): PageTemplateConfig =
     PageTemplateConfig(
         templateId = templateId,
         backgroundKind = backgroundKind,
         spacing = spacing,
+        lineWidth = lineWidth,
         colorHex = templateColorToHex(color),
     )
 
@@ -2346,6 +2433,7 @@ private fun buildToolbarState(
     activeInsertAction: InsertAction,
     inputSettings: InputSettings,
     templateState: PageTemplateState,
+    customTemplates: List<TemplateOption>,
     onBrushChange: (Brush) -> Unit,
     onInputSettingsChange: (InputSettings) -> Unit,
     onSegmentEraserEnabledChange: (Boolean) -> Unit,
@@ -2354,7 +2442,9 @@ private fun buildToolbarState(
     onClearPageRequested: () -> Unit,
     onInsertActionSelected: (InsertAction) -> Unit,
     onTemplateChange: (PageTemplateState) -> Unit,
-    onTemplateApplyToAllPages: () -> Unit,
+    onTemplateApply: (TemplateApplyScope) -> Unit,
+    onSaveCustomTemplate: (String) -> Unit,
+    onDeleteCustomTemplate: (String) -> Unit,
 ): NoteEditorToolbarState =
     NoteEditorToolbarState(
         brush = brush,
@@ -2366,6 +2456,7 @@ private fun buildToolbarState(
         activeInsertAction = activeInsertAction,
         inputSettings = inputSettings,
         templateState = templateState,
+        customTemplates = customTemplates,
         onBrushChange = onBrushChange,
         onInputSettingsChange = onInputSettingsChange,
         onSegmentEraserEnabledChange = onSegmentEraserEnabledChange,
@@ -2374,7 +2465,9 @@ private fun buildToolbarState(
         onClearPageRequested = onClearPageRequested,
         onInsertActionSelected = onInsertActionSelected,
         onTemplateChange = onTemplateChange,
-        onTemplateApplyToAllPages = onTemplateApplyToAllPages,
+        onTemplateApply = onTemplateApply,
+        onSaveCustomTemplate = onSaveCustomTemplate,
+        onDeleteCustomTemplate = onDeleteCustomTemplate,
     )
 
 private fun InputSettings.allowsAnyFingerGesture(): Boolean =

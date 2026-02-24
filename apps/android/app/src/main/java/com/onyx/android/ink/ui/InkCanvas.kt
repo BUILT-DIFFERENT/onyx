@@ -134,6 +134,9 @@ data class InkCanvasCallbacks(
     ) -> Unit,
     val onUndoShortcut: () -> Unit = {},
     val onRedoShortcut: () -> Unit = {},
+    val onSwitchToPenShortcut: () -> Unit = {},
+    val onSwitchToEraserShortcut: () -> Unit = {},
+    val onSwitchToLastToolShortcut: () -> Unit = {},
     val onDoubleTapGesture: () -> Unit = {},
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
 )
@@ -258,6 +261,9 @@ fun InkCanvas(
                                     onPanGestureEnd = currentCallbacks.onPanGestureEnd,
                                     onUndoShortcut = currentCallbacks.onUndoShortcut,
                                     onRedoShortcut = currentCallbacks.onRedoShortcut,
+                                    onSwitchToPenShortcut = currentCallbacks.onSwitchToPenShortcut,
+                                    onSwitchToEraserShortcut = currentCallbacks.onSwitchToEraserShortcut,
+                                    onSwitchToLastToolShortcut = currentCallbacks.onSwitchToLastToolShortcut,
                                     onDoubleTapGesture = currentCallbacks.onDoubleTapGesture,
                                     onStylusButtonEraserActiveChanged =
                                         currentCallbacks.onStylusButtonEraserActiveChanged,
@@ -302,6 +308,9 @@ fun InkCanvas(
                                     onPanGestureEnd = currentCallbacks.onPanGestureEnd,
                                     onUndoShortcut = currentCallbacks.onUndoShortcut,
                                     onRedoShortcut = currentCallbacks.onRedoShortcut,
+                                    onSwitchToPenShortcut = currentCallbacks.onSwitchToPenShortcut,
+                                    onSwitchToEraserShortcut = currentCallbacks.onSwitchToEraserShortcut,
+                                    onSwitchToLastToolShortcut = currentCallbacks.onSwitchToLastToolShortcut,
                                     onDoubleTapGesture = currentCallbacks.onDoubleTapGesture,
                                     onStylusButtonEraserActiveChanged =
                                         currentCallbacks.onStylusButtonEraserActiveChanged,

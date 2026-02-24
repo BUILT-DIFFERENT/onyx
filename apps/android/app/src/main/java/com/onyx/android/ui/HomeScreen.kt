@@ -57,6 +57,7 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -198,6 +199,7 @@ private data class NoteLockPromptState(
 
 internal enum class HomeDestination {
     ALL,
+    RECENTS,
     SHARED,
     TRASH,
 }
@@ -280,6 +282,7 @@ private data class HomeScreenActions(
     val onNavigateToEditor: (String, String?) -> Unit,
     val onRequestOpenNote: (NoteEntity, String?) -> Unit,
     val onRequestToggleNoteLock: (NoteEntity) -> Unit,
+    val onRequestToggleNotePin: (NoteEntity) -> Unit,
     val onNavigateToDeveloperFlags: () -> Unit,
     val onSelectFolder: (FolderEntity?) -> Unit,
     val onShowCreateFolderDialog: () -> Unit,
@@ -407,6 +410,7 @@ fun HomeScreen(
     }
     val openNoteWithLockGuard: (NoteEntity, String?) -> Unit = { note, pageId ->
         if (!note.isLocked) {
+            viewModel.markNoteOpened(note.noteId)
             onNavigateToEditor(note.noteId, pageId)
         } else {
             noteLockPrompt =
@@ -499,6 +503,7 @@ fun HomeScreen(
                             passcode = passcode,
                             onSuccess = {
                                 noteLockPrompt = null
+                                viewModel.markNoteOpened(prompt.note.noteId)
                                 onNavigateToEditor(prompt.note.noteId, prompt.pageId)
                             },
                             onError = { message -> errorMessage = message },
@@ -532,6 +537,9 @@ fun HomeScreen(
                         pageId = null,
                         mode = NoteLockPromptMode.TOGGLE_NOTE_LOCK,
                     )
+            },
+            onRequestToggleNotePin = { note ->
+                viewModel.setNotePinned(note.noteId, !note.isPinned)
             },
             onSearchQueryChange = viewModel::onSearchQueryChange,
             onNavigateToSearchResult = onNavigateToSearchResult,
@@ -2040,6 +2048,7 @@ private fun HomeContentBody(
             state = state,
             onRequestOpenNote = actions.onRequestOpenNote,
             onRequestToggleNoteLock = actions.onRequestToggleNoteLock,
+            onRequestToggleNotePin = actions.onRequestToggleNotePin,
             resumeLastPageEnabled = state.resumeLastPageEnabled,
             onNavigateToSearchResult = actions.onNavigateToSearchResult,
             onRequestDeleteNote = actions.onRequestDeleteNote,
@@ -2062,6 +2071,7 @@ private fun HomeListContent(
     state: HomeScreenState,
     onRequestOpenNote: (NoteEntity, String?) -> Unit,
     onRequestToggleNoteLock: (NoteEntity) -> Unit,
+    onRequestToggleNotePin: (NoteEntity) -> Unit,
     resumeLastPageEnabled: Boolean,
     onNavigateToSearchResult: (SearchResult) -> Unit,
     onRequestDeleteNote: (NoteEntity) -> Unit,
@@ -2108,6 +2118,7 @@ private fun HomeListContent(
                 onManageTags = onManageTags,
                 onRequestExportPdf = onRequestExportPdf,
                 onRequestToggleNoteLock = onRequestToggleNoteLock,
+                onRequestToggleNotePin = onRequestToggleNotePin,
                 onEnterSelectionMode = onEnterSelectionMode,
                 onToggleNoteSelection = onToggleNoteSelection,
                 destination = destination,
@@ -2179,6 +2190,7 @@ internal fun NotesListContent(
     onManageTags: (NoteEntity) -> Unit,
     onRequestExportPdf: (NoteEntity) -> Unit,
     onRequestToggleNoteLock: (NoteEntity) -> Unit,
+    onRequestToggleNotePin: (NoteEntity) -> Unit,
     onEnterSelectionMode: (String) -> Unit,
     onToggleNoteSelection: (String) -> Unit,
     destination: HomeDestination = HomeDestination.ALL,
@@ -2238,6 +2250,10 @@ internal fun NotesListContent(
                 onToggleLock = {
                     activeContextMenuNoteId = null
                     onRequestToggleNoteLock(note)
+                },
+                onTogglePinned = {
+                    activeContextMenuNoteId = null
+                    onRequestToggleNotePin(note)
                 },
                 destination = destination,
                 onRestore = {
@@ -2369,6 +2385,7 @@ private fun NoteRow(
     onManageTags: () -> Unit,
     onExportPdf: () -> Unit,
     onToggleLock: () -> Unit,
+    onTogglePinned: () -> Unit,
     destination: HomeDestination = HomeDestination.ALL,
     onRestore: () -> Unit = {},
     onDeleteForever: () -> Unit = {},
@@ -2424,6 +2441,14 @@ private fun NoteRow(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = "Locked note",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 8.dp),
+                            )
+                        }
+                        if (note.isPinned) {
+                            Icon(
+                                imageVector = Icons.Default.PushPin,
+                                contentDescription = "Pinned note",
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(start = 8.dp),
                             )
                         }
@@ -2494,6 +2519,10 @@ private fun NoteRow(
                     DropdownMenuItem(
                         text = { Text(if (note.isLocked) "Unlock note..." else "Lock note...") },
                         onClick = onToggleLock,
+                    )
+                    DropdownMenuItem(
+                        text = { Text(if (note.isPinned) "Unpin note" else "Pin note") },
+                        onClick = onTogglePinned,
                     )
                     DropdownMenuItem(
                         text = { Text("Delete note") },
@@ -3016,6 +3045,7 @@ internal class HomeScreenViewModel
                 when (query.destination) {
                     HomeDestination.TRASH -> repository.getTrashNotes()
                     HomeDestination.SHARED -> repository.getSharedNotes()
+                    HomeDestination.RECENTS -> repository.getRecentNotes()
                     HomeDestination.ALL ->
                         when {
                             query.tag != null -> repository.getNotesByTag(query.tag.tagId)
@@ -3184,6 +3214,35 @@ internal class HomeScreenViewModel
                         throw throwable
                     }
                     onError(throwable.message ?: "Unable to unlock note.")
+                }
+            }
+        }
+
+        fun markNoteOpened(noteId: String) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.markNoteOpened(noteId)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Mark note opened failed", throwable)
+                }
+            }
+        }
+
+        fun setNotePinned(
+            noteId: String,
+            isPinned: Boolean,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.setNotePinned(noteId = noteId, isPinned = isPinned)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Set note pin state failed", throwable)
                 }
             }
         }

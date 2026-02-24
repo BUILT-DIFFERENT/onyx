@@ -8,6 +8,7 @@ import com.onyx.android.data.entity.PageEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
+@Suppress("TooManyFunctions")
 interface PageDao {
     @Query("SELECT * FROM pages WHERE noteId = :noteId ORDER BY indexInNote ASC")
     fun getPagesForNote(noteId: String): Flow<List<PageEntity>>
@@ -41,6 +42,24 @@ interface PageDao {
     suspend fun updateTemplate(
         pageId: String,
         templateId: String?,
+        updatedAt: Long,
+    )
+
+    @Query(
+        """
+        UPDATE pages
+        SET width = :width,
+            height = :height,
+            unit = :unit,
+            updatedAt = :updatedAt
+        WHERE pageId = :pageId
+        """,
+    )
+    suspend fun updateDimensions(
+        pageId: String,
+        width: Float,
+        height: Float,
+        unit: String,
         updatedAt: Long,
     )
 

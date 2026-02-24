@@ -21,6 +21,16 @@ interface PageTemplateDao {
     @Query("SELECT * FROM page_templates WHERE isBuiltIn = 1 ORDER BY name ASC")
     fun getBuiltInTemplates(): Flow<List<PageTemplateEntity>>
 
+    @Query(
+        """
+        SELECT * FROM page_templates
+        WHERE isBuiltIn = 0
+          AND templateId LIKE 'custom-template-%'
+        ORDER BY createdAt DESC
+        """,
+    )
+    fun getCustomTemplates(): Flow<List<PageTemplateEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(template: PageTemplateEntity)
 

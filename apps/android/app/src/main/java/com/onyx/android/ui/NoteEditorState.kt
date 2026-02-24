@@ -25,6 +25,22 @@ import com.onyx.android.pdf.ValidatingTile
 import com.onyx.android.recognition.ConvertedTextBlock
 import com.onyx.android.recognition.RecognitionMode
 
+internal enum class TemplateApplyScope {
+    CURRENT_PAGE,
+    ALL_PAGES,
+}
+
+internal data class TemplateOption(
+    val templateId: String,
+    val name: String,
+    val config: PageTemplateState,
+)
+
+internal data class RecognitionInlinePreview(
+    val text: String = "",
+    val isPending: Boolean = false,
+)
+
 internal enum class InteractionMode {
     DRAW,
     TEXT_SELECTION,
@@ -94,6 +110,7 @@ internal data class NoteEditorToolbarState(
     val activeInsertAction: InsertAction = InsertAction.NONE,
     val inputSettings: InputSettings = InputSettings(),
     val templateState: PageTemplateState,
+    val customTemplates: List<TemplateOption> = emptyList(),
     val onBrushChange: (Brush) -> Unit,
     val onInputSettingsChange: (InputSettings) -> Unit = {},
     val onSegmentEraserEnabledChange: (Boolean) -> Unit = {},
@@ -102,7 +119,9 @@ internal data class NoteEditorToolbarState(
     val onClearPageRequested: () -> Unit = {},
     val onInsertActionSelected: (InsertAction) -> Unit = {},
     val onTemplateChange: (PageTemplateState) -> Unit,
-    val onTemplateApplyToAllPages: () -> Unit = {},
+    val onTemplateApply: (TemplateApplyScope) -> Unit = {},
+    val onSaveCustomTemplate: (String) -> Unit = {},
+    val onDeleteCustomTemplate: (String) -> Unit = {},
 )
 
 internal enum class EraserFilter {
@@ -155,6 +174,7 @@ internal data class NoteEditorContentState(
     val isTextSelectionEnabled: Boolean = false,
     val isRecognitionOverlayEnabled: Boolean = false,
     val recognitionText: String? = null,
+    val recognitionInlinePreview: RecognitionInlinePreview = RecognitionInlinePreview(),
     val convertedTextBlocks: List<ConvertedTextBlock> = emptyList(),
     val onConvertedTextBlockSelected: (ConvertedTextBlock) -> Unit = {},
     val loadThumbnail: suspend (Int) -> android.graphics.Bitmap? = { null },
@@ -192,6 +212,9 @@ internal data class NoteEditorContentState(
     ) -> Unit,
     val onUndoShortcut: () -> Unit = {},
     val onRedoShortcut: () -> Unit = {},
+    val onSwitchToPenShortcut: () -> Unit = {},
+    val onSwitchToEraserShortcut: () -> Unit = {},
+    val onSwitchToLastToolShortcut: () -> Unit = {},
     val onDoubleTapZoomRequested: () -> Unit = {},
     val onViewportSizeChanged: (IntSize) -> Unit,
     val onPageSelected: (Int) -> Unit,
@@ -220,6 +243,7 @@ internal data class PageItemState(
     val selectedObjectId: String? = null,
     val searchHighlightBounds: Rect? = null,
     val recognitionText: String? = null,
+    val recognitionInlinePreview: RecognitionInlinePreview = RecognitionInlinePreview(),
     val convertedTextBlocks: List<ConvertedTextBlock> = emptyList(),
 )
 
@@ -251,6 +275,7 @@ internal data class MultiPageContentState(
     val lassoSelectionsByPageId: Map<String, LassoSelection> = emptyMap(),
     val isTextSelectionEnabled: Boolean = false,
     val isRecognitionOverlayEnabled: Boolean = false,
+    val recognitionInlinePreviewByPageId: Map<String, RecognitionInlinePreview> = emptyMap(),
     val onConvertedTextBlockSelected: (pageId: String, block: ConvertedTextBlock) -> Unit = { _, _ -> },
     val loadThumbnail: suspend (Int) -> android.graphics.Bitmap? = { null },
     val onStrokeFinished: (Stroke, String) -> Unit,
@@ -286,6 +311,9 @@ internal data class MultiPageContentState(
     ) -> Unit,
     val onUndoShortcut: () -> Unit = {},
     val onRedoShortcut: () -> Unit = {},
+    val onSwitchToPenShortcut: () -> Unit = {},
+    val onSwitchToEraserShortcut: () -> Unit = {},
+    val onSwitchToLastToolShortcut: () -> Unit = {},
     val onDoubleTapZoomRequested: () -> Unit = {},
     val onDocumentZoomChange: (Float) -> Unit,
     val onDocumentPanXChange: (Float) -> Unit,
@@ -345,6 +373,7 @@ internal data class BrushState(
     val activeBrush: Brush,
     val penBrush: Brush,
     val highlighterBrush: Brush,
+    val eraserBaseWidth: Float,
     val lastNonEraserTool: Tool,
     val inputSettings: InputSettings,
     val onBrushChange: (Brush) -> Unit,

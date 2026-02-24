@@ -16,6 +16,7 @@ import com.onyx.android.data.entity.NoteEntity
 import com.onyx.android.data.entity.NoteTagCrossRef
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.data.entity.PageObjectEntity
+import com.onyx.android.data.entity.PageTemplateEntity
 import com.onyx.android.data.entity.RecognitionIndexEntity
 import com.onyx.android.data.entity.StrokeEntity
 import com.onyx.android.data.entity.TagEntity
@@ -142,6 +143,8 @@ class NoteRepository(
         private const val PAGE_TEMPLATE_ID_SUFFIX = "template"
         private const val TEMPLATE_MIN_SPACING = 8f
         private const val TEMPLATE_MAX_SPACING = 80f
+        private const val TEMPLATE_MIN_LINE_WIDTH = 0.25f
+        private const val TEMPLATE_MAX_LINE_WIDTH = 6f
         private const val RGB_MASK = 0xFFFFFF
         private const val DEFAULT_PAGE_WIDTH_PT = 612f
         private const val DEFAULT_PAGE_HEIGHT_PT = 792f
@@ -195,6 +198,12 @@ class NoteRepository(
         val firstPageId: String,
     )
 
+    data class PaperSize(
+        val widthPt: Float,
+        val heightPt: Float,
+        val unit: String = "pt",
+    )
+
     fun getAllNotes(): Flow<List<NoteEntity>> = noteDao.getAllNotes()
 
     suspend fun getNoteById(noteId: String): NoteEntity? = noteDao.getById(noteId)
@@ -204,6 +213,10 @@ class NoteRepository(
     fun getSharedNotes(): Flow<List<NoteEntity>> = flowOf(emptyList())
 
     fun getPagesForNote(noteId: String): Flow<List<PageEntity>> = pageDao.getPagesForNote(noteId)
+
+    fun getCustomTemplates(): Flow<List<PageTemplateEntity>> = pageTemplateDao.getCustomTemplates()
+
+    suspend fun getPagesForNoteSync(noteId: String): List<PageEntity> = pageDao.getPagesForNoteSync(noteId)
 
     suspend fun getPrimaryPdfAssetIdForNote(noteId: String): String? =
         pageDao
@@ -239,7 +252,29 @@ class NoteRepository(
         noteId: String,
         pageId: String?,
     ) {
-        noteDao.updateLastOpenedPage(noteId = noteId, pageId = pageId)
+        noteDao.updateLastOpenedPage(
+            noteId = noteId,
+            pageId = pageId,
+            openedAt = System.currentTimeMillis(),
+        )
+    }
+
+    suspend fun markNoteOpened(noteId: String) {
+        noteDao.updateLastOpenedAt(
+            noteId = noteId,
+            openedAt = System.currentTimeMillis(),
+        )
+    }
+
+    suspend fun setNotePinned(
+        noteId: String,
+        isPinned: Boolean,
+    ) {
+        noteDao.updatePinnedState(
+            noteId = noteId,
+            isPinned = isPinned,
+            updatedAt = System.currentTimeMillis(),
+        )
     }
 
     suspend fun createPage(page: PageEntity): PageEntity {
@@ -267,8 +302,10 @@ class NoteRepository(
         indexInNote: Int,
     ): PageEntity {
         val now = System.currentTimeMillis()
-        val paperTemplateId = pageDao.getPagesForNoteSync(noteId).lastOrNull()?.templateId
-        val (pageWidth, pageHeight) = resolvePaperSize(paperTemplateId)
+        val lastPage = pageDao.getPagesForNoteSync(noteId).lastOrNull()
+        val pageWidth = lastPage?.width ?: DEFAULT_PAGE_WIDTH_PT
+        val pageHeight = lastPage?.height ?: DEFAULT_PAGE_HEIGHT_PT
+        val pageUnit = lastPage?.unit ?: "pt"
         val page =
             PageEntity(
                 pageId = UUID.randomUUID().toString(),
@@ -278,7 +315,7 @@ class NoteRepository(
                 indexInNote = indexInNote,
                 width = pageWidth,
                 height = pageHeight,
-                unit = "pt",
+                unit = pageUnit,
                 pdfAssetId = null,
                 pdfPageNo = null,
                 updatedAt = now,
@@ -301,18 +338,20 @@ class NoteRepository(
         return page
     }
 
-    private fun resolvePaperSize(templateId: String?): Pair<Float, Float> =
-        when (val normalizedTemplate = templateId?.removePrefix(PAPER_TEMPLATE_PREFIX)) {
-            PAPER_A4 -> PAPER_A4_WIDTH_PT to PAPER_A4_HEIGHT_PT
-            PAPER_PHONE -> PAPER_PHONE_WIDTH_PT to PAPER_PHONE_HEIGHT_PT
-            PAPER_LETTER -> DEFAULT_PAGE_WIDTH_PT to DEFAULT_PAGE_HEIGHT_PT
+    fun resolvePaperSizeFromTemplateId(templateId: String?): PaperSize? {
+        val token = templateId?.removePrefix(PAPER_TEMPLATE_PREFIX) ?: return null
+        return when (token) {
+            PAPER_A4 -> PaperSize(PAPER_A4_WIDTH_PT, PAPER_A4_HEIGHT_PT, "pt")
+            PAPER_PHONE -> PaperSize(PAPER_PHONE_WIDTH_PT, PAPER_PHONE_HEIGHT_PT, "pt")
+            PAPER_LETTER -> PaperSize(DEFAULT_PAGE_WIDTH_PT, DEFAULT_PAGE_HEIGHT_PT, "pt")
             else -> {
-                parseCustomPaperSize(normalizedTemplate) ?: (DEFAULT_PAGE_WIDTH_PT to DEFAULT_PAGE_HEIGHT_PT)
+                parseCustomPaperSize(token)
             }
         }
+    }
 
     @Suppress("ReturnCount")
-    private fun parseCustomPaperSize(templateToken: String?): Pair<Float, Float>? {
+    private fun parseCustomPaperSize(templateToken: String?): PaperSize? {
         val token = templateToken ?: return null
         if (!token.startsWith(PAPER_CUSTOM_PREFIX)) {
             return null
@@ -325,8 +364,12 @@ class NoteRepository(
         }
         val widthPt = valueToken.substring(0, separatorIndex).toFloatOrNull() ?: return null
         val heightPt = valueToken.substring(separatorIndex + 1).toFloatOrNull() ?: return null
-        return widthPt.coerceIn(PAPER_CUSTOM_MIN_PT, PAPER_CUSTOM_MAX_PT) to
-            heightPt.coerceIn(PAPER_CUSTOM_MIN_PT, PAPER_CUSTOM_MAX_PT)
+        val unit = payload.substringAfter(':', "pt")
+        return PaperSize(
+            widthPt = widthPt.coerceIn(PAPER_CUSTOM_MIN_PT, PAPER_CUSTOM_MAX_PT),
+            heightPt = heightPt.coerceIn(PAPER_CUSTOM_MIN_PT, PAPER_CUSTOM_MAX_PT),
+            unit = unit,
+        )
     }
 
     private suspend fun generateInitialNoteTitle(now: Long): String =
@@ -462,6 +505,7 @@ class NoteRepository(
         pageId: String,
         backgroundKind: String,
         spacing: Float,
+        lineWidth: Float,
         colorHex: String,
     ) {
         val now = System.currentTimeMillis()
@@ -474,14 +518,16 @@ class NoteRepository(
 
         val normalizedKind = normalizeBackgroundKind(backgroundKind)
         val normalizedSpacing = spacing.coerceIn(TEMPLATE_MIN_SPACING, TEMPLATE_MAX_SPACING)
+        val normalizedLineWidth = lineWidth.coerceIn(TEMPLATE_MIN_LINE_WIDTH, TEMPLATE_MAX_LINE_WIDTH)
         val normalizedColor = normalizeColorHex(colorHex)
         val templateId = "$pageId-$PAGE_TEMPLATE_ID_SUFFIX"
         pageTemplateDao.insert(
-            com.onyx.android.data.entity.PageTemplateEntity(
+            PageTemplateEntity(
                 templateId = templateId,
                 name = templateName(normalizedKind, normalizedSpacing),
                 backgroundKind = normalizedKind,
                 spacing = normalizedSpacing,
+                lineWidth = normalizedLineWidth,
                 color = normalizedColor,
                 isBuiltIn = false,
                 createdAt = now,
@@ -491,10 +537,23 @@ class NoteRepository(
         noteDao.updateTimestamp(page.noteId, now)
     }
 
+    suspend fun updatePagePaperSize(
+        pageId: String,
+        width: Float,
+        height: Float,
+        unit: String,
+    ) {
+        val page = pageDao.getById(pageId) ?: return
+        val now = System.currentTimeMillis()
+        pageDao.updateDimensions(pageId = pageId, width = width, height = height, unit = unit, updatedAt = now)
+        noteDao.updateTimestamp(page.noteId, now)
+    }
+
     suspend fun saveTemplateForNote(
         noteId: String,
         backgroundKind: String,
         spacing: Float,
+        lineWidth: Float,
         colorHex: String,
     ) {
         val pages = pageDao.getPagesForNoteSync(noteId)
@@ -512,14 +571,16 @@ class NoteRepository(
 
         val normalizedKind = normalizeBackgroundKind(backgroundKind)
         val normalizedSpacing = spacing.coerceIn(TEMPLATE_MIN_SPACING, TEMPLATE_MAX_SPACING)
+        val normalizedLineWidth = lineWidth.coerceIn(TEMPLATE_MIN_LINE_WIDTH, TEMPLATE_MAX_LINE_WIDTH)
         val normalizedColor = normalizeColorHex(colorHex)
         val templateId = "$noteId-$PAGE_TEMPLATE_ID_SUFFIX"
         pageTemplateDao.insert(
-            com.onyx.android.data.entity.PageTemplateEntity(
+            PageTemplateEntity(
                 templateId = templateId,
                 name = templateName(normalizedKind, normalizedSpacing),
                 backgroundKind = normalizedKind,
                 spacing = normalizedSpacing,
+                lineWidth = normalizedLineWidth,
                 color = normalizedColor,
                 isBuiltIn = false,
                 createdAt = now,
@@ -527,6 +588,52 @@ class NoteRepository(
         )
         pages.forEach { page ->
             pageDao.updateTemplate(pageId = page.pageId, templateId = templateId, updatedAt = now)
+        }
+        noteDao.updateTimestamp(noteId, now)
+    }
+
+    suspend fun saveCustomTemplate(
+        name: String,
+        config: PageTemplateConfig,
+    ): String {
+        val now = System.currentTimeMillis()
+        val templateId = "custom-template-${UUID.randomUUID()}"
+        pageTemplateDao.insert(
+            PageTemplateEntity(
+                templateId = templateId,
+                name = name.trim().ifBlank { "Custom template" },
+                backgroundKind = normalizeBackgroundKind(config.backgroundKind),
+                spacing = config.spacing.coerceIn(TEMPLATE_MIN_SPACING, TEMPLATE_MAX_SPACING),
+                lineWidth = config.lineWidth.coerceIn(TEMPLATE_MIN_LINE_WIDTH, TEMPLATE_MAX_LINE_WIDTH),
+                color = normalizeColorHex(config.colorHex),
+                isBuiltIn = false,
+                createdAt = now,
+            ),
+        )
+        return templateId
+    }
+
+    suspend fun deleteCustomTemplate(templateId: String) {
+        val template = pageTemplateDao.getById(templateId) ?: return
+        if (template.isBuiltIn) {
+            return
+        }
+        pageTemplateDao.delete(templateId)
+    }
+
+    suspend fun updatePaperSizeForNote(
+        noteId: String,
+        width: Float,
+        height: Float,
+        unit: String,
+    ) {
+        val pages = pageDao.getPagesForNoteSync(noteId)
+        if (pages.isEmpty()) {
+            return
+        }
+        val now = System.currentTimeMillis()
+        pages.forEach { page ->
+            pageDao.updateDimensions(pageId = page.pageId, width = width, height = height, unit = unit, updatedAt = now)
         }
         noteDao.updateTimestamp(noteId, now)
     }
@@ -609,13 +716,16 @@ class NoteRepository(
         noteDao.updateTimestamp(page.noteId, now)
     }
 
-    private fun com.onyx.android.data.entity.PageTemplateEntity.toConfig(): PageTemplateConfig =
+    private fun PageTemplateEntity.toConfig(): PageTemplateConfig =
         PageTemplateConfig(
             templateId = templateId,
             backgroundKind = normalizeBackgroundKind(backgroundKind),
             spacing =
                 spacing?.coerceIn(TEMPLATE_MIN_SPACING, TEMPLATE_MAX_SPACING)
                     ?: PageTemplateConfig.DEFAULT_SPACING,
+            lineWidth =
+                lineWidth?.coerceIn(TEMPLATE_MIN_LINE_WIDTH, TEMPLATE_MAX_LINE_WIDTH)
+                    ?: PageTemplateConfig.DEFAULT_LINE_WIDTH,
             colorHex = normalizeColorHex(color),
         )
 
@@ -624,6 +734,9 @@ class NoteRepository(
             PageTemplateConfig.KIND_GRID,
             PageTemplateConfig.KIND_LINED,
             PageTemplateConfig.KIND_DOTTED,
+            PageTemplateConfig.KIND_CORNELL,
+            PageTemplateConfig.KIND_ENGINEERING,
+            PageTemplateConfig.KIND_MUSIC,
             -> backgroundKind
 
             else -> PageTemplateConfig.KIND_GRID
@@ -642,6 +755,10 @@ class NoteRepository(
             val colorInt = android.graphics.Color.parseColor(colorHex)
             String.format(Locale.US, "#%06X", (RGB_MASK and colorInt))
         }.getOrDefault(PageTemplateConfig.DEFAULT_COLOR_HEX)
+    }
+
+    private fun prioritizePinned(notes: List<NoteEntity>): List<NoteEntity> {
+        return notes.sortedByDescending { note -> note.isPinned }
     }
 
     suspend fun restoreSplitStroke(
@@ -1518,7 +1635,7 @@ class NoteRepository(
                     }
                 }
             }
-        }
+        }.map { notes -> prioritizePinned(notes) }
 
     /**
      * Get notes filtered by date range.
@@ -1548,7 +1665,7 @@ class NoteRepository(
                     noteDao.getNotesByFolderAndDateRange(folderId, startTime, endTime)
                 }
             }
-        }
+        }.map { notes -> prioritizePinned(notes) }
     }
 
     /**
@@ -1709,7 +1826,12 @@ class NoteRepository(
      * @param tagId The ID of the tag
      * @return Flow of list of notes with the tag
      */
-    fun getNotesByTag(tagId: String): Flow<List<NoteEntity>> = tagDao.getNotesWithTag(tagId)
+    fun getNotesByTag(tagId: String): Flow<List<NoteEntity>> =
+        tagDao
+            .getNotesWithTag(tagId)
+            .map { notes -> prioritizePinned(notes) }
+
+    fun getRecentNotes(): Flow<List<NoteEntity>> = noteDao.getRecentNotes()
 
     // Batch operations for multi-select
 

@@ -9,6 +9,7 @@ data class PageTemplateEntity(
     val name: String,
     val backgroundKind: String,
     val spacing: Float? = null,
+    val lineWidth: Float? = null,
     val color: String? = null,
     val isBuiltIn: Boolean,
     val createdAt: Long,

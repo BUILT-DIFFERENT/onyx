@@ -33,6 +33,9 @@ enum class MultiFingerTapAction {
     NONE,
     UNDO,
     REDO,
+    SWITCH_TO_PEN,
+    SWITCH_TO_ERASER,
+    SWITCH_TO_LAST_TOOL,
 }
 
 enum class LatencyOptimizationMode {

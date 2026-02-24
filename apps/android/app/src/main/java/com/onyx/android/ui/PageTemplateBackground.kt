@@ -16,6 +16,7 @@ internal data class PageTemplateState(
     val templateId: String?,
     val backgroundKind: String,
     val spacing: Float,
+    val lineWidth: Float,
     val color: Color,
 ) {
     companion object {
@@ -24,6 +25,7 @@ internal data class PageTemplateState(
                 templateId = null,
                 backgroundKind = "blank",
                 spacing = 0f,
+                lineWidth = 1f,
                 color = Color.Transparent,
             )
 
@@ -32,6 +34,7 @@ internal data class PageTemplateState(
                 templateId = "builtin-grid",
                 backgroundKind = "grid",
                 spacing = 24f,
+                lineWidth = 1f,
                 color = Color(0xFFE0E0E0),
             )
 
@@ -40,6 +43,7 @@ internal data class PageTemplateState(
                 templateId = "builtin-lined",
                 backgroundKind = "lined",
                 spacing = 24f,
+                lineWidth = 1f,
                 color = Color(0xFFE0E0E0),
             )
 
@@ -48,6 +52,7 @@ internal data class PageTemplateState(
                 templateId = "builtin-dotted",
                 backgroundKind = "dotted",
                 spacing = 24f,
+                lineWidth = 1f,
                 color = Color(0xFFE0E0E0),
             )
     }
@@ -90,9 +95,13 @@ internal fun spacingRangeForTemplate(backgroundKind: String): ClosedFloatingPoin
         "grid" -> 20f..60f
         "lined" -> 30f..50f
         "dotted" -> 10f..20f
+        "cornell" -> 20f..48f
+        "engineering" -> 14f..40f
+        "music" -> 8f..24f
         else -> 12f..48f
     }
 
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 internal fun computeTemplatePattern(
     backgroundKind: String,
     pageWidth: Float,
@@ -142,6 +151,52 @@ internal fun computeTemplatePattern(
             TemplatePattern(dots = dots)
         }
 
+        "cornell" -> {
+            val lines = mutableListOf<TemplateLine>()
+            val headerHeight = spacing * 2f
+            val marginX = pageWidth * 0.3f
+            lines += TemplateLine(start = Offset(0f, headerHeight), end = Offset(pageWidth, headerHeight))
+            lines += TemplateLine(start = Offset(marginX, headerHeight), end = Offset(marginX, pageHeight))
+            var y = headerHeight + spacing
+            while (y <= pageHeight) {
+                lines += TemplateLine(start = Offset(0f, y), end = Offset(pageWidth, y))
+                y += spacing
+            }
+            TemplatePattern(lines = lines)
+        }
+
+        "engineering" -> {
+            val lines = mutableListOf<TemplateLine>()
+            val minorSpacing = (spacing / 2f).coerceAtLeast(4f)
+            var x = 0f
+            while (x <= pageWidth) {
+                lines += TemplateLine(start = Offset(x, 0f), end = Offset(x, pageHeight))
+                x += minorSpacing
+            }
+            var y = 0f
+            while (y <= pageHeight) {
+                lines += TemplateLine(start = Offset(0f, y), end = Offset(pageWidth, y))
+                y += minorSpacing
+            }
+            TemplatePattern(lines = lines)
+        }
+
+        "music" -> {
+            val lines = mutableListOf<TemplateLine>()
+            val groupGap = spacing * 2.5f
+            var startY = spacing
+            while (startY <= pageHeight) {
+                repeat(5) { index ->
+                    val y = startY + (index * spacing)
+                    if (y <= pageHeight) {
+                        lines += TemplateLine(start = Offset(0f, y), end = Offset(pageWidth, y))
+                    }
+                }
+                startY += (5 * spacing) + groupGap
+            }
+            TemplatePattern(lines = lines)
+        }
+
         else -> {
             TemplatePattern()
         }
@@ -174,7 +229,7 @@ internal fun PageTemplateBackground(
         val left = viewTransform.pageToScreenX(0f)
         val top = viewTransform.pageToScreenY(0f)
         val zoom = viewTransform.zoom.coerceAtLeast(0.0001f)
-        val strokeWidth = 1f / zoom
+        val strokeWidth = (templateState.lineWidth.coerceIn(0.25f, 6f)) / zoom
         val dotRadius = maxOf((templateState.spacing * 0.08f), 0.9f / zoom)
 
         withTransform({

@@ -61,7 +61,8 @@ object AppModule {
     fun providePdfExportRepository(
         @ApplicationContext context: Context,
         pdfAssetStorage: PdfAssetStorage,
-    ): PdfExportRepository = PdfExportRepository(context, pdfAssetStorage)
+        noteRepository: NoteRepository,
+    ): PdfExportRepository = PdfExportRepository(context, pdfAssetStorage, noteRepository)
 
     @Provides
     @Singleton

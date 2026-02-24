@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -124,6 +125,8 @@ internal class NoteEditorViewModel
         val currentTemplateConfig: StateFlow<PageTemplateConfig> = _currentTemplateConfig.asStateFlow()
         private val _templateConfigByPageId = MutableStateFlow<Map<String, PageTemplateConfig>>(emptyMap())
         val templateConfigByPageId: StateFlow<Map<String, PageTemplateConfig>> = _templateConfigByPageId.asStateFlow()
+        private val _customTemplates = MutableStateFlow<List<TemplateOption>>(emptyList())
+        val customTemplates: StateFlow<List<TemplateOption>> = _customTemplates.asStateFlow()
         private val _errorMessage = MutableStateFlow<String?>(null)
         val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
         private val _searchHighlightBounds = MutableStateFlow<Rect?>(initialHighlightBounds)
@@ -157,6 +160,9 @@ internal class NoteEditorViewModel
 
         private val _recognizedTextByPage = MutableStateFlow<Map<String, String>>(emptyMap())
         val recognizedTextByPage: StateFlow<Map<String, String>> = _recognizedTextByPage.asStateFlow()
+        private val _recognitionInlinePreviewByPage = MutableStateFlow<Map<String, RecognitionInlinePreview>>(emptyMap())
+        val recognitionInlinePreviewByPage: StateFlow<Map<String, RecognitionInlinePreview>> =
+            _recognitionInlinePreviewByPage.asStateFlow()
 
         private val _convertedTextBlocksByPage = MutableStateFlow<Map<String, List<ConvertedTextBlock>>>(emptyMap())
         val convertedTextBlocksByPage: StateFlow<Map<String, List<ConvertedTextBlock>>> =
@@ -179,6 +185,9 @@ internal class NoteEditorViewModel
                         val updated = _recognizedTextByPage.value.toMutableMap()
                         updated[pageId] = text
                         _recognizedTextByPage.value = updated
+                        val preview = _recognitionInlinePreviewByPage.value.toMutableMap()
+                        preview[pageId] = RecognitionInlinePreview(text = text, isPending = false)
+                        _recognitionInlinePreviewByPage.value = preview
                     }.onFailure { throwable ->
                         reportError("Failed to update recognition state.", throwable)
                     }
@@ -217,6 +226,29 @@ internal class NoteEditorViewModel
                 }
             }
             loadNote()
+            observeCustomTemplates()
+        }
+
+        private fun observeCustomTemplates() {
+            viewModelScope.launch {
+                repository.getCustomTemplates().collectLatest { templates ->
+                    _customTemplates.value =
+                        templates.map { template ->
+                            TemplateOption(
+                                templateId = template.templateId,
+                                name = template.name,
+                                config =
+                                    PageTemplateState(
+                                        templateId = template.templateId,
+                                        backgroundKind = template.backgroundKind,
+                                        spacing = template.spacing ?: PageTemplateConfig.DEFAULT_SPACING,
+                                        lineWidth = template.lineWidth ?: PageTemplateConfig.DEFAULT_LINE_WIDTH,
+                                        color = parseTemplateColor(template.color ?: PageTemplateConfig.DEFAULT_COLOR_HEX),
+                                    ),
+                            )
+                        }
+                }
+            }
         }
 
         fun updateEditorSettings(settings: EditorSettings) {
@@ -529,12 +561,22 @@ internal class NoteEditorViewModel
             _currentTemplateConfig.value = normalized
             viewModelScope.launch {
                 runCatching {
+                    val paperSize = repository.resolvePaperSizeFromTemplateId(normalized.templateId)
                     repository.saveTemplateForPage(
                         pageId = page.pageId,
                         backgroundKind = normalized.backgroundKind,
                         spacing = normalized.spacing,
+                        lineWidth = normalized.lineWidth,
                         colorHex = normalized.colorHex,
                     )
+                    if (paperSize != null) {
+                        repository.updatePagePaperSize(
+                            pageId = page.pageId,
+                            width = paperSize.widthPt,
+                            height = paperSize.heightPt,
+                            unit = paperSize.unit,
+                        )
+                    }
                     pageDao.getById(page.pageId)?.let { updatedPage ->
                         replacePageInState(updatedPage)
                         if (currentPageId == updatedPage.pageId) {
@@ -556,12 +598,22 @@ internal class NoteEditorViewModel
             _currentTemplateConfig.value = normalized
             viewModelScope.launch {
                 runCatching {
+                    val paperSize = repository.resolvePaperSizeFromTemplateId(normalized.templateId)
                     repository.saveTemplateForNote(
                         noteId = noteId,
                         backgroundKind = normalized.backgroundKind,
                         spacing = normalized.spacing,
+                        lineWidth = normalized.lineWidth,
                         colorHex = normalized.colorHex,
                     )
+                    if (paperSize != null) {
+                        repository.updatePaperSizeForNote(
+                            noteId = noteId,
+                            width = paperSize.widthPt,
+                            height = paperSize.heightPt,
+                            unit = paperSize.unit,
+                        )
+                    }
                     refreshPages(
                         selectPageId = currentPageId,
                         selectIndex = _currentPageIndex.value,
@@ -572,25 +624,62 @@ internal class NoteEditorViewModel
             }
         }
 
+        fun saveCurrentTemplateAsCustom(name: String) {
+            val normalizedName = name.trim()
+            if (normalizedName.isBlank()) {
+                return
+            }
+            val template = normalizeTemplateConfig(_currentTemplateConfig.value)
+            if (template.backgroundKind == PageTemplateConfig.KIND_BLANK) {
+                return
+            }
+            viewModelScope.launch {
+                runCatching {
+                    repository.saveCustomTemplate(normalizedName, template)
+                }.onFailure { throwable ->
+                    reportError("Failed to save custom template.", throwable)
+                }
+            }
+        }
+
+        fun deleteCustomTemplate(templateId: String) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.deleteCustomTemplate(templateId)
+                }.onFailure { throwable ->
+                    reportError("Failed to delete custom template.", throwable)
+                }
+            }
+        }
+
         fun addStroke(
             stroke: Stroke,
             persist: Boolean,
             updateRecognition: Boolean = true,
         ) {
-            _strokes.value = _strokes.value + stroke
-            if (persist) {
-                val pageId = currentPageId ?: return
-                enqueueStrokeWrite {
-                    repository.saveStroke(pageId, stroke)
-                }
-            }
             val pageId = currentPageId
-            if (pageId != null && tryAutoBeautifySinglePageStroke(pageId = pageId, stroke = stroke, persist = persist)) {
-                return
-            }
-            // Only update recognition if this is the active recognition page
-            if (updateRecognition && currentPageId == _activeRecognitionPageId.value && shouldRunRecognition()) {
-                myScriptPageManager?.addStroke(stroke)
+            val scratchOutApplied = pageId != null && tryApplyScratchOutGesture(pageId = pageId, stroke = stroke)
+            if (!scratchOutApplied) {
+                _strokes.value = _strokes.value + stroke
+                if (persist) {
+                    currentPageId?.let { persistPageId ->
+                        enqueueStrokeWrite {
+                            repository.saveStroke(persistPageId, stroke)
+                        }
+                    }
+                }
+                val beautified =
+                    pageId != null &&
+                        tryAutoBeautifySinglePageStroke(pageId = pageId, stroke = stroke, persist = persist)
+                // Only update recognition if this is the active recognition page
+                if (!beautified &&
+                    updateRecognition &&
+                    currentPageId == _activeRecognitionPageId.value &&
+                    shouldRunRecognition()
+                ) {
+                    markRecognitionPreviewPending(currentPageId)
+                    myScriptPageManager?.addStroke(stroke)
+                }
             }
         }
 
@@ -722,6 +811,9 @@ internal class NoteEditorViewModel
             persist: Boolean,
             updateRecognition: Boolean = true,
         ) {
+            if (tryApplyScratchOutGesture(pageId = pageId, stroke = stroke)) {
+                return
+            }
             val currentCache = _pageStrokesCache.value.toMutableMap()
             val pageStrokes = currentCache[pageId].orEmpty() + stroke
             currentCache[pageId] = pageStrokes
@@ -736,6 +828,7 @@ internal class NoteEditorViewModel
                 return
             }
             if (updateRecognition && pageId == currentPageId && shouldRunRecognition()) {
+                markRecognitionPreviewPending(pageId)
                 myScriptPageManager?.addStroke(stroke)
             }
         }
@@ -1481,6 +1574,9 @@ internal class NoteEditorViewModel
                     PageTemplateConfig.KIND_GRID,
                     PageTemplateConfig.KIND_LINED,
                     PageTemplateConfig.KIND_DOTTED,
+                    PageTemplateConfig.KIND_CORNELL,
+                    PageTemplateConfig.KIND_ENGINEERING,
+                    PageTemplateConfig.KIND_MUSIC,
                     PageTemplateConfig.KIND_BLANK,
                     -> config.backgroundKind
 
@@ -1504,6 +1600,10 @@ internal class NoteEditorViewModel
             val blocksMap = _convertedTextBlocksByPage.value.toMutableMap()
             blocksMap[pageId] = convertedBlocks
             _convertedTextBlocksByPage.value = blocksMap
+            _recognitionInlinePreviewByPage.value =
+                _recognitionInlinePreviewByPage.value.toMutableMap().apply {
+                    this[pageId] = RecognitionInlinePreview(text = recognitionText, isPending = false)
+                }
         }
 
         private fun mergeBounds(strokes: List<Stroke>): OverlayBounds {
@@ -1656,6 +1756,76 @@ internal class NoteEditorViewModel
             }
             if (mode == RecognitionMode.OFF) {
                 myScriptPageManager?.closeCurrentPage()
+                _recognitionInlinePreviewByPage.value = emptyMap()
             }
         }
+
+        private fun markRecognitionPreviewPending(pageId: String?) {
+            val targetPageId = pageId ?: return
+            val existingText = _recognizedTextByPage.value[targetPageId].orEmpty()
+            _recognitionInlinePreviewByPage.value =
+                _recognitionInlinePreviewByPage.value.toMutableMap().apply {
+                    this[targetPageId] = RecognitionInlinePreview(text = existingText, isPending = true)
+                }
+        }
+
+        private fun tryApplyScratchOutGesture(
+            pageId: String,
+            stroke: Stroke,
+        ): Boolean {
+            val existingBlocks = _convertedTextBlocksByPage.value[pageId].orEmpty()
+            val canApply = shouldRunRecognition() && isScratchOutGesture(stroke) && existingBlocks.isNotEmpty()
+            val removedIds =
+                if (canApply) {
+                    existingBlocks
+                        .filter { block -> intersects(stroke.bounds, block.bounds) }
+                        .map { it.id }
+                        .toSet()
+                } else {
+                    emptySet()
+                }
+            val applied = canApply && removedIds.isNotEmpty()
+            if (applied) {
+                val retainedBlocks = existingBlocks.filterNot { block -> block.id in removedIds }
+                _convertedTextBlocksByPage.value =
+                    _convertedTextBlocksByPage.value.toMutableMap().apply {
+                        this[pageId] = retainedBlocks
+                    }
+                viewModelScope.launch {
+                    runCatching {
+                        repository.saveConvertedTextBlocks(pageId, retainedBlocks)
+                    }.onFailure { throwable ->
+                        reportError("Failed to apply scratch-out gesture.", throwable)
+                    }
+                }
+            }
+            return applied
+        }
+
+        private fun isScratchOutGesture(stroke: Stroke): Boolean {
+            val hasMinimumPoints = stroke.points.size >= 8
+            val hasMinimumBounds = stroke.bounds.w >= 8f || stroke.bounds.h >= 8f
+            if (hasMinimumPoints && hasMinimumBounds) {
+                var directionChanges = 0
+                var previousDx = 0f
+                for (index in 1 until stroke.points.size) {
+                    val dx = stroke.points[index].x - stroke.points[index - 1].x
+                    if (index > 1 && kotlin.math.sign(dx) != kotlin.math.sign(previousDx)) {
+                        directionChanges += 1
+                    }
+                    previousDx = dx
+                }
+                return directionChanges >= 6
+            }
+            return false
+        }
+
+        private fun intersects(
+            strokeBounds: com.onyx.android.ink.model.StrokeBounds,
+            overlayBounds: OverlayBounds,
+        ): Boolean =
+            strokeBounds.x < overlayBounds.x + overlayBounds.w &&
+                strokeBounds.x + strokeBounds.w > overlayBounds.x &&
+                strokeBounds.y < overlayBounds.y + overlayBounds.h &&
+                strokeBounds.y + strokeBounds.h > overlayBounds.y
     }

@@ -216,12 +216,12 @@ Evidence paths:
   - Priority wave: `Wave Parity`
   - Validation gate: Instrumented tests for internal page link and external URL link behavior.
 
-- [x] `PDF-03` Export/share with flatten-annotations option
-  - Status: `Partial (Wave Z-PdfExportShareMVP)`
+- [ ] `PDF-03` Export/share with flatten-annotations option
+  - Status: `Strong Partial (Wave Z-PdfExportShareMVP + flatten-strokes export)`
   - Competitor behavior: Samsung-style workflows include export/share of annotated PDFs with flatten controls.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
-  - What exists now: Home note actions now include export/share with layered vs flattened mode selection; Android export emits PDF artifact plus metadata sidecar and launches system share intent.
-  - What is missing: True annotation flattening in the render/export pipeline and Convex runtime export metadata sync writes.
+  - What exists now: Home note actions include layered vs flattened mode selection; flattened mode now emits a newly rendered PDF where source pages are rasterized and persisted ink strokes are burned into each exported page, with share intent + metadata sidecar output.
+  - What is missing: Flattening for non-stroke page objects (image/text/audio/sticky/etc), visual goldens for layered-vs-flattened parity, and Convex runtime export metadata sync writes.
   - Exact change needed: Implement export/share pipeline with `flatten=true|false` mode and persist export metadata for Android and Convex consumers.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -229,23 +229,23 @@ Evidence paths:
 
 ## Gestures / Stylus Gaps
 
-- [x] `GEST-01` Configurable stylus/finger gesture mapping
-  - Status: `Strong Partial`
+- [ ] `GEST-01` Configurable stylus/finger gesture mapping
+  - Status: `Strong Partial+ (Android gesture-matrix expansion)`
   - Competitor behavior: Notewise lets users map stylus button and single/double finger behavior.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`
-  - What exists now: Input settings dialog persists single/double-finger behavior, stylus primary/secondary/long-hold actions, double-tap zoom source/action, two/three-finger shortcuts, and latency mode; touch routing consumes these settings in canvas gesture dispatch.
-  - What is missing: Extended gesture matrix (tool-switch shortcuts) and Convex/web runtime sync for profile portability.
+  - What exists now: Input settings persists single/double-finger behavior, stylus primary/secondary/long-hold actions, double-tap zoom source/action, two/three-finger shortcuts, latency mode, and multi-finger tool-switch shortcuts (`switch-to-pen`, `switch-to-eraser`, `switch-to-last-tool`); touch routing consumes all of these in canvas dispatch.
+  - What is missing: Convex/web runtime sync for cross-device profile portability and deeper policy tests across all mode combinations.
   - Exact change needed: Add editor input settings persistence + settings UI and route gesture dispatch through those preferences.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Unit tests for mapping policy + UI test for persisted input preferences.
 
-- [x] `GEST-02` Gesture shortcuts (multi-finger undo/redo, configurable double-tap behavior)
-  - Status: `Strong Partial (Wave M-MultiFingerShortcuts)`
+- [ ] `GEST-02` Gesture shortcuts (multi-finger undo/redo, configurable double-tap behavior)
+  - Status: `Strong Partial+ (Wave M-MultiFingerShortcuts + tool-switch shortcuts)`
   - Competitor behavior: Notewise supports multi-finger undo/redo and configurable double-tap behavior.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\UndoController.kt`
-  - What exists now: Configurable two-finger and three-finger tap shortcuts are persisted (`UNDO|REDO|NONE`) and routed to editor undo/redo; configurable double-tap zoom mapping is also persisted and active.
-  - What is missing: Additional shortcut permutations (for example gesture-to-tool switching), plus broader coverage for zoom-lock/read-only permutations in instrumentation.
+  - What exists now: Two-finger/three-finger shortcuts now support `UNDO|REDO|NONE|SWITCH_TO_PEN|SWITCH_TO_ERASER|SWITCH_TO_LAST_TOOL`, and double-tap zoom mapping is persisted and active.
+  - What is missing: Broader zoom-lock/read-only instrumentation coverage and UX validation for shortcut conflicts in complex editor states.
   - Exact change needed: Expand gesture shortcut matrix beyond undo/redo and add exhaustive instrumentation coverage across editor modes.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -275,56 +275,56 @@ Evidence paths:
 
 ## Template System Gaps
 
-- [x] `TPL-01` Paper size selector (A-series, letter, phone)
-  - Status: `Partial (Wave Z-PaperPresetScaffold)`
+- [ ] `TPL-01` Paper size selector (A-series, letter, phone)
+  - Status: `Strong Partial (Wave Z-PaperPresetScaffold + persisted page-dimension flow)`
   - Competitor behavior: Notewise exposes selectable paper sizes with explicit dimensions.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\PageTemplateConfig.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\PageEntity.kt`
-  - What exists now: Template settings now expose `Letter`, `A4`, and `Phone` paper presets via `templateId` (`paper:*`), and new-page creation derives dimensions from the latest selected paper preset.
-  - What is missing: Dedicated persisted paper-size field (instead of templateId convention), explicit unit controls, and per-note default management UX.
+  - What exists now: Template settings expose `Letter`, `A4`, `Phone`, and custom size with explicit unit controls; selected paper now persists through page `width/height/unit` and template updates apply dimensions via repository APIs; new pages inherit persisted dimensions from existing note pages.
+  - What is missing: Dedicated per-note default paper-size management surface independent from page-level edits, plus cross-surface metadata parity.
   - Exact change needed: Expand `PageTemplateConfig` with paper-size metadata and apply selected dimensions on page create/apply flows.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Unit tests for paper-size mapping + UI tests for template picker application.
 
-- [x] `TPL-02` Expanded template catalog and categories
-  - Status: `Partial`
+- [ ] `TPL-02` Expanded template catalog and categories
+  - Status: `Strong Partial (Android categorized templates implemented)`
   - Competitor behavior: Notewise includes basic/education/music categories with richer built-in templates.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\PageTemplateBackground.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\PageTemplateConfig.kt`
-  - What exists now: Basic templates (blank/lined/grid/dotted).
-  - What is missing: Category model and specialized templates (Cornell, engineering, music score, etc.).
+  - What exists now: Template picker now exposes categorized sections (`Basic`, `Study`, `Technical`, `Music`) and specialized templates (`Cornell`, `Engineering`, `Music staff`) with renderer support.
+  - What is missing: Contract-level category metadata and cross-surface parity (Convex/Web decode + visual-regression matrix in CI).
   - Exact change needed: Add categorized template registry and renderer support for new pattern families.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Visual regression tests for each template category and picker filter tests.
 
-- [x] `TPL-03` Custom templates tab
-  - Status: `Missing`
+- [ ] `TPL-03` Custom templates tab
+  - Status: `Strong Partial (Wave AB-CustomTemplateLibraryMVP)`
   - Competitor behavior: Notewise separates built-in and custom templates.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\dao\PageTemplateDao.kt`
-  - What exists now: Template rows can be stored, but no dedicated custom-template manager in UI.
-  - What is missing: Custom tab, template create/import flow, and reusable custom-template lifecycle.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\dao\PageTemplateDao.kt`
+  - What exists now: Template panel now has built-in/custom sections, custom-template save from current settings, list/apply/delete flows, and ViewModel-backed custom-template stream from Room.
+  - What is missing: Import/export/rename UX for custom templates, plus Convex/Web sync portability for custom-template catalogs.
   - Exact change needed: Add built-in/custom tabbed picker and custom template CRUD flows backed by `PageTemplateDao`.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: CRUD tests for custom templates and apply-to-page integration tests.
 
-- [x] `TPL-04` Template line-width control
-  - Status: `Missing`
+- [ ] `TPL-04` Template line-width control
+  - Status: `Strong Partial+ (Wave AB-TemplateLineWidthPersistence)`
   - Competitor behavior: Notewise exposes independent line thickness for template patterns.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\PageTemplateBackground.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\PageTemplateConfig.kt`
-  - What exists now: Template density and color controls exist.
-  - What is missing: Line-width parameter and renderer support.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\PageTemplateBackground.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\PageTemplateConfig.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\PageTemplateEntity.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\migrations\Migration17To18.kt`
+  - What exists now: Template settings include line-width slider, `lineWidth` persists through Room and repository apply flows, and background renderer consumes `templateState.lineWidth`.
+  - What is missing: Dedicated renderer goldens for line-width fidelity across zoom/device classes and cross-surface metadata contracts.
   - Exact change needed: Add `lineWidth` field to template config and apply it in background pattern painting.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Renderer unit tests for line-width scaling and persistence tests.
 
-- [x] `TPL-05` Apply template to current page vs all pages
-  - Status: `Partial (Wave Z-TemplateApplyScopeMVP)`
+- [ ] `TPL-05` Apply template to current page vs all pages
+  - Status: `Strong Partial+ (Wave AB-TemplateApplyScopeSelector)`
   - Competitor behavior: Notewise allows apply-to-current or apply-to-all selection.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
-  - What exists now: Template panel now includes an `Apply current template to all pages` action wired through ViewModel and repository batch template updates.
-  - What is missing: Explicit apply-scope chooser UX and undo/redo semantics for bulk apply.
+  - What exists now: Template panel includes explicit apply-scope selector (`Current page` / `All pages`), and ViewModel routes scope-aware apply operations to page-only or note-wide repository updates.
+  - What is missing: Bulk-apply undo/redo parity and cross-device metadata sync semantics for scoped apply actions.
   - Exact change needed: Add apply-scope option and repository batch template update path for full-note application.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -332,29 +332,29 @@ Evidence paths:
 
 ## Recognition / Conversion Gaps
 
-- [x] `REC-01` Real-time inline recognition preview UX
-  - Status: `Partial`
+- [ ] `REC-01` Real-time inline recognition preview UX
+  - Status: `Strong Partial (Wave AB-InlineRecognitionPreviewPendingState)`
   - Competitor behavior: Samsung Notes recognition feels continuous with clearer inline preview behavior.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
-  - What exists now: Recognition pipeline with converted text overlays.
-  - What is missing: Explicit pending/confirmed inline preview UX while writing.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorScaffold.kt`
+  - What exists now: Recognition overlay now shows inline preview with explicit pending/confirmed states; new strokes mark preview pending and recognition callbacks promote preview to confirmed text.
+  - What is missing: Confidence-threshold controls and richer preview conflict-resolution UX for dense mixed ink/text edits.
   - Exact change needed: Add transient preview layer and confidence/commit timing rules for continuous recognition display.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Stylus latency benchmark and UX acceptance pass for preview clarity.
 
-- [x] `REC-02` Interactive ink gestures as recognizer actions (scratch-out/scribble)
-  - Status: `Missing`
+- [ ] `REC-02` Interactive ink gestures as recognizer actions (scratch-out/scribble)
+  - Status: `Partial (Wave AB-ScratchOutDeleteHeuristicMVP)`
   - Competitor behavior: Competitor flows support gesture-based recognition edits.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`
-  - What exists now: Erasing exists, but recognizer-intent gestures are not interpreted as conversion commands.
-  - What is missing: Gesture classifier and command mapping into recognized text edits.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\ConvertedTextBlock.kt`
+  - What exists now: Added scratch-out heuristic that detects scribble-like strokes, intersects with converted-text block bounds, removes matching blocks, and persists updated converted-text overlays.
+  - What is missing: Robust gesture classifier set (join/split/insert), explicit undo/redo semantics for recognizer commands, and cross-surface command contract sync.
   - Exact change needed: Add recognizer gesture command pipeline (scratch-out/delete, join/split behaviors) with undo/redo support.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Unit tests for gesture command parsing + integration tests for recognized-block mutation.
 
-- [x] `REC-03` Recognition mode/language configurability
+- [ ] `REC-03` Recognition mode/language configurability
   - Status: `Partial`
   - Competitor behavior: Mature apps expose recognition language/mode settings.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptEngine.kt`
@@ -371,62 +371,62 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### Home / Library Expansion
 
-- [x] `HOME-04` Library sort controls + persistence
-  - Status: `Missing`
+- [ ] `HOME-04` Library sort controls + persistence
+  - Status: `Partial (Wave Z-HomeSortFilterControlsMVP)`
   - Competitor behavior: Samsung exposes explicit sorting (for example Date modified) in folder/note views.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`
-  - What exists now: List-first browsing with limited sort affordances.
-  - What is missing: Sort selector, sort direction, and per-surface persistence.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\dao\NoteDao.kt`
+  - What exists now: Home now has sort option/direction controls (`Name`/`Created`/`Modified`, asc/desc) and repository-backed sorted query routing for root and folder scopes.
+  - What is missing: Persisting sort selection across app restarts and extending the same persisted sort contract to cross-surface clients.
   - Exact change needed: Add sortable home query model (`modified`, `created`, `title`), persist last choice, and keep sort state stable when switching folders or list/grid modes.
   - Surface impact: `Android`, `Web`, `Convex`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Home UI test for sort mode persistence + repository query tests for each comparator.
 
-- [x] `HOME-05` Unified search across title, typed text, handwriting, and PDF text
-  - Status: `Missing`
+- [ ] `HOME-05` Unified search across title, typed text, handwriting, and PDF text
+  - Status: `Strong Partial+ (Wave Z-AndroidUnifiedSearchMVP)`
   - Competitor behavior: Mature note apps return hybrid search results across note metadata and content layers.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\PdfTextExtractor.kt`
-  - What exists now: Typed and recognition pathways exist but are not unified into one global search experience.
-  - What is missing: Indexed multi-source search pipeline and unified result ranking/highlighting.
+  - What exists now: Home search now returns unified ranked results across note metadata, page metadata/template text, handwriting-recognition index text, and PDF text characters, with source labels and jump metadata.
+  - What is missing: OCR fallback for scanned PDFs and sync-backed cross-device/global search index contracts.
   - Exact change needed: Build a single search index contract that fuses title/body text, handwriting index tokens, and PDF text/OCR tokens, with result chips indicating match source.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Contract tests for mixed-source match sets + UI tests for source-specific highlight jumps.
 
-- [x] `HOME-06` Favorites / pinned notes
-  - Status: `Missing`
+- [ ] `HOME-06` Favorites / pinned notes
+  - Status: `Strong Partial (Wave AB-PinnedNotesAndroidMVP)`
   - Competitor behavior: Competitor flows commonly allow star/pin for quick retrieval.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\NoteEntity.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`
-  - What exists now: No dedicated pin/star metadata or pinned lane in home.
-  - What is missing: Pin action, pinned section, and ordering rules.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\NoteEntity.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\dao\NoteDao.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`
+  - What exists now: Notes now persist `isPinned`, list-row context menu supports pin/unpin actions, pinned notes render a pin indicator, and home list flows prioritize pinned notes ahead of non-pinned notes.
+  - What is missing: Dedicated pinned-lane section UX and Convex/Web metadata parity for cross-device pin state.
   - Exact change needed: Add `isPinned` note metadata, home section rendering, and deterministic sort precedence for pinned notes.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Repository ordering tests + UI tests for pin/unpin transitions.
 
-- [x] `HOME-07` Tags and smart folders
-  - Status: `Missing`
+- [ ] `HOME-07` Tags and smart folders
+  - Status: `Strong Partial (Wave Z-TagsMVP, smart-folders pending)`
   - Competitor behavior: "To win" tier organization includes tags and saved smart filters.
   - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
-  - What exists now: Folder organization only.
-  - What is missing: Tagging model, assignment UI, and dynamic query folders.
+  - What exists now: Tag entities + note-tag mapping exist with create/delete/assign/remove/batch-add flows and tag-based filtering UI in Home.
+  - What is missing: Smart-folder predicate model, saved dynamic filter destinations, and cross-surface sync contract/runtime support for smart folders.
   - Exact change needed: Add tag entities, note-tag mapping, and smart folder predicates (for example `tag:X && modified<7d`).
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Excellence`
   - Validation gate: Contract fixture coverage for tag joins and smart-folder predicate decoding.
 
-- [x] `HOME-08` Global recents destination
-  - Status: `Missing`
+- [ ] `HOME-08` Global recents destination
+  - Status: `Strong Partial (Wave AB-RecentsDestinationAndroidMVP)`
   - Competitor behavior: Fast-reopen recents are expected in high-velocity note workflows.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\NoteEntity.kt`
-  - What exists now: No dedicated Recents lane.
-  - What is missing: Recents query endpoint and home destination with clear sorting semantics.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\NoteEntity.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\dao\NoteDao.kt`
+  - What exists now: Home destination tabs now include `Recents`, notes persist `lastOpenedAt`, and opening notes updates recency so destination queries return most-recently opened notes.
+  - What is missing: Dedicated recents-empty-state polish and cross-device sync of last-open metadata semantics.
   - Exact change needed: Track last-open timestamps per note and add `Recents` destination with virtual-folder behavior.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Integration tests for recents ordering and update behavior after open actions.
 
-- [x] `HOME-09` Note version history surface
+- [ ] `HOME-09` Note version history surface
   - Status: `Missing`
   - Competitor behavior: Best-in-class reliability includes lightweight per-note history.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\convex\schema.ts`
@@ -450,7 +450,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: UI tests asserting input lockout in view mode and full restoration in edit mode.
 
-- [x] `EDIT-14` Page manager panel (thumbnails, reorder, duplicate, delete)
+- [ ] `EDIT-14` Page manager panel (thumbnails, reorder, duplicate, delete)
   - Status: `Strong Partial (Wave I-PageManagerOps)`
   - Competitor behavior: Competitive editors expose strong page-level management, especially for long notes and PDFs.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
@@ -472,7 +472,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: Compose tests for pill state updates across page navigation and zoom changes.
 
-- [x] `EDIT-16` Quick color strip + favorite slots in main toolbar
+- [ ] `EDIT-16` Quick color strip + favorite slots in main toolbar
   - Status: `Strong Partial (Wave J-ColorPresetUX)`
   - Competitor behavior: Samsung keeps color dots one tap away while preserving deeper palette controls.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\config\BrushPresetStore.kt`
@@ -483,7 +483,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: UI tests for quick color apply + favorite reassignment persistence.
 
-- [x] `EDIT-17` Advanced color picker parity (swatches, spectrum, HEX/RGB)
+- [ ] `EDIT-17` Advanced color picker parity (swatches, spectrum, HEX/RGB)
   - Status: `Strong Partial (Wave J-ColorPresetUX)`
   - Competitor behavior: Samsung palette includes swatches, spectrum, and numeric color entry.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\ToolSettingsPanel.kt`
@@ -494,7 +494,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: UI tests for HEX/RGB parse, validation, and preset round-trip.
 
-- [x] `EDIT-18` Highlighter line mode + tip shape controls
+- [ ] `EDIT-18` Highlighter line mode + tip shape controls
   - Status: `Missing`
   - Competitor behavior: Notewise supports always-straight highlighter mode, tip shape, opacity, and thickness controls.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\model\Brush.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\ToolSettingsPanel.kt`
@@ -505,7 +505,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Renderer tests for square/round tip + UI tests for straight-line behavior.
 
-- [x] `EDIT-19` Hold-to-shape while drawing
+- [ ] `EDIT-19` Hold-to-shape while drawing
   - Status: `Missing`
   - Competitor behavior: Notewise exposes hold-to-shape directly in pen settings.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\ToolSettingsPanel.kt`
@@ -516,7 +516,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Stroke gesture recognition tests and UI tests for hold conversion success/fail conditions.
 
-- [x] `EDIT-20` Always-accessible insert `+` menu with explicit Samsung parity actions
+- [ ] `EDIT-20` Always-accessible insert `+` menu with explicit Samsung parity actions
   - Status: `Done for architecture + shape route (Wave F-ObjectInsert)`
   - Competitor behavior: Samsung insert menu quickly exposes PDF, voice recording, image, camera, scan, audio file, drawing, and sticky note.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`
@@ -528,7 +528,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: UI smoke suite that asserts each menu entry appears and routes to expected flow.
 
-- [x] `EDIT-21` Camera capture + document scan insert flows
+- [ ] `EDIT-21` Camera capture + document scan insert flows
   - Status: `Missing`
   - Competitor behavior: Samsung includes direct camera and scan insertion from editor.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
@@ -539,7 +539,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Instrumented tests for camera/scan permission flow and persisted object reopen.
 
-- [x] `EDIT-22` Embedded audio recording objects (waveform + timeline links)
+- [ ] `EDIT-22` Embedded audio recording objects (waveform + timeline links)
   - Status: `Missing`
   - Competitor behavior: Samsung-style audio insertion supports in-note recording context.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
@@ -550,7 +550,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Integration test for record->persist->playback and export policy checks.
 
-- [x] `EDIT-23` Sticky note objects as movable callouts
+- [ ] `EDIT-23` Sticky note objects as movable callouts
   - Status: `Missing`
   - Competitor behavior: Samsung insert menu exposes sticky notes as lightweight callouts.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\PageObjectEntity.kt`
@@ -561,7 +561,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Object lifecycle tests and screenshot tests for sticky style variants.
 
-- [x] `EDIT-24` Ruler/straightedge and snap-to-align guides
+- [ ] `EDIT-24` Ruler/straightedge and snap-to-align guides
   - Status: `Missing`
   - Competitor behavior: Notewise settings expose snap-to-align controls; premium note apps provide ruler alignment aids.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\ToolSettingsPanel.kt`
@@ -572,7 +572,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Excellence`
   - Validation gate: Transform unit tests for snap thresholds + interaction tests for ruler-assisted lines.
 
-- [x] `EDIT-25` Area eraser visual cursor parity
+- [ ] `EDIT-25` Area eraser visual cursor parity
   - Status: `Strong Partial (Wave S-EraserCursorOverlay)`
   - Competitor behavior: Samsung shows a live circular eraser cursor while area erasing.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
@@ -585,7 +585,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### PDF / Document Expansion
 
-- [x] `PDF-04` PDF page-strip/thumbnails in annotation mode
+- [ ] `PDF-04` PDF page-strip/thumbnails in annotation mode
   - Status: `Missing`
   - Competitor behavior: Annotation-first PDF workflows rely on quick page thumbnail navigation.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\PdfiumDocumentSession.kt`
@@ -596,7 +596,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: UI tests for thumbnail jump accuracy and performance checks on long PDFs.
 
-- [x] `PDF-05` OCR fallback for scanned PDF text search
+- [ ] `PDF-05` OCR fallback for scanned PDF text search
   - Status: `Missing`
   - Competitor behavior: Search parity requires results even when PDFs are image-only scans.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\PdfTextExtractor.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
@@ -607,7 +607,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave V2`
   - Validation gate: OCR fixture tests with scanned PDFs and query recall checks.
 
-- [x] `PDF-06` Insert blank pages between imported PDF pages
+- [ ] `PDF-06` Insert blank pages between imported PDF pages
   - Status: `Missing`
   - Competitor behavior: Competitive annotation apps allow whitespace insertion between source pages.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\PageRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`
@@ -618,7 +618,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Repository tests for mixed page order and export correctness.
 
-- [x] `PDF-07` Smart highlight/underline text snap
+- [ ] `PDF-07` Smart highlight/underline text snap
   - Status: `Missing`
   - Competitor behavior: Premium PDF tools can align highlight/underline strokes to text baselines.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\PdfTextExtractor.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`
@@ -629,7 +629,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave V2`
   - Validation gate: Integration tests for snapped bounds on known PDF text fixtures.
 
-- [x] `PDF-08` Explicit dark-mode handling notice for PDF backgrounds
+- [ ] `PDF-08` Explicit dark-mode handling notice for PDF backgrounds
   - Status: `Missing`
   - Competitor behavior: Samsung clearly informs users when dark mode does not alter PDF page backgrounds.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`
@@ -642,7 +642,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### Gesture / Stylus Expansion
 
-- [x] `GEST-05` Latency optimization modes (Normal/Fast Experimental)
+- [ ] `GEST-05` Latency optimization modes (Normal/Fast Experimental)
   - Status: `Strong Partial (Wave Q-LatencyModes MVP)`
   - Competitor behavior: Notewise exposes latency optimization choices for device-specific tuning.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorSettings.kt`
@@ -653,7 +653,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Performance benchmarks comparing profile frame time and perceived latency.
 
-- [x] `GEST-06` Full stylus-button mapping (primary/secondary/long-hold)
+- [ ] `GEST-06` Full stylus-button mapping (primary/secondary/long-hold)
   - Status: `Strong Partial+ (Wave P-StylusToggleAction)`
   - Competitor behavior: Notewise supports rich button remapping including hold-to-erase and switch-to-last-tool.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`
@@ -664,7 +664,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: Input-mapping tests for each stylus action and persistence round-trip.
 
-- [x] `GEST-07` Finger behavior matrix parity (single/double finger action profiles)
+- [ ] `GEST-07` Finger behavior matrix parity (single/double finger action profiles)
   - Status: `Strong Partial+ (Wave N-DoubleFingerPanOnly)`
   - Competitor behavior: Notewise lets users set single-finger and double-finger behavior independently.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`
@@ -675,7 +675,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: Instrumented tests for each profile combination under stylus-present and stylus-absent scenarios.
 
-- [x] `GEST-08` Double-tap zoom-level shortcut
+- [ ] `GEST-08` Double-tap zoom-level shortcut
   - Status: `Strong Partial+ (Wave O-StylusDoubleTapZoom)`
   - Competitor behavior: Notewise optionally maps double tap to zoom-level change.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
@@ -688,7 +688,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### Template System Expansion
 
-- [x] `TPL-06` Custom page width/height inputs in template modal
+- [ ] `TPL-06` Custom page width/height inputs in template modal
   - Status: `Partial (Wave Z-CustomPaperSizeScaffold)`
   - Competitor behavior: Notewise offers paper presets plus free-form custom dimensions.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
@@ -699,7 +699,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Unit tests for dimension normalization and UI form validation tests.
 
-- [x] `TPL-07` Template rendering quality contract (anti-swim, page-locked patterns)
+- [ ] `TPL-07` Template rendering quality contract (anti-swim, page-locked patterns)
   - Status: `Partial (Wave Z-TemplateQualityContract)`
   - Competitor behavior: Dot/grid backgrounds remain stable during pan/zoom and feel physically page-bound.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\PageTemplateBackground.kt`, `C:\onyx\apps\android\app\src\test\java\com\onyx\android\ui\PageTemplateBackgroundTest.kt`, `C:\onyx\docs\architecture\template-rendering-quality-contract.md`
@@ -712,7 +712,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### Recognition / Intelligence Expansion
 
-- [x] `REC-04` Recognition operating modes (`Off`, `Search-only`, `Live convert`)
+- [ ] `REC-04` Recognition operating modes (`Off`, `Search-only`, `Live convert`)
   - Status: `Partial (Wave Z-RecognitionModesMVP)`
   - Competitor behavior: Power users expect control over recognition intensity and conversion intrusiveness.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`
@@ -723,7 +723,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: Mode-based behavior tests and settings persistence checks.
 
-- [x] `REC-05` Lasso-to-text conversion workflow
+- [ ] `REC-05` Lasso-to-text conversion workflow
   - Status: `Partial (Wave Z-LassoConvertActionMVP)`
   - Competitor behavior: Users expect selected handwriting to convert to editable text blocks.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\LassoGeometry.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\ConvertedTextBlock.kt`
@@ -734,7 +734,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: End-to-end tests for lasso conversion commit/revert and layout preservation.
 
-- [x] `REC-06` Search-level handwriting indexing across note corpus
+- [ ] `REC-06` Search-level handwriting indexing across note corpus
   - Status: `Partial (Wave Z-HandwritingIndexSearchMVP)`
   - Competitor behavior: Competitive search can find handwritten keywords across library, not only current page.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
@@ -745,7 +745,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave V1`
   - Validation gate: Cross-note query tests with highlight jump accuracy.
 
-- [x] `REC-07` Shape recognition and beautification
+- [ ] `REC-07` Shape recognition and beautification
   - Status: `Partial (Wave Z-ShapeBeautifierScaffold)`
   - Competitor behavior: Intelligent shape cleanup is expected for polished handwritten diagrams.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\ShapeBeautifier.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionSettings.kt`
@@ -756,7 +756,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave V2`
   - Validation gate: Recognition precision/recall tests on shape fixture dataset.
 
-- [x] `REC-08` Optional math recognition mode
+- [ ] `REC-08` Optional math recognition mode
   - Status: `Partial (Wave Z-MathRecognitionModeScaffold)`
   - Competitor behavior: Math parsing is a high-differentiation capability in intelligent note apps.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MathRecognitionMode.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionSettings.kt`
@@ -769,7 +769,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### Settings / Security Expansion
 
-- [x] `SET-01` Note password lock and unlock flow
+- [ ] `SET-01` Note password lock and unlock flow
   - Status: `Partial (Wave Z-NoteLockMVP)`
   - Competitor behavior: Notewise exposes password protection in app settings.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\NoteEntity.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteLockStore.kt`
@@ -780,7 +780,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave V1`
   - Validation gate: Security tests for lock enforcement and credential reset flow.
 
-- [x] `SET-02` Focus/presentation settings (`keep screen on`, `hide system bars`)
+- [ ] `SET-02` Focus/presentation settings (`keep screen on`, `hide system bars`)
   - Status: `Strong Partial (Wave Z-FocusPresentationPersistence)`
   - Competitor behavior: Notewise includes immersion-oriented settings for long sessions/presenting.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\EditorSettingsEntity.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\migrations\Migration16To17.kt`
@@ -791,7 +791,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave V1`
   - Validation gate: Instrumented tests for window-flag behavior across mode transitions.
 
-- [x] `SET-03` New-note naming rule and resume-last-page behavior
+- [ ] `SET-03` New-note naming rule and resume-last-page behavior
   - Status: `Partial (Wave Z-LaunchPreferencesMVP)`
   - Competitor behavior: Notewise exposes naming pattern preferences and "continue from last opened page".
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteLaunchPreferences.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`
@@ -802,7 +802,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave V1`
   - Validation gate: Repository tests for generated names and reopen-to-last-page behavior.
 
-- [x] `SET-04` Storage dashboard + cache clear controls
+- [ ] `SET-04` Storage dashboard + cache clear controls
   - Status: `Partial (Wave Z-StorageDashboardMVP)`
   - Competitor behavior: Notewise provides note storage sizing and cache clear actions.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\StorageRepository.kt`
@@ -815,7 +815,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### Performance / Reliability Expansion
 
-- [x] `PERF-01` Predictive inking + perceived-latency budget enforcement
+- [ ] `PERF-01` Predictive inking + perceived-latency budget enforcement
   - Status: `Strong Partial (Wave Z-LatencyBudgetTelemetryScaffold)`
   - Competitor behavior: Samsung-class pen feel depends on predictive rendering and very low perceived latency.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`
@@ -826,7 +826,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: Stylus benchmark suite with pass/fail thresholds for perceived latency.
 
-- [x] `PERF-02` 120fps target on capable devices with 60fps floor
+- [ ] `PERF-02` 120fps target on capable devices with 60fps floor
   - Status: `Partial (Wave Z-FrameRatePolicyMVP)`
   - Competitor behavior: Premium inking apps maintain high refresh fluidity under normal load.
   - Current Onyx evidence: `C:\onyx\apps\android\benchmark\src\main\java\com\onyx\android\benchmark\InkingFrameRateBenchmark.kt`, `C:\onyx\docs\architecture\android-frame-rate-targets.md`
@@ -837,7 +837,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: Macrobenchmark reports meeting target frame pacing budgets.
 
-- [x] `PERF-03` Incremental redraw/dirty-region policy for heavy pages
+- [ ] `PERF-03` Incremental redraw/dirty-region policy for heavy pages
   - Status: `Strong Partial (Wave Z-DirtyRegionPolicyDocsBenchmark)`
   - Competitor behavior: Large notes remain smooth by avoiding full-canvas repaints.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
@@ -848,7 +848,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: Frame-time regression tests on large mixed-content pages.
 
-- [x] `PERF-04` Stress profile for very large notes/PDFs
+- [ ] `PERF-04` Stress profile for very large notes/PDFs
   - Status: `Partial (Wave Z-StressProfileMatrixMVP)`
   - Competitor behavior: Mature apps handle thousands of strokes and long PDFs without visible stutter.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\androidTest`, `C:\onyx\docs\architecture\testing.md`
@@ -869,7 +869,7 @@ Proposed public API/interface/type updates to align with backlog items:
 - New gesture preference model persisted for editor input settings (stylus and finger mapping + shortcut actions).
 - New export/share contract surface for flattened vs layered annotation output metadata (Android + Convex consumers).
 
-- [x] `XSURF-01` Convex schema/contracts for new feature metadata
+- [ ] `XSURF-01` Convex schema/contracts for new feature metadata
   - Status: `Strong Partial++ (Wave V-FeatureMetadataContracts)`
   - Competitor behavior: Not a UI feature by itself; required to support parity features across devices.
   - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\packages\validation\src\schemas\featureMetadata.ts`, `C:\onyx\tests\contracts\fixtures\gesture-settings.fixture.json`, `C:\onyx\tests\contracts\fixtures\template-scope.fixture.json`, `C:\onyx\tests\contracts\fixtures\export-metadata.fixture.json`, `C:\onyx\docs\architecture\feature-metadata-contracts.md`
@@ -880,7 +880,7 @@ Proposed public API/interface/type updates to align with backlog items:
   - Priority wave: `Wave Foundation`
   - Validation gate: Contract fixture test suite and schema drift checks in CI.
 
-- [x] `XSURF-02` Web implications tracking for view-only surface
+- [ ] `XSURF-02` Web implications tracking for view-only surface
   - Status: `Near Done (Wave W-WebDecodeFallbackRuntimeTests)`
   - Competitor behavior: Not competitor-visible directly; needed so web does not break on new Android-authored metadata.
   - Current Onyx evidence: `C:\onyx\apps\web\src\contracts\decodeMetadata.ts`, `C:\onyx\apps\web\src\contracts\decodeMetadata.test.ts`, `C:\onyx\docs\architecture\web-object-fallback-matrix.md`
@@ -891,7 +891,7 @@ Proposed public API/interface/type updates to align with backlog items:
   - Priority wave: `Wave Foundation`
   - Validation gate: Web contract decoding tests for mixed-feature notes and fallback rendering snapshots.
 
-- [x] `XSURF-03` Attachment/object schema expansion (image/audio/sticky/scan/file)
+- [ ] `XSURF-03` Attachment/object schema expansion (image/audio/sticky/scan/file)
   - Status: `Strong Partial (runtime image/text MVP + full attachment contract scaffolding)`
   - Competitor behavior: Required cross-surface contract for Samsung-style insert parity.
   - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\PageObjectEntity.kt`
@@ -903,7 +903,7 @@ Proposed public API/interface/type updates to align with backlog items:
   - Priority wave: `Wave Foundation`
   - Validation gate: Contract fixtures for each attachment object type.
 
-- [x] `XSURF-04` Search-index contracts (handwriting tokens + PDF OCR tokens)
+- [ ] `XSURF-04` Search-index contracts (handwriting tokens + PDF OCR tokens)
   - Status: `Strong Partial (Wave T-SearchIndexContracts)`
   - Competitor behavior: Required to support unified search parity across devices.
   - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\packages\validation\src\schemas\searchIndexToken.ts`, `C:\onyx\tests\contracts\fixtures\search-index-handwriting-token.fixture.json`, `C:\onyx\tests\contracts\fixtures\search-index-pdf-ocr-token.fixture.json`, `C:\onyx\docs\architecture\search-index-contracts.md`
@@ -914,7 +914,7 @@ Proposed public API/interface/type updates to align with backlog items:
   - Priority wave: `Wave Foundation`
   - Validation gate: Contract schema tests and mixed-source fixtures for handwriting + OCR payloads.
 
-- [x] `XSURF-05` Sync conflict policy + metadata for edits at page/object granularity
+- [ ] `XSURF-05` Sync conflict policy + metadata for edits at page/object granularity
   - Status: `Weak Partial (Wave U-ConflictMetadataContracts)`
   - Competitor behavior: Needed for cross-device reliability once parity features are synced.
   - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\packages\validation\src\schemas\pageObject.ts`, `C:\onyx\tests\contracts\fixtures\page-object-shape-conflict.fixture.json`, `C:\onyx\docs\architecture\object-sync-conflict-policy.md`
