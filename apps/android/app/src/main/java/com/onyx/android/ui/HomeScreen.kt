@@ -12,6 +12,7 @@
 
 package com.onyx.android.ui
 
+import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -78,10 +79,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -98,8 +101,12 @@ import com.onyx.android.data.repository.SearchResult
 import com.onyx.android.data.repository.SearchSourceType
 import com.onyx.android.data.repository.SortDirection
 import com.onyx.android.data.repository.SortOption
+import com.onyx.android.data.repository.StorageBreakdown
+import com.onyx.android.data.repository.StorageRepository
 import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfDocumentInfoReader
+import com.onyx.android.pdf.PdfExportArtifact
+import com.onyx.android.pdf.PdfExportRepository
 import com.onyx.android.pdf.PdfIncorrectPasswordException
 import com.onyx.android.pdf.PdfPageInfo
 import com.onyx.android.pdf.PdfPasswordRequiredException
@@ -123,6 +130,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.DateFormat
 import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 import androidx.compose.foundation.lazy.grid.items as gridItems
 
@@ -208,6 +216,10 @@ private data class HomeScreenState(
     val viewMode: HomeViewMode = HomeViewMode.LIST,
     val resumeLastPageEnabled: Boolean = true,
     val noteNamingRule: NoteNamingRule = NoteNamingRule.UNTITLED_COUNTER,
+    val showStorageDialog: Boolean = false,
+    val storageBreakdown: StorageBreakdown? = null,
+    val showClearCacheConfirmation: Boolean = false,
+    val pendingExportNote: NoteEntity? = null,
     // Sort/Filter state
     val sortOption: SortOption = SortOption.MODIFIED,
     val sortDirection: SortDirection = SortDirection.DESC,
@@ -276,6 +288,14 @@ private data class HomeScreenActions(
     val onToggleViewMode: () -> Unit,
     val onToggleResumeLastPage: () -> Unit,
     val onCycleNoteNamingRule: () -> Unit,
+    val onShowStorageDialog: () -> Unit,
+    val onDismissStorageDialog: () -> Unit,
+    val onRequestClearCache: () -> Unit,
+    val onDismissClearCacheConfirmation: () -> Unit,
+    val onConfirmClearCache: () -> Unit,
+    val onRequestExportPdf: (NoteEntity) -> Unit,
+    val onDismissExportPdfDialog: () -> Unit,
+    val onExportPdfModeSelected: (Boolean) -> Unit,
     val onRestoreNote: (String) -> Unit,
     val onPermanentlyDeleteNote: (String) -> Unit,
     // Sort/Filter actions
@@ -295,6 +315,7 @@ fun HomeScreen(
     onNavigateToSearchResult: (SearchResult) -> Unit,
     onNavigateToDeveloperFlags: () -> Unit,
 ) {
+    val context = LocalContext.current
     val viewModel: HomeScreenViewModel = hiltViewModel()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
@@ -324,6 +345,10 @@ fun HomeScreen(
     var showBatchAddTagDialog by remember { mutableStateOf(false) }
     var destination by remember { mutableStateOf(HomeDestination.ALL) }
     var viewMode by remember { mutableStateOf(HomeViewMode.LIST) }
+    var showStorageDialog by remember { mutableStateOf(false) }
+    var storageBreakdown by remember { mutableStateOf<StorageBreakdown?>(null) }
+    var showClearCacheConfirmation by remember { mutableStateOf(false) }
+    var pendingExportNote by remember { mutableStateOf<NoteEntity?>(null) }
     // Sort/Filter state
     var sortOption by remember { mutableStateOf(SortOption.MODIFIED) }
     var sortDirection by remember { mutableStateOf(SortDirection.DESC) }
@@ -380,6 +405,10 @@ fun HomeScreen(
             viewMode = viewMode,
             resumeLastPageEnabled = resumeLastPageEnabled,
             noteNamingRule = noteNamingRule,
+            showStorageDialog = showStorageDialog,
+            storageBreakdown = storageBreakdown,
+            showClearCacheConfirmation = showClearCacheConfirmation,
+            pendingExportNote = pendingExportNote,
             sortOption = sortOption,
             sortDirection = sortDirection,
             filterState = filterState,
@@ -573,6 +602,47 @@ fun HomeScreen(
                     }
                 viewModel.setNoteNamingRule(nextRule)
             },
+            onShowStorageDialog = {
+                showStorageDialog = true
+                viewModel.loadStorageBreakdown(
+                    onSuccess = { breakdown -> storageBreakdown = breakdown },
+                    onError = { message -> errorMessage = message },
+                )
+            },
+            onDismissStorageDialog = {
+                showStorageDialog = false
+                showClearCacheConfirmation = false
+            },
+            onRequestClearCache = { showClearCacheConfirmation = true },
+            onDismissClearCacheConfirmation = { showClearCacheConfirmation = false },
+            onConfirmClearCache = {
+                showClearCacheConfirmation = false
+                viewModel.clearCacheData(
+                    onComplete = {
+                        viewModel.loadStorageBreakdown(
+                            onSuccess = { breakdown -> storageBreakdown = breakdown },
+                            onError = { message -> errorMessage = message },
+                        )
+                    },
+                    onError = { message -> errorMessage = message },
+                )
+            },
+            onRequestExportPdf = { note ->
+                pendingExportNote = note
+            },
+            onDismissExportPdfDialog = { pendingExportNote = null },
+            onExportPdfModeSelected = { flatten ->
+                val note = pendingExportNote ?: return@HomeScreenActions
+                pendingExportNote = null
+                viewModel.exportPdfForShare(
+                    noteId = note.noteId,
+                    flatten = flatten,
+                    onSuccess = { artifact ->
+                        sharePdfArtifact(context, artifact)
+                    },
+                    onError = { message -> errorMessage = message },
+                )
+            },
             onRestoreNote = { noteId ->
                 viewModel.restoreNote(
                     noteId = noteId,
@@ -718,6 +788,13 @@ private fun HomeScreenContent(
                                         isLaunchSettingsMenuExpanded = false
                                     },
                                 )
+                                DropdownMenuItem(
+                                    text = { Text("Storage dashboard") },
+                                    onClick = {
+                                        actions.onShowStorageDialog()
+                                        isLaunchSettingsMenuExpanded = false
+                                    },
+                                )
                             }
                         }
                         if (BuildConfig.DEBUG) {
@@ -827,6 +904,23 @@ private fun HomeDialogs(
         onDismiss = actions.onDismissBatchAddTagDialog,
         onAddTag = actions.onConfirmBatchAddTag,
     )
+    HomeStorageDialog(
+        show = state.showStorageDialog,
+        storageBreakdown = state.storageBreakdown,
+        onDismiss = actions.onDismissStorageDialog,
+        onRequestClearCache = actions.onRequestClearCache,
+    )
+    HomeClearCacheConfirmationDialog(
+        show = state.showClearCacheConfirmation,
+        onDismiss = actions.onDismissClearCacheConfirmation,
+        onConfirm = actions.onConfirmClearCache,
+    )
+    HomeExportPdfModeDialog(
+        note = state.pendingExportNote,
+        onDismiss = actions.onDismissExportPdfDialog,
+        onExportFlattened = { actions.onExportPdfModeSelected(true) },
+        onExportLayered = { actions.onExportPdfModeSelected(false) },
+    )
 }
 
 @Composable
@@ -864,6 +958,108 @@ private fun HomeImportErrorDialog(
         confirmButton = {
             Button(onClick = onDismiss) {
                 Text(text = "OK")
+            }
+        },
+    )
+}
+
+@Composable
+private fun HomeStorageDialog(
+    show: Boolean,
+    storageBreakdown: StorageBreakdown?,
+    onDismiss: () -> Unit,
+    onRequestClearCache: () -> Unit,
+) {
+    if (!show) {
+        return
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Storage dashboard") },
+        text = {
+            if (storageBreakdown == null) {
+                Text("Loading storage usage...")
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Notes DB: ${formatBytes(storageBreakdown.notesBytes)}")
+                    Text("Images: ${formatBytes(storageBreakdown.imagesBytes)}")
+                    Text("PDF assets: ${formatBytes(storageBreakdown.pdfBytes)}")
+                    Text("Audio: ${formatBytes(storageBreakdown.audioBytes)}")
+                    Text("Cache: ${formatBytes(storageBreakdown.cacheBytes)}")
+                    Text("Thumbnails: ${formatBytes(storageBreakdown.thumbnailsBytes)}")
+                    Text("Exports: ${formatBytes(storageBreakdown.exportsBytes)}")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Total: ${formatBytes(storageBreakdown.totalBytes)}")
+                }
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Close")
+            }
+        },
+        confirmButton = {
+            Button(onClick = onRequestClearCache) {
+                Text("Clear cache")
+            }
+        },
+    )
+}
+
+@Composable
+private fun HomeClearCacheConfirmationDialog(
+    show: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    if (!show) {
+        return
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Clear cache") },
+        text = { Text("Clear temporary files, thumbnail cache, and exports? Notes and PDF assets stay intact.") },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text("Clear")
+            }
+        },
+    )
+}
+
+@Composable
+private fun HomeExportPdfModeDialog(
+    note: NoteEntity?,
+    onDismiss: () -> Unit,
+    onExportFlattened: () -> Unit,
+    onExportLayered: () -> Unit,
+) {
+    if (note == null) {
+        return
+    }
+    val title = note.title.ifBlank { "Untitled Note" }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Export PDF") },
+        text = { Text("Choose export mode for \"$title\".") },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        confirmButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = onExportLayered) {
+                    Text("Layered")
+                }
+                Button(onClick = onExportFlattened) {
+                    Text("Flattened")
+                }
             }
         },
     )
@@ -1695,6 +1891,7 @@ private fun HomeContentBody(
             onRequestDeleteNote = actions.onRequestDeleteNote,
             onMoveNote = actions.onShowMoveNoteDialog,
             onManageTags = actions.onShowManageTagsDialog,
+            onRequestExportPdf = actions.onRequestExportPdf,
             onEnterSelectionMode = actions.onEnterSelectionMode,
             onToggleNoteSelection = actions.onToggleNoteSelection,
             destination = state.destination,
@@ -1715,6 +1912,7 @@ private fun HomeListContent(
     onRequestDeleteNote: (NoteEntity) -> Unit,
     onMoveNote: (NoteEntity) -> Unit,
     onManageTags: (NoteEntity) -> Unit,
+    onRequestExportPdf: (NoteEntity) -> Unit,
     onEnterSelectionMode: (String) -> Unit,
     onToggleNoteSelection: (String) -> Unit,
     destination: HomeDestination,
@@ -1753,6 +1951,7 @@ private fun HomeListContent(
                 onRequestDeleteNote = onRequestDeleteNote,
                 onMoveNote = onMoveNote,
                 onManageTags = onManageTags,
+                onRequestExportPdf = onRequestExportPdf,
                 onEnterSelectionMode = onEnterSelectionMode,
                 onToggleNoteSelection = onToggleNoteSelection,
                 destination = destination,
@@ -1818,6 +2017,7 @@ internal fun NotesListContent(
     onRequestDeleteNote: (NoteEntity) -> Unit,
     onMoveNote: (NoteEntity) -> Unit,
     onManageTags: (NoteEntity) -> Unit,
+    onRequestExportPdf: (NoteEntity) -> Unit,
     onEnterSelectionMode: (String) -> Unit,
     onToggleNoteSelection: (String) -> Unit,
     destination: HomeDestination = HomeDestination.ALL,
@@ -1872,6 +2072,10 @@ internal fun NotesListContent(
                 onManageTags = {
                     activeContextMenuNoteId = null
                     onManageTags(note)
+                },
+                onExportPdf = {
+                    activeContextMenuNoteId = null
+                    onRequestExportPdf(note)
                 },
                 destination = destination,
                 onRestore = {
@@ -2004,6 +2208,7 @@ private fun NoteRow(
     onDelete: () -> Unit,
     onMove: () -> Unit,
     onManageTags: () -> Unit,
+    onExportPdf: () -> Unit,
     destination: HomeDestination = HomeDestination.ALL,
     onRestore: () -> Unit = {},
     onDeleteForever: () -> Unit = {},
@@ -2110,6 +2315,10 @@ private fun NoteRow(
                     DropdownMenuItem(
                         text = { Text("Move to folder") },
                         onClick = onMove,
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Export PDF...") },
+                        onClick = onExportPdf,
                     )
                     DropdownMenuItem(
                         text = { Text("Delete note") },
@@ -2411,6 +2620,42 @@ private fun FolderBreadcrumb(
     }
 }
 
+private fun formatBytes(bytes: Long): String {
+    if (bytes <= 0L) {
+        return "0 B"
+    }
+    val kb = 1024.0
+    val mb = kb * 1024.0
+    val gb = mb * 1024.0
+    val value = bytes.toDouble()
+    return when {
+        value >= gb -> String.format(Locale.US, "%.2f GB", value / gb)
+        value >= mb -> String.format(Locale.US, "%.2f MB", value / mb)
+        value >= kb -> String.format(Locale.US, "%.1f KB", value / kb)
+        else -> "$bytes B"
+    }
+}
+
+private fun sharePdfArtifact(
+    context: android.content.Context,
+    artifact: PdfExportArtifact,
+) {
+    val uri =
+        FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            artifact.pdfFile,
+        )
+    val chooserTitle = if (artifact.flatten) "Share flattened PDF" else "Share layered PDF"
+    val shareIntent =
+        Intent(Intent.ACTION_SEND)
+            .setType(PDF_MIME_TYPE)
+            .putExtra(Intent.EXTRA_STREAM, uri)
+            .putExtra(Intent.EXTRA_SUBJECT, artifact.pdfFile.nameWithoutExtension)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    context.startActivity(Intent.createChooser(shareIntent, chooserTitle))
+}
+
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @HiltViewModel
 internal class HomeScreenViewModel
@@ -2420,6 +2665,8 @@ internal class HomeScreenViewModel
         private val pdfAssetStorage: PdfAssetStorage,
         private val pdfDocumentInfoReader: PdfDocumentInfoReader,
         private val pdfPasswordStore: PdfPasswordStore,
+        private val pdfExportRepository: PdfExportRepository,
+        private val storageRepository: StorageRepository,
     ) : ViewModel() {
         private data class HomeQueryState(
             val destination: HomeDestination,
@@ -2578,6 +2825,65 @@ internal class HomeScreenViewModel
         fun setNoteNamingRule(rule: NoteNamingRule) {
             repository.setNoteNamingRule(rule)
             _noteNamingRule.value = rule
+        }
+
+        fun loadStorageBreakdown(
+            onSuccess: (StorageBreakdown) -> Unit,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    storageRepository.getStorageBreakdown()
+                }.onSuccess(onSuccess)
+                    .onFailure { throwable ->
+                        if (throwable is CancellationException) {
+                            throw throwable
+                        }
+                        Log.e(HOME_LOG_TAG, "Load storage breakdown failed", throwable)
+                        onError("Unable to load storage usage.")
+                    }
+            }
+        }
+
+        fun clearCacheData(
+            onComplete: () -> Unit,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    storageRepository.clearCacheData()
+                }.onSuccess {
+                    onComplete()
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Clear cache failed", throwable)
+                    onError("Unable to clear cache.")
+                }
+            }
+        }
+
+        fun exportPdfForShare(
+            noteId: String,
+            flatten: Boolean,
+            onSuccess: (PdfExportArtifact) -> Unit,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    val note = repository.getNoteById(noteId) ?: error("Note not found.")
+                    val pdfAssetId = repository.getPrimaryPdfAssetIdForNote(noteId) ?: error("No PDF asset available.")
+                    pdfExportRepository.exportNotePdf(note = note, pdfAssetId = pdfAssetId, flatten = flatten)
+                }.onSuccess(onSuccess)
+                    .onFailure { throwable ->
+                        if (throwable is CancellationException) {
+                            throw throwable
+                        }
+                        Log.e(HOME_LOG_TAG, "Export PDF failed", throwable)
+                        onError("Unable to export PDF for sharing.")
+                    }
+            }
         }
 
         fun createNote(

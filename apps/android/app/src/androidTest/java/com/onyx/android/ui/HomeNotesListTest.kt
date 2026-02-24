@@ -39,9 +39,11 @@ class HomeNotesListTest {
                     selectionMode = false,
                     selectedNoteIds = emptySet(),
                     onNavigateToEditor = { _, _ -> },
+                    resumeLastPageEnabled = true,
                     onRequestDeleteNote = { target -> requestedDeleteNoteId = target.noteId },
                     onMoveNote = {},
                     onManageTags = {},
+                    onRequestExportPdf = {},
                     onEnterSelectionMode = {},
                     onToggleNoteSelection = {},
                 )

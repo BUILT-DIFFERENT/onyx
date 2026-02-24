@@ -1097,6 +1097,19 @@ private fun rememberNoteEditorUiState(
                         )
                 }
             },
+            onLassoConvertToText = {
+                val pageId = pageState.currentPage?.pageId ?: return@NoteEditorContentState
+                val lassoStroke =
+                    pageState.strokes
+                        .lastOrNull { stroke -> stroke.style.tool == Tool.LASSO }
+                        ?: return@NoteEditorContentState
+                viewModel.startConversionDraftFromLasso(
+                    pageId = pageId,
+                    lassoStroke = lassoStroke,
+                    pageStrokes = pageState.strokes,
+                )
+                lassoSelection = LassoSelection()
+            },
             onInsertActionChanged = { action ->
                 activeInsertAction = action
             },
@@ -1726,6 +1739,19 @@ private fun rememberMultiPageUiState(
                             scale = scale,
                         )
                 }
+            },
+            onLassoConvertToText = { pageId ->
+                val pageStrokes = pageStrokesCache[pageId].orEmpty()
+                val lassoStroke =
+                    pageStrokes
+                        .lastOrNull { stroke -> stroke.style.tool == Tool.LASSO }
+                        ?: return@MultiPageContentState
+                viewModel.startConversionDraftFromLasso(
+                    pageId = pageId,
+                    lassoStroke = lassoStroke,
+                    pageStrokes = pageStrokes,
+                )
+                lassoSelectionsByPageId.remove(pageId)
             },
             onInsertActionChanged = { action ->
                 activeInsertAction = action

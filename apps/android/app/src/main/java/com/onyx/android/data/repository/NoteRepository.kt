@@ -194,11 +194,19 @@ class NoteRepository(
 
     fun getAllNotes(): Flow<List<NoteEntity>> = noteDao.getAllNotes()
 
+    suspend fun getNoteById(noteId: String): NoteEntity? = noteDao.getById(noteId)
+
     fun getTrashNotes(): Flow<List<NoteEntity>> = noteDao.getDeletedNotes()
 
     fun getSharedNotes(): Flow<List<NoteEntity>> = flowOf(emptyList())
 
     fun getPagesForNote(noteId: String): Flow<List<PageEntity>> = pageDao.getPagesForNote(noteId)
+
+    suspend fun getPrimaryPdfAssetIdForNote(noteId: String): String? =
+        pageDao
+            .getPagesForNoteSync(noteId)
+            .sortedBy { page -> page.indexInNote }
+            .firstNotNullOfOrNull { page -> page.pdfAssetId }
 
     fun isResumeLastPageEnabled(): Boolean = noteLaunchPreferences.isResumeLastPageEnabled()
 

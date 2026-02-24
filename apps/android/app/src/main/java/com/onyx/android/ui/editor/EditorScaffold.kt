@@ -380,6 +380,7 @@ private fun MultiPageEditorContent(
                         onLassoResize = { scale, pivotX, pivotY ->
                             contentState.onLassoResize(pageState.page.pageId, scale, pivotX, pivotY)
                         },
+                        onLassoConvertToText = { contentState.onLassoConvertToText(pageState.page.pageId) },
                         onInsertActionChanged = contentState.onInsertActionChanged,
                         onShapeObjectCreate = { shapeType, x, y, width, height ->
                             contentState.onShapeObjectCreate(pageState.page.pageId, shapeType, x, y, width, height)
@@ -463,6 +464,7 @@ private fun PageItem(
     onStrokeSplit: (InkStroke, List<InkStroke>) -> Unit,
     onLassoMove: (Float, Float) -> Unit,
     onLassoResize: (Float, Float, Float) -> Unit,
+    onLassoConvertToText: () -> Unit,
     onInsertActionChanged: (InsertAction) -> Unit,
     onShapeObjectCreate: (ShapeType, Float, Float, Float, Float) -> Unit,
     onTextObjectCreate: (Float, Float) -> Unit,
@@ -605,6 +607,7 @@ private fun PageItem(
                         onStrokeSplit = onStrokeSplit,
                         onLassoMove = onLassoMove,
                         onLassoResize = onLassoResize,
+                        onLassoConvertToText = onLassoConvertToText,
                         onInsertActionChanged = onInsertActionChanged,
                         onShapeObjectCreate = onShapeObjectCreate,
                         onTextObjectCreate = onTextObjectCreate,
@@ -719,6 +722,12 @@ private fun PageItem(
                 onConvertedTextBlockSelected = onConvertedTextBlockSelected,
             )
         }
+        LassoConvertAction(
+            selection = pageState.lassoSelection,
+            viewTransform = renderTransform,
+            enabled = !isReadOnly,
+            onConvert = onLassoConvertToText,
+        )
     }
 }
 
@@ -935,6 +944,12 @@ private fun NoteEditorContent(
                     onConvertedTextBlockSelected = contentState.onConvertedTextBlockSelected,
                 )
             }
+            LassoConvertAction(
+                selection = contentState.lassoSelection,
+                viewTransform = contentState.viewTransform,
+                enabled = !contentState.isReadOnly,
+                onConvert = contentState.onLassoConvertToText,
+            )
             PageZoomPill(
                 currentPage = (contentState.currentPageIndex + 1).coerceAtLeast(1),
                 totalPages = contentState.totalPages,
@@ -960,6 +975,36 @@ private fun NoteEditorContent(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+    }
+}
+
+@Composable
+private fun LassoConvertAction(
+    selection: com.onyx.android.ink.model.LassoSelection,
+    viewTransform: ViewTransform,
+    enabled: Boolean,
+    onConvert: () -> Unit,
+) {
+    val bounds = selection.selectionBounds ?: return
+    if (!selection.hasSelection) {
+        return
+    }
+    val left = viewTransform.pageToScreenX(bounds.x)
+    val top = viewTransform.pageToScreenY(bounds.y)
+    TextButton(
+        onClick = onConvert,
+        enabled = enabled,
+        modifier =
+            Modifier
+                .offset {
+                    IntOffset(
+                        x = left.roundToInt(),
+                        y = (top - 40f).roundToInt(),
+                    )
+                }.semantics { contentDescription = "Convert lasso to text" }
+                .testTag("lasso-convert-button"),
+    ) {
+        Text("Convert to text")
     }
 }
 

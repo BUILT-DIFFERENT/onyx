@@ -217,11 +217,11 @@ Evidence paths:
   - Validation gate: Instrumented tests for internal page link and external URL link behavior.
 
 - [ ] `PDF-03` Export/share with flatten-annotations option
-  - Status: `Missing`
+  - Status: `Partial (Wave Z-PdfExportShareMVP)`
   - Competitor behavior: Samsung-style workflows include export/share of annotated PDFs with flatten controls.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
-  - What exists now: PDF import and annotation rendering exist; no share/export pipeline with flatten option.
-  - What is missing: Export job, flatten toggle, generated asset metadata contract.
+  - What exists now: Home note actions now include export/share with layered vs flattened mode selection; Android export emits PDF artifact plus metadata sidecar and launches system share intent.
+  - What is missing: True annotation flattening in the render/export pipeline and Convex runtime export metadata sync writes.
   - Exact change needed: Implement export/share pipeline with `flatten=true|false` mode and persist export metadata for Android and Convex consumers.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -724,11 +724,11 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Validation gate: Mode-based behavior tests and settings persistence checks.
 
 - [ ] `REC-05` Lasso-to-text conversion workflow
-  - Status: `Missing`
+  - Status: `Partial (Wave Z-LassoConvertActionMVP)`
   - Competitor behavior: Users expect selected handwriting to convert to editable text blocks.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\LassoGeometry.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\ConvertedTextBlock.kt`
-  - What exists now: Recognition overlays exist, but lasso-triggered conversion workflow is not exposed.
-  - What is missing: Context action, preview, confirmation, and resulting text-object insertion semantics.
+  - What exists now: Lasso selection now exposes an in-canvas `Convert to text` action (single-page + multi-page) that opens editable conversion dialog and persists conversion blocks.
+  - What is missing: Full text-object insertion/replacement semantics and ink-preserving convert+undo parity.
   - Exact change needed: Add lasso action `Convert to text`, show editable preview, and commit into text object layer while preserving original ink for undo.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -803,11 +803,11 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Validation gate: Repository tests for generated names and reopen-to-last-page behavior.
 
 - [ ] `SET-04` Storage dashboard + cache clear controls
-  - Status: `Missing`
+  - Status: `Partial (Wave Z-StorageDashboardMVP)`
   - Competitor behavior: Notewise provides note storage sizing and cache clear actions.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\settings\SettingsScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\StorageRepository.kt`
-  - What exists now: No user-facing storage footprint summary.
-  - What is missing: Storage breakdown (notes/images/PDF/audio/cache) and clear-cache affordance.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\StorageRepository.kt`
+  - What exists now: Home launch-preferences menu now includes storage dashboard dialog with category breakdown and clear-cache confirmation.
+  - What is missing: Dedicated settings surface and deeper per-asset attribution fidelity.
   - Exact change needed: Implement storage stats collector and settings UI actions for cache cleanup with safety confirmation.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave V1`

@@ -10,11 +10,13 @@ import com.onyx.android.data.dao.PageObjectDao
 import com.onyx.android.data.dao.PageTemplateDao
 import com.onyx.android.data.repository.NoteLaunchPreferences
 import com.onyx.android.data.repository.NoteRepository
+import com.onyx.android.data.repository.StorageRepository
 import com.onyx.android.data.serialization.StrokeSerializer
 import com.onyx.android.data.thumbnail.ThumbnailGenerator
 import com.onyx.android.device.DeviceIdentity
 import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfDocumentInfoReader
+import com.onyx.android.pdf.PdfExportRepository
 import com.onyx.android.pdf.PdfPasswordStore
 import com.onyx.android.pdf.PdfiumDocumentInfoReader
 import com.onyx.android.recognition.MyScriptEngine
@@ -55,6 +57,13 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun providePdfExportRepository(
+        @ApplicationContext context: Context,
+        pdfAssetStorage: PdfAssetStorage,
+    ): PdfExportRepository = PdfExportRepository(context, pdfAssetStorage)
+
+    @Provides
+    @Singleton
     fun providePdfDocumentInfoReader(
         @ApplicationContext context: Context,
     ): PdfDocumentInfoReader = PdfiumDocumentInfoReader(context)
@@ -70,6 +79,12 @@ object AppModule {
     fun provideRecognitionSettings(
         @ApplicationContext context: Context,
     ): RecognitionSettings = RecognitionSettings(context)
+
+    @Provides
+    @Singleton
+    fun provideStorageRepository(
+        @ApplicationContext context: Context,
+    ): StorageRepository = StorageRepository(context)
 
     @Provides
     @Singleton
