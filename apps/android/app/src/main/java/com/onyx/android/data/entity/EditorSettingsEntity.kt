@@ -21,6 +21,7 @@ data class EditorSettingsEntity(
     val highlighterMaxWidthFactor: Float = 1.15f,
     val highlighterSmoothingLevel: Float = 0.35f,
     val highlighterEndTaperStrength: Float = 0.35f,
+    val eraserBaseWidth: Float = 12.0f,
     val lastNonEraserTool: String = "PEN",
     val singleFingerMode: String = "PAN",
     val doubleFingerMode: String = "ZOOM_PAN",

@@ -2,6 +2,7 @@ package com.onyx.android.data
 
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.onyx.android.data.migrations.MIGRATION_11_12
+import com.onyx.android.data.migrations.MIGRATION_12_13
 import com.onyx.android.data.migrations.MIGRATION_4_5
 import io.mockk.every
 import io.mockk.mockk
@@ -106,5 +107,16 @@ class OnyxDatabaseTest {
         MIGRATION_11_12.migrate(database)
 
         assert(executedSql.any { it.contains("ADD COLUMN latencyOptimizationMode TEXT NOT NULL DEFAULT 'NORMAL'") })
+    }
+
+    @Test
+    fun `migration 12 to 13 adds eraser width to editor settings`() {
+        val database = mockk<SupportSQLiteDatabase>(relaxed = true)
+        val executedSql = mutableListOf<String>()
+        every { database.execSQL(capture(executedSql)) } returns Unit
+
+        MIGRATION_12_13.migrate(database)
+
+        assert(executedSql.any { it.contains("ADD COLUMN eraserBaseWidth REAL NOT NULL DEFAULT 12.0") })
     }
 }

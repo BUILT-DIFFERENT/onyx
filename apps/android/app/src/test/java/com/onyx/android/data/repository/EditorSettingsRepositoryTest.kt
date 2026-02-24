@@ -69,6 +69,7 @@ class EditorSettingsRepositoryTest {
             assertEquals(Tool.HIGHLIGHTER, result.lastNonEraserTool)
             assertEquals("#00FF00", result.highlighterBrush.color)
             assertEquals(12.0f, result.highlighterBrush.baseWidth)
+            assertEquals(12.0f, result.eraserBaseWidth)
         }
 
     @Test
@@ -122,6 +123,7 @@ class EditorSettingsRepositoryTest {
             assertEquals("#0000FF", result.penBrush.color)
             assertEquals(5.0f, result.penBrush.baseWidth)
             assertEquals(Tool.PEN, result.lastNonEraserTool)
+            assertEquals(12.0f, result.eraserBaseWidth)
         }
 
     @Test
@@ -169,6 +171,7 @@ class EditorSettingsRepositoryTest {
                             entity.penBaseWidth == 4.0f &&
                             entity.highlighterColor == "#654321" &&
                             entity.highlighterBaseWidth == 8.0f &&
+                            entity.eraserBaseWidth == 12f &&
                             entity.lastNonEraserTool == "HIGHLIGHTER" &&
                             entity.latencyOptimizationMode == "NORMAL"
                     },
@@ -186,6 +189,7 @@ class EditorSettingsRepositoryTest {
         assertEquals(2.0f, defaults.penBrush.baseWidth)
         assertEquals(Tool.HIGHLIGHTER, defaults.highlighterBrush.tool)
         assertEquals("#B31E88E5", defaults.highlighterBrush.color)
+        assertEquals(12f, defaults.eraserBaseWidth)
         assertEquals(Tool.PEN, defaults.lastNonEraserTool)
         assertEquals(LatencyOptimizationMode.NORMAL, defaults.inputSettings.latencyOptimizationMode)
     }

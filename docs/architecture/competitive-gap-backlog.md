@@ -138,11 +138,11 @@ Evidence paths:
   - Validation gate: Renderer visual regression tests for each line style.
 
 - [ ] `EDIT-08` Advanced pen controls (stabilization and pressure tuning depth)
-  - Status: `Partial`
+  - Status: `Strong Partial (Wave R-PressureStabilizationControls)`
   - Competitor behavior: Notewise provides deeper stabilization and pressure controls than basic brush settings.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\ToolSettingsPanel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\model\Brush.kt`
-  - What exists now: Size/smoothing/taper exist, but pressure and stabilization are not fully surfaced as distinct user controls.
-  - What is missing: Separate pressure-sensitivity and stabilization controls with explicit labels and persistence.
+  - What exists now: Pen and highlighter settings now expose explicit `Pressure sensitivity` and `Stabilization` controls wired to persisted brush width-factor and smoothing parameters.
+  - What is missing: Deeper pressure-curve customization beyond single sensitivity control and per-tool preset profiles for stabilization behavior.
   - Exact change needed: Extend brush settings model/UI for pressure and stabilization sliders and route parameters into stroke shaping.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -160,11 +160,11 @@ Evidence paths:
   - Validation gate: Geometry unit tests and integration tests for partial erase/undo consistency.
 
 - [ ] `EDIT-10` Eraser size control
-  - Status: `Missing`
+  - Status: `Strong Partial (Wave R-EraserSizeControl)`
   - Competitor behavior: Competitor apps expose eraser radius sliders.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\ToolSettingsPanel.kt`
-  - What exists now: No explicit eraser diameter setting in UI.
-  - What is missing: Radius slider and application to hit-testing.
+  - What exists now: Eraser tool settings now expose an explicit size slider, persisted eraser width state, and segment-eraser hit radius scaling from configured width.
+  - What is missing: Area/pixel eraser parity and live radius cursor feedback for all erase modes.
   - Exact change needed: Add eraser radius setting and propagate it through stroke/segment/area eraser hit paths.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`

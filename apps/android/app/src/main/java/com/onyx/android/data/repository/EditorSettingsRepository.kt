@@ -21,6 +21,7 @@ data class EditorSettings(
     val selectedTool: Tool,
     val penBrush: Brush,
     val highlighterBrush: Brush,
+    val eraserBaseWidth: Float = 12f,
     val lastNonEraserTool: Tool,
     val inputSettings: InputSettings = InputSettings(),
 )
@@ -57,6 +58,7 @@ class EditorSettingsRepository
                     highlighterMaxWidthFactor = settings.highlighterBrush.maxWidthFactor,
                     highlighterSmoothingLevel = settings.highlighterBrush.smoothingLevel,
                     highlighterEndTaperStrength = settings.highlighterBrush.endTaperStrength,
+                    eraserBaseWidth = settings.eraserBaseWidth,
                     lastNonEraserTool = settings.lastNonEraserTool.name,
                     singleFingerMode = settings.inputSettings.singleFingerMode.name,
                     doubleFingerMode = settings.inputSettings.doubleFingerMode.name,
@@ -131,6 +133,7 @@ class EditorSettingsRepository
                         smoothingLevel = highlighterSmoothingLevel,
                         endTaperStrength = highlighterEndTaperStrength,
                     ),
+                eraserBaseWidth = eraserBaseWidth,
                 lastNonEraserTool = lastTool,
                 inputSettings =
                     InputSettings(
@@ -150,6 +153,7 @@ class EditorSettingsRepository
 
         companion object {
             const val DEFAULT_STACKED_HIGHLIGHTER_BASE_WIDTH = 6.5f
+            const val DEFAULT_ERASER_BASE_WIDTH = 12f
 
             val DEFAULT_SETTINGS =
                 EditorSettings(
@@ -161,6 +165,7 @@ class EditorSettingsRepository
                             color = "#B31E88E5",
                             baseWidth = DEFAULT_STACKED_HIGHLIGHTER_BASE_WIDTH,
                         ),
+                    eraserBaseWidth = DEFAULT_ERASER_BASE_WIDTH,
                     lastNonEraserTool = Tool.PEN,
                     inputSettings = InputSettings(),
                 )

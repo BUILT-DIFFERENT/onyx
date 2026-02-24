@@ -97,6 +97,8 @@ private const val MAX_LASSO_SCALE = 5f
 private const val ZOOM_PERCENT_DIVISOR = 100f
 private const val FIT_ZOOM_BASELINE = 1f
 private const val MIN_ZOOM_CHANGE_EPSILON = 0.001f
+private const val MIN_ERASER_BASE_WIDTH = 0.5f
+private const val MAX_ERASER_BASE_WIDTH = 20f
 
 @Suppress("MagicNumber")
 private val DOUBLE_TAP_ZOOM_PRESETS = listOf(50, 100, 200, 300, 400)
@@ -1589,6 +1591,7 @@ private fun rememberBrushState(
         mutableStateOf(editorSettings.highlighterBrush.copy(tool = Tool.HIGHLIGHTER))
     }
     var selectedTool by remember { mutableStateOf(editorSettings.selectedTool) }
+    var eraserBaseWidth by remember { mutableStateOf(editorSettings.eraserBaseWidth) }
     var lastNonEraserTool by remember { mutableStateOf(editorSettings.lastNonEraserTool) }
     var inputSettings by remember { mutableStateOf(editorSettings.inputSettings) }
 
@@ -1596,6 +1599,7 @@ private fun rememberBrushState(
         penBrush = editorSettings.penBrush.copy(tool = Tool.PEN)
         highlighterBrush = editorSettings.highlighterBrush.copy(tool = Tool.HIGHLIGHTER)
         selectedTool = editorSettings.selectedTool
+        eraserBaseWidth = editorSettings.eraserBaseWidth
         lastNonEraserTool = editorSettings.lastNonEraserTool
         inputSettings = editorSettings.inputSettings
     }
@@ -1606,6 +1610,7 @@ private fun rememberBrushState(
                 selectedTool = selectedTool,
                 penBrush = penBrush.copy(tool = Tool.PEN),
                 highlighterBrush = highlighterBrush.copy(tool = Tool.HIGHLIGHTER),
+                eraserBaseWidth = eraserBaseWidth,
                 lastNonEraserTool = lastNonEraserTool,
                 inputSettings = inputSettings,
             ),
@@ -1624,8 +1629,17 @@ private fun rememberBrushState(
 
             Tool.ERASER -> {
                 when (lastNonEraserTool) {
-                    Tool.HIGHLIGHTER -> highlighterBrush.copy(tool = Tool.ERASER)
-                    else -> penBrush.copy(tool = Tool.ERASER)
+                    Tool.HIGHLIGHTER ->
+                        highlighterBrush.copy(
+                            tool = Tool.ERASER,
+                            baseWidth = eraserBaseWidth,
+                        )
+
+                    else ->
+                        penBrush.copy(
+                            tool = Tool.ERASER,
+                            baseWidth = eraserBaseWidth,
+                        )
                 }
             }
 
@@ -1657,6 +1671,7 @@ private fun rememberBrushState(
 
                 Tool.ERASER -> {
                     selectedTool = Tool.ERASER
+                    eraserBaseWidth = updatedBrush.baseWidth.coerceIn(MIN_ERASER_BASE_WIDTH, MAX_ERASER_BASE_WIDTH)
                     if (lastNonEraserTool == Tool.HIGHLIGHTER) {
                         highlighterBrush = highlighterBrush.copy(tool = Tool.HIGHLIGHTER)
                     } else {

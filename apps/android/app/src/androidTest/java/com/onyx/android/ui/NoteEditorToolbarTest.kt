@@ -7,10 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -126,7 +124,8 @@ class NoteEditorToolbarTest {
             up()
         }
         composeRule.onNodeWithText("Pen settings").assertIsDisplayed()
-        composeRule.onNodeWithText("Smoothing").assertIsDisplayed()
+        composeRule.onNodeWithText("Pressure sensitivity").assertIsDisplayed()
+        composeRule.onNodeWithText("Stabilization").assertIsDisplayed()
         composeRule.onNodeWithText("End taper").assertIsDisplayed()
     }
 
@@ -197,7 +196,7 @@ class NoteEditorToolbarTest {
         }
         composeRule.onNodeWithText("Eraser options").assertIsDisplayed()
         composeRule.onNodeWithText("Stroke eraser").assertIsDisplayed()
-        composeRule.onAllNodesWithText("Brush size").assertCountEquals(0)
+        composeRule.onNodeWithText("Eraser size").assertIsDisplayed()
     }
 
     @Test

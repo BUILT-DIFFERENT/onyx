@@ -32,6 +32,7 @@ import com.onyx.android.data.entity.TagEntity
 import com.onyx.android.data.entity.ThumbnailEntity
 import com.onyx.android.data.migrations.MIGRATION_10_11
 import com.onyx.android.data.migrations.MIGRATION_11_12
+import com.onyx.android.data.migrations.MIGRATION_12_13
 import com.onyx.android.data.migrations.MIGRATION_4_5
 import com.onyx.android.data.migrations.MIGRATION_5_6
 import com.onyx.android.data.migrations.MIGRATION_6_7
@@ -55,7 +56,7 @@ import com.onyx.android.data.migrations.MIGRATION_9_10
         OperationLogEntity::class,
         PageObjectEntity::class,
     ],
-    version = 12,
+    version = 13,
     exportSchema = true,
 )
 @Suppress("TooManyFunctions")
@@ -349,6 +350,7 @@ abstract class OnyxDatabase : RoomDatabase() {
                     MIGRATION_9_10,
                     MIGRATION_10_11,
                     MIGRATION_11_12,
+                    MIGRATION_12_13,
                 ).build()
     }
 }

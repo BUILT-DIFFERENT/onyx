@@ -94,8 +94,18 @@ internal fun ToolSettingsPanel(
                         enabled = true,
                         onBrushChange = onBrushChange,
                     )
+                    val pressureSensitivity = resolvePressureSensitivity(brush)
+                    Text(text = "Pressure sensitivity", style = MaterialTheme.typography.bodyMedium)
+                    Slider(
+                        value = pressureSensitivity,
+                        onValueChange = { sensitivity ->
+                            onBrushChange(applyPressureSensitivity(brush, sensitivity))
+                        },
+                        valueRange = 0f..1f,
+                        steps = TOOL_SETTINGS_DIALOG_SLIDER_STEPS,
+                    )
                     val smoothing = resolveSmoothingLevel(brush)
-                    Text(text = "Smoothing", style = MaterialTheme.typography.bodyMedium)
+                    Text(text = "Stabilization", style = MaterialTheme.typography.bodyMedium)
                     Slider(
                         value = smoothing,
                         onValueChange = { level ->
@@ -152,8 +162,18 @@ internal fun ToolSettingsPanel(
                         },
                         valueRange = HIGHLIGHTER_OPACITY_MIN..HIGHLIGHTER_OPACITY_MAX,
                     )
+                    val pressureSensitivity = resolvePressureSensitivity(brush)
+                    Text(text = "Pressure sensitivity", style = MaterialTheme.typography.bodyMedium)
+                    Slider(
+                        value = pressureSensitivity,
+                        onValueChange = { sensitivity ->
+                            onBrushChange(applyPressureSensitivity(brush, sensitivity))
+                        },
+                        valueRange = 0f..1f,
+                        steps = TOOL_SETTINGS_DIALOG_SLIDER_STEPS,
+                    )
                     val smoothing = resolveSmoothingLevel(brush)
-                    Text(text = "Smoothing", style = MaterialTheme.typography.bodyMedium)
+                    Text(text = "Stabilization", style = MaterialTheme.typography.bodyMedium)
                     Slider(
                         value = smoothing,
                         onValueChange = { level ->
@@ -180,6 +200,12 @@ internal fun ToolSettingsPanel(
                         text = "Erases whole strokes on touch.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    BrushSizeControl(
+                        brush = brush,
+                        enabled = true,
+                        label = "Eraser size",
+                        onBrushChange = onBrushChange,
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -228,6 +254,7 @@ internal fun ToolSettingsPanel(
 private fun BrushSizeControl(
     brush: Brush,
     enabled: Boolean,
+    label: String = "Brush size",
     onBrushChange: (Brush) -> Unit,
 ) {
     val normalizedValue =
@@ -243,7 +270,7 @@ private fun BrushSizeControl(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "Brush size",
+            text = label,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.width(BRUSH_SIZE_SLIDER_WIDTH_DP.dp),
         )
@@ -302,6 +329,26 @@ internal fun applySmoothingLevel(
     brush: Brush,
     level: Float,
 ): Brush = brush.copy(smoothingLevel = level.coerceIn(0f, 1f))
+
+internal fun resolvePressureSensitivity(brush: Brush): Float {
+    val spread = (brush.maxWidthFactor - brush.minWidthFactor).coerceIn(PRESSURE_SPREAD_MIN, PRESSURE_SPREAD_MAX)
+    return ((spread - PRESSURE_SPREAD_MIN) / (PRESSURE_SPREAD_MAX - PRESSURE_SPREAD_MIN)).coerceIn(0f, 1f)
+}
+
+internal fun applyPressureSensitivity(
+    brush: Brush,
+    sensitivity: Float,
+): Brush {
+    val normalized = sensitivity.coerceIn(0f, 1f)
+    val spread = PRESSURE_SPREAD_MIN + (PRESSURE_SPREAD_MAX - PRESSURE_SPREAD_MIN) * normalized
+    val halfSpread = spread / 2f
+    val minFactor = (PRESSURE_BASELINE - halfSpread).coerceAtLeast(PRESSURE_MIN_WIDTH_FACTOR_FLOOR)
+    val maxFactor = (PRESSURE_BASELINE + halfSpread).coerceAtMost(PRESSURE_MAX_WIDTH_FACTOR_CEILING)
+    return brush.copy(
+        minWidthFactor = minFactor,
+        maxWidthFactor = maxFactor,
+    )
+}
 
 internal fun resolveEndTaperStrength(brush: Brush): Float = brush.endTaperStrength.coerceIn(0f, 1f)
 
@@ -380,6 +427,12 @@ internal fun stripAlpha(colorHex: String): String {
         normalized
     }
 }
+
+private const val PRESSURE_BASELINE = 1f
+private const val PRESSURE_SPREAD_MIN = 0.2f
+private const val PRESSURE_SPREAD_MAX = 1.2f
+private const val PRESSURE_MIN_WIDTH_FACTOR_FLOOR = 0.1f
+private const val PRESSURE_MAX_WIDTH_FACTOR_CEILING = 2.2f
 
 internal fun toggleEraser(
     brush: Brush,

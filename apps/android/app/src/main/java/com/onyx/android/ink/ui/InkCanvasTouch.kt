@@ -37,7 +37,10 @@ private const val PREDICTED_STROKE_ALPHA = 0.2f
 private const val IN_PROGRESS_STROKE_ALPHA = 1f
 private const val EDGE_TOLERANCE_PX = 12f
 private const val MIN_TOLERANCE_ZOOM = 0.001f
-private const val SEGMENT_ERASER_RADIUS_PX = 10f
+private const val SEGMENT_ERASER_BASE_RADIUS_PX = 10f
+private const val ERASER_BASE_WIDTH_DEFAULT = 12f
+private const val ERASER_RADIUS_SCALE_MIN = 0.5f
+private const val ERASER_RADIUS_SCALE_MAX = 4f
 private const val HOVER_ERASER_COLOR = 0xFF6B6B6B.toInt()
 private const val HOVER_ERASER_ALPHA = 0.6f
 private const val HOVER_PEN_ALPHA = 0.35f
@@ -689,7 +692,11 @@ private fun handleEraserAtPointer(
                 listOf(currentPagePoint)
             }
         val eraserRadius =
-            SEGMENT_ERASER_RADIUS_PX /
+            (
+                SEGMENT_ERASER_BASE_RADIUS_PX *
+                    (interaction.brush.baseWidth / ERASER_BASE_WIDTH_DEFAULT)
+                        .coerceIn(ERASER_RADIUS_SCALE_MIN, ERASER_RADIUS_SCALE_MAX)
+            ) /
                 interaction.viewTransform.zoom.coerceAtLeast(MIN_TOLERANCE_ZOOM)
         val splitCandidates =
             computeStrokeSplitCandidates(
