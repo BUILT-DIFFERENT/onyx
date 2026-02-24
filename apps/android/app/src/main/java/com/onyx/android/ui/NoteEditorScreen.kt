@@ -6,10 +6,13 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -199,6 +202,7 @@ private fun NoteEditorScreenContent(
             topBarState = uiState.topBarState,
             toolbarState = uiState.toolbarState,
             multiPageContentState = uiState.multiPageContentState,
+            snackbarHostState = uiState.snackbarHostState,
         )
         if (showOutlineSheet) {
             PdfOutlineSheet(
@@ -242,6 +246,7 @@ private fun NoteEditorScreenContent(
             toolbarState = uiState.toolbarState,
             contentState = uiState.contentState,
             transformState = uiState.transformState,
+            snackbarHostState = uiState.snackbarHostState,
         )
         if (showOutlineSheet) {
             PdfOutlineSheet(
@@ -411,16 +416,27 @@ private fun rememberNoteEditorUiState(
     val undoController = remember(viewModel) { UndoController(viewModel, MAX_UNDO_ACTIONS) }
     var isReadOnly by rememberSaveable { mutableStateOf(false) }
     var isTextSelectionMode by rememberSaveable { mutableStateOf(false) }
+    var isZoomLocked by rememberSaveable { mutableStateOf(false) }
     var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
     var isSegmentEraserEnabled by rememberSaveable { mutableStateOf(false) }
     var activeInsertAction by rememberSaveable { mutableStateOf(InsertAction.NONE) }
+    var pendingImageUri by rememberSaveable { mutableStateOf<String?>(null) }
     var lassoSelection by remember { mutableStateOf(LassoSelection()) }
     val templateConfig by viewModel.currentTemplateConfig.collectAsState()
     val templateState = remember(templateConfig) { templateConfig.toUiState() }
     var panFlingJob by remember { mutableStateOf<Job?>(null) }
     val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val pickImageLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            pendingImageUri = uri?.toString()
+            activeInsertAction = if (uri != null) InsertAction.IMAGE else InsertAction.NONE
+            if (uri != null) {
+                viewModel.selectObject(null)
+            }
+        }
     val viewportWidth = viewportSize.width.toFloat()
     val viewportHeight = viewportSize.height.toFloat()
     val pdfState =
@@ -474,6 +490,7 @@ private fun rememberNoteEditorUiState(
         isTextSelectionMode = false
         lassoSelection = LassoSelection()
         activeInsertAction = InsertAction.NONE
+        pendingImageUri = null
         viewModel.selectObject(null)
     }
     val topBarState =
@@ -491,7 +508,15 @@ private fun rememberNoteEditorUiState(
             },
         ).copy(
             isReadOnly = isReadOnly,
-            onToggleReadOnly = { isReadOnly = !isReadOnly },
+            onToggleReadOnly = {
+                isReadOnly = !isReadOnly
+                coroutineScope.launch {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.showSnackbar(
+                        if (isReadOnly) "View mode enabled" else "Edit mode enabled",
+                    )
+                }
+            },
             isTextSelectionMode = isTextSelectionMode,
             onToggleTextSelectionMode = {
                 if (pdfState.isPdfPage) {
@@ -518,9 +543,13 @@ private fun rememberNoteEditorUiState(
             brushState.onBrushChange,
             { isSegmentEraserEnabled = it },
             { action ->
-                activeInsertAction = action
-                if (action != InsertAction.NONE) {
-                    viewModel.selectObject(null)
+                if (action == InsertAction.IMAGE) {
+                    pickImageLauncher.launch("image/*")
+                } else {
+                    activeInsertAction = action
+                    if (action != InsertAction.NONE) {
+                        viewModel.selectObject(null)
+                    }
                 }
             },
             {
@@ -530,6 +559,7 @@ private fun rememberNoteEditorUiState(
     val onTransformGesture: (Float, Float, Float, Float, Float) -> Unit =
         { zoomChange, panChangeX, panChangeY, centroidX, centroidY ->
             panFlingJob?.cancel()
+            val effectiveZoomChange = if (isZoomLocked) 1f else zoomChange
             viewTransform =
                 applyTransformGesture(
                     current = viewTransform,
@@ -540,7 +570,7 @@ private fun rememberNoteEditorUiState(
                     viewportHeight = viewportHeight,
                     gesture =
                         TransformGesture(
-                            zoomChange,
+                            effectiveZoomChange,
                             panChangeX,
                             panChangeY,
                             centroidX,
@@ -652,7 +682,9 @@ private fun rememberNoteEditorUiState(
             allowCanvasFingerGestures = true,
             thumbnails = thumbnails,
             currentPageIndex = pageState.currentPageIndex,
+            totalPages = pageState.pages.size,
             templateState = templateState,
+            isZoomLocked = isZoomLocked,
             lassoSelection = lassoSelection,
             isTextSelectionEnabled = isTextSelectionMode,
             isRecognitionOverlayEnabled = recognitionOverlayEnabled,
@@ -732,6 +764,44 @@ private fun rememberNoteEditorUiState(
                     activeInsertAction = InsertAction.NONE
                 }
             },
+            onTextObjectCreate = { x, y ->
+                val pageId = pageState.currentPage?.pageId
+                if (pageId != null) {
+                    val textObject =
+                        viewModel.createTextObject(
+                            pageId = pageId,
+                            x = x,
+                            y = y,
+                        )
+                    undoController.onObjectAdded(pageId = pageId, pageObject = textObject)
+                    viewModel.selectObject(textObject.objectId)
+                    activeInsertAction = InsertAction.NONE
+                }
+            },
+            onImageObjectCreate = { x, y ->
+                val pageId = pageState.currentPage?.pageId
+                if (pageId != null) {
+                    val imageObject =
+                        viewModel.createImageObject(
+                            pageId = pageId,
+                            x = x,
+                            y = y,
+                            sourceUri = pendingImageUri,
+                        )
+                    undoController.onObjectAdded(pageId = pageId, pageObject = imageObject)
+                    viewModel.selectObject(imageObject.objectId)
+                    activeInsertAction = InsertAction.NONE
+                    pendingImageUri = null
+                }
+            },
+            onTextObjectEdit = { pageObject, text ->
+                val updatedObject = viewModel.updateTextObjectPayload(pageObject, text)
+                undoController.onObjectTransformed(
+                    pageId = pageObject.pageId,
+                    before = pageObject,
+                    after = updatedObject,
+                )
+            },
             onObjectSelected = viewModel::selectObject,
             onObjectTransformed = { before, after ->
                 undoController.onObjectTransformed(
@@ -753,6 +823,32 @@ private fun rememberNoteEditorUiState(
             onPanGestureEnd = onPanGestureEnd,
             onViewportSizeChanged = { viewportSize = it },
             onPageSelected = { targetIndex -> viewModel.navigateBy(targetIndex - pageState.currentPageIndex) },
+            onZoomPresetSelected = { zoomPercent ->
+                val targetZoom =
+                    (zoomPercent / 100f).coerceIn(
+                        zoomLimits.minZoom,
+                        zoomLimits.maxZoom,
+                    )
+                viewTransform =
+                    constrainTransformToViewport(
+                        transform = viewTransform.copy(zoom = targetZoom),
+                        pageWidth = pdfState.pageWidth,
+                        pageHeight = pdfState.pageHeight,
+                        viewportWidth = viewportWidth,
+                        viewportHeight = viewportHeight,
+                    )
+            },
+            onFitZoomRequested = {
+                viewTransform =
+                    fitTransformToViewport(
+                        pageWidth = pdfState.pageWidth,
+                        pageHeight = pdfState.pageHeight,
+                        viewportWidth = viewportWidth,
+                        viewportHeight = viewportHeight,
+                        zoomLimits = zoomLimits,
+                    )
+            },
+            onZoomLockChanged = { locked -> isZoomLocked = locked },
             onTemplateChange = { state -> viewModel.updateCurrentPageTemplate(state.toConfig()) },
         )
 
@@ -770,8 +866,20 @@ private fun rememberNoteEditorUiState(
                 viewportHeight = viewportHeight,
             ) { updatedTransform ->
                 panFlingJob?.cancel()
-                viewTransform = updatedTransform
+                viewTransform =
+                    if (isZoomLocked) {
+                        constrainTransformToViewport(
+                            transform = updatedTransform.copy(zoom = viewTransform.zoom),
+                            pageWidth = pdfState.pageWidth,
+                            pageHeight = pdfState.pageHeight,
+                            viewportWidth = viewportWidth,
+                            viewportHeight = viewportHeight,
+                        )
+                    } else {
+                        updatedTransform
+                    }
             },
+        snackbarHostState = snackbarHostState,
     )
 }
 
@@ -803,9 +911,13 @@ private fun rememberMultiPageUiState(
     var isReadOnly by rememberSaveable { mutableStateOf(false) }
     var isTextSelectionMode by rememberSaveable { mutableStateOf(false) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
     var isSegmentEraserEnabled by rememberSaveable { mutableStateOf(false) }
     var activeInsertAction by rememberSaveable { mutableStateOf(InsertAction.NONE) }
+    var isZoomLocked by rememberSaveable { mutableStateOf(false) }
+    var pendingImageUri by rememberSaveable { mutableStateOf<String?>(null) }
     val lassoSelectionsByPageId = remember { mutableStateMapOf<String, LassoSelection>() }
     val templateConfigByPageId by viewModel.templateConfigByPageId.collectAsState()
     val currentTemplateConfig by viewModel.currentTemplateConfig.collectAsState()
@@ -825,6 +937,14 @@ private fun rememberMultiPageUiState(
     val searchHighlightBounds by viewModel.searchHighlightBounds.collectAsState()
     val pageById = remember(pageState.pages) { pageState.pages.associateBy { it.pageId } }
     val viewportWidth = viewportSize.width.toFloat()
+    val pickImageLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            pendingImageUri = uri?.toString()
+            activeInsertAction = if (uri != null) InsertAction.IMAGE else InsertAction.NONE
+            if (uri != null) {
+                viewModel.selectObject(null)
+            }
+        }
 
     val pdfAssetId =
         pageState.pages.firstOrNull { it.kind == "pdf" || it.kind == "mixed" }?.pdfAssetId
@@ -866,6 +986,7 @@ private fun rememberMultiPageUiState(
         isStylusButtonEraserActive = false
         isTextSelectionMode = false
         activeInsertAction = InsertAction.NONE
+        pendingImageUri = null
         viewModel.selectObject(null)
     }
     LaunchedEffect(searchHighlightBounds) {
@@ -948,7 +1069,15 @@ private fun rememberMultiPageUiState(
             },
         ).copy(
             isReadOnly = isReadOnly,
-            onToggleReadOnly = { isReadOnly = !isReadOnly },
+            onToggleReadOnly = {
+                isReadOnly = !isReadOnly
+                coroutineScope.launch {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.showSnackbar(
+                        if (isReadOnly) "View mode enabled" else "Edit mode enabled",
+                    )
+                }
+            },
             isTextSelectionMode = isTextSelectionMode,
             onToggleTextSelectionMode = {
                 if (pdfRenderer != null) {
@@ -975,9 +1104,13 @@ private fun rememberMultiPageUiState(
             brushState.onBrushChange,
             { isSegmentEraserEnabled = it },
             { action ->
-                activeInsertAction = action
-                if (action != InsertAction.NONE) {
-                    viewModel.selectObject(null)
+                if (action == InsertAction.IMAGE) {
+                    pickImageLauncher.launch("image/*")
+                } else {
+                    activeInsertAction = action
+                    if (action != InsertAction.NONE) {
+                        viewModel.selectObject(null)
+                    }
                 }
             },
             { state ->
@@ -1031,8 +1164,10 @@ private fun rememberMultiPageUiState(
             firstVisiblePageIndex = pageState.currentPageIndex,
             documentZoom = documentZoom,
             documentPanX = documentPanX,
+            totalPages = pageState.pages.size,
             minDocumentZoom = STACKED_DOCUMENT_MIN_ZOOM,
             maxDocumentZoom = STACKED_DOCUMENT_MAX_ZOOM,
+            isZoomLocked = isZoomLocked,
             thumbnails = thumbnails,
             templateState = templateState,
             lassoSelectionsByPageId = lassoSelectionsByPageId,
@@ -1103,6 +1238,38 @@ private fun rememberMultiPageUiState(
                 viewModel.selectObject(shapeObject.objectId)
                 activeInsertAction = InsertAction.NONE
             },
+            onTextObjectCreate = { pageId, x, y ->
+                val textObject =
+                    viewModel.createTextObject(
+                        pageId = pageId,
+                        x = x,
+                        y = y,
+                    )
+                undoController.onObjectAdded(pageId = pageId, pageObject = textObject)
+                viewModel.selectObject(textObject.objectId)
+                activeInsertAction = InsertAction.NONE
+            },
+            onImageObjectCreate = { pageId, x, y ->
+                val imageObject =
+                    viewModel.createImageObject(
+                        pageId = pageId,
+                        x = x,
+                        y = y,
+                        sourceUri = pendingImageUri,
+                    )
+                undoController.onObjectAdded(pageId = pageId, pageObject = imageObject)
+                viewModel.selectObject(imageObject.objectId)
+                activeInsertAction = InsertAction.NONE
+                pendingImageUri = null
+            },
+            onTextObjectEdit = { pageId, pageObject, text ->
+                val updatedObject = viewModel.updateTextObjectPayload(pageObject, text)
+                undoController.onObjectTransformed(
+                    pageId = pageId,
+                    before = pageObject,
+                    after = updatedObject,
+                )
+            },
             onObjectSelected = viewModel::selectObject,
             onObjectTransformed = { pageId, before, after ->
                 undoController.onObjectTransformed(
@@ -1124,15 +1291,17 @@ private fun rememberMultiPageUiState(
             onTransformGesture = { _, _, _, _, _ -> },
             onPanGestureEnd = { _, _ -> },
             onDocumentZoomChange = { updatedZoom ->
-                val clampedZoom = updatedZoom.coerceIn(STACKED_DOCUMENT_MIN_ZOOM, STACKED_DOCUMENT_MAX_ZOOM)
-                documentZoom = clampedZoom
-                val minPanX =
-                    if (viewportWidth > 0f) {
-                        (viewportWidth * (1f - clampedZoom)).coerceAtMost(0f)
-                    } else {
-                        0f
-                    }
-                documentPanX = documentPanX.coerceIn(minPanX, 0f)
+                if (!isZoomLocked) {
+                    val clampedZoom = updatedZoom.coerceIn(STACKED_DOCUMENT_MIN_ZOOM, STACKED_DOCUMENT_MAX_ZOOM)
+                    documentZoom = clampedZoom
+                    val minPanX =
+                        if (viewportWidth > 0f) {
+                            (viewportWidth * (1f - clampedZoom)).coerceAtMost(0f)
+                        } else {
+                            0f
+                        }
+                    documentPanX = documentPanX.coerceIn(minPanX, 0f)
+                }
             },
             onDocumentPanXChange = { updatedPanX ->
                 val minPanX =
@@ -1154,6 +1323,28 @@ private fun rememberMultiPageUiState(
             onPageSelected = { targetIndex ->
                 viewModel.navigateBy(targetIndex - pageState.currentPageIndex)
             },
+            onZoomPresetSelected = { zoomPercent ->
+                val targetZoom = (zoomPercent / 100f).coerceIn(STACKED_DOCUMENT_MIN_ZOOM, STACKED_DOCUMENT_MAX_ZOOM)
+                documentZoom = targetZoom
+                val minPanX =
+                    if (viewportWidth > 0f) {
+                        (viewportWidth * (1f - documentZoom)).coerceAtMost(0f)
+                    } else {
+                        0f
+                    }
+                documentPanX = documentPanX.coerceIn(minPanX, 0f)
+            },
+            onFitZoomRequested = {
+                documentZoom = 1f
+                val minPanX =
+                    if (viewportWidth > 0f) {
+                        (viewportWidth * (1f - documentZoom)).coerceAtMost(0f)
+                    } else {
+                        0f
+                    }
+                documentPanX = documentPanX.coerceIn(minPanX, 0f)
+            },
+            onZoomLockChanged = { locked -> isZoomLocked = locked },
             onTemplateChange = { state -> viewModel.updateCurrentPageTemplate(state.toConfig()) },
         )
 
@@ -1161,6 +1352,7 @@ private fun rememberMultiPageUiState(
         topBarState = topBarState,
         toolbarState = toolbarState,
         multiPageContentState = multiPageContentState,
+        snackbarHostState = snackbarHostState,
     )
 }
 

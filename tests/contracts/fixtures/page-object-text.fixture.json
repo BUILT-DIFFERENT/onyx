@@ -1,0 +1,23 @@
+{
+  "objectId": "a80e8400-e29b-41d4-a716-446655440010",
+  "pageId": "660e8400-e29b-41d4-a716-446655440001",
+  "noteId": "550e8400-e29b-41d4-a716-446655440000",
+  "kind": "text",
+  "zIndex": 3,
+  "x": 60,
+  "y": 240,
+  "width": 240,
+  "height": 84,
+  "rotationDeg": 0,
+  "payload": {
+    "text": "Meeting notes",
+    "align": "start",
+    "color": "#111111",
+    "fontSizeSp": 16,
+    "bold": false,
+    "italic": false,
+    "underline": false
+  },
+  "createdAt": 1708300800000,
+  "updatedAt": 1708300800000
+}

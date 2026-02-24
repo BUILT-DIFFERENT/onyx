@@ -1,0 +1,19 @@
+{
+  "objectId": "c80e8400-e29b-41d4-a716-446655440012",
+  "pageId": "660e8400-e29b-41d4-a716-446655440001",
+  "noteId": "550e8400-e29b-41d4-a716-446655440000",
+  "kind": "sticky",
+  "zIndex": 5,
+  "x": 180,
+  "y": 420,
+  "width": 180,
+  "height": 180,
+  "rotationDeg": 0,
+  "payload": {
+    "text": "TODO",
+    "color": "#FFE082",
+    "style": "rounded"
+  },
+  "createdAt": 1708300800000,
+  "updatedAt": 1708300800000
+}

@@ -18,10 +18,13 @@ import com.onyx.android.ink.algorithm.applyStrokeSplit
 import com.onyx.android.ink.algorithm.restoreStrokeSplit
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.Tool
+import com.onyx.android.objects.model.ImagePayload
 import com.onyx.android.objects.model.PageObject
 import com.onyx.android.objects.model.PageObjectKind
 import com.onyx.android.objects.model.ShapePayload
 import com.onyx.android.objects.model.ShapeType
+import com.onyx.android.objects.model.TextAlign
+import com.onyx.android.objects.model.TextPayload
 import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfPasswordStore
 import com.onyx.android.recognition.ConvertedTextBlock
@@ -90,6 +93,10 @@ internal class NoteEditorViewModel
             private const val PAGE_BUFFER_SIZE = 1
             private const val PAGE_LOG_PREVIEW_COUNT = 5
             private const val SPLIT_RECOGNITION_REFRESH_STROKE_ID = "__segment_eraser_refresh__"
+            private const val DEFAULT_TEXT_OBJECT_WIDTH = 220f
+            private const val DEFAULT_TEXT_OBJECT_HEIGHT = 72f
+            private const val DEFAULT_IMAGE_OBJECT_WIDTH = 240f
+            private const val DEFAULT_IMAGE_OBJECT_HEIGHT = 180f
         }
 
         private val objectJson = Json { ignoreUnknownKeys = true }
@@ -830,9 +837,8 @@ internal class NoteEditorViewModel
             height: Float,
         ): PageObject {
             val now = System.currentTimeMillis()
-            val noteIdForPage =
-                _pages.value.firstOrNull { page -> page.pageId == pageId }?.noteId ?: noteId
-            val zIndex = _pageObjectsCache.value[pageId].orEmpty().maxOfOrNull { objectItem -> objectItem.zIndex }?.plus(1) ?: 0
+            val noteIdForPage = resolveNoteIdForPage(pageId)
+            val zIndex = getNextObjectZIndex(pageId)
             val shapePayload = ShapePayload(shapeType = shapeType)
             return PageObject(
                 objectId = UUID.randomUUID().toString(),
@@ -853,6 +859,82 @@ internal class NoteEditorViewModel
             )
         }
 
+        fun createTextObject(
+            pageId: String,
+            x: Float,
+            y: Float,
+            text: String = "Text",
+        ): PageObject {
+            val now = System.currentTimeMillis()
+            val noteIdForPage = resolveNoteIdForPage(pageId)
+            val zIndex = getNextObjectZIndex(pageId)
+            val textPayload = TextPayload(text = text, align = TextAlign.START)
+            return PageObject(
+                objectId = UUID.randomUUID().toString(),
+                pageId = pageId,
+                noteId = noteIdForPage,
+                kind = PageObjectKind.TEXT,
+                zIndex = zIndex,
+                x = x,
+                y = y,
+                width = DEFAULT_TEXT_OBJECT_WIDTH,
+                height = DEFAULT_TEXT_OBJECT_HEIGHT,
+                rotationDeg = 0f,
+                payloadJson = objectJson.encodeToString(TextPayload.serializer(), textPayload),
+                textPayload = textPayload,
+                createdAt = now,
+                updatedAt = now,
+                deletedAt = null,
+            )
+        }
+
+        fun createImageObject(
+            pageId: String,
+            x: Float,
+            y: Float,
+            sourceUri: String? = null,
+            mimeType: String? = null,
+        ): PageObject {
+            val now = System.currentTimeMillis()
+            val noteIdForPage = resolveNoteIdForPage(pageId)
+            val zIndex = getNextObjectZIndex(pageId)
+            val imagePayload =
+                ImagePayload(
+                    sourceUri = sourceUri,
+                    mimeType = mimeType,
+                )
+            return PageObject(
+                objectId = UUID.randomUUID().toString(),
+                pageId = pageId,
+                noteId = noteIdForPage,
+                kind = PageObjectKind.IMAGE,
+                zIndex = zIndex,
+                x = x,
+                y = y,
+                width = DEFAULT_IMAGE_OBJECT_WIDTH,
+                height = DEFAULT_IMAGE_OBJECT_HEIGHT,
+                rotationDeg = 0f,
+                payloadJson = objectJson.encodeToString(ImagePayload.serializer(), imagePayload),
+                imagePayload = imagePayload,
+                createdAt = now,
+                updatedAt = now,
+                deletedAt = null,
+            )
+        }
+
+        fun updateTextObjectPayload(
+            pageObject: PageObject,
+            text: String,
+        ): PageObject {
+            val currentPayload = pageObject.textPayload ?: TextPayload()
+            val updatedPayload = currentPayload.copy(text = text)
+            return pageObject.copy(
+                payloadJson = objectJson.encodeToString(TextPayload.serializer(), updatedPayload),
+                textPayload = updatedPayload,
+                updatedAt = System.currentTimeMillis(),
+            )
+        }
+
         fun duplicatePageObject(
             pageId: String,
             pageObject: PageObject,
@@ -868,6 +950,12 @@ internal class NoteEditorViewModel
                 deletedAt = null,
             )
         }
+
+        private fun resolveNoteIdForPage(pageId: String): String =
+            _pages.value.firstOrNull { page -> page.pageId == pageId }?.noteId ?: noteId
+
+        private fun getNextObjectZIndex(pageId: String): Int =
+            _pageObjectsCache.value[pageId].orEmpty().maxOfOrNull { objectItem -> objectItem.zIndex }?.plus(1) ?: 0
 
         /**
          * Load strokes for a range of pages (for pre-loading in multi-page mode).

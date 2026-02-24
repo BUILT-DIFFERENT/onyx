@@ -9,6 +9,7 @@
 
 package com.onyx.android.ui.editor
 
+import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,6 +36,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -42,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.objects.model.InsertAction
 import com.onyx.android.objects.model.PageObject
+import com.onyx.android.objects.model.PageObjectKind
 import com.onyx.android.objects.model.ShapeType
 import kotlin.math.max
 import kotlin.math.min
@@ -52,6 +56,9 @@ private const val MIN_OBJECT_SIZE_PT = 12f
 private const val HANDLE_SIZE_DP = 18
 private val OBJECT_HIGHLIGHT_COLOR = Color(0xFF136CC5)
 private val OBJECT_ACTION_BG = Color(0xEE1F2433)
+private val IMAGE_PLACEHOLDER_BG = Color(0x33000000)
+private val IMAGE_PLACEHOLDER_STROKE = Color(0xAA000000)
+private const val TEXT_DEFAULT = "Text"
 
 @Composable
 internal fun PageObjectLayer(
@@ -63,6 +70,9 @@ internal fun PageObjectLayer(
     isInteractionBlocked: Boolean,
     onInsertActionChanged: (InsertAction) -> Unit,
     onShapeObjectCreate: (ShapeType, Float, Float, Float, Float) -> Unit,
+    onTextObjectCreate: (Float, Float) -> Unit,
+    onImageObjectCreate: (Float, Float) -> Unit,
+    onTextObjectEdit: (PageObject, String) -> Unit,
     onObjectSelected: (String?) -> Unit,
     onObjectTransformed: (PageObject, PageObject) -> Unit,
     onDuplicateObject: (PageObject) -> Unit,
@@ -74,9 +84,11 @@ internal fun PageObjectLayer(
     var draftInsertStart by remember { mutableStateOf<Offset?>(null) }
     var draftInsertCurrent by remember { mutableStateOf<Offset?>(null) }
     var draftObject by remember { mutableStateOf<PageObject?>(null) }
+    var textEditValue by remember { mutableStateOf(TEXT_DEFAULT) }
 
     LaunchedEffect(selectedObjectId) {
         draftObject = null
+        textEditValue = selectedObject?.textPayload?.text ?: TEXT_DEFAULT
     }
 
     val resolvedSelectedObject = draftObject ?: selectedObject
@@ -152,6 +164,36 @@ internal fun PageObjectLayer(
                                     draftInsertCurrent = null
                                 },
                             )
+                        },
+            )
+        } else if (interactive && activeInsertAction == InsertAction.TEXT) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .pointerInput(activeInsertAction, viewTransform.zoom) {
+                            detectTapGestures { position ->
+                                onTextObjectCreate(
+                                    viewTransform.screenToPageX(position.x),
+                                    viewTransform.screenToPageY(position.y),
+                                )
+                                onInsertActionChanged(InsertAction.NONE)
+                            }
+                        },
+            )
+        } else if (interactive && activeInsertAction == InsertAction.IMAGE) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .pointerInput(activeInsertAction, viewTransform.zoom) {
+                            detectTapGestures { position ->
+                                onImageObjectCreate(
+                                    viewTransform.screenToPageX(position.x),
+                                    viewTransform.screenToPageY(position.y),
+                                )
+                                onInsertActionChanged(InsertAction.NONE)
+                            }
                         },
             )
         } else if (interactive && pageObjects.isNotEmpty()) {
@@ -253,6 +295,29 @@ internal fun PageObjectLayer(
                         },
             )
 
+            if (resolvedSelectedObject.kind == PageObjectKind.TEXT) {
+                val density = LocalDensity.current
+                val fieldWidthDp = with(density) { max(96f, selectedRect.width).toDp() }
+                val fieldHeightDp = with(density) { max(56f, selectedRect.height).toDp() }
+                OutlinedTextField(
+                    value = textEditValue,
+                    onValueChange = { updated ->
+                        textEditValue = updated
+                    },
+                    singleLine = false,
+                    label = { Text("Text object") },
+                    modifier =
+                        Modifier
+                            .offset {
+                                IntOffset(
+                                    selectedRect.left.roundToInt(),
+                                    selectedRect.top.roundToInt(),
+                                )
+                            }.size(width = fieldWidthDp, height = fieldHeightDp)
+                            .testTag("text-object-editor"),
+                )
+            }
+
             Row(
                 modifier =
                     Modifier
@@ -265,6 +330,14 @@ internal fun PageObjectLayer(
                         .testTag("shape-object-actions"),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
+                if (resolvedSelectedObject.kind == PageObjectKind.TEXT) {
+                    TextButton(
+                        onClick = { onTextObjectEdit(resolvedSelectedObject, textEditValue.ifBlank { TEXT_DEFAULT }) },
+                        modifier = Modifier.testTag("text-save-action"),
+                    ) {
+                        Text("Save text", color = Color.White)
+                    }
+                }
                 TextButton(
                     onClick = { onDuplicateObject(resolvedSelectedObject) },
                     modifier = Modifier.testTag("shape-duplicate-action"),
@@ -327,47 +400,110 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPageObject(
     viewTransform: ViewTransform,
     isSelected: Boolean,
 ) {
-    val shapePayload = pageObject.shapePayload ?: return
-    val color = shapePayload.strokeColor.toComposeColor()
     val left = viewTransform.pageToScreenX(pageObject.x)
     val top = viewTransform.pageToScreenY(pageObject.y)
     val width = viewTransform.pageWidthToScreen(pageObject.width)
     val height = viewTransform.pageWidthToScreen(pageObject.height)
-    val strokeWidth = max(1f, shapePayload.strokeWidth * viewTransform.zoom)
-    when (shapePayload.shapeType) {
-        ShapeType.LINE -> {
+    val selectionStroke = max(1f, viewTransform.zoom)
+
+    when (pageObject.kind) {
+        PageObjectKind.SHAPE -> {
+            val shapePayload = pageObject.shapePayload ?: return
+            val color = shapePayload.strokeColor.toComposeColor()
+            val strokeWidth = max(1f, shapePayload.strokeWidth * viewTransform.zoom)
+            when (shapePayload.shapeType) {
+                ShapeType.LINE -> {
+                    drawLine(
+                        color = color,
+                        start = Offset(left, top),
+                        end = Offset(left + width, top + height),
+                        strokeWidth = strokeWidth,
+                    )
+                }
+
+                ShapeType.RECTANGLE -> {
+                    drawRect(
+                        color = color,
+                        topLeft = Offset(left, top),
+                        size = Size(width, height),
+                        style = Stroke(width = strokeWidth),
+                    )
+                }
+
+                ShapeType.ELLIPSE -> {
+                    drawOval(
+                        color = color,
+                        topLeft = Offset(left, top),
+                        size = Size(width, height),
+                        style = Stroke(width = strokeWidth),
+                    )
+                }
+            }
+        }
+
+        PageObjectKind.IMAGE -> {
+            drawRect(
+                color = IMAGE_PLACEHOLDER_BG,
+                topLeft = Offset(left, top),
+                size = Size(width, height),
+            )
+            drawRect(
+                color = IMAGE_PLACEHOLDER_STROKE,
+                topLeft = Offset(left, top),
+                size = Size(width, height),
+                style = Stroke(width = max(1f, viewTransform.zoom)),
+            )
             drawLine(
-                color = color,
+                color = IMAGE_PLACEHOLDER_STROKE,
                 start = Offset(left, top),
                 end = Offset(left + width, top + height),
-                strokeWidth = strokeWidth,
+                strokeWidth = max(1f, viewTransform.zoom),
             )
+            drawLine(
+                color = IMAGE_PLACEHOLDER_STROKE,
+                start = Offset(left + width, top),
+                end = Offset(left, top + height),
+                strokeWidth = max(1f, viewTransform.zoom),
+            )
+            val imageLabelPaint =
+                Paint().apply {
+                    isAntiAlias = true
+                    color = android.graphics.Color.parseColor("#1F2433")
+                    textSize = max(10f, 12f * viewTransform.zoom)
+                }
+            val label = pageObject.imagePayload?.displayName ?: "Image"
+            drawContext.canvas.nativeCanvas.drawText(label, left + 8f * viewTransform.zoom, top + 20f * viewTransform.zoom, imageLabelPaint)
         }
 
-        ShapeType.RECTANGLE -> {
+        PageObjectKind.TEXT -> {
             drawRect(
-                color = color,
+                color = Color(0x12000000),
                 topLeft = Offset(left, top),
                 size = Size(width, height),
-                style = Stroke(width = strokeWidth),
             )
-        }
-
-        ShapeType.ELLIPSE -> {
-            drawOval(
-                color = color,
+            drawRect(
+                color = Color(0x55000000),
                 topLeft = Offset(left, top),
                 size = Size(width, height),
-                style = Stroke(width = strokeWidth),
+                style = Stroke(width = max(1f, viewTransform.zoom)),
             )
+            val textPaint =
+                Paint().apply {
+                    isAntiAlias = true
+                    color = pageObject.textPayload?.color?.toAndroidColor() ?: android.graphics.Color.BLACK
+                    textSize = max(10f, (pageObject.textPayload?.fontSizeSp ?: 16f) * viewTransform.zoom)
+                }
+            val textValue = pageObject.textPayload?.text?.ifBlank { TEXT_DEFAULT } ?: TEXT_DEFAULT
+            drawContext.canvas.nativeCanvas.drawText(textValue, left + 8f * viewTransform.zoom, top + 24f * viewTransform.zoom, textPaint)
         }
     }
+
     if (isSelected) {
         drawRect(
             color = OBJECT_HIGHLIGHT_COLOR,
             topLeft = Offset(left, top),
             size = Size(width, height),
-            style = Stroke(width = max(1f, viewTransform.zoom)),
+            style = Stroke(width = selectionStroke),
         )
     }
 }
@@ -408,3 +544,8 @@ private fun String.toComposeColor(): Color =
     runCatching {
         Color(android.graphics.Color.parseColor(this))
     }.getOrElse { Color.Black }
+
+private fun String.toAndroidColor(): Int =
+    runCatching {
+        android.graphics.Color.parseColor(this)
+    }.getOrElse { android.graphics.Color.BLACK }

@@ -2,6 +2,7 @@ package com.onyx.android.ui
 
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performTouchInput
@@ -41,6 +42,7 @@ class NoteEditorReadOnlyModeTest {
                             onStrokeErased = { strokeErasedCalls += 1 },
                         ),
                     transformState = rememberTransformableState { _, _, _ -> },
+                    snackbarHostState = SnackbarHostState(),
                 )
             }
         }
@@ -124,6 +126,7 @@ private fun defaultContentState(
         interactionMode = InteractionMode.DRAW,
         thumbnails = emptyList(),
         currentPageIndex = 0,
+        totalPages = 1,
         templateState = PageTemplateState.BLANK,
         isRecognitionOverlayEnabled = false,
         recognitionText = null,

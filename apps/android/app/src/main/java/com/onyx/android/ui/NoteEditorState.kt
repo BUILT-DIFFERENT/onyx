@@ -1,6 +1,7 @@
 package com.onyx.android.ui
 
 import androidx.compose.foundation.gestures.TransformableState
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
@@ -107,7 +108,9 @@ internal data class NoteEditorContentState(
     val allowCanvasFingerGestures: Boolean = true,
     val thumbnails: List<ThumbnailItem>,
     val currentPageIndex: Int,
+    val totalPages: Int,
     val templateState: PageTemplateState,
+    val isZoomLocked: Boolean = false,
     val lassoSelection: LassoSelection = LassoSelection(),
     val isTextSelectionEnabled: Boolean = false,
     val isRecognitionOverlayEnabled: Boolean = false,
@@ -122,6 +125,9 @@ internal data class NoteEditorContentState(
     val onLassoResize: (Float, Float, Float) -> Unit = { _, _, _ -> },
     val onInsertActionChanged: (InsertAction) -> Unit = {},
     val onShapeObjectCreate: (ShapeType, Float, Float, Float, Float) -> Unit = { _, _, _, _, _ -> },
+    val onTextObjectCreate: (Float, Float) -> Unit = { _, _ -> },
+    val onImageObjectCreate: (Float, Float) -> Unit = { _, _ -> },
+    val onTextObjectEdit: (PageObject, String) -> Unit = { _, _ -> },
     val onObjectSelected: (String?) -> Unit = {},
     val onObjectTransformed: (PageObject, PageObject) -> Unit = { _, _ -> },
     val onDuplicateObject: (PageObject) -> Unit = {},
@@ -141,6 +147,9 @@ internal data class NoteEditorContentState(
     ) -> Unit,
     val onViewportSizeChanged: (IntSize) -> Unit,
     val onPageSelected: (Int) -> Unit,
+    val onZoomPresetSelected: (Int) -> Unit = {},
+    val onFitZoomRequested: () -> Unit = {},
+    val onZoomLockChanged: (Boolean) -> Unit = {},
     val onTemplateChange: (PageTemplateState) -> Unit,
 )
 
@@ -182,8 +191,10 @@ internal data class MultiPageContentState(
     val firstVisiblePageIndex: Int,
     val documentZoom: Float,
     val documentPanX: Float,
+    val totalPages: Int,
     val minDocumentZoom: Float,
     val maxDocumentZoom: Float,
+    val isZoomLocked: Boolean = false,
     val thumbnails: List<ThumbnailItem>,
     val templateState: PageTemplateState,
     val lassoSelectionsByPageId: Map<String, LassoSelection> = emptyMap(),
@@ -198,6 +209,9 @@ internal data class MultiPageContentState(
     val onLassoResize: (String, Float, Float, Float) -> Unit = { _, _, _, _ -> },
     val onInsertActionChanged: (InsertAction) -> Unit = {},
     val onShapeObjectCreate: (String, ShapeType, Float, Float, Float, Float) -> Unit = { _, _, _, _, _, _ -> },
+    val onTextObjectCreate: (String, Float, Float) -> Unit = { _, _, _ -> },
+    val onImageObjectCreate: (String, Float, Float) -> Unit = { _, _, _ -> },
+    val onTextObjectEdit: (String, PageObject, String) -> Unit = { _, _, _ -> },
     val onObjectSelected: (String?) -> Unit = {},
     val onObjectTransformed: (String, PageObject, PageObject) -> Unit = { _, _, _ -> },
     val onDuplicateObject: (String, PageObject) -> Unit = { _, _ -> },
@@ -222,6 +236,9 @@ internal data class MultiPageContentState(
     val onVisiblePagesImmediateChanged: (IntRange) -> Unit,
     val onVisiblePagesPrefetchChanged: (IntRange) -> Unit,
     val onPageSelected: (Int) -> Unit,
+    val onZoomPresetSelected: (Int) -> Unit = {},
+    val onFitZoomRequested: () -> Unit = {},
+    val onZoomLockChanged: (Boolean) -> Unit = {},
     val onTemplateChange: (PageTemplateState) -> Unit,
 )
 
@@ -253,6 +270,7 @@ internal data class NoteEditorUiState(
     val toolbarState: NoteEditorToolbarState,
     val contentState: NoteEditorContentState,
     val transformState: TransformableState,
+    val snackbarHostState: SnackbarHostState,
 )
 
 /**
@@ -262,6 +280,7 @@ internal data class MultiPageUiState(
     val topBarState: NoteEditorTopBarState,
     val toolbarState: NoteEditorToolbarState,
     val multiPageContentState: MultiPageContentState,
+    val snackbarHostState: SnackbarHostState,
 )
 
 internal data class BrushState(

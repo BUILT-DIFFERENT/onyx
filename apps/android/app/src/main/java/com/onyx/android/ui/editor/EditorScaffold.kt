@@ -29,9 +29,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,7 +61,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -104,12 +115,15 @@ private val NOTE_PAPER_SHADOW = Color(0x15000000)
 private val EDGE_GLOW_COLOR = Color(0x40000000)
 private val SEARCH_HIGHLIGHT_FILL = Color(0x44FFEB3B)
 private val SEARCH_HIGHLIGHT_STROKE = Color(0xFFFFA000)
+private val PAGE_PILL_COLOR = Color(0xFF2B3144)
+private val PAGE_PILL_TEXT_COLOR = Color(0xFFF2F5FF)
 private const val EDITOR_VIEWPORT_TEST_TAG = "note-editor-viewport"
 private const val PAGE_GAP_DP = 8
 private const val PAGE_TRACKING_DEBOUNCE_MS = 100L
 private const val PINCH_ZOOM_CHANGE_MIN = 0.92f
 private const val PINCH_ZOOM_CHANGE_MAX = 1.08f
 private const val PINCH_ZOOM_EPSILON = 0.002f
+private val ZOOM_PRESET_OPTIONS = listOf(50, 100, 200, 300, 400)
 
 @Composable
 internal fun EditorScaffold(
@@ -117,9 +131,11 @@ internal fun EditorScaffold(
     toolbarState: NoteEditorToolbarState,
     contentState: NoteEditorContentState,
     transformState: TransformableState,
+    snackbarHostState: SnackbarHostState,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             EditorToolbar(
                 topBarState = topBarState,
@@ -143,9 +159,11 @@ internal fun EditorMultiPageScaffold(
     topBarState: NoteEditorTopBarState,
     toolbarState: NoteEditorToolbarState,
     multiPageContentState: MultiPageContentState,
+    snackbarHostState: SnackbarHostState,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             EditorToolbar(
                 topBarState = topBarState,
@@ -359,6 +377,15 @@ private fun MultiPageEditorContent(
                         onShapeObjectCreate = { shapeType, x, y, width, height ->
                             contentState.onShapeObjectCreate(pageState.page.pageId, shapeType, x, y, width, height)
                         },
+                        onTextObjectCreate = { x, y ->
+                            contentState.onTextObjectCreate(pageState.page.pageId, x, y)
+                        },
+                        onImageObjectCreate = { x, y ->
+                            contentState.onImageObjectCreate(pageState.page.pageId, x, y)
+                        },
+                        onTextObjectEdit = { pageObject, text ->
+                            contentState.onTextObjectEdit(pageState.page.pageId, pageObject, text)
+                        },
                         onObjectSelected = contentState.onObjectSelected,
                         onObjectTransformed = { before, after ->
                             contentState.onObjectTransformed(pageState.page.pageId, before, after)
@@ -376,6 +403,19 @@ private fun MultiPageEditorContent(
                     )
                 }
             }
+            PageZoomPill(
+                currentPage = (contentState.firstVisiblePageIndex + 1).coerceAtLeast(1),
+                totalPages = contentState.totalPages,
+                zoomPercent = (contentState.documentZoom * 100f).roundToInt(),
+                isZoomLocked = contentState.isZoomLocked,
+                onPageSelected = { pageNumber ->
+                    contentState.onPageSelected((pageNumber - 1).coerceAtLeast(0))
+                },
+                onZoomPresetSelected = contentState.onZoomPresetSelected,
+                onFitZoomRequested = contentState.onFitZoomRequested,
+                onZoomLockChanged = contentState.onZoomLockChanged,
+                modifier = Modifier.align(androidx.compose.ui.Alignment.BottomEnd),
+            )
         }
 
         // Thumbnail strip at bottom for PDF documents
@@ -413,6 +453,9 @@ private fun PageItem(
     onLassoResize: (Float, Float, Float) -> Unit,
     onInsertActionChanged: (InsertAction) -> Unit,
     onShapeObjectCreate: (ShapeType, Float, Float, Float, Float) -> Unit,
+    onTextObjectCreate: (Float, Float) -> Unit,
+    onImageObjectCreate: (Float, Float) -> Unit,
+    onTextObjectEdit: (PageObject, String) -> Unit,
     onObjectSelected: (String?) -> Unit,
     onObjectTransformed: (PageObject, PageObject) -> Unit,
     onDuplicateObject: (PageObject) -> Unit,
@@ -536,6 +579,7 @@ private fun PageItem(
                         allowCanvasFingerGestures = false,
                         thumbnails = emptyList(),
                         currentPageIndex = pageState.page.indexInNote,
+                        totalPages = 1,
                         templateState = pageState.templateState,
                         lassoSelection = pageState.lassoSelection,
                         isTextSelectionEnabled = interactionMode == InteractionMode.TEXT_SELECTION,
@@ -547,6 +591,9 @@ private fun PageItem(
                         onLassoResize = onLassoResize,
                         onInsertActionChanged = onInsertActionChanged,
                         onShapeObjectCreate = onShapeObjectCreate,
+                        onTextObjectCreate = onTextObjectCreate,
+                        onImageObjectCreate = onImageObjectCreate,
+                        onTextObjectEdit = onTextObjectEdit,
                         onObjectSelected = onObjectSelected,
                         onObjectTransformed = onObjectTransformed,
                         onDuplicateObject = onDuplicateObject,
@@ -611,6 +658,9 @@ private fun PageItem(
             isInteractionBlocked = interactionMode == InteractionMode.TEXT_SELECTION,
             onInsertActionChanged = onInsertActionChanged,
             onShapeObjectCreate = onShapeObjectCreate,
+            onTextObjectCreate = onTextObjectCreate,
+            onImageObjectCreate = onImageObjectCreate,
+            onTextObjectEdit = onTextObjectEdit,
             onObjectSelected = onObjectSelected,
             onObjectTransformed = onObjectTransformed,
             onDuplicateObject = onDuplicateObject,
@@ -838,6 +888,9 @@ private fun NoteEditorContent(
                 isInteractionBlocked = contentState.interactionMode == InteractionMode.TEXT_SELECTION,
                 onInsertActionChanged = contentState.onInsertActionChanged,
                 onShapeObjectCreate = contentState.onShapeObjectCreate,
+                onTextObjectCreate = contentState.onTextObjectCreate,
+                onImageObjectCreate = contentState.onImageObjectCreate,
+                onTextObjectEdit = contentState.onTextObjectEdit,
                 onObjectSelected = contentState.onObjectSelected,
                 onObjectTransformed = contentState.onObjectTransformed,
                 onDuplicateObject = contentState.onDuplicateObject,
@@ -851,6 +904,19 @@ private fun NoteEditorContent(
                     onConvertedTextBlockSelected = contentState.onConvertedTextBlockSelected,
                 )
             }
+            PageZoomPill(
+                currentPage = (contentState.currentPageIndex + 1).coerceAtLeast(1),
+                totalPages = contentState.totalPages,
+                zoomPercent = (contentState.viewTransform.zoom * 100f).roundToInt(),
+                isZoomLocked = contentState.isZoomLocked,
+                onPageSelected = { pageNumber ->
+                    contentState.onPageSelected((pageNumber - 1).coerceAtLeast(0))
+                },
+                onZoomPresetSelected = contentState.onZoomPresetSelected,
+                onFitZoomRequested = contentState.onFitZoomRequested,
+                onZoomLockChanged = contentState.onZoomLockChanged,
+                modifier = Modifier.align(androidx.compose.ui.Alignment.BottomEnd),
+            )
         }
 
         // Thumbnail strip at bottom for PDF documents
@@ -863,6 +929,140 @@ private fun NoteEditorContent(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+    }
+}
+
+@Composable
+private fun PageZoomPill(
+    currentPage: Int,
+    totalPages: Int,
+    zoomPercent: Int,
+    isZoomLocked: Boolean,
+    onPageSelected: (Int) -> Unit,
+    onZoomPresetSelected: (Int) -> Unit,
+    onFitZoomRequested: () -> Unit,
+    onZoomLockChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var showPageJumpDialog by remember { mutableStateOf(false) }
+    var pageInput by remember(currentPage) { mutableStateOf(currentPage.toString()) }
+    Surface(
+        modifier =
+            modifier
+                .padding(end = 12.dp, bottom = 12.dp)
+                .testTag("page-zoom-pill"),
+        shape = RoundedCornerShape(20.dp),
+        color = PAGE_PILL_COLOR,
+        shadowElevation = 3.dp,
+    ) {
+        Box {
+            TextButton(
+                onClick = { expanded = true },
+                modifier =
+                    Modifier.semantics {
+                        role = androidx.compose.ui.semantics.Role.Button
+                        stateDescription = "Page $currentPage of $totalPages, zoom $zoomPercent percent"
+                    }.testTag("page-zoom-pill-button"),
+            ) {
+                Text(
+                    text = "P$currentPage/$totalPages • ${zoomPercent.coerceAtLeast(1)}%",
+                    color = PAGE_PILL_TEXT_COLOR,
+                    fontSize = 12.sp,
+                )
+            }
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                ZOOM_PRESET_OPTIONS.forEach { preset ->
+                    DropdownMenuItem(
+                        text = { Text("$preset%") },
+                        onClick = {
+                            expanded = false
+                            onZoomPresetSelected(preset)
+                        },
+                    )
+                }
+                DropdownMenuItem(
+                    text = { Text("Fit to page") },
+                    onClick = {
+                        expanded = false
+                        onFitZoomRequested()
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text(if (isZoomLocked) "Unlock zoom" else "Lock zoom") },
+                    onClick = {
+                        expanded = false
+                        onZoomLockChanged(!isZoomLocked)
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text("Next page") },
+                    enabled = currentPage < totalPages,
+                    onClick = {
+                        expanded = false
+                        onPageSelected((currentPage + 1).coerceAtMost(totalPages))
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text("Previous page") },
+                    enabled = currentPage > 1,
+                    onClick = {
+                        expanded = false
+                        onPageSelected((currentPage - 1).coerceAtLeast(1))
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text("Go to page...") },
+                    enabled = totalPages > 1,
+                    onClick = {
+                        expanded = false
+                        pageInput = currentPage.toString()
+                        showPageJumpDialog = true
+                    },
+                )
+            }
+        }
+    }
+    if (showPageJumpDialog) {
+        AlertDialog(
+            onDismissRequest = { showPageJumpDialog = false },
+            title = { Text("Go to page") },
+            text = {
+                OutlinedTextField(
+                    value = pageInput,
+                    onValueChange = { updated ->
+                        pageInput = updated.filter { it.isDigit() }.take(4)
+                    },
+                    singleLine = true,
+                    label = { Text("Page (1-$totalPages)") },
+                    modifier = Modifier.testTag("page-zoom-pill-page-input"),
+                )
+            },
+            dismissButton = {
+                TextButton(onClick = { showPageJumpDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+            confirmButton = {
+                val selectedPage =
+                    pageInput.toIntOrNull()
+                        ?.coerceIn(1, totalPages)
+                TextButton(
+                    onClick = {
+                        if (selectedPage != null) {
+                            onPageSelected(selectedPage)
+                        }
+                        showPageJumpDialog = false
+                    },
+                    enabled = selectedPage != null,
+                ) {
+                    Text("Go")
+                }
+            },
+        )
     }
 }
 

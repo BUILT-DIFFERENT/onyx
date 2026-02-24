@@ -24,9 +24,11 @@ import com.onyx.android.data.serialization.StrokeSerializer
 import com.onyx.android.data.thumbnail.ThumbnailGenerator
 import com.onyx.android.device.DeviceIdentity
 import com.onyx.android.ink.model.Stroke
+import com.onyx.android.objects.model.ImagePayload
 import com.onyx.android.objects.model.PageObject
 import com.onyx.android.objects.model.PageObjectKind
 import com.onyx.android.objects.model.ShapePayload
+import com.onyx.android.objects.model.TextPayload
 import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfPasswordStore
 import com.onyx.android.pdf.PdfTextChar
@@ -476,6 +478,22 @@ class NoteRepository(
             } else {
                 null
             }
+        val imagePayload =
+            if (kind == PageObjectKind.IMAGE) {
+                runCatching {
+                    objectJson.decodeFromString(ImagePayload.serializer(), payloadJson)
+                }.getOrNull()
+            } else {
+                null
+            }
+        val textPayload =
+            if (kind == PageObjectKind.TEXT) {
+                runCatching {
+                    objectJson.decodeFromString(TextPayload.serializer(), payloadJson)
+                }.getOrNull()
+            } else {
+                null
+            }
 
         return PageObject(
             objectId = objectId,
@@ -490,6 +508,8 @@ class NoteRepository(
             rotationDeg = rotationDeg,
             payloadJson = payloadJson,
             shapePayload = shapePayload,
+            imagePayload = imagePayload,
+            textPayload = textPayload,
             createdAt = createdAt,
             updatedAt = updatedAt,
             deletedAt = deletedAt,
@@ -498,10 +518,21 @@ class NoteRepository(
 
     private fun PageObject.toEntity(): PageObjectEntity {
         val resolvedPayloadJson =
-            if (kind == PageObjectKind.SHAPE && shapePayload != null) {
-                objectJson.encodeToString(ShapePayload.serializer(), shapePayload)
-            } else {
-                payloadJson
+            when (kind) {
+                PageObjectKind.SHAPE ->
+                    shapePayload?.let {
+                        objectJson.encodeToString(ShapePayload.serializer(), it)
+                    } ?: payloadJson
+
+                PageObjectKind.IMAGE ->
+                    imagePayload?.let {
+                        objectJson.encodeToString(ImagePayload.serializer(), it)
+                    } ?: payloadJson
+
+                PageObjectKind.TEXT ->
+                    textPayload?.let {
+                        objectJson.encodeToString(TextPayload.serializer(), it)
+                    } ?: payloadJson
             }
         return PageObjectEntity(
             objectId = objectId,

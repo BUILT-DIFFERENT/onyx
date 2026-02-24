@@ -1,0 +1,19 @@
+{
+  "objectId": "d80e8400-e29b-41d4-a716-446655440013",
+  "pageId": "660e8400-e29b-41d4-a716-446655440001",
+  "noteId": "550e8400-e29b-41d4-a716-446655440000",
+  "kind": "scan",
+  "zIndex": 6,
+  "x": 220,
+  "y": 630,
+  "width": 260,
+  "height": 180,
+  "rotationDeg": 0,
+  "payload": {
+    "assetId": "scan_asset_1",
+    "pageCount": 2,
+    "source": "camera"
+  },
+  "createdAt": 1708300800000,
+  "updatedAt": 1708300800000
+}

@@ -2,6 +2,7 @@ package com.onyx.android.ui
 
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -196,6 +197,7 @@ class NoteEditorTopBarTest {
                     toolbarState = defaultToolbarState(),
                     contentState = defaultContentState(),
                     transformState = rememberTransformableState { _, _, _ -> },
+                    snackbarHostState = SnackbarHostState(),
                 )
             }
         }
@@ -275,6 +277,7 @@ private fun defaultContentState(): NoteEditorContentState =
         interactionMode = InteractionMode.DRAW,
         thumbnails = emptyList(),
         currentPageIndex = 0,
+        totalPages = 1,
         templateState = PageTemplateState.BLANK,
         isRecognitionOverlayEnabled = false,
         recognitionText = null,

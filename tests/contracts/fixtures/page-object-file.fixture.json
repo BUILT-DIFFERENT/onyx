@@ -1,0 +1,20 @@
+{
+  "objectId": "e80e8400-e29b-41d4-a716-446655440014",
+  "pageId": "660e8400-e29b-41d4-a716-446655440001",
+  "noteId": "550e8400-e29b-41d4-a716-446655440000",
+  "kind": "file",
+  "zIndex": 7,
+  "x": 300,
+  "y": 840,
+  "width": 260,
+  "height": 80,
+  "rotationDeg": 0,
+  "payload": {
+    "assetId": "file_asset_1",
+    "fileName": "spec.pdf",
+    "mimeType": "application/pdf",
+    "sizeBytes": 204857
+  },
+  "createdAt": 1708300800000,
+  "updatedAt": 1708300800000
+}

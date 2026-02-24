@@ -661,19 +661,66 @@ internal fun EditorToolbar(
                         )
                         HorizontalDivider()
                         InsertMenuItem(
-                            text = "Image (coming next wave)",
+                            text = "Image",
                             icon = Icons.Filled.BorderColor,
+                            enabled = isEditingEnabled,
+                            active = toolbarState.activeInsertAction == InsertAction.IMAGE,
+                            testTag = "insert-image",
+                            onClick = {
+                                toolbarState.onInsertActionSelected(InsertAction.IMAGE)
+                                isInsertMenuExpanded = false
+                            },
+                        )
+                        InsertMenuItem(
+                            text = "Text",
+                            icon = Icons.Filled.Create,
+                            enabled = isEditingEnabled,
+                            active = toolbarState.activeInsertAction == InsertAction.TEXT,
+                            testTag = "insert-text",
+                            onClick = {
+                                toolbarState.onInsertActionSelected(InsertAction.TEXT)
+                                isInsertMenuExpanded = false
+                            },
+                        )
+                        HorizontalDivider()
+                        InsertMenuItem(
+                            text = "Camera (coming next wave)",
+                            icon = Icons.Filled.Add,
                             enabled = false,
                             active = false,
-                            testTag = "insert-image-disabled",
+                            testTag = "insert-camera-disabled",
                             onClick = {},
                         )
                         InsertMenuItem(
-                            text = "Text (coming next wave)",
-                            icon = Icons.Filled.Create,
+                            text = "Scan (coming next wave)",
+                            icon = Icons.Filled.Add,
                             enabled = false,
                             active = false,
-                            testTag = "insert-text-disabled",
+                            testTag = "insert-scan-disabled",
+                            onClick = {},
+                        )
+                        InsertMenuItem(
+                            text = "Voice recording (coming next wave)",
+                            icon = Icons.Filled.Add,
+                            enabled = false,
+                            active = false,
+                            testTag = "insert-voice-disabled",
+                            onClick = {},
+                        )
+                        InsertMenuItem(
+                            text = "Audio file (coming next wave)",
+                            icon = Icons.Filled.Add,
+                            enabled = false,
+                            active = false,
+                            testTag = "insert-audio-disabled",
+                            onClick = {},
+                        )
+                        InsertMenuItem(
+                            text = "Sticky note (coming next wave)",
+                            icon = Icons.Filled.Add,
+                            enabled = false,
+                            active = false,
+                            testTag = "insert-sticky-disabled",
                             onClick = {},
                         )
                     }

@@ -28,6 +28,8 @@ data class PageObject(
     val rotationDeg: Float,
     val payloadJson: String,
     val shapePayload: ShapePayload? = null,
+    val imagePayload: ImagePayload? = null,
+    val textPayload: TextPayload? = null,
     val createdAt: Long,
     val updatedAt: Long,
     val deletedAt: Long? = null,

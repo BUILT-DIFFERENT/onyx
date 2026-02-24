@@ -220,7 +220,12 @@ describe('PageObjectSchema', () => {
       ...validShapeObject,
       objectId: '980e8400-e29b-41d4-a716-446655440009',
       kind: 'image' as const,
-      payload: { assetId: null, mimeType: 'image/png' },
+      payload: {
+        assetId: null,
+        mimeType: 'image/png',
+        sourceUri: 'content://media/external/images/media/1',
+        displayName: 'IMG_0001.png',
+      },
     });
     expect(imageResult.kind).toBe('image');
 
@@ -228,9 +233,68 @@ describe('PageObjectSchema', () => {
       ...validShapeObject,
       objectId: 'a80e8400-e29b-41d4-a716-446655440010',
       kind: 'text' as const,
-      payload: { text: 'Hello' },
+      payload: {
+        text: 'Hello',
+        align: 'start' as const,
+        color: '#111111',
+        fontSizeSp: 16,
+        bold: false,
+        italic: false,
+        underline: false,
+      },
     });
     expect(textResult.kind).toBe('text');
+  });
+
+  it('accepts attachment object payload scaffolding for audio/sticky/scan/file', () => {
+    const audioResult = PageObjectSchema.parse({
+      ...validShapeObject,
+      objectId: 'b80e8400-e29b-41d4-a716-446655440011',
+      kind: 'audio' as const,
+      payload: {
+        assetId: 'audio_asset_1',
+        mimeType: 'audio/m4a',
+        durationMs: 4200,
+      },
+    });
+    expect(audioResult.kind).toBe('audio');
+
+    const stickyResult = PageObjectSchema.parse({
+      ...validShapeObject,
+      objectId: 'c80e8400-e29b-41d4-a716-446655440012',
+      kind: 'sticky' as const,
+      payload: {
+        text: 'TODO',
+        color: '#FFE082',
+        style: 'rounded' as const,
+      },
+    });
+    expect(stickyResult.kind).toBe('sticky');
+
+    const scanResult = PageObjectSchema.parse({
+      ...validShapeObject,
+      objectId: 'd80e8400-e29b-41d4-a716-446655440013',
+      kind: 'scan' as const,
+      payload: {
+        assetId: 'scan_asset_1',
+        pageCount: 2,
+        source: 'camera' as const,
+      },
+    });
+    expect(scanResult.kind).toBe('scan');
+
+    const fileResult = PageObjectSchema.parse({
+      ...validShapeObject,
+      objectId: 'e80e8400-e29b-41d4-a716-446655440014',
+      kind: 'file' as const,
+      payload: {
+        assetId: 'file_asset_1',
+        fileName: 'spec.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 204857,
+      },
+    });
+    expect(fileResult.kind).toBe('file');
   });
 
   it('rejects payload mismatch for kind', () => {

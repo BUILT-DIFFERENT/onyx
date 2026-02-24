@@ -1,0 +1,20 @@
+{
+  "objectId": "980e8400-e29b-41d4-a716-446655440009",
+  "pageId": "660e8400-e29b-41d4-a716-446655440001",
+  "noteId": "550e8400-e29b-41d4-a716-446655440000",
+  "kind": "image",
+  "zIndex": 2,
+  "x": 40,
+  "y": 120,
+  "width": 220,
+  "height": 160,
+  "rotationDeg": 0,
+  "payload": {
+    "assetId": null,
+    "mimeType": "image/png",
+    "sourceUri": "content://media/external/images/media/1",
+    "displayName": "IMG_0001.png"
+  },
+  "createdAt": 1708300800000,
+  "updatedAt": 1708300800000
+}

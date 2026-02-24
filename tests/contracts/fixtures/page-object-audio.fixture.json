@@ -1,0 +1,20 @@
+{
+  "objectId": "b80e8400-e29b-41d4-a716-446655440011",
+  "pageId": "660e8400-e29b-41d4-a716-446655440001",
+  "noteId": "550e8400-e29b-41d4-a716-446655440000",
+  "kind": "audio",
+  "zIndex": 4,
+  "x": 72,
+  "y": 336,
+  "width": 260,
+  "height": 72,
+  "rotationDeg": 0,
+  "payload": {
+    "assetId": "audio_asset_1",
+    "mimeType": "audio/m4a",
+    "durationMs": 8420,
+    "waveformAssetId": null
+  },
+  "createdAt": 1708300800000,
+  "updatedAt": 1708300800000
+}

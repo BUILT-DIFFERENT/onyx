@@ -72,33 +72,33 @@ Evidence paths:
   - Validation gate: Unit tests for shape serialization and Android UI tests for create/transform/undo.
 
 - [ ] `EDIT-02` Image insert tool
-  - Status: `Missing`
+  - Status: `Partial (Wave G-InsertParity runtime MVP)`
   - Competitor behavior: Samsung Notes and Notewise allow image insertion as editable canvas objects.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
-  - What exists now: No insert-image action in editor toolbar.
-  - What is missing: Media picker integration, image object transforms, persistence/export behavior.
+  - What exists now: Insert menu routes to image picker + tap-to-place image objects with persisted metadata and object transform handles.
+  - What is missing: Production asset lifecycle/export integration and polished image crop/replace UX.
   - Exact change needed: Add image insert command, object bounds metadata, and object transform handles with storage references.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Integration test for image insert->reopen->move->delete lifecycle.
 
 - [ ] `EDIT-03` Text object tool
-  - Status: `Missing`
+  - Status: `Partial (Wave G-InsertParity runtime MVP)`
   - Competitor behavior: Competitor editors provide explicit typed text objects separate from handwriting conversion.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\ConvertedTextBlock.kt`
-  - What exists now: Recognized-text overlays exist; no authored text-box workflow.
-  - What is missing: Text object insertion, editing, and object-level persistence.
+  - What exists now: Text insert route creates persisted text objects with in-canvas edit/save, move/resize, duplicate/delete, and undo/redo.
+  - What is missing: Rich formatting strip parity (lists/alignment controls beyond MVP) and advanced typography controls.
   - Exact change needed: Introduce text object entity and editing UI, keeping recognition overlays as a separate data path.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Editor UI tests for text insert/edit/move/delete and persistence reload.
 
 - [ ] `EDIT-04` Rich insert menu
-  - Status: `Missing`
+  - Status: `Strong Partial (Wave G-InsertParity)`
   - Competitor behavior: Samsung Notes uses a consolidated insert menu (image/table/GIF/audio and related actions).
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`
-  - What exists now: Direct tool buttons only.
-  - What is missing: Unified insert-entry UX and command routing.
+  - What exists now: Unified `+` insert menu routes shape/image/text actions and includes explicit disabled parity placeholders for camera/scan/voice/audio/sticky.
+  - What is missing: Runtime implementations for camera/scan/voice/audio/sticky insert flows.
   - Exact change needed: Add extensible insert menu architecture that routes to shape/image/text and future insert capabilities.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -252,22 +252,22 @@ Evidence paths:
   - Validation gate: Gesture instrumentation tests for undo/redo and double-tap action mapping.
 
 - [ ] `GEST-03` Visible zoom percentage indicator
-  - Status: `Missing`
+  - Status: `Done (Wave G-ZoomPill)`
   - Competitor behavior: Samsung/Notewise show current zoom percentage in-editor.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorScaffold.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorShared.kt`
-  - What exists now: Zoom state exists internally without explicit percentage UI.
-  - What is missing: Persistent zoom percentage affordance in editor chrome.
+  - What exists now: Persistent page/zoom pill shows live zoom percentage in both single-page and stacked-page editor modes.
+  - What is missing: Optional compact/minimized variants for very small screens.
   - Exact change needed: Add zoom HUD component bound to active canvas transform scale.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Compose UI test verifying zoom percentage updates as scale changes.
 
-- [ ] `GEST-04` Zoom presets and lock-zoom behavior
-  - Status: `Missing`
+- [x] `GEST-04` Zoom presets and lock-zoom behavior
+  - Status: `Done (Wave H-PageZoomJump)`
   - Competitor behavior: Notewise provides 50/100/200/... presets plus lock-zoom mode.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorShared.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`
-  - What exists now: Pinch zoom bounds exist, but no preset controls or lock toggle.
-  - What is missing: Preset quick actions, fit-content action, and lock-zoom guard in gesture layer.
+  - What exists now: Page/zoom pill menu includes presets (50/100/200/300/400), fit action, lock/unlock toggle, and go-to-page; zoom-change paths respect lock guard in single and stacked editors.
+  - What is missing: Dedicated settings persistence for lock state.
   - Exact change needed: Add zoom action menu (50/100/200/300/400/fit/lock) and block pinch scale changes while lock is enabled.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -439,12 +439,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### Editor / Tooling Expansion
 
-- [ ] `EDIT-13` Explicit Edit mode vs View mode toggle
-  - Status: `Missing`
+- [x] `EDIT-13` Explicit Edit mode vs View mode toggle
+  - Status: `Done (Wave H-ModeSnackbar)`
   - Competitor behavior: Notewise shows mode-switch snackbars and simplified non-edit chrome.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorScaffold.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
-  - What exists now: Always-edit oriented toolbar experience.
-  - What is missing: Dedicated view-mode state, protected interactions, and transition messaging.
+  - What exists now: Explicit read-only/view mode toggle is wired through editor state, editing actions are gated, and mode-switch user feedback is surfaced as snackbars.
+  - What is missing: Optional simplified view-mode chrome polish.
   - Exact change needed: Add `EditorMode` state (`Edit`, `View`), suppress editing gestures in `View`, and emit clear snackbar confirmations on mode changes.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -461,12 +461,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Page-order persistence tests and UI drag/drop reorder tests.
 
-- [ ] `EDIT-15` Persistent page/zoom pill + menu parity
-  - Status: `Missing`
+- [x] `EDIT-15` Persistent page/zoom pill + menu parity
+  - Status: `Done (Wave H-PageZoomJump)`
   - Competitor behavior: Notewise uses a bottom-right pill showing page index plus zoom %, with menu actions.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorShared.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorScaffold.kt`
-  - What exists now: Zoom state exists but no dedicated page/zoom control capsule.
-  - What is missing: Persistent pill UI, tap menu integration, and page indicator coupling.
+  - What exists now: Bottom-right page/zoom pill is present in single-page and stacked-page editors with page index + zoom percentage, menu actions, and jump-to-page numeric entry.
+  - What is missing: Final visual parity polish.
   - Exact change needed: Replace standalone zoom indicator with a combined page/zoom pill that opens presets, fit-content, and lock-zoom actions.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -520,8 +520,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Status: `Done for architecture + shape route (Wave F-ObjectInsert)`
   - Competitor behavior: Samsung insert menu quickly exposes PDF, voice recording, image, camera, scan, audio file, drawing, and sticky note.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`
-  - What exists now: `+` now routes to a dedicated insert menu with shape actions enabled and explicit disabled placeholders for next-wave entries.
-  - What is missing: Full parity action inventory (`camera`, `scan`, `voice`, `audio file`, `sticky`) and permission flows.
+  - What exists now: `+` routes to a dedicated insert menu with shape/image/text routes active and explicit disabled placeholders for `camera`, `scan`, `voice`, `audio file`, and `sticky`.
+  - What is missing: Runtime permission + capture/import flows for deferred entries.
   - Deferred from Wave F: Runtime image/text/audio/sticky/scan/file insert flows remain in parity backlog by design.
   - Exact change needed: Expand `EDIT-04` implementation contract to include dedicated insert intents for `PDF`, `Image`, `Camera`, `Scan`, `Voice recording`, `Audio file`, and `Sticky note`, including disabled-state UX when not available.
   - Surface impact: `Android`, `Docs/QA`
@@ -870,18 +870,18 @@ Proposed public API/interface/type updates to align with backlog items:
 - New export/share contract surface for flattened vs layered annotation output metadata (Android + Convex consumers).
 
 - [ ] `XSURF-01` Convex schema/contracts for new feature metadata
-  - Status: `Strong Partial (Wave F-ObjectInsert contracts landed for page objects)`
+  - Status: `Strong Partial+ (Wave G attachment object contracts landed)`
   - Competitor behavior: Not a UI feature by itself; required to support parity features across devices.
   - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\docs\architecture\system-overview.md`
-  - What exists now: Current contracts cover existing note/page/stroke surface but not expanded object/gesture/export metadata.
-  - What is missing: Canonical schema and fixture coverage for new metadata introduced by this backlog.
+  - What exists now: Contracts now cover shape/image/text/audio/sticky/scan/file page-object metadata with fixture validation.
+  - What is missing: Gesture/template/export metadata surfaces still need canonical contract fixtures.
   - Exact change needed: Add Convex schema and contract fixtures for object tools, template scope, gesture settings, and export metadata before cross-device sync rollout.
   - Surface impact: `Convex`, `Android`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Contract fixture test suite and schema drift checks in CI.
 
 - [ ] `XSURF-02` Web implications tracking for view-only surface
-  - Status: `Strong Partial (fallback policy + contract tests documented in Wave F)`
+  - Status: `Strong Partial+ (fallback matrix expanded for attachment object kinds)`
   - Competitor behavior: Not competitor-visible directly; needed so web does not break on new Android-authored metadata.
   - Current Onyx evidence: `C:\onyx\apps\web\README.md`, `C:\onyx\docs\architecture\system-overview.md`
   - What exists now: Web is view-only and does not yet define behavior for incoming advanced object metadata.
@@ -892,12 +892,12 @@ Proposed public API/interface/type updates to align with backlog items:
   - Validation gate: Web contract decoding tests for mixed-feature notes and fallback rendering snapshots.
 
 - [ ] `XSURF-03` Attachment/object schema expansion (image/audio/sticky/scan/file)
-  - Status: `Partial (shape runtime + image/text contract scaffolding only in Wave F)`
+  - Status: `Strong Partial (runtime image/text MVP + full attachment contract scaffolding)`
   - Competitor behavior: Required cross-surface contract for Samsung-style insert parity.
   - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\PageObjectEntity.kt`
-  - What exists now: Stroke/template-centric contracts.
-  - What is missing: Canonical metadata for attachment object types and lifecycle fields.
-  - Deferred from Wave F: Runtime support for audio/sticky/scan/file kinds is intentionally not started yet.
+  - What exists now: Canonical object union contract includes image/audio/sticky/scan/file payload scaffolding; Android runtime now supports shape/image/text object kinds.
+  - What is missing: Runtime audio/sticky/scan/file object interactions and attachment lifecycle operations.
+  - Deferred from this wave: Runtime support for audio/sticky/scan/file remains intentionally deferred.
   - Exact change needed: Add object union schema with type-specific payload validation and fallback policy for unsupported clients.
   - Surface impact: `Convex`, `Android`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`

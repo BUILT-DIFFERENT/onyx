@@ -67,5 +67,30 @@ describe('Contract Fixtures Validation', () => {
       expect(result.payload.shapeType).toBe('rectangle');
       expect(result.zIndex).toBeTypeOf('number');
     });
+
+    it('validates page-object-image.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'page-object-image.fixture.json'), 'utf-8'));
+      const result = PageObjectSchema.parse(fixture);
+      expect(result.kind).toBe('image');
+      if (result.kind !== 'image') throw new Error('Expected image object');
+      expect(result.payload.mimeType).toBe('image/png');
+    });
+
+    it('validates page-object-text.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'page-object-text.fixture.json'), 'utf-8'));
+      const result = PageObjectSchema.parse(fixture);
+      expect(result.kind).toBe('text');
+      if (result.kind !== 'text') throw new Error('Expected text object');
+      expect(result.payload.text).toBe('Meeting notes');
+    });
+
+    it('validates attachment object fixtures', () => {
+      const kinds = ['audio', 'sticky', 'scan', 'file'] as const;
+      for (const kind of kinds) {
+        const fixture = JSON.parse(readFileSync(join(fixturesDir, `page-object-${kind}.fixture.json`), 'utf-8'));
+        const result = PageObjectSchema.parse(fixture);
+        expect(result.kind).toBe(kind);
+      }
+    });
   });
 });

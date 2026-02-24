@@ -2,6 +2,7 @@ package com.onyx.android.ui
 
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +64,7 @@ class NoteEditorToolbarTest {
                         ),
                     contentState = defaultContentState(),
                     transformState = rememberTransformableState { _, _, _ -> },
+                    snackbarHostState = SnackbarHostState(),
                 )
             }
         }
@@ -199,7 +201,7 @@ class NoteEditorToolbarTest {
     }
 
     @Test
-    fun insertMenu_exposesShapeActions_andDeferredPlaceholders() {
+    fun insertMenu_exposesRichActions_withDeferredPlaceholders() {
         var selectedInsertAction = InsertAction.NONE
         setEditorScaffold(
             toolbarState =
@@ -224,8 +226,24 @@ class NoteEditorToolbarTest {
         composeRule.onNodeWithContentDescription("Insert menu").performClick()
         composeRule.onNodeWithText("Rectangle").assertIsDisplayed()
         composeRule.onNodeWithText("Ellipse").assertIsDisplayed()
-        composeRule.onNodeWithText("Image (coming next wave)").assertIsDisplayed()
-        composeRule.onNodeWithText("Text (coming next wave)").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Image").assertIsDisplayed().performClick()
+        composeRule.runOnIdle {
+            assertEquals(InsertAction.IMAGE, selectedInsertAction)
+        }
+
+        composeRule.onNodeWithContentDescription("Insert menu").performClick()
+        composeRule.onNodeWithText("Text").assertIsDisplayed().performClick()
+        composeRule.runOnIdle {
+            assertEquals(InsertAction.TEXT, selectedInsertAction)
+        }
+
+        composeRule.onNodeWithContentDescription("Insert menu").performClick()
+        composeRule.onNodeWithText("Camera (coming next wave)").assertIsDisplayed()
+        composeRule.onNodeWithText("Scan (coming next wave)").assertIsDisplayed()
+        composeRule.onNodeWithText("Voice recording (coming next wave)").assertIsDisplayed()
+        composeRule.onNodeWithText("Audio file (coming next wave)").assertIsDisplayed()
+        composeRule.onNodeWithText("Sticky note (coming next wave)").assertIsDisplayed()
     }
 
     private fun setEditorScaffold(toolbarState: NoteEditorToolbarState) {
@@ -236,6 +254,7 @@ class NoteEditorToolbarTest {
                     toolbarState = toolbarState,
                     contentState = defaultContentState(),
                     transformState = rememberTransformableState { _, _, _ -> },
+                    snackbarHostState = SnackbarHostState(),
                 )
             }
         }
@@ -291,6 +310,7 @@ private fun defaultContentState(): NoteEditorContentState =
         interactionMode = InteractionMode.DRAW,
         thumbnails = emptyList(),
         currentPageIndex = 0,
+        totalPages = 1,
         templateState = PageTemplateState.BLANK,
         isRecognitionOverlayEnabled = false,
         recognitionText = null,
