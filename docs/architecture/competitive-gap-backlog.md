@@ -816,11 +816,11 @@ This addendum expands scope without removing prior backlog work. It captures eve
 ### Performance / Reliability Expansion
 
 - [ ] `PERF-01` Predictive inking + perceived-latency budget enforcement
-  - Status: `Partial`
+  - Status: `Strong Partial (Wave Z-LatencyBudgetTelemetryScaffold)`
   - Competitor behavior: Samsung-class pen feel depends on predictive rendering and very low perceived latency.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`
-  - What exists now: OpenGL rendering with pressure-aware strokes.
-  - What is missing: Explicit predictive path, latency telemetry, and CI performance thresholds.
+  - What exists now: Prediction-path routing exists in touch handling, renderer emits frame/transform latency telemetry logs, and a latency macrobenchmark now captures frame + trace-section timings (`InkCanvas#handleTouchEvent`, `InkGlRenderer#onDrawFrame`).
+  - What is missing: CI-enforced pass/fail thresholds and stylus-lab calibration across hardware tiers.
   - Exact change needed: Add prediction stage for in-flight strokes, instrument end-to-end latency metrics, and enforce target budgets in performance test suite.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -838,22 +838,22 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Validation gate: Macrobenchmark reports meeting target frame pacing budgets.
 
 - [ ] `PERF-03` Incremental redraw/dirty-region policy for heavy pages
-  - Status: `Partial`
+  - Status: `Strong Partial (Wave Z-DirtyRegionPolicyDocsBenchmark)`
   - Competitor behavior: Large notes remain smooth by avoiding full-canvas repaints.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
-  - What exists now: Renderer exists, but no documented dirty-region guarantees for all tool/object types.
-  - What is missing: Dirty-region invalidation contract across ink/object/PDF overlays.
+  - What exists now: Renderer uses viewport culling + spatial indexing for committed strokes, and dirty-region policy is now documented with benchmark validation paths.
+  - What is missing: Full object/PDF overlay incremental-invalidation integration with explicit runtime assertions.
   - Exact change needed: Implement and document dirty-region redraw strategy for stroke updates, selection overlays, and template/background composition.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Frame-time regression tests on large mixed-content pages.
 
 - [ ] `PERF-04` Stress profile for very large notes/PDFs
-  - Status: `Missing`
+  - Status: `Partial (Wave Z-StressProfileMatrixMVP)`
   - Competitor behavior: Mature apps handle thousands of strokes and long PDFs without visible stutter.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\androidTest`, `C:\onyx\docs\architecture\testing.md`
-  - What exists now: No published stress matrix tied to competitor-scale workloads.
-  - What is missing: Reproducible load scenarios and pass/fail thresholds.
+  - What exists now: Published stress-profile matrix and Android macrobenchmark scaffold capturing frame/memory behavior for heavy interaction loops.
+  - What is missing: Deterministic large fixture generation and CI hard thresholds/regression alerting.
   - Exact change needed: Add performance fixtures for `N` strokes/page, `M` pages/note, and mixed PDF+ink workloads with memory/frame budget assertions.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`
