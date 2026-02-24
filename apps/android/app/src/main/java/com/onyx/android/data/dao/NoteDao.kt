@@ -28,6 +28,12 @@ interface NoteDao {
         updatedAt: Long,
     )
 
+    @Query("UPDATE notes SET lastOpenedPageId = :pageId WHERE noteId = :noteId")
+    suspend fun updateLastOpenedPage(
+        noteId: String,
+        pageId: String?,
+    )
+
     @Query("UPDATE notes SET title = :title, updatedAt = :updatedAt WHERE noteId = :noteId")
     suspend fun updateTitle(
         noteId: String,
@@ -168,4 +174,7 @@ interface NoteDao {
     /** Test-only query to get all notes synchronously */
     @Query("SELECT * FROM notes ORDER BY noteId")
     suspend fun getAllNotesForTesting(): List<NoteEntity>
+
+    @Query("SELECT title FROM notes WHERE deletedAt IS NULL")
+    suspend fun getActiveTitles(): List<String>
 }

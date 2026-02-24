@@ -92,6 +92,7 @@ import com.onyx.android.data.entity.TagEntity
 import com.onyx.android.data.repository.DateRange
 import com.onyx.android.data.repository.DuplicateTagNameException
 import com.onyx.android.data.repository.FilterState
+import com.onyx.android.data.repository.NoteNamingRule
 import com.onyx.android.data.repository.NoteRepository
 import com.onyx.android.data.repository.SearchResult
 import com.onyx.android.data.repository.SearchSourceType
@@ -205,6 +206,8 @@ private data class HomeScreenState(
     val showBatchAddTagDialog: Boolean = false,
     val destination: HomeDestination = HomeDestination.ALL,
     val viewMode: HomeViewMode = HomeViewMode.LIST,
+    val resumeLastPageEnabled: Boolean = true,
+    val noteNamingRule: NoteNamingRule = NoteNamingRule.UNTITLED_COUNTER,
     // Sort/Filter state
     val sortOption: SortOption = SortOption.MODIFIED,
     val sortDirection: SortDirection = SortDirection.DESC,
@@ -271,6 +274,8 @@ private data class HomeScreenActions(
     val onConfirmBatchAddTag: (String) -> Unit,
     val onSelectDestination: (HomeDestination) -> Unit,
     val onToggleViewMode: () -> Unit,
+    val onToggleResumeLastPage: () -> Unit,
+    val onCycleNoteNamingRule: () -> Unit,
     val onRestoreNote: (String) -> Unit,
     val onPermanentlyDeleteNote: (String) -> Unit,
     // Sort/Filter actions
@@ -299,6 +304,8 @@ fun HomeScreen(
     val tags by viewModel.tags.collectAsState()
     val selectedTagFilter by viewModel.selectedTagFilter.collectAsState()
     val noteTags by viewModel.noteTags.collectAsState()
+    val resumeLastPageEnabled by viewModel.resumeLastPageEnabled.collectAsState()
+    val noteNamingRule by viewModel.noteNamingRule.collectAsState()
     var notePendingDelete by remember { mutableStateOf<NoteEntity?>(null) }
     var folderPendingDelete by remember { mutableStateOf<FolderEntity?>(null) }
     var tagPendingDelete by remember { mutableStateOf<TagEntity?>(null) }
@@ -371,6 +378,8 @@ fun HomeScreen(
             showBatchAddTagDialog = showBatchAddTagDialog,
             destination = destination,
             viewMode = viewMode,
+            resumeLastPageEnabled = resumeLastPageEnabled,
+            noteNamingRule = noteNamingRule,
             sortOption = sortOption,
             sortDirection = sortDirection,
             filterState = filterState,
@@ -552,6 +561,18 @@ fun HomeScreen(
                         HomeViewMode.LIST
                     }
             },
+            onToggleResumeLastPage = {
+                viewModel.setResumeLastPageEnabled(!resumeLastPageEnabled)
+            },
+            onCycleNoteNamingRule = {
+                val nextRule =
+                    when (noteNamingRule) {
+                        NoteNamingRule.UNTITLED_COUNTER -> NoteNamingRule.DATE_TIME
+                        NoteNamingRule.DATE_TIME -> NoteNamingRule.BLANK
+                        NoteNamingRule.BLANK -> NoteNamingRule.UNTITLED_COUNTER
+                    }
+                viewModel.setNoteNamingRule(nextRule)
+            },
             onRestoreNote = { noteId ->
                 viewModel.restoreNote(
                     noteId = noteId,
@@ -596,6 +617,7 @@ private fun HomeScreenContent(
     state: HomeScreenState,
     actions: HomeScreenActions,
 ) {
+    var isLaunchSettingsMenuExpanded by remember { mutableStateOf(false) }
     HomeDialogs(state = state, actions = actions)
     Scaffold(
         topBar = {
@@ -660,6 +682,43 @@ private fun HomeScreenContent(
                                     },
                                 contentDescription = "Toggle list/grid",
                             )
+                        }
+                        Box {
+                            IconButton(onClick = { isLaunchSettingsMenuExpanded = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "Note launch preferences",
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = isLaunchSettingsMenuExpanded,
+                                onDismissRequest = { isLaunchSettingsMenuExpanded = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            if (state.resumeLastPageEnabled) {
+                                                "Resume last page: On"
+                                            } else {
+                                                "Resume last page: Off"
+                                            },
+                                        )
+                                    },
+                                    onClick = {
+                                        actions.onToggleResumeLastPage()
+                                        isLaunchSettingsMenuExpanded = false
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text("New note naming: ${state.noteNamingRule.label}")
+                                    },
+                                    onClick = {
+                                        actions.onCycleNoteNamingRule()
+                                        isLaunchSettingsMenuExpanded = false
+                                    },
+                                )
+                            }
                         }
                         if (BuildConfig.DEBUG) {
                             IconButton(onClick = actions.onNavigateToDeveloperFlags) {
@@ -1631,6 +1690,7 @@ private fun HomeContentBody(
         HomeListContent(
             state = state,
             onNavigateToEditor = actions.onNavigateToEditor,
+            resumeLastPageEnabled = state.resumeLastPageEnabled,
             onNavigateToSearchResult = actions.onNavigateToSearchResult,
             onRequestDeleteNote = actions.onRequestDeleteNote,
             onMoveNote = actions.onShowMoveNoteDialog,
@@ -1650,6 +1710,7 @@ private fun HomeContentBody(
 private fun HomeListContent(
     state: HomeScreenState,
     onNavigateToEditor: (String, String?) -> Unit,
+    resumeLastPageEnabled: Boolean,
     onNavigateToSearchResult: (SearchResult) -> Unit,
     onRequestDeleteNote: (NoteEntity) -> Unit,
     onMoveNote: (NoteEntity) -> Unit,
@@ -1676,6 +1737,7 @@ private fun HomeListContent(
                 notes = state.notes,
                 noteTags = state.noteTags,
                 onNavigateToEditor = onNavigateToEditor,
+                resumeLastPageEnabled = resumeLastPageEnabled,
                 modifier = modifier,
             )
         }
@@ -1687,6 +1749,7 @@ private fun HomeListContent(
                 selectionMode = state.selectionMode,
                 selectedNoteIds = state.selectedNoteIds,
                 onNavigateToEditor = onNavigateToEditor,
+                resumeLastPageEnabled = resumeLastPageEnabled,
                 onRequestDeleteNote = onRequestDeleteNote,
                 onMoveNote = onMoveNote,
                 onManageTags = onManageTags,
@@ -1751,6 +1814,7 @@ internal fun NotesListContent(
     selectionMode: Boolean,
     selectedNoteIds: Set<String>,
     onNavigateToEditor: (String, String?) -> Unit,
+    resumeLastPageEnabled: Boolean,
     onRequestDeleteNote: (NoteEntity) -> Unit,
     onMoveNote: (NoteEntity) -> Unit,
     onManageTags: (NoteEntity) -> Unit,
@@ -1783,7 +1847,10 @@ internal fun NotesListContent(
                     if (selectionMode) {
                         onToggleNoteSelection(note.noteId)
                     } else {
-                        onNavigateToEditor(note.noteId, null)
+                        onNavigateToEditor(
+                            note.noteId,
+                            if (resumeLastPageEnabled) note.lastOpenedPageId else null,
+                        )
                     }
                 },
                 onLongPress = {
@@ -1827,6 +1894,7 @@ private fun NotesGridContent(
     notes: List<NoteEntity>,
     noteTags: Map<String, List<TagEntity>>,
     onNavigateToEditor: (String, String?) -> Unit,
+    resumeLastPageEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
@@ -1841,7 +1909,12 @@ private fun NotesGridContent(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .clickable { onNavigateToEditor(note.noteId, null) },
+                        .clickable {
+                            onNavigateToEditor(
+                                note.noteId,
+                                if (resumeLastPageEnabled) note.lastOpenedPageId else null,
+                            )
+                        },
                 tonalElevation = 1.dp,
                 shape = MaterialTheme.shapes.medium,
             ) {
@@ -2377,6 +2450,10 @@ internal class HomeScreenViewModel
         val dateRangeFilter: StateFlow<DateRange?> = _dateRangeFilter.asStateFlow()
         private val _destination = MutableStateFlow(HomeDestination.ALL)
         val destination: StateFlow<HomeDestination> = _destination.asStateFlow()
+        private val _resumeLastPageEnabled = MutableStateFlow(repository.isResumeLastPageEnabled())
+        val resumeLastPageEnabled: StateFlow<Boolean> = _resumeLastPageEnabled.asStateFlow()
+        private val _noteNamingRule = MutableStateFlow(repository.getNoteNamingRule())
+        val noteNamingRule: StateFlow<NoteNamingRule> = _noteNamingRule.asStateFlow()
 
         val searchResults: StateFlow<List<SearchResult>> =
             _searchQuery
@@ -2491,6 +2568,16 @@ internal class HomeScreenViewModel
                 _selectedTagFilter.value = null
                 _dateRangeFilter.value = null
             }
+        }
+
+        fun setResumeLastPageEnabled(enabled: Boolean) {
+            repository.setResumeLastPageEnabled(enabled)
+            _resumeLastPageEnabled.value = enabled
+        }
+
+        fun setNoteNamingRule(rule: NoteNamingRule) {
+            repository.setNoteNamingRule(rule)
+            _noteNamingRule.value = rule
         }
 
         fun createNote(

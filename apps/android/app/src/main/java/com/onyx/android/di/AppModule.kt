@@ -8,6 +8,7 @@ import com.onyx.android.data.dao.OperationLogDao
 import com.onyx.android.data.dao.PageDao
 import com.onyx.android.data.dao.PageObjectDao
 import com.onyx.android.data.dao.PageTemplateDao
+import com.onyx.android.data.repository.NoteLaunchPreferences
 import com.onyx.android.data.repository.NoteRepository
 import com.onyx.android.data.serialization.StrokeSerializer
 import com.onyx.android.data.thumbnail.ThumbnailGenerator
@@ -18,6 +19,7 @@ import com.onyx.android.pdf.PdfPasswordStore
 import com.onyx.android.pdf.PdfiumDocumentInfoReader
 import com.onyx.android.recognition.MyScriptEngine
 import com.onyx.android.recognition.MyScriptPageManager
+import com.onyx.android.recognition.RecognitionSettings
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -59,6 +61,18 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideNoteLaunchPreferences(
+        @ApplicationContext context: Context,
+    ): NoteLaunchPreferences = NoteLaunchPreferences(context)
+
+    @Provides
+    @Singleton
+    fun provideRecognitionSettings(
+        @ApplicationContext context: Context,
+    ): RecognitionSettings = RecognitionSettings(context)
+
+    @Provides
+    @Singleton
     fun provideThumbnailGenerator(
         @ApplicationContext context: Context,
         database: OnyxDatabase,
@@ -83,6 +97,7 @@ object AppModule {
         pdfAssetStorage: PdfAssetStorage,
         pdfPasswordStore: PdfPasswordStore,
         thumbnailGenerator: ThumbnailGenerator,
+        noteLaunchPreferences: NoteLaunchPreferences,
     ): NoteRepository =
         NoteRepository(
             noteDao = database.noteDao(),
@@ -99,6 +114,7 @@ object AppModule {
             pdfAssetStorage = pdfAssetStorage,
             pdfPasswordStore = pdfPasswordStore,
             thumbnailGenerator = thumbnailGenerator,
+            noteLaunchPreferences = noteLaunchPreferences,
         )
 
     @Provides

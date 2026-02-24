@@ -99,6 +99,7 @@ import com.onyx.android.input.MultiFingerTapAction
 import com.onyx.android.input.SingleFingerMode
 import com.onyx.android.input.StylusButtonAction
 import com.onyx.android.objects.model.InsertAction
+import com.onyx.android.recognition.RecognitionMode
 import com.onyx.android.ui.NoteEditorToolbarState
 import com.onyx.android.ui.NoteEditorTopBarState
 import com.onyx.android.ui.PageTemplateState
@@ -363,6 +364,22 @@ internal fun EditorToolbar(
                             onClick = {
                                 isOverflowMenuExpanded = false
                                 topBarState.onToggleReadOnly()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text =
+                                        when (topBarState.recognitionMode) {
+                                            RecognitionMode.OFF -> "Recognition mode: Off"
+                                            RecognitionMode.SEARCH_ONLY -> "Recognition mode: Search-only"
+                                            RecognitionMode.LIVE_CONVERT -> "Recognition mode: Live convert"
+                                        },
+                                )
+                            },
+                            onClick = {
+                                isOverflowMenuExpanded = false
+                                topBarState.onCycleRecognitionMode()
                             },
                         )
                         DropdownMenuItem(
@@ -843,10 +860,13 @@ internal fun EditorToolbar(
             ) {
                 IconButton(
                     onClick = topBarState.onToggleRecognitionOverlay,
+                    enabled = topBarState.recognitionMode == RecognitionMode.LIVE_CONVERT,
                     modifier =
                         Modifier.semantics {
                             contentDescription =
-                                if (topBarState.isRecognitionOverlayEnabled) {
+                                if (topBarState.recognitionMode != RecognitionMode.LIVE_CONVERT) {
+                                    "Recognition overlay unavailable in current mode"
+                                } else if (topBarState.isRecognitionOverlayEnabled) {
                                     "Recognition overlay on"
                                 } else {
                                     "Recognition overlay off"
@@ -856,7 +876,14 @@ internal fun EditorToolbar(
                     Icon(
                         imageVector = if (topBarState.isRecognitionOverlayEnabled) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
                         contentDescription = null,
-                        tint = if (topBarState.isRecognitionOverlayEnabled) NOTEWISE_SELECTED else NOTEWISE_ICON,
+                        tint =
+                            if (topBarState.recognitionMode != RecognitionMode.LIVE_CONVERT) {
+                                NOTEWISE_ICON_MUTED
+                            } else if (topBarState.isRecognitionOverlayEnabled) {
+                                NOTEWISE_SELECTED
+                            } else {
+                                NOTEWISE_ICON
+                            },
                     )
                 }
                 IconButton(

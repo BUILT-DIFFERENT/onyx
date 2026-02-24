@@ -206,11 +206,11 @@ Evidence paths:
   - Validation gate: Android UI test for multi-page find navigation and highlight positioning.
 
 - [ ] `PDF-02` Hyperlink navigation support
-  - Status: `Missing`
+  - Status: `Partial (Wave Z-PdfLinkContractScaffold)`
   - Competitor behavior: Tapping internal/external PDF links is standard in mature PDF annotation apps.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\PdfiumDocumentSession.kt`
-  - What exists now: Outline navigation exists; link hit-testing/tap routing is not implemented.
-  - What is missing: Link rectangle extraction, click handling, and destination handling rules.
+  - What exists now: Link model and tap-routing scaffolding exist (`PdfPageLink`/`PdfLinkTarget`, `PdfTextEngine.getLinks`, tap handling path in PDF content, safe external URL launch helper), with current Pdfium link extraction stubbed.
+  - What is missing: Native PDF link rectangle extraction and full internal/external destination resolution.
   - Exact change needed: Extend PDF extraction to include link regions and implement tap routing for internal jumps and safe external URL opening.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -713,11 +713,11 @@ This addendum expands scope without removing prior backlog work. It captures eve
 ### Recognition / Intelligence Expansion
 
 - [ ] `REC-04` Recognition operating modes (`Off`, `Search-only`, `Live convert`)
-  - Status: `Missing`
+  - Status: `Partial (Wave Z-RecognitionModesMVP)`
   - Competitor behavior: Power users expect control over recognition intensity and conversion intrusiveness.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`
-  - What exists now: Recognition is enabled path-first with limited user control.
-  - What is missing: Mode selector and mode-specific pipeline branching.
+  - What exists now: Persisted recognition mode (`Off`/`Search-only`/`Live convert`) is wired into editor controls and ViewModel gating for recognition pipeline/overlay behavior.
+  - What is missing: Broader mode-aware UX polish and dedicated behavior tests for every stroke/edit path.
   - Exact change needed: Introduce recognition mode setting and split pipeline behavior by mode (`none`, `index-only`, `inline conversion`).
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -792,11 +792,11 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Validation gate: Instrumented tests for window-flag behavior across mode transitions.
 
 - [ ] `SET-03` New-note naming rule and resume-last-page behavior
-  - Status: `Missing`
+  - Status: `Partial (Wave Z-LaunchPreferencesMVP)`
   - Competitor behavior: Notewise exposes naming pattern preferences and "continue from last opened page".
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\settings\SettingsScreen.kt`
-  - What exists now: Static/default note naming and basic open logic.
-  - What is missing: Naming template settings and page-resume metadata.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteLaunchPreferences.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`
+  - What exists now: Home now exposes launch-preference controls (resume toggle + naming-rule cycle), new note creation respects naming rule, and editor persists/resumes last-opened page per note.
+  - What is missing: Dedicated full settings-screen surface and expanded naming-template customization.
   - Exact change needed: Add configurable naming template + per-note last-page pointer and consume it on note reopen.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave V1`

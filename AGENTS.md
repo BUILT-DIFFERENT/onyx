@@ -45,6 +45,7 @@
 - Monorepo test-script clarification: package-level `test` scripts for packages without tests are now non-failing placeholders (`echo "No tests for this package yet"`), and vitest-based packages use `--passWithNoTests` to avoid false-negative pipeline failures when run from package-local cwd.
 - Compose flow-combine clarification: `kotlinx.coroutines.flow.combine` overloads above five flows can resolve to the vararg-array transform signature in this toolchain; for type-safe state composition prefer nested `combine` (or staged combine + copy) instead of a 6-argument lambda.
 - Paper-size scaffold clarification: current `TPL-01` partial stores paper preset selection in `PageTemplateState.templateId` (`paper:letter|paper:a4|paper:phone`) and `NoteRepository.createPageForNote` derives new-page dimensions from the latest page templateId; this is a transitional convention until a dedicated paper-size field is added.
+- Settings-surface clarification: there is no standalone `apps/android/app/src/main/java/com/onyx/android/ui/settings/SettingsScreen.kt` in the current tree; editor/home preference controls are currently implemented in `NoteEditorScreen.kt` and `HomeScreen.kt`.
 
 ## Context7 Library IDs (Project Stack)
 

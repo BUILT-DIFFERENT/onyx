@@ -183,6 +183,11 @@ class PdfiumRenderer(
             documentSession.getTextCharacters(pageIndex)
         }
 
+    override fun getLinks(pageIndex: Int): List<PdfPageLink> =
+        synchronized(lock) {
+            documentSession.getPageLinks(pageIndex)
+        }
+
     override fun getTableOfContents(): List<PdfTocItem> =
         synchronized(lock) {
             documentSession.getTableOfContents()

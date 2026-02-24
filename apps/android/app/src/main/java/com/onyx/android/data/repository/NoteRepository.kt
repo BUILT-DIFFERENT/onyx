@@ -126,6 +126,7 @@ class NoteRepository(
     private val pdfAssetStorage: PdfAssetStorage,
     private val pdfPasswordStore: PdfPasswordStore,
     private val thumbnailGenerator: ThumbnailGenerator?,
+    private val noteLaunchPreferences: NoteLaunchPreferences,
 ) {
     companion object {
         private const val SNIPPET_LENGTH = 100
@@ -156,6 +157,7 @@ class NoteRepository(
         private val PDF_RESULT_COLOR = Color(0xFFF2994A)
         private val NOTE_METADATA_RESULT_COLOR = Color(0xFF34A853)
         private val PAGE_METADATA_RESULT_COLOR = Color(0xFF7E57C2)
+        private val UNTITLED_TITLE_REGEX = Regex("^Untitled(?:\\s+(\\d+))?$")
     }
 
     private data class RankedResult(
@@ -169,11 +171,12 @@ class NoteRepository(
 
     suspend fun createNote(): NoteWithFirstPage {
         val now = System.currentTimeMillis()
+        val generatedTitle = generateInitialNoteTitle(now)
         val note =
             NoteEntity(
                 noteId = UUID.randomUUID().toString(),
                 ownerUserId = deviceIdentity.getDeviceId(),
-                title = "",
+                title = generatedTitle,
                 createdAt = now,
                 updatedAt = now,
                 deletedAt = null,
@@ -196,6 +199,25 @@ class NoteRepository(
     fun getSharedNotes(): Flow<List<NoteEntity>> = flowOf(emptyList())
 
     fun getPagesForNote(noteId: String): Flow<List<PageEntity>> = pageDao.getPagesForNote(noteId)
+
+    fun isResumeLastPageEnabled(): Boolean = noteLaunchPreferences.isResumeLastPageEnabled()
+
+    fun setResumeLastPageEnabled(enabled: Boolean) {
+        noteLaunchPreferences.setResumeLastPageEnabled(enabled)
+    }
+
+    fun getNoteNamingRule(): NoteNamingRule = noteLaunchPreferences.getNoteNamingRule()
+
+    fun setNoteNamingRule(rule: NoteNamingRule) {
+        noteLaunchPreferences.setNoteNamingRule(rule)
+    }
+
+    suspend fun updateLastOpenedPage(
+        noteId: String,
+        pageId: String?,
+    ) {
+        noteDao.updateLastOpenedPage(noteId = noteId, pageId = pageId)
+    }
 
     suspend fun createPage(page: PageEntity): PageEntity {
         val now = System.currentTimeMillis()
@@ -263,6 +285,22 @@ class NoteRepository(
             PAPER_LETTER -> DEFAULT_PAGE_WIDTH_PT to DEFAULT_PAGE_HEIGHT_PT
             else -> DEFAULT_PAGE_WIDTH_PT to DEFAULT_PAGE_HEIGHT_PT
         }
+
+    private suspend fun generateInitialNoteTitle(now: Long): String =
+        when (noteLaunchPreferences.getNoteNamingRule()) {
+            NoteNamingRule.BLANK -> ""
+            NoteNamingRule.DATE_TIME -> noteLaunchPreferences.buildDateTimeTitle(now)
+            NoteNamingRule.UNTITLED_COUNTER -> generateUntitledTitle()
+        }
+
+    private suspend fun generateUntitledTitle(): String {
+        val titles = noteDao.getActiveTitles()
+        val maxSuffix =
+            titles.maxOfOrNull { title ->
+                UNTITLED_TITLE_REGEX.matchEntire(title.trim())?.groups?.get(1)?.value?.toIntOrNull() ?: 0
+            } ?: 0
+        return "Untitled ${maxSuffix + 1}"
+    }
 
     suspend fun movePage(
         noteId: String,

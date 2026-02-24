@@ -30,6 +30,8 @@ import com.onyx.android.pdf.PdfPasswordStore
 import com.onyx.android.recognition.ConvertedTextBlock
 import com.onyx.android.recognition.MyScriptPageManager
 import com.onyx.android.recognition.OverlayBounds
+import com.onyx.android.recognition.RecognitionMode
+import com.onyx.android.recognition.RecognitionSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -56,6 +58,7 @@ internal class NoteEditorViewModel
         private val noteDao: NoteDao,
         private val pageDao: PageDao,
         private val myScriptPageManager: MyScriptPageManager?,
+        private val recognitionSettings: RecognitionSettings,
         val pdfPasswordStore: PdfPasswordStore,
         val pdfAssetStorage: PdfAssetStorage,
     ) : ViewModel() {
@@ -147,6 +150,8 @@ internal class NoteEditorViewModel
 
         private val _recognitionOverlayEnabled = MutableStateFlow(false)
         val recognitionOverlayEnabled: StateFlow<Boolean> = _recognitionOverlayEnabled.asStateFlow()
+        private val _recognitionMode = MutableStateFlow(recognitionSettings.getRecognitionMode())
+        val recognitionMode: StateFlow<RecognitionMode> = _recognitionMode.asStateFlow()
 
         private val _recognizedTextByPage = MutableStateFlow<Map<String, String>>(emptyMap())
         val recognizedTextByPage: StateFlow<Map<String, String>> = _recognizedTextByPage.asStateFlow()
@@ -164,6 +169,9 @@ internal class NoteEditorViewModel
         init {
             myScriptPageManager?.onRecognitionUpdated = { pageId, text ->
                 viewModelScope.launch {
+                    if (!shouldRunRecognition()) {
+                        return@launch
+                    }
                     runCatching {
                         repository.updateRecognition(pageId, text, "myscript-4.3")
                         val updated = _recognizedTextByPage.value.toMutableMap()
@@ -174,6 +182,7 @@ internal class NoteEditorViewModel
                     }
                 }
             }
+            applyRecognitionModeSideEffects(_recognitionMode.value)
             viewModelScope.launch {
                 for (task in strokeWriteQueue) {
                     val firstAttempt =
@@ -230,6 +239,14 @@ internal class NoteEditorViewModel
                         reportError("Note not found while loading editor state.")
                     } else {
                         _noteTitle.value = note.title
+                        if (
+                            pendingInitialPageId == null &&
+                            pendingInitialPageIndex == null &&
+                            repository.isResumeLastPageEnabled() &&
+                            !note.lastOpenedPageId.isNullOrBlank()
+                        ) {
+                            pendingInitialPageId = note.lastOpenedPageId
+                        }
                     }
                     refreshPages(selectIndex = pendingInitialPageIndex, selectPageId = pendingInitialPageId)
                     pendingInitialPageId = null
@@ -261,7 +278,28 @@ internal class NoteEditorViewModel
         }
 
         fun toggleRecognitionOverlay() {
-            _recognitionOverlayEnabled.value = !_recognitionOverlayEnabled.value
+            if (_recognitionMode.value == RecognitionMode.LIVE_CONVERT) {
+                _recognitionOverlayEnabled.value = !_recognitionOverlayEnabled.value
+            }
+        }
+
+        fun cycleRecognitionMode() {
+            val nextMode =
+                when (_recognitionMode.value) {
+                    RecognitionMode.OFF -> RecognitionMode.SEARCH_ONLY
+                    RecognitionMode.SEARCH_ONLY -> RecognitionMode.LIVE_CONVERT
+                    RecognitionMode.LIVE_CONVERT -> RecognitionMode.OFF
+                }
+            setRecognitionMode(nextMode)
+        }
+
+        fun setRecognitionMode(mode: RecognitionMode) {
+            if (_recognitionMode.value == mode) {
+                return
+            }
+            _recognitionMode.value = mode
+            recognitionSettings.setRecognitionMode(mode)
+            applyRecognitionModeSideEffects(mode)
         }
 
         fun dismissConversionDraft() {
@@ -471,7 +509,7 @@ internal class NoteEditorViewModel
                     val updatedObjectCache = _pageObjectsCache.value.toMutableMap()
                     updatedObjectCache[pageId] = emptyList()
                     _pageObjectsCache.value = updatedObjectCache
-                    if (pageId == _activeRecognitionPageId.value) {
+                    if (pageId == _activeRecognitionPageId.value && shouldRunRecognition()) {
                         myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, emptyList())
                     }
                 }.onFailure { throwable ->
@@ -520,7 +558,7 @@ internal class NoteEditorViewModel
                 }
             }
             // Only update recognition if this is the active recognition page
-            if (updateRecognition && currentPageId == _activeRecognitionPageId.value) {
+            if (updateRecognition && currentPageId == _activeRecognitionPageId.value && shouldRunRecognition()) {
                 myScriptPageManager?.addStroke(stroke)
             }
         }
@@ -537,7 +575,7 @@ internal class NoteEditorViewModel
                 }
             }
             // Only update recognition if this is the active recognition page
-            if (updateRecognition && currentPageId == _activeRecognitionPageId.value) {
+            if (updateRecognition && currentPageId == _activeRecognitionPageId.value && shouldRunRecognition()) {
                 myScriptPageManager?.onStrokeErased(stroke.id, _strokes.value)
             }
         }
@@ -556,7 +594,7 @@ internal class NoteEditorViewModel
                     repository.replaceStrokeWithSegments(pageId, original.id, segments)
                 }
             }
-            if (updateRecognition && currentPageId == _activeRecognitionPageId.value) {
+            if (updateRecognition && currentPageId == _activeRecognitionPageId.value && shouldRunRecognition()) {
                 myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, mutation.strokes)
             }
             return mutation.insertionIndex
@@ -581,7 +619,7 @@ internal class NoteEditorViewModel
                     )
                 }
             }
-            if (updateRecognition && currentPageId == _activeRecognitionPageId.value) {
+            if (updateRecognition && currentPageId == _activeRecognitionPageId.value && shouldRunRecognition()) {
                 myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, restored)
             }
         }
@@ -605,7 +643,7 @@ internal class NoteEditorViewModel
                     repository.replaceStrokes(pageId, replacement)
                 }
             }
-            if (updateRecognition && currentPageId == _activeRecognitionPageId.value) {
+            if (updateRecognition && currentPageId == _activeRecognitionPageId.value && shouldRunRecognition()) {
                 myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, _strokes.value)
             }
         }
@@ -625,7 +663,9 @@ internal class NoteEditorViewModel
                     replacePageInState(locallyMixedPage)
                     if (currentPageId == pageId) {
                         _currentPage.value = locallyMixedPage
-                        myScriptPageManager?.onPageEnter(pageId)
+                        if (shouldRunRecognition()) {
+                            myScriptPageManager?.onPageEnter(pageId)
+                        }
                     }
                     repository.upgradePageToMixed(pageId)
                     val updatedPage = pageDao.getById(pageId)
@@ -661,7 +701,7 @@ internal class NoteEditorViewModel
                     repository.saveStroke(pageId, stroke)
                 }
             }
-            if (updateRecognition && pageId == currentPageId) {
+            if (updateRecognition && pageId == currentPageId && shouldRunRecognition()) {
                 myScriptPageManager?.addStroke(stroke)
             }
         }
@@ -685,7 +725,7 @@ internal class NoteEditorViewModel
                     repository.deleteStroke(stroke.id)
                 }
             }
-            if (updateRecognition && pageId == currentPageId) {
+            if (updateRecognition && pageId == currentPageId && shouldRunRecognition()) {
                 myScriptPageManager?.onStrokeErased(stroke.id, pageStrokes)
             }
         }
@@ -707,7 +747,7 @@ internal class NoteEditorViewModel
                     repository.replaceStrokeWithSegments(pageId, original.id, segments)
                 }
             }
-            if (updateRecognition && pageId == currentPageId) {
+            if (updateRecognition && pageId == currentPageId && shouldRunRecognition()) {
                 myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, mutation.strokes)
             }
             return mutation.insertionIndex
@@ -735,7 +775,7 @@ internal class NoteEditorViewModel
                     )
                 }
             }
-            if (updateRecognition && pageId == currentPageId) {
+            if (updateRecognition && pageId == currentPageId && shouldRunRecognition()) {
                 myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, restored)
             }
         }
@@ -764,7 +804,7 @@ internal class NoteEditorViewModel
                     repository.replaceStrokes(pageId, replacement)
                 }
             }
-            if (updateRecognition && pageId == currentPageId) {
+            if (updateRecognition && pageId == currentPageId && shouldRunRecognition()) {
                 myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, updatedPageStrokes)
             }
         }
@@ -1107,6 +1147,9 @@ internal class NoteEditorViewModel
          * @param pageId The page ID that received stylus input
          */
         fun setActiveRecognitionPage(pageId: String) {
+            if (!shouldRunRecognition()) {
+                return
+            }
             if (_activeRecognitionPageId.value != pageId) {
                 // Close the previous recognition page if different
                 if (_activeRecognitionPageId.value != null && _activeRecognitionPageId.value != pageId) {
@@ -1114,7 +1157,9 @@ internal class NoteEditorViewModel
                 }
                 _activeRecognitionPageId.value = pageId
                 // Initialize recognition for the new active page
-                myScriptPageManager?.onPageEnter(pageId)
+                if (shouldRunRecognition()) {
+                    myScriptPageManager?.onPageEnter(pageId)
+                }
             }
         }
 
@@ -1322,6 +1367,7 @@ internal class NoteEditorViewModel
             setCurrentPage(pages.getOrNull(resolvedIndex))
         }
 
+        @Suppress("CyclomaticComplexMethod")
         private suspend fun setCurrentPage(page: PageEntity?) {
             // Note: Do NOT change activeRecognitionPageId here - it's only updated on stylus interaction
             if (currentPageId != page?.pageId && currentPageId != null) {
@@ -1331,6 +1377,9 @@ internal class NoteEditorViewModel
                 }
             }
             currentPageId = page?.pageId
+            if (repository.isResumeLastPageEnabled()) {
+                repository.updateLastOpenedPage(noteId = noteId, pageId = currentPageId)
+            }
             _currentPage.value = page
             _currentTemplateConfig.value =
                 page
@@ -1340,7 +1389,7 @@ internal class NoteEditorViewModel
                     } ?: PageTemplateConfig.BLANK
             currentPageId?.let { pageId ->
                 // Only initialize recognition if this is also the active recognition page
-                if (pageId == _activeRecognitionPageId.value) {
+                if (pageId == _activeRecognitionPageId.value && shouldRunRecognition()) {
                     myScriptPageManager?.onPageEnter(pageId)
                 }
                 val loadedStrokes =
@@ -1354,7 +1403,7 @@ internal class NoteEditorViewModel
                 _pageObjects.value = loadedPageObjects
                 updatePageObjectCacheForPage(pageId, loadedPageObjects)
                 _selectedObjectId.value = null
-                if (page?.kind != "pdf" && pageId == _activeRecognitionPageId.value) {
+                if (page?.kind != "pdf" && pageId == _activeRecognitionPageId.value && shouldRunRecognition()) {
                     loadedStrokes.forEach { stroke ->
                         myScriptPageManager?.addStroke(stroke)
                     }
@@ -1470,5 +1519,16 @@ internal class NoteEditorViewModel
                 Log.e(LOG_TAG, message, throwable)
             }
             _errorMessage.value = message
+        }
+
+        private fun shouldRunRecognition(): Boolean = _recognitionMode.value != RecognitionMode.OFF
+
+        private fun applyRecognitionModeSideEffects(mode: RecognitionMode) {
+            if (mode != RecognitionMode.LIVE_CONVERT) {
+                _recognitionOverlayEnabled.value = false
+            }
+            if (mode == RecognitionMode.OFF) {
+                myScriptPageManager?.closeCurrentPage()
+            }
         }
     }

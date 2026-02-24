@@ -11,6 +11,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -49,6 +50,7 @@ import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
 import com.onyx.android.ink.ui.InkCanvasCallbacks
 import com.onyx.android.ink.ui.InkCanvasState
+import com.onyx.android.pdf.PdfPageLink
 import com.onyx.android.pdf.PdfTextExtractor
 import com.onyx.android.pdf.PdfTileKey
 import com.onyx.android.pdf.ValidatingTile
@@ -97,6 +99,8 @@ private fun rememberPdfSelectionState(contentState: NoteEditorContentState): Pdf
         currentPage = contentState.currentPage,
         viewTransform = contentState.viewTransform,
         isSelectionEnabled = selectionEnabled,
+        pdfLinks = contentState.pdfLinks,
+        onPdfLinkTapped = contentState.onPdfLinkTapped,
         selection = textSelection,
         onSelectionChange = { textSelection = it },
         onCopySelection = {
@@ -145,7 +149,8 @@ private fun PdfPageLayers(
         modifier =
             Modifier
                 .fillMaxSize()
-                .pdfSelectionInput(selectionState),
+                .pdfSelectionInput(selectionState)
+                .pdfLinkTapInput(selectionState),
     ) {
         if (bitmap != null || tileEntries.isNotEmpty()) {
             Canvas(modifier = Modifier.fillMaxSize()) {
@@ -280,6 +285,8 @@ private data class PdfSelectionState(
     val currentPage: PageEntity?,
     val viewTransform: ViewTransform,
     val isSelectionEnabled: Boolean,
+    val pdfLinks: List<PdfPageLink>,
+    val onPdfLinkTapped: (PdfPageLink) -> Unit,
     val selection: TextSelection?,
     val onSelectionChange: (TextSelection?) -> Unit,
     val onCopySelection: () -> Unit,
@@ -303,6 +310,23 @@ private fun Modifier.pdfSelectionInput(state: PdfSelectionState): Modifier =
                     handlePdfDragEnd(state)
                 },
             )
+        }
+    }
+
+private fun Modifier.pdfLinkTapInput(state: PdfSelectionState): Modifier =
+    if (state.isSelectionEnabled || state.pdfLinks.isEmpty()) {
+        this
+    } else {
+        pointerInput(state.currentPage?.pageId, state.pdfLinks, state.viewTransform) {
+            detectTapGestures { offset ->
+                val pageX = state.viewTransform.screenToPageX(offset.x)
+                val pageY = state.viewTransform.screenToPageY(offset.y)
+                state.pdfLinks.firstOrNull { link ->
+                    link.bounds.contains(pageX, pageY)
+                }?.let { link ->
+                    state.onPdfLinkTapped(link)
+                }
+            }
         }
     }
 

@@ -133,6 +133,7 @@ class PdfiumDocumentInfoReader(
         }
 }
 
+@Suppress("TooManyFunctions")
 internal class PdfiumDocumentSession private constructor(
     private val pdfiumCore: PdfiumCore,
     private val pdfDocument: PdfDocument,
@@ -204,6 +205,13 @@ internal class PdfiumDocumentSession private constructor(
         ensureOpen()
         val bookmarks = pdfiumCore.getTableOfContents(pdfDocument)
         return bookmarks.map { it.toOutlineItem() }
+    }
+
+    fun getPageLinks(pageIndex: Int): List<PdfPageLink> {
+        ensureOpen()
+        ensurePageOpened(pageIndex)
+        // Link extraction is scaffolded for now; native bridge/runtime extraction is next wave.
+        return emptyList()
     }
 
     /**

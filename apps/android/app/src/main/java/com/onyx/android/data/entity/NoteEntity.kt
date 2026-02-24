@@ -16,4 +16,5 @@ data class NoteEntity(
     val updatedAt: Long,
     val deletedAt: Long? = null,
     val folderId: String? = null,
+    val lastOpenedPageId: String? = null,
 )

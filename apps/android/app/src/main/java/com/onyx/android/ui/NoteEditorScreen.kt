@@ -5,6 +5,8 @@ package com.onyx.android.ui
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -625,6 +627,7 @@ private fun rememberNoteEditorUiState(
     val pageObjects by viewModel.pageObjects.collectAsState()
     val selectedObjectId by viewModel.selectedObjectId.collectAsState()
     val recognitionOverlayEnabled by viewModel.recognitionOverlayEnabled.collectAsState()
+    val recognitionMode by viewModel.recognitionMode.collectAsState()
     val recognizedTextByPage by viewModel.recognizedTextByPage.collectAsState()
     val convertedTextBlocksByPage by viewModel.convertedTextBlocksByPage.collectAsState()
     val undoController = remember(viewModel) { UndoController(viewModel, MAX_UNDO_ACTIONS) }
@@ -842,6 +845,8 @@ private fun rememberNoteEditorUiState(
             },
             isRecognitionOverlayEnabled = recognitionOverlayEnabled,
             onToggleRecognitionOverlay = viewModel::toggleRecognitionOverlay,
+            recognitionMode = recognitionMode,
+            onCycleRecognitionMode = viewModel::cycleRecognitionMode,
             keepScreenOn = keepScreenOn,
             hideSystemBars = hideSystemBars,
             onKeepScreenOnChanged = onKeepScreenOnChanged,
@@ -979,6 +984,17 @@ private fun rememberNoteEditorUiState(
             }
         }
 
+    val pdfLinks =
+        remember(pageState.currentPage?.pageId, pdfState.pdfRenderer) {
+            val page = pageState.currentPage
+            if (page?.kind == "pdf" && pdfState.pdfRenderer != null) {
+                val pageIndex = page.pdfPageNo ?: 0
+                pdfState.pdfRenderer.getLinks(pageIndex)
+            } else {
+                emptyList()
+            }
+        }
+
     val contentState =
         NoteEditorContentState(
             isPdfPage = pdfState.isPdfPage,
@@ -990,6 +1006,7 @@ private fun rememberNoteEditorUiState(
             pdfCrossfadeProgress = pdfState.pdfCrossfadeProgress,
             pdfBitmap = pdfState.pdfBitmap,
             pdfRenderer = pdfState.pdfRenderer,
+            pdfLinks = pdfLinks,
             currentPage = pageState.currentPage,
             viewTransform = viewTransform,
             pageWidthDp = pdfState.pageWidthDp,
@@ -1155,6 +1172,20 @@ private fun rememberNoteEditorUiState(
                 undoController.onObjectRemoved(pageObject.pageId, pageObject)
             },
             onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
+            onPdfLinkTapped = { link ->
+                when (val target = link.target) {
+                    is com.onyx.android.pdf.PdfLinkTarget.InternalPage -> {
+                        val offset = target.pageIndex - pageState.currentPageIndex
+                        if (offset != 0) {
+                            viewModel.navigateBy(offset)
+                        }
+                    }
+
+                    is com.onyx.android.pdf.PdfLinkTarget.ExternalUrl -> {
+                        openExternalUrl(appContext, target.url)
+                    }
+                }
+            },
             onTransformGesture = onTransformGesture,
             onPanGestureEnd = onPanGestureEnd,
             onUndoShortcut = undoController::undo,
@@ -1294,6 +1325,7 @@ private fun rememberMultiPageUiState(
     val pageObjectsCache by viewModel.pageObjectsCache.collectAsState()
     val selectedObjectId by viewModel.selectedObjectId.collectAsState()
     val recognitionOverlayEnabled by viewModel.recognitionOverlayEnabled.collectAsState()
+    val recognitionMode by viewModel.recognitionMode.collectAsState()
     val recognizedTextByPage by viewModel.recognizedTextByPage.collectAsState()
     val convertedTextBlocksByPage by viewModel.convertedTextBlocksByPage.collectAsState()
     val searchHighlightBounds by viewModel.searchHighlightBounds.collectAsState()
@@ -1545,6 +1577,8 @@ private fun rememberMultiPageUiState(
             },
             isRecognitionOverlayEnabled = recognitionOverlayEnabled,
             onToggleRecognitionOverlay = viewModel::toggleRecognitionOverlay,
+            recognitionMode = recognitionMode,
+            onCycleRecognitionMode = viewModel::cycleRecognitionMode,
             keepScreenOn = keepScreenOn,
             hideSystemBars = hideSystemBars,
             onKeepScreenOnChanged = onKeepScreenOnChanged,
@@ -2290,6 +2324,25 @@ private fun InputSettings.allowsAnyFingerGesture(): Boolean =
         doubleTapZoomAction != DoubleTapZoomAction.NONE ||
         twoFingerTapAction != MultiFingerTapAction.NONE ||
         threeFingerTapAction != MultiFingerTapAction.NONE
+
+private fun openExternalUrl(
+    context: Context,
+    url: String,
+) {
+    val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return
+    if (uri.scheme.isNullOrBlank()) {
+        return
+    }
+    val intent = Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    val packageManager = context.packageManager
+    if (intent.resolveActivity(packageManager) != null) {
+        runCatching {
+            context.startActivity(intent)
+        }.onFailure { error ->
+            Log.w(NOTE_EDITOR_LOG_TAG, "Failed to open external URL: $url", error)
+        }
+    }
+}
 
 @Suppress("LongParameterList")
 private fun applyDoubleTapZoomToTransform(

@@ -16,11 +16,13 @@ import com.onyx.android.objects.model.InsertAction
 import com.onyx.android.objects.model.PageObject
 import com.onyx.android.objects.model.ShapeType
 import com.onyx.android.pdf.PdfDocumentRenderer
+import com.onyx.android.pdf.PdfPageLink
 import com.onyx.android.pdf.PdfTextChar
 import com.onyx.android.pdf.PdfTextSelection
 import com.onyx.android.pdf.PdfTileKey
 import com.onyx.android.pdf.ValidatingTile
 import com.onyx.android.recognition.ConvertedTextBlock
+import com.onyx.android.recognition.RecognitionMode
 
 internal enum class InteractionMode {
     DRAW,
@@ -73,6 +75,8 @@ internal data class NoteEditorTopBarState(
     val onOpenPageManager: () -> Unit = {},
     val isRecognitionOverlayEnabled: Boolean = false,
     val onToggleRecognitionOverlay: () -> Unit = {},
+    val recognitionMode: RecognitionMode = RecognitionMode.LIVE_CONVERT,
+    val onCycleRecognitionMode: () -> Unit = {},
     val keepScreenOn: Boolean = false,
     val hideSystemBars: Boolean = true,
     val onKeepScreenOnChanged: (Boolean) -> Unit = {},
@@ -121,6 +125,7 @@ internal data class NoteEditorContentState(
     val pdfCrossfadeProgress: Float,
     val pdfBitmap: android.graphics.Bitmap?,
     val pdfRenderer: PdfDocumentRenderer?,
+    val pdfLinks: List<PdfPageLink> = emptyList(),
     val currentPage: PageEntity?,
     val viewTransform: ViewTransform,
     val pageWidthDp: Dp,
@@ -170,6 +175,7 @@ internal data class NoteEditorContentState(
     val onEraserFilterChange: (EraserFilter) -> Unit = {},
     val onClearPageRequested: () -> Unit = {},
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
+    val onPdfLinkTapped: (PdfPageLink) -> Unit = {},
     val onTransformGesture: (
         zoomChange: Float,
         panChangeX: Float,
