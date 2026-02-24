@@ -59,6 +59,9 @@ import com.onyx.android.ink.ui.calculateSelectionBounds
 import com.onyx.android.ink.ui.findStrokesInLasso
 import com.onyx.android.ink.ui.moveStrokes
 import com.onyx.android.ink.ui.resizeStrokes
+import com.onyx.android.input.DoubleFingerMode
+import com.onyx.android.input.InputSettings
+import com.onyx.android.input.SingleFingerMode
 import com.onyx.android.objects.model.InsertAction
 import com.onyx.android.pdf.OutlineItem
 import com.onyx.android.pdf.PdfAssetStorage
@@ -690,8 +693,10 @@ private fun rememberNoteEditorUiState(
             isStylusButtonEraserActive,
             isSegmentEraserEnabled,
             activeInsertAction,
+            brushState.inputSettings,
             templateState,
             brushState.onBrushChange,
+            brushState.onInputSettingsChange,
             { isSegmentEraserEnabled = it },
             { action ->
                 if (action == InsertAction.IMAGE) {
@@ -830,7 +835,8 @@ private fun rememberNoteEditorUiState(
             isSegmentEraserEnabled = isSegmentEraserEnabled,
             activeInsertAction = activeInsertAction,
             interactionMode = if (isTextSelectionMode) InteractionMode.TEXT_SELECTION else InteractionMode.DRAW,
-            allowCanvasFingerGestures = true,
+            allowCanvasFingerGestures = brushState.inputSettings.allowsAnyFingerGesture(),
+            inputSettings = brushState.inputSettings,
             thumbnails = thumbnails,
             currentPageIndex = pageState.currentPageIndex,
             totalPages = pageState.pages.size,
@@ -1251,8 +1257,10 @@ private fun rememberMultiPageUiState(
             isStylusButtonEraserActive,
             isSegmentEraserEnabled,
             activeInsertAction,
+            brushState.inputSettings,
             templateState,
             brushState.onBrushChange,
+            brushState.onInputSettingsChange,
             { isSegmentEraserEnabled = it },
             { action ->
                 if (action == InsertAction.IMAGE) {
@@ -1311,6 +1319,7 @@ private fun rememberMultiPageUiState(
             activeInsertAction = activeInsertAction,
             selectedObjectId = selectedObjectId,
             interactionMode = if (isTextSelectionMode) InteractionMode.TEXT_SELECTION else InteractionMode.SCROLL,
+            inputSettings = brushState.inputSettings,
             pdfRenderer = pdfRenderer,
             firstVisiblePageIndex = pageState.currentPageIndex,
             documentZoom = documentZoom,
@@ -1519,12 +1528,14 @@ private fun rememberBrushState(
     }
     var selectedTool by remember { mutableStateOf(editorSettings.selectedTool) }
     var lastNonEraserTool by remember { mutableStateOf(editorSettings.lastNonEraserTool) }
+    var inputSettings by remember { mutableStateOf(editorSettings.inputSettings) }
 
     LaunchedEffect(editorSettings) {
         penBrush = editorSettings.penBrush.copy(tool = Tool.PEN)
         highlighterBrush = editorSettings.highlighterBrush.copy(tool = Tool.HIGHLIGHTER)
         selectedTool = editorSettings.selectedTool
         lastNonEraserTool = editorSettings.lastNonEraserTool
+        inputSettings = editorSettings.inputSettings
     }
 
     fun persistSettings() {
@@ -1534,6 +1545,7 @@ private fun rememberBrushState(
                 penBrush = penBrush.copy(tool = Tool.PEN),
                 highlighterBrush = highlighterBrush.copy(tool = Tool.HIGHLIGHTER),
                 lastNonEraserTool = lastNonEraserTool,
+                inputSettings = inputSettings,
             ),
         )
     }
@@ -1564,6 +1576,7 @@ private fun rememberBrushState(
         penBrush = penBrush,
         highlighterBrush = highlighterBrush,
         lastNonEraserTool = lastNonEraserTool,
+        inputSettings = inputSettings,
         onBrushChange = { updatedBrush ->
             when (updatedBrush.tool) {
                 Tool.PEN -> {
@@ -1596,6 +1609,10 @@ private fun rememberBrushState(
                     persistSettings()
                 }
             }
+        },
+        onInputSettingsChange = { updatedInputSettings ->
+            inputSettings = updatedInputSettings
+            persistSettings()
         },
     )
 }
@@ -1862,8 +1879,10 @@ private fun buildToolbarState(
     isStylusButtonEraserActive: Boolean,
     isSegmentEraserEnabled: Boolean,
     activeInsertAction: InsertAction,
+    inputSettings: InputSettings,
     templateState: PageTemplateState,
     onBrushChange: (Brush) -> Unit,
+    onInputSettingsChange: (InputSettings) -> Unit,
     onSegmentEraserEnabledChange: (Boolean) -> Unit,
     onInsertActionSelected: (InsertAction) -> Unit,
     onTemplateChange: (PageTemplateState) -> Unit,
@@ -1874,9 +1893,14 @@ private fun buildToolbarState(
         isStylusButtonEraserActive = isStylusButtonEraserActive,
         isSegmentEraserEnabled = isSegmentEraserEnabled,
         activeInsertAction = activeInsertAction,
+        inputSettings = inputSettings,
         templateState = templateState,
         onBrushChange = onBrushChange,
+        onInputSettingsChange = onInputSettingsChange,
         onSegmentEraserEnabledChange = onSegmentEraserEnabledChange,
         onInsertActionSelected = onInsertActionSelected,
         onTemplateChange = onTemplateChange,
     )
+
+private fun InputSettings.allowsAnyFingerGesture(): Boolean =
+    singleFingerMode != SingleFingerMode.IGNORE || doubleFingerMode != DoubleFingerMode.IGNORE

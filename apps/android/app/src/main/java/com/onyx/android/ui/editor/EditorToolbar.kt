@@ -89,6 +89,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.onyx.android.config.QuickColorPaletteStore
 import com.onyx.android.ink.model.Tool
+import com.onyx.android.input.DoubleFingerMode
+import com.onyx.android.input.InputSettings
+import com.onyx.android.input.SingleFingerMode
+import com.onyx.android.input.StylusButtonAction
 import com.onyx.android.objects.model.InsertAction
 import com.onyx.android.ui.NoteEditorToolbarState
 import com.onyx.android.ui.NoteEditorTopBarState
@@ -174,6 +178,8 @@ internal fun EditorToolbar(
     var isInsertMenuExpanded by rememberSaveable { mutableStateOf(false) }
     var isPageJumpDialogVisible by rememberSaveable { mutableStateOf(false) }
     var pageJumpInput by rememberSaveable { mutableStateOf("") }
+    var isInputSettingsDialogVisible by rememberSaveable { mutableStateOf(false) }
+    var inputSettingsDraft by remember { mutableStateOf(toolbarState.inputSettings) }
     val focusManager = LocalFocusManager.current
     val brush = toolbarState.brush
     val selectedTool =
@@ -204,6 +210,9 @@ internal fun EditorToolbar(
         if (!isEditingEnabled) {
             isTitleEditing = false
         }
+    }
+    LaunchedEffect(toolbarState.inputSettings) {
+        inputSettingsDraft = toolbarState.inputSettings
     }
     val onColorSelected: (String) -> Unit = { selectedColor ->
         val targetTool =
@@ -314,6 +323,16 @@ internal fun EditorToolbar(
                                 if (isEditingEnabled && topBarState.totalPages > 0) {
                                     topBarState.onOpenPageManager()
                                 }
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Input settings") },
+                            enabled = isEditingEnabled,
+                            modifier = Modifier.testTag("open-input-settings"),
+                            onClick = {
+                                isOverflowMenuExpanded = false
+                                inputSettingsDraft = toolbarState.inputSettings
+                                isInputSettingsDialogVisible = true
                             },
                         )
                         DropdownMenuItem(
@@ -839,6 +858,17 @@ internal fun EditorToolbar(
             },
         )
     }
+    if (isInputSettingsDialogVisible) {
+        InputSettingsDialog(
+            settings = inputSettingsDraft,
+            onSettingsChange = { updated -> inputSettingsDraft = updated },
+            onDismiss = { isInputSettingsDialogVisible = false },
+            onApply = {
+                toolbarState.onInputSettingsChange(inputSettingsDraft)
+                isInputSettingsDialogVisible = false
+            },
+        )
+    }
 }
 
 @Composable
@@ -881,6 +911,127 @@ private fun RowScope.NoteTitleEditor(
                 overflow = TextOverflow.Ellipsis,
                 color = if (isEditingEnabled) NOTEWISE_ICON else NOTEWISE_ICON_MUTED,
             )
+        }
+    }
+}
+
+@Composable
+private fun InputSettingsDialog(
+    settings: InputSettings,
+    onSettingsChange: (InputSettings) -> Unit,
+    onDismiss: () -> Unit,
+    onApply: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Input settings") },
+        text = {
+            androidx.compose.foundation.layout.Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                InputSettingsSelector(
+                    label = "Single finger",
+                    selected = settings.singleFingerMode.name,
+                    options = SingleFingerMode.entries.map { it.name },
+                    onSelect = { selected ->
+                        onSettingsChange(
+                            settings.copy(
+                                singleFingerMode = SingleFingerMode.valueOf(selected),
+                            ),
+                        )
+                    },
+                )
+                InputSettingsSelector(
+                    label = "Double finger",
+                    selected = settings.doubleFingerMode.name,
+                    options = DoubleFingerMode.entries.map { it.name },
+                    onSelect = { selected ->
+                        onSettingsChange(
+                            settings.copy(
+                                doubleFingerMode = DoubleFingerMode.valueOf(selected),
+                            ),
+                        )
+                    },
+                )
+                InputSettingsSelector(
+                    label = "Stylus primary",
+                    selected = settings.stylusPrimaryAction.name,
+                    options = StylusButtonAction.entries.map { it.name },
+                    onSelect = { selected ->
+                        onSettingsChange(
+                            settings.copy(
+                                stylusPrimaryAction = StylusButtonAction.valueOf(selected),
+                            ),
+                        )
+                    },
+                )
+                InputSettingsSelector(
+                    label = "Stylus secondary",
+                    selected = settings.stylusSecondaryAction.name,
+                    options = StylusButtonAction.entries.map { it.name },
+                    onSelect = { selected ->
+                        onSettingsChange(
+                            settings.copy(
+                                stylusSecondaryAction = StylusButtonAction.valueOf(selected),
+                            ),
+                        )
+                    },
+                )
+                InputSettingsSelector(
+                    label = "Stylus long hold",
+                    selected = settings.stylusLongHoldAction.name,
+                    options = StylusButtonAction.entries.map { it.name },
+                    onSelect = { selected ->
+                        onSettingsChange(
+                            settings.copy(
+                                stylusLongHoldAction = StylusButtonAction.valueOf(selected),
+                            ),
+                        )
+                    },
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        confirmButton = {
+            Button(onClick = onApply) {
+                Text("Apply")
+            }
+        },
+    )
+}
+
+@Composable
+private fun InputSettingsSelector(
+    label: String,
+    selected: String,
+    options: List<String>,
+    onSelect: (String) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        TextButton(
+            onClick = { expanded = true },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("$label: $selected")
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onSelect(option)
+                        expanded = false
+                    },
+                )
+            }
         }
     }
 }

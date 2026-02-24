@@ -74,6 +74,9 @@ import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
 import com.onyx.android.ink.ui.InkCanvasCallbacks
 import com.onyx.android.ink.ui.InkCanvasState
+import com.onyx.android.input.DoubleFingerMode
+import com.onyx.android.input.InputSettings
+import com.onyx.android.input.SingleFingerMode
 import com.onyx.android.objects.model.InsertAction
 import com.onyx.android.objects.model.PageObject
 import com.onyx.android.objects.model.ShapeType
@@ -364,6 +367,7 @@ private fun MultiPageEditorContent(
                         activeInsertAction = contentState.activeInsertAction,
                         selectedObjectId = contentState.selectedObjectId,
                         interactionMode = contentState.interactionMode,
+                        inputSettings = contentState.inputSettings,
                         isRecognitionOverlayEnabled = contentState.isRecognitionOverlayEnabled,
                         pdfRenderer = contentState.pdfRenderer,
                         onStrokeFinished = { stroke -> contentState.onStrokeFinished(stroke, pageState.page.pageId) },
@@ -444,6 +448,7 @@ private fun PageItem(
     activeInsertAction: InsertAction,
     selectedObjectId: String?,
     interactionMode: InteractionMode,
+    inputSettings: InputSettings,
     isRecognitionOverlayEnabled: Boolean,
     pdfRenderer: PdfDocumentRenderer?,
     onStrokeFinished: (InkStroke) -> Unit,
@@ -609,7 +614,7 @@ private fun PageItem(
             )
         } else {
             val inkCanvasState =
-                remember(pageState.page.pageId, pageState.strokes, renderTransform, brush) {
+                remember(pageState.page.pageId, pageState.strokes, renderTransform, brush, inputSettings) {
                     InkCanvasState(
                         strokes = pageState.strokes,
                         viewTransform = renderTransform,
@@ -619,7 +624,8 @@ private fun PageItem(
                         pageWidth = pageState.pageWidth,
                         pageHeight = pageState.pageHeight,
                         allowEditing = !isReadOnly && activeInsertAction == InsertAction.NONE,
-                        allowFingerGestures = brush.tool == com.onyx.android.ink.model.Tool.LASSO,
+                        allowFingerGestures = inputSettings.allowsAnyFingerGesture(),
+                        inputSettings = inputSettings,
                     )
                 }
             val inkCanvasCallbacks =
@@ -841,6 +847,8 @@ private fun NoteEditorContent(
                         pageWidth = contentState.pageWidth,
                         pageHeight = contentState.pageHeight,
                         allowEditing = !contentState.isReadOnly && contentState.activeInsertAction == InsertAction.NONE,
+                        allowFingerGestures = contentState.allowCanvasFingerGestures,
+                        inputSettings = contentState.inputSettings,
                     )
                 val inkCanvasCallbacks =
                     InkCanvasCallbacks(
@@ -1348,3 +1356,6 @@ private fun calculateGlowAlpha(
     if (distance >= threshold) return 0f
     return 1f - (distance / threshold)
 }
+
+private fun InputSettings.allowsAnyFingerGesture(): Boolean =
+    singleFingerMode != SingleFingerMode.IGNORE || doubleFingerMode != DoubleFingerMode.IGNORE

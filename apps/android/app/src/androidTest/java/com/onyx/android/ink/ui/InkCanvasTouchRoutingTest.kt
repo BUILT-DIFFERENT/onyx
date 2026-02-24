@@ -14,6 +14,7 @@ import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.StrokeStyle
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.input.InputSettings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -1142,6 +1143,7 @@ private fun createInteraction(
     pageHeight: Float = 1000f,
     allowEditing: Boolean = true,
     allowFingerGestures: Boolean = true,
+    inputSettings: InputSettings = InputSettings(),
     onStrokeFinished: (Stroke) -> Unit = {},
     onStrokeErased: (Stroke) -> Unit = {},
     onTransformGesture: (Float, Float, Float, Float, Float) -> Unit = { _, _, _, _, _ -> },
@@ -1158,6 +1160,7 @@ private fun createInteraction(
         pageHeight = pageHeight,
         allowEditing = allowEditing,
         allowFingerGestures = allowFingerGestures,
+        inputSettings = inputSettings,
         onStrokeFinished = onStrokeFinished,
         onStrokeErased = onStrokeErased,
         onTransformGesture = onTransformGesture,

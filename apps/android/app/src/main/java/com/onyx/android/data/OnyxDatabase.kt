@@ -33,6 +33,7 @@ import com.onyx.android.data.entity.ThumbnailEntity
 import com.onyx.android.data.migrations.MIGRATION_4_5
 import com.onyx.android.data.migrations.MIGRATION_5_6
 import com.onyx.android.data.migrations.MIGRATION_6_7
+import com.onyx.android.data.migrations.MIGRATION_7_8
 
 @Database(
     entities = [
@@ -50,7 +51,7 @@ import com.onyx.android.data.migrations.MIGRATION_6_7
         OperationLogEntity::class,
         PageObjectEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
 )
 @Suppress("TooManyFunctions")
@@ -332,7 +333,14 @@ abstract class OnyxDatabase : RoomDatabase() {
         fun build(context: Context): OnyxDatabase =
             Room
                 .databaseBuilder(context, OnyxDatabase::class.java, DATABASE_NAME)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
-                .build()
+                .addMigrations(
+                    MIGRATION_1_2,
+                    MIGRATION_2_3,
+                    MIGRATION_3_4,
+                    MIGRATION_4_5,
+                    MIGRATION_5_6,
+                    MIGRATION_6_7,
+                    MIGRATION_7_8,
+                ).build()
     }
 }

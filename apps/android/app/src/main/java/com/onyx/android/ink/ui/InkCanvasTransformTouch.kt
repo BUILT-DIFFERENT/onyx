@@ -14,6 +14,8 @@ import android.view.MotionEvent
 import android.view.VelocityTracker
 import com.onyx.android.ink.gl.GlInkSurfaceView
 import com.onyx.android.ink.model.Tool
+import com.onyx.android.input.DoubleFingerMode
+import com.onyx.android.input.SingleFingerMode
 import kotlin.math.abs
 import kotlin.math.hypot
 
@@ -46,6 +48,12 @@ internal fun shouldStartSingleFingerPanGesture(
         event.pointerCount == 1 &&
         isPointerDefinitelyFinger(event, 0) &&
         !eventHasStylusStream(event, runtime)
+
+internal fun canStartTransformGesture(interaction: InkCanvasInteraction): Boolean =
+    interaction.inputSettings.doubleFingerMode == DoubleFingerMode.ZOOM_PAN
+
+internal fun canStartSingleFingerPanGesture(interaction: InkCanvasInteraction): Boolean =
+    interaction.inputSettings.singleFingerMode == SingleFingerMode.PAN
 
 internal fun handleSingleFingerPanGesture(
     view: GlInkSurfaceView,

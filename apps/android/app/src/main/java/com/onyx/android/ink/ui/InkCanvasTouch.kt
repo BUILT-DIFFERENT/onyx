@@ -24,6 +24,9 @@ import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.input.InputSettings
+import com.onyx.android.input.SingleFingerMode
+import com.onyx.android.input.StylusButtonAction
 
 private const val PALM_CONTACT_SIZE_THRESHOLD = 1.0f
 private const val PREDICTED_STROKE_ALPHA = 0.2f
@@ -46,6 +49,7 @@ internal data class InkCanvasInteraction(
     val pageHeight: Float,
     val allowEditing: Boolean,
     val allowFingerGestures: Boolean,
+    val inputSettings: InputSettings,
     val onStrokeFinished: (Stroke) -> Unit,
     val onStrokeErased: (Stroke) -> Unit,
     val onStrokeSplit: (original: Stroke, segments: List<Stroke>) -> Unit = { _, _ -> },
@@ -117,11 +121,13 @@ internal fun handleTouchEvent(
         }
     }
     return when {
-        runtime.isTransforming || shouldStartTransformGesture(event) -> {
+        (runtime.isTransforming || shouldStartTransformGesture(event)) &&
+            canStartTransformGesture(interaction) -> {
             handleTransformGesture(view, event, interaction, runtime)
         }
 
-        runtime.isSingleFingerPanning || shouldStartSingleFingerPanGesture(event, runtime) -> {
+        (runtime.isSingleFingerPanning || shouldStartSingleFingerPanGesture(event, runtime)) &&
+            canStartSingleFingerPanGesture(interaction) -> {
             handleSingleFingerPanGesture(view, event, interaction, runtime)
         }
 
@@ -227,7 +233,7 @@ private fun syncStylusButtonEraserState(
             MotionEvent.ACTION_HOVER_EXIT,
             -> false
 
-            else -> isStylusButtonPressed(event)
+            else -> isStylusButtonPressed(event, interaction)
         }
     updateStylusButtonEraserState(isActive, interaction, runtime)
 }
@@ -244,9 +250,23 @@ private fun updateStylusButtonEraserState(
     interaction.onStylusButtonEraserActiveChanged(isActive)
 }
 
-private fun isStylusButtonPressed(event: MotionEvent): Boolean =
-    event.buttonState and MotionEvent.BUTTON_STYLUS_PRIMARY == MotionEvent.BUTTON_STYLUS_PRIMARY ||
-        event.buttonState and MotionEvent.BUTTON_STYLUS_SECONDARY == MotionEvent.BUTTON_STYLUS_SECONDARY
+private fun shouldTreatStylusPrimaryAsEraser(
+    event: MotionEvent,
+    interaction: InkCanvasInteraction?,
+): Boolean {
+    val action = interaction?.inputSettings?.stylusPrimaryAction ?: StylusButtonAction.ERASER_HOLD
+    return action == StylusButtonAction.ERASER_HOLD &&
+        (event.buttonState and MotionEvent.BUTTON_STYLUS_PRIMARY == MotionEvent.BUTTON_STYLUS_PRIMARY)
+}
+
+private fun shouldTreatStylusSecondaryAsEraser(
+    event: MotionEvent,
+    interaction: InkCanvasInteraction?,
+): Boolean {
+    val action = interaction?.inputSettings?.stylusSecondaryAction ?: StylusButtonAction.ERASER_HOLD
+    return action == StylusButtonAction.ERASER_HOLD &&
+        (event.buttonState and MotionEvent.BUTTON_STYLUS_SECONDARY == MotionEvent.BUTTON_STYLUS_SECONDARY)
+}
 
 private fun resolvePointerMode(
     event: MotionEvent,
@@ -259,11 +279,21 @@ private fun resolvePointerMode(
     if (toolType == MotionEvent.TOOL_TYPE_ERASER || interaction.brush.tool == Tool.ERASER) {
         return PointerMode.ERASE
     }
-    if (pointerIsStylusStream && (runtime.isStylusButtonEraserActive || isStylusButtonPressed(event))) {
+    if (
+        pointerIsStylusStream &&
+        (runtime.isStylusButtonEraserActive || isStylusButtonPressed(event, interaction))
+    ) {
         return PointerMode.ERASE
     }
     return PointerMode.DRAW
 }
+
+private fun isStylusButtonPressed(
+    event: MotionEvent,
+    interaction: InkCanvasInteraction,
+): Boolean =
+    shouldTreatStylusPrimaryAsEraser(event, interaction) ||
+        shouldTreatStylusSecondaryAsEraser(event, interaction)
 
 private fun handlePointerDown(
     view: GlInkSurfaceView,
@@ -287,6 +317,9 @@ private fun handlePointerDown(
         runtime.stylusPointerIds.add(pointerId)
     } else {
         runtime.stylusPointerIds.remove(pointerId)
+        if (interaction.inputSettings.singleFingerMode != SingleFingerMode.DRAW) {
+            return false
+        }
     }
     if (!interaction.allowEditing) {
         return true

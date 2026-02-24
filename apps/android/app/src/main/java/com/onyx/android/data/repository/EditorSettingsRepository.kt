@@ -4,6 +4,10 @@ import com.onyx.android.data.dao.EditorSettingsDao
 import com.onyx.android.data.entity.EditorSettingsEntity
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
+import com.onyx.android.input.DoubleFingerMode
+import com.onyx.android.input.InputSettings
+import com.onyx.android.input.SingleFingerMode
+import com.onyx.android.input.StylusButtonAction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -14,6 +18,7 @@ data class EditorSettings(
     val penBrush: Brush,
     val highlighterBrush: Brush,
     val lastNonEraserTool: Tool,
+    val inputSettings: InputSettings = InputSettings(),
 )
 
 @Singleton
@@ -49,6 +54,11 @@ class EditorSettingsRepository
                     highlighterSmoothingLevel = settings.highlighterBrush.smoothingLevel,
                     highlighterEndTaperStrength = settings.highlighterBrush.endTaperStrength,
                     lastNonEraserTool = settings.lastNonEraserTool.name,
+                    singleFingerMode = settings.inputSettings.singleFingerMode.name,
+                    doubleFingerMode = settings.inputSettings.doubleFingerMode.name,
+                    stylusPrimaryAction = settings.inputSettings.stylusPrimaryAction.name,
+                    stylusSecondaryAction = settings.inputSettings.stylusSecondaryAction.name,
+                    stylusLongHoldAction = settings.inputSettings.stylusLongHoldAction.name,
                     updatedAt = System.currentTimeMillis(),
                 )
             editorSettingsDao.saveSettings(entity)
@@ -59,6 +69,20 @@ class EditorSettingsRepository
             val penTool = runCatching { Tool.valueOf(penTool) }.getOrDefault(Tool.PEN)
             val highlighterTool = runCatching { Tool.valueOf(highlighterTool) }.getOrDefault(Tool.HIGHLIGHTER)
             val lastTool = runCatching { Tool.valueOf(lastNonEraserTool) }.getOrDefault(Tool.PEN)
+            val singleFingerMode =
+                runCatching { SingleFingerMode.valueOf(singleFingerMode) }
+                    .getOrDefault(SingleFingerMode.PAN)
+            val doubleFingerMode =
+                runCatching { DoubleFingerMode.valueOf(doubleFingerMode) }.getOrDefault(DoubleFingerMode.ZOOM_PAN)
+            val stylusPrimaryAction =
+                runCatching { StylusButtonAction.valueOf(stylusPrimaryAction) }
+                    .getOrDefault(StylusButtonAction.ERASER_HOLD)
+            val stylusSecondaryAction =
+                runCatching { StylusButtonAction.valueOf(stylusSecondaryAction) }
+                    .getOrDefault(StylusButtonAction.ERASER_HOLD)
+            val stylusLongHoldAction =
+                runCatching { StylusButtonAction.valueOf(stylusLongHoldAction) }
+                    .getOrDefault(StylusButtonAction.NO_ACTION)
 
             return EditorSettings(
                 selectedTool = selected,
@@ -83,6 +107,14 @@ class EditorSettingsRepository
                         endTaperStrength = highlighterEndTaperStrength,
                     ),
                 lastNonEraserTool = lastTool,
+                inputSettings =
+                    InputSettings(
+                        singleFingerMode = singleFingerMode,
+                        doubleFingerMode = doubleFingerMode,
+                        stylusPrimaryAction = stylusPrimaryAction,
+                        stylusSecondaryAction = stylusSecondaryAction,
+                        stylusLongHoldAction = stylusLongHoldAction,
+                    ),
             )
         }
 
@@ -100,6 +132,7 @@ class EditorSettingsRepository
                             baseWidth = DEFAULT_STACKED_HIGHLIGHTER_BASE_WIDTH,
                         ),
                     lastNonEraserTool = Tool.PEN,
+                    inputSettings = InputSettings(),
                 )
         }
     }

@@ -27,6 +27,7 @@ import com.onyx.android.ink.model.LassoSelection
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.input.InputSettings
 import android.graphics.Path as AndroidPath
 
 internal enum class PointerMode {
@@ -93,6 +94,7 @@ data class InkCanvasState(
     val pageHeight: Float,
     val allowEditing: Boolean = true,
     val allowFingerGestures: Boolean = true,
+    val inputSettings: InputSettings = InputSettings(),
 )
 
 data class InkCanvasCallbacks(
@@ -131,6 +133,7 @@ fun InkCanvas(
     val currentPageHeight by rememberUpdatedState(state.pageHeight)
     val currentAllowEditing by rememberUpdatedState(state.allowEditing)
     val currentAllowFingerGestures by rememberUpdatedState(state.allowFingerGestures)
+    val currentInputSettings by rememberUpdatedState(state.inputSettings)
     val currentCallbacks by rememberUpdatedState(callbacks)
     val context = LocalContext.current
     val flagStore = remember(context) { FeatureFlagStore.getInstance(context) }
@@ -217,6 +220,7 @@ fun InkCanvas(
                                     pageHeight = currentPageHeight,
                                     allowEditing = currentAllowEditing,
                                     allowFingerGestures = currentAllowFingerGestures,
+                                    inputSettings = currentInputSettings,
                                     onStrokeFinished = onFinished,
                                     onStrokeErased = onErased,
                                     onStrokeSplit = onSplit,
@@ -256,6 +260,7 @@ fun InkCanvas(
                                     pageHeight = currentPageHeight,
                                     allowEditing = currentAllowEditing,
                                     allowFingerGestures = currentAllowFingerGestures,
+                                    inputSettings = currentInputSettings,
                                     onStrokeFinished = onFinished,
                                     onStrokeErased = onErased,
                                     onStrokeSplit = onSplit,

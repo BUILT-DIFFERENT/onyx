@@ -11,6 +11,7 @@ import com.onyx.android.ink.model.LassoSelection
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.input.InputSettings
 import com.onyx.android.objects.model.InsertAction
 import com.onyx.android.objects.model.PageObject
 import com.onyx.android.objects.model.ShapeType
@@ -75,8 +76,10 @@ internal data class NoteEditorToolbarState(
     val isStylusButtonEraserActive: Boolean,
     val isSegmentEraserEnabled: Boolean = false,
     val activeInsertAction: InsertAction = InsertAction.NONE,
+    val inputSettings: InputSettings = InputSettings(),
     val templateState: PageTemplateState,
     val onBrushChange: (Brush) -> Unit,
+    val onInputSettingsChange: (InputSettings) -> Unit = {},
     val onSegmentEraserEnabledChange: (Boolean) -> Unit = {},
     val onInsertActionSelected: (InsertAction) -> Unit = {},
     val onTemplateChange: (PageTemplateState) -> Unit,
@@ -107,6 +110,7 @@ internal data class NoteEditorContentState(
     val activeInsertAction: InsertAction = InsertAction.NONE,
     val interactionMode: InteractionMode,
     val allowCanvasFingerGestures: Boolean = true,
+    val inputSettings: InputSettings = InputSettings(),
     val thumbnails: List<ThumbnailItem>,
     val currentPageIndex: Int,
     val totalPages: Int,
@@ -188,6 +192,7 @@ internal data class MultiPageContentState(
     val activeInsertAction: InsertAction = InsertAction.NONE,
     val selectedObjectId: String? = null,
     val interactionMode: InteractionMode,
+    val inputSettings: InputSettings = InputSettings(),
     val pdfRenderer: PdfDocumentRenderer?,
     val firstVisiblePageIndex: Int,
     val documentZoom: Float,
@@ -289,7 +294,9 @@ internal data class BrushState(
     val penBrush: Brush,
     val highlighterBrush: Brush,
     val lastNonEraserTool: Tool,
+    val inputSettings: InputSettings,
     val onBrushChange: (Brush) -> Unit,
+    val onInputSettingsChange: (InputSettings) -> Unit,
 )
 
 internal data class StrokeCallbacks(

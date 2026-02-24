@@ -27,6 +27,7 @@
 - Shell tooling clarification: in some Codex `cmd` sessions, utilities like `git`, `findstr`, or `powershell` may be unavailable on PATH; use `bun` scripts and direct file reads (`type`) as the fallback inspection path.
 - PATH mutation clarification: repo tooling currently does not persistently rewrite Windows PATH (no `setx PATH`/registry PATH writes found); `scripts/gradlew.js` and `apps/android/gradlew.bat` only modify PATH for the current spawned process/session.
 - Codex desktop PATH reliability clarification: the packaged Windows desktop runtime can still start with a user-only PATH view (missing HKLM entries like `C:\Windows\System32` and `C:\Program Files\Git\cmd`), so startup env normalization should merge machine+user registry Path values before spawning CLI/terminal child processes.
+- Ink touch contract clarification: `InkCanvasInteraction` now requires `inputSettings`; test helpers constructing interactions (especially androidTests under `ink/ui`) should pass `InputSettings()` explicitly or thread scenario-specific settings.
 - Page manager parity clarification: `EDIT-14` currently has persistent reorder/duplicate/delete operations via the editor overflow dialog in `NoteEditorScreen.kt`, but thumbnail-grid drag/drop parity and page-operation undo are still pending.
 
 ## Context7 Library IDs (Project Stack)
