@@ -662,6 +662,9 @@ private fun rememberNoteEditorUiState(
     val selectedObjectId by viewModel.selectedObjectId.collectAsState()
     val recognitionOverlayEnabled by viewModel.recognitionOverlayEnabled.collectAsState()
     val recognitionMode by viewModel.recognitionMode.collectAsState()
+    val recognitionLanguage by viewModel.recognitionLanguage.collectAsState()
+    val shapeBeautificationEnabled by viewModel.shapeBeautificationEnabled.collectAsState()
+    val mathRecognitionMode by viewModel.mathRecognitionMode.collectAsState()
     val recognizedTextByPage by viewModel.recognizedTextByPage.collectAsState()
     val recognitionInlinePreviewByPage by viewModel.recognitionInlinePreviewByPage.collectAsState()
     val convertedTextBlocksByPage by viewModel.convertedTextBlocksByPage.collectAsState()
@@ -883,6 +886,17 @@ private fun rememberNoteEditorUiState(
             onToggleRecognitionOverlay = viewModel::toggleRecognitionOverlay,
             recognitionMode = recognitionMode,
             onCycleRecognitionMode = viewModel::cycleRecognitionMode,
+            onRecognitionModeSelected = viewModel::setRecognitionMode,
+            recognitionLanguage = recognitionLanguage,
+            supportedRecognitionLanguages =
+                viewModel.supportedRecognitionLanguages.map { (tag, label) ->
+                    RecognitionLanguageOption(tag = tag, label = label)
+                },
+            onRecognitionLanguageSelected = viewModel::setRecognitionLanguage,
+            shapeBeautificationEnabled = shapeBeautificationEnabled,
+            onShapeBeautificationEnabledChanged = viewModel::setShapeBeautificationEnabled,
+            mathRecognitionMode = mathRecognitionMode,
+            onMathRecognitionModeSelected = viewModel::setMathRecognitionMode,
             keepScreenOn = keepScreenOn,
             hideSystemBars = hideSystemBars,
             onKeepScreenOnChanged = onKeepScreenOnChanged,
@@ -1395,6 +1409,9 @@ private fun rememberMultiPageUiState(
     val selectedObjectId by viewModel.selectedObjectId.collectAsState()
     val recognitionOverlayEnabled by viewModel.recognitionOverlayEnabled.collectAsState()
     val recognitionMode by viewModel.recognitionMode.collectAsState()
+    val recognitionLanguage by viewModel.recognitionLanguage.collectAsState()
+    val shapeBeautificationEnabled by viewModel.shapeBeautificationEnabled.collectAsState()
+    val mathRecognitionMode by viewModel.mathRecognitionMode.collectAsState()
     val recognizedTextByPage by viewModel.recognizedTextByPage.collectAsState()
     val recognitionInlinePreviewByPage by viewModel.recognitionInlinePreviewByPage.collectAsState()
     val convertedTextBlocksByPage by viewModel.convertedTextBlocksByPage.collectAsState()
@@ -1651,6 +1668,17 @@ private fun rememberMultiPageUiState(
             onToggleRecognitionOverlay = viewModel::toggleRecognitionOverlay,
             recognitionMode = recognitionMode,
             onCycleRecognitionMode = viewModel::cycleRecognitionMode,
+            onRecognitionModeSelected = viewModel::setRecognitionMode,
+            recognitionLanguage = recognitionLanguage,
+            supportedRecognitionLanguages =
+                viewModel.supportedRecognitionLanguages.map { (tag, label) ->
+                    RecognitionLanguageOption(tag = tag, label = label)
+                },
+            onRecognitionLanguageSelected = viewModel::setRecognitionLanguage,
+            shapeBeautificationEnabled = shapeBeautificationEnabled,
+            onShapeBeautificationEnabledChanged = viewModel::setShapeBeautificationEnabled,
+            mathRecognitionMode = mathRecognitionMode,
+            onMathRecognitionModeSelected = viewModel::setMathRecognitionMode,
             keepScreenOn = keepScreenOn,
             hideSystemBars = hideSystemBars,
             onKeepScreenOnChanged = onKeepScreenOnChanged,

@@ -354,12 +354,12 @@ Evidence paths:
   - Priority wave: `Wave Foundation`
   - Validation gate: Unit tests for gesture command parsing + integration tests for recognized-block mutation.
 
-- [ ] `REC-03` Recognition mode/language configurability
-  - Status: `Partial`
+- [x] `REC-03` Recognition mode/language configurability
+  - Status: `Done (Wave AC-RecognitionSettingsControls)`
   - Competitor behavior: Mature apps expose recognition language/mode settings.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptEngine.kt`
-  - What exists now: Recognition settings are internally represented but not fully user-configurable.
-  - What is missing: Settings UX for language/mode profile selection.
+  - What exists now: Recognition settings are persisted and user-configurable from editor overflow (`Recognition settings`) including mode, language, shape-beautification toggle, and math-mode profile selection.
+  - What is missing: Deep runtime model specialization per language profile and cross-device sync.
   - Exact change needed: Add recognition settings UI and bind selected profiles into engine/session configuration.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -750,7 +750,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Competitor behavior: Intelligent shape cleanup is expected for polished handwritten diagrams.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\ShapeBeautifier.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionSettings.kt`
   - What exists now: Heuristic shape candidate detection scaffold (line/rectangle/ellipse) and optional auto-beautify routing are added behind a persisted recognition setting (`shape_beautification_enabled`).
-  - What is missing: User-facing enablement controls, tuned precision/recall dataset thresholds, and richer geometry replacement policy.
+  - What is missing: Tuned precision/recall dataset thresholds, richer geometry replacement policy, and cross-surface sync for recognizer decisions.
   - Exact change needed: Add recognition pass for geometric primitives and convert qualifying strokes into editable shape objects.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave V2`
@@ -761,7 +761,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Competitor behavior: Math parsing is a high-differentiation capability in intelligent note apps.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MathRecognitionMode.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionSettings.kt`
   - What exists now: Persisted math-recognition mode scaffold exists (`OFF`, `INLINE_PREVIEW`, `LATEX_ONLY`) with storage mapping and tests.
-  - What is missing: Runtime math parsing pipeline, editor UX controls, and output object insertion flow.
+  - What is missing: Runtime math parsing pipeline and output object insertion flow.
   - Exact change needed: Add optional math recognizer profile with equation preview and commit as text/LaTeX object.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave V2`

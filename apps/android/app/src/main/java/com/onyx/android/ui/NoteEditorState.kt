@@ -23,6 +23,7 @@ import com.onyx.android.pdf.PdfTextSelection
 import com.onyx.android.pdf.PdfTileKey
 import com.onyx.android.pdf.ValidatingTile
 import com.onyx.android.recognition.ConvertedTextBlock
+import com.onyx.android.recognition.MathRecognitionMode
 import com.onyx.android.recognition.RecognitionMode
 
 internal enum class TemplateApplyScope {
@@ -39,6 +40,11 @@ internal data class TemplateOption(
 internal data class RecognitionInlinePreview(
     val text: String = "",
     val isPending: Boolean = false,
+)
+
+internal data class RecognitionLanguageOption(
+    val tag: String,
+    val label: String,
 )
 
 internal enum class InteractionMode {
@@ -94,6 +100,14 @@ internal data class NoteEditorTopBarState(
     val onToggleRecognitionOverlay: () -> Unit = {},
     val recognitionMode: RecognitionMode = RecognitionMode.LIVE_CONVERT,
     val onCycleRecognitionMode: () -> Unit = {},
+    val onRecognitionModeSelected: (RecognitionMode) -> Unit = {},
+    val recognitionLanguage: String = "",
+    val supportedRecognitionLanguages: List<RecognitionLanguageOption> = emptyList(),
+    val onRecognitionLanguageSelected: (String) -> Unit = {},
+    val shapeBeautificationEnabled: Boolean = false,
+    val onShapeBeautificationEnabledChanged: (Boolean) -> Unit = {},
+    val mathRecognitionMode: MathRecognitionMode = MathRecognitionMode.OFF,
+    val onMathRecognitionModeSelected: (MathRecognitionMode) -> Unit = {},
     val keepScreenOn: Boolean = false,
     val hideSystemBars: Boolean = true,
     val onKeepScreenOnChanged: (Boolean) -> Unit = {},

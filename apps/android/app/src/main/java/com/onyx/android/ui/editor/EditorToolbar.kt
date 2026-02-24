@@ -55,6 +55,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -100,6 +101,7 @@ import com.onyx.android.input.MultiFingerTapAction
 import com.onyx.android.input.SingleFingerMode
 import com.onyx.android.input.StylusButtonAction
 import com.onyx.android.objects.model.InsertAction
+import com.onyx.android.recognition.MathRecognitionMode
 import com.onyx.android.recognition.RecognitionMode
 import com.onyx.android.ui.NoteEditorToolbarState
 import com.onyx.android.ui.NoteEditorTopBarState
@@ -174,6 +176,13 @@ internal enum class ToolPanelType {
     LASSO,
 }
 
+private data class RecognitionSettingsDraft(
+    val mode: RecognitionMode,
+    val language: String,
+    val shapeBeautificationEnabled: Boolean,
+    val mathMode: MathRecognitionMode,
+)
+
 private data class ToolButtonVisuals(
     val label: String,
     val icon: ImageVector,
@@ -198,7 +207,19 @@ internal fun EditorToolbar(
     var isPageJumpDialogVisible by rememberSaveable { mutableStateOf(false) }
     var pageJumpInput by rememberSaveable { mutableStateOf("") }
     var isInputSettingsDialogVisible by rememberSaveable { mutableStateOf(false) }
+    var isRecognitionSettingsDialogVisible by rememberSaveable { mutableStateOf(false) }
     var inputSettingsDraft by remember { mutableStateOf(toolbarState.inputSettings) }
+    var recognitionSettingsDraft by
+        remember {
+            mutableStateOf(
+                RecognitionSettingsDraft(
+                    mode = topBarState.recognitionMode,
+                    language = topBarState.recognitionLanguage,
+                    shapeBeautificationEnabled = topBarState.shapeBeautificationEnabled,
+                    mathMode = topBarState.mathRecognitionMode,
+                ),
+            )
+        }
     var isPdfSearchDialogVisible by rememberSaveable { mutableStateOf(false) }
     var pdfSearchQueryDraft by rememberSaveable { mutableStateOf(topBarState.pdfSearchQuery) }
     val focusManager = LocalFocusManager.current
@@ -234,6 +255,20 @@ internal fun EditorToolbar(
     }
     LaunchedEffect(toolbarState.inputSettings) {
         inputSettingsDraft = toolbarState.inputSettings
+    }
+    LaunchedEffect(
+        topBarState.recognitionMode,
+        topBarState.recognitionLanguage,
+        topBarState.shapeBeautificationEnabled,
+        topBarState.mathRecognitionMode,
+    ) {
+        recognitionSettingsDraft =
+            RecognitionSettingsDraft(
+                mode = topBarState.recognitionMode,
+                language = topBarState.recognitionLanguage,
+                shapeBeautificationEnabled = topBarState.shapeBeautificationEnabled,
+                mathMode = topBarState.mathRecognitionMode,
+            )
     }
     LaunchedEffect(topBarState.pdfSearchQuery, isPdfSearchDialogVisible) {
         if (!isPdfSearchDialogVisible) {
@@ -390,6 +425,20 @@ internal fun EditorToolbar(
                             onClick = {
                                 isOverflowMenuExpanded = false
                                 topBarState.onCycleRecognitionMode()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Recognition settings") },
+                            onClick = {
+                                isOverflowMenuExpanded = false
+                                recognitionSettingsDraft =
+                                    RecognitionSettingsDraft(
+                                        mode = topBarState.recognitionMode,
+                                        language = topBarState.recognitionLanguage,
+                                        shapeBeautificationEnabled = topBarState.shapeBeautificationEnabled,
+                                        mathMode = topBarState.mathRecognitionMode,
+                                    )
+                                isRecognitionSettingsDialogVisible = true
                             },
                         )
                         DropdownMenuItem(
@@ -974,6 +1023,23 @@ internal fun EditorToolbar(
             },
         )
     }
+    if (isRecognitionSettingsDialogVisible) {
+        RecognitionSettingsDialog(
+            draft = recognitionSettingsDraft,
+            languageOptions = topBarState.supportedRecognitionLanguages,
+            onDraftChange = { updated -> recognitionSettingsDraft = updated },
+            onDismiss = { isRecognitionSettingsDialogVisible = false },
+            onApply = {
+                topBarState.onRecognitionModeSelected(recognitionSettingsDraft.mode)
+                topBarState.onRecognitionLanguageSelected(recognitionSettingsDraft.language)
+                topBarState.onShapeBeautificationEnabledChanged(
+                    recognitionSettingsDraft.shapeBeautificationEnabled,
+                )
+                topBarState.onMathRecognitionModeSelected(recognitionSettingsDraft.mathMode)
+                isRecognitionSettingsDialogVisible = false
+            },
+        )
+    }
     if (isPdfSearchDialogVisible && topBarState.isPdfDocument) {
         AlertDialog(
             onDismissRequest = { isPdfSearchDialogVisible = false },
@@ -1218,6 +1284,78 @@ private fun InputSettingsDialog(
                                 threeFingerTapAction = MultiFingerTapAction.valueOf(selected),
                             ),
                         )
+                    },
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        confirmButton = {
+            Button(onClick = onApply) {
+                Text("Apply")
+            }
+        },
+    )
+}
+
+@Composable
+private fun RecognitionSettingsDialog(
+    draft: RecognitionSettingsDraft,
+    languageOptions: List<com.onyx.android.ui.RecognitionLanguageOption>,
+    onDraftChange: (RecognitionSettingsDraft) -> Unit,
+    onDismiss: () -> Unit,
+    onApply: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Recognition settings") },
+        text = {
+            androidx.compose.foundation.layout.Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                InputSettingsSelector(
+                    label = "Recognition mode",
+                    selected = draft.mode.name,
+                    options = RecognitionMode.entries.map { it.name },
+                    onSelect = { selected ->
+                        onDraftChange(draft.copy(mode = RecognitionMode.valueOf(selected)))
+                    },
+                )
+                val selectedLanguageLabel =
+                    languageOptions.firstOrNull { option -> option.tag == draft.language }?.label
+                        ?: draft.language
+                InputSettingsSelector(
+                    label = "Language",
+                    selected = selectedLanguageLabel,
+                    options = languageOptions.map { it.label },
+                    onSelect = { selectedLabel ->
+                        languageOptions.firstOrNull { option -> option.label == selectedLabel }?.let { option ->
+                            onDraftChange(draft.copy(language = option.tag))
+                        }
+                    },
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text("Shape beautification")
+                    Checkbox(
+                        checked = draft.shapeBeautificationEnabled,
+                        onCheckedChange = { checked ->
+                            onDraftChange(draft.copy(shapeBeautificationEnabled = checked))
+                        },
+                    )
+                }
+                InputSettingsSelector(
+                    label = "Math mode",
+                    selected = draft.mathMode.name,
+                    options = MathRecognitionMode.entries.map { it.name },
+                    onSelect = { selected ->
+                        onDraftChange(draft.copy(mathMode = MathRecognitionMode.valueOf(selected)))
                     },
                 )
             }

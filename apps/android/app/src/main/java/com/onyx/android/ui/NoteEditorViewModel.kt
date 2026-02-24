@@ -28,6 +28,7 @@ import com.onyx.android.objects.model.TextPayload
 import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfPasswordStore
 import com.onyx.android.recognition.ConvertedTextBlock
+import com.onyx.android.recognition.MathRecognitionMode
 import com.onyx.android.recognition.MyScriptPageManager
 import com.onyx.android.recognition.OverlayBounds
 import com.onyx.android.recognition.RecognitionMode
@@ -157,6 +158,13 @@ internal class NoteEditorViewModel
         val recognitionOverlayEnabled: StateFlow<Boolean> = _recognitionOverlayEnabled.asStateFlow()
         private val _recognitionMode = MutableStateFlow(recognitionSettings.getRecognitionMode())
         val recognitionMode: StateFlow<RecognitionMode> = _recognitionMode.asStateFlow()
+        private val _recognitionLanguage = MutableStateFlow(recognitionSettings.getRecognitionLanguage())
+        val recognitionLanguage: StateFlow<String> = _recognitionLanguage.asStateFlow()
+        private val _shapeBeautificationEnabled = MutableStateFlow(recognitionSettings.isShapeBeautificationEnabled())
+        val shapeBeautificationEnabled: StateFlow<Boolean> = _shapeBeautificationEnabled.asStateFlow()
+        private val _mathRecognitionMode = MutableStateFlow(recognitionSettings.getMathRecognitionMode())
+        val mathRecognitionMode: StateFlow<MathRecognitionMode> = _mathRecognitionMode.asStateFlow()
+        val supportedRecognitionLanguages: List<Pair<String, String>> = RecognitionSettings.SUPPORTED_LANGUAGES
 
         private val _recognizedTextByPage = MutableStateFlow<Map<String, String>>(emptyMap())
         val recognizedTextByPage: StateFlow<Map<String, String>> = _recognizedTextByPage.asStateFlow()
@@ -334,6 +342,30 @@ internal class NoteEditorViewModel
             _recognitionMode.value = mode
             recognitionSettings.setRecognitionMode(mode)
             applyRecognitionModeSideEffects(mode)
+        }
+
+        fun setRecognitionLanguage(language: String) {
+            if (_recognitionLanguage.value == language) {
+                return
+            }
+            _recognitionLanguage.value = language
+            recognitionSettings.setRecognitionLanguage(language)
+        }
+
+        fun setShapeBeautificationEnabled(enabled: Boolean) {
+            if (_shapeBeautificationEnabled.value == enabled) {
+                return
+            }
+            _shapeBeautificationEnabled.value = enabled
+            recognitionSettings.setShapeBeautificationEnabled(enabled)
+        }
+
+        fun setMathRecognitionMode(mode: MathRecognitionMode) {
+            if (_mathRecognitionMode.value == mode) {
+                return
+            }
+            _mathRecognitionMode.value = mode
+            recognitionSettings.setMathRecognitionMode(mode)
         }
 
         fun dismissConversionDraft() {
@@ -1672,7 +1704,7 @@ internal class NoteEditorViewModel
         }
 
         private fun shouldRunShapeBeautification(stroke: Stroke): Boolean =
-            recognitionSettings.isShapeBeautificationEnabled() &&
+            _shapeBeautificationEnabled.value &&
                 stroke.style.tool != Tool.ERASER &&
                 stroke.style.tool != Tool.LASSO
 
