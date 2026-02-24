@@ -21,8 +21,23 @@ data class StrokeStyle(
     val maxWidthFactor: Float = 1.15f,
     val smoothingLevel: Float = 0.35f,
     val endTaperStrength: Float = 0.35f,
+    val lineStyle: StrokeLineStyle = StrokeLineStyle.SOLID,
     val nibRotation: Boolean = false,
 )
+
+@Serializable
+enum class StrokeLineStyle(
+    val apiValue: String,
+) {
+    @SerialName("solid")
+    SOLID("solid"),
+
+    @SerialName("dashed")
+    DASHED("dashed"),
+
+    @SerialName("dotted")
+    DOTTED("dotted"),
+}
 
 @Serializable
 data class StrokeBounds(

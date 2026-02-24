@@ -57,6 +57,7 @@ describe('Contract Fixtures Validation', () => {
       expect(result.style).toBeDefined();
       expect(result.style.tool).toBe('pen');
       expect(result.style.color).toBe('#000000');
+      expect(result.style.lineStyle).toBe('solid');
       expect(result.style.baseWidth).toBeTypeOf('number');
       expect(result.bounds).toBeDefined();
       expect(result.bounds.x).toBeTypeOf('number');

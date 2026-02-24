@@ -123,8 +123,10 @@ internal class NoteEditorViewModel
         val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
         private val _searchHighlightBounds = MutableStateFlow<Rect?>(initialHighlightBounds)
         val searchHighlightBounds: StateFlow<Rect?> = _searchHighlightBounds.asStateFlow()
-        val searchHighlightPageId: String? = initialSearchHighlightPageId
-        val searchHighlightPageIndex: Int? = initialSearchHighlightPageIndex
+        private val _searchHighlightPageId = MutableStateFlow(initialSearchHighlightPageId)
+        val searchHighlightPageId: StateFlow<String?> = _searchHighlightPageId.asStateFlow()
+        private val _searchHighlightPageIndex = MutableStateFlow(initialSearchHighlightPageIndex)
+        val searchHighlightPageIndex: StateFlow<Int?> = _searchHighlightPageIndex.asStateFlow()
         private val defaultEditorSettings = EditorSettingsRepository.DEFAULT_SETTINGS
         val editorSettings: StateFlow<EditorSettings> =
             editorSettingsRepository
@@ -240,6 +242,18 @@ internal class NoteEditorViewModel
 
         fun clearSearchHighlight() {
             _searchHighlightBounds.value = null
+            _searchHighlightPageId.value = null
+            _searchHighlightPageIndex.value = null
+        }
+
+        fun setSearchHighlight(
+            pageId: String?,
+            pageIndex: Int?,
+            bounds: Rect?,
+        ) {
+            _searchHighlightPageId.value = pageId
+            _searchHighlightPageIndex.value = pageIndex
+            _searchHighlightBounds.value = bounds
         }
 
         fun clearError() {

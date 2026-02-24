@@ -48,6 +48,7 @@ import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.HorizontalRule
 import androidx.compose.material.icons.filled.Loupe
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
@@ -184,6 +185,8 @@ internal fun EditorToolbar(
     var pageJumpInput by rememberSaveable { mutableStateOf("") }
     var isInputSettingsDialogVisible by rememberSaveable { mutableStateOf(false) }
     var inputSettingsDraft by remember { mutableStateOf(toolbarState.inputSettings) }
+    var isPdfSearchDialogVisible by rememberSaveable { mutableStateOf(false) }
+    var pdfSearchQueryDraft by rememberSaveable { mutableStateOf(topBarState.pdfSearchQuery) }
     val focusManager = LocalFocusManager.current
     val brush = toolbarState.brush
     val selectedTool =
@@ -217,6 +220,11 @@ internal fun EditorToolbar(
     }
     LaunchedEffect(toolbarState.inputSettings) {
         inputSettingsDraft = toolbarState.inputSettings
+    }
+    LaunchedEffect(topBarState.pdfSearchQuery, isPdfSearchDialogVisible) {
+        if (!isPdfSearchDialogVisible) {
+            pdfSearchQueryDraft = topBarState.pdfSearchQuery
+        }
     }
     val onColorSelected: (String) -> Unit = { selectedColor ->
         val targetTool =
@@ -651,6 +659,19 @@ internal fun EditorToolbar(
                         )
                     }
                     IconButton(
+                        onClick = {
+                            isPdfSearchDialogVisible = true
+                            pdfSearchQueryDraft = topBarState.pdfSearchQuery
+                        },
+                        modifier = Modifier.semantics { contentDescription = "Find in document" },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = null,
+                            tint = NOTEWISE_ICON,
+                        )
+                    }
+                    IconButton(
                         onClick = topBarState.onOpenOutline,
                         modifier = Modifier.semantics { contentDescription = "Table of contents" },
                     ) {
@@ -870,6 +891,65 @@ internal fun EditorToolbar(
             onApply = {
                 toolbarState.onInputSettingsChange(inputSettingsDraft)
                 isInputSettingsDialogVisible = false
+            },
+        )
+    }
+    if (isPdfSearchDialogVisible && topBarState.isPdfDocument) {
+        AlertDialog(
+            onDismissRequest = { isPdfSearchDialogVisible = false },
+            title = { Text("Find in document") },
+            text = {
+                androidx.compose.foundation.layout.Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    OutlinedTextField(
+                        value = pdfSearchQueryDraft,
+                        onValueChange = { value -> pdfSearchQueryDraft = value },
+                        singleLine = true,
+                        label = { Text("Search text") },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions =
+                            KeyboardActions(
+                                onSearch = { topBarState.onPdfSearchQuerySubmit(pdfSearchQueryDraft) },
+                            ),
+                        modifier = Modifier.testTag("pdf-search-input"),
+                    )
+                    if (topBarState.pdfSearchStatusText.isNotBlank()) {
+                        Text(
+                            text = topBarState.pdfSearchStatusText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.testTag("pdf-search-status"),
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        TextButton(
+                            onClick = { topBarState.onPdfSearchPrevious() },
+                            modifier = Modifier.testTag("pdf-search-previous"),
+                        ) {
+                            Text("Previous")
+                        }
+                        TextButton(
+                            onClick = { topBarState.onPdfSearchNext() },
+                            modifier = Modifier.testTag("pdf-search-next"),
+                        ) {
+                            Text("Next")
+                        }
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { isPdfSearchDialogVisible = false }) {
+                    Text("Close")
+                }
+            },
+            confirmButton = {
+                Button(onClick = { topBarState.onPdfSearchQuerySubmit(pdfSearchQueryDraft) }) {
+                    Text("Search")
+                }
             },
         )
     }

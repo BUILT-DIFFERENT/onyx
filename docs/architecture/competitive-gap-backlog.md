@@ -126,12 +126,12 @@ Evidence paths:
   - Priority wave: `Wave Parity`
   - Validation gate: UI test for preset selection persistence across editor reopen.
 
-- [ ] `EDIT-07` Line style options (solid/dashed/dotted)
-  - Status: `Missing`
+- [x] `EDIT-07` Line style options (solid/dashed/dotted)
+  - Status: `Done (Wave S-LineStyleOptions)`
   - Competitor behavior: Notewise exposes stroke line style options in tool settings.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\model\Stroke.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`
-  - What exists now: Solid stroke rendering only.
-  - What is missing: Style enum and renderer support for non-solid stroke patterns.
+  - What exists now: Pen/highlighter settings now expose solid/dashed/dotted line styles, persisted through editor settings and rendered across Compose/GL stroke pipelines.
+  - What is missing: Dedicated visual goldens for each style under dense zoom levels.
   - Exact change needed: Extend stroke style schema and rendering pipeline to support dashed/dotted stroke geometry.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -195,11 +195,11 @@ Evidence paths:
 ## PDF / Document Gaps
 
 - [ ] `PDF-01` In-editor PDF search UX
-  - Status: `Missing`
+  - Status: `Strong Partial (Wave T-PdfFindMvp)`
   - Competitor behavior: Competitor apps provide in-document search with next/previous match navigation.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorShared.kt`
-  - What exists now: PDF text extraction/selection exists; no editor-local search surface.
-  - What is missing: Search query UI, result indexing, and viewport jumps.
+  - What exists now: Editor-local find dialog supports query submit, result indexing, previous/next navigation, page jump, and highlight bounds.
+  - What is missing: Match list surface and persistent per-document search history.
   - Exact change needed: Add PDF find controller with query state, result list, highlight overlay, and previous/next navigation actions.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -230,11 +230,11 @@ Evidence paths:
 ## Gestures / Stylus Gaps
 
 - [ ] `GEST-01` Configurable stylus/finger gesture mapping
-  - Status: `Missing`
+  - Status: `Strong Partial`
   - Competitor behavior: Notewise lets users map stylus button and single/double finger behavior.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`
-  - What exists now: Input behavior is mostly hardcoded.
-  - What is missing: User-configurable gesture mapping surface and persisted settings model.
+  - What exists now: Input settings dialog persists single/double-finger behavior, stylus primary/secondary/long-hold actions, double-tap zoom source/action, two/three-finger shortcuts, and latency mode; touch routing consumes these settings in canvas gesture dispatch.
+  - What is missing: Extended gesture matrix (tool-switch shortcuts) and Convex/web runtime sync for profile portability.
   - Exact change needed: Add editor input settings persistence + settings UI and route gesture dispatch through those preferences.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`

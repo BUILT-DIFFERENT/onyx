@@ -25,6 +25,7 @@ import com.onyx.android.ink.ui.HIGHLIGHTER_STROKE_ALPHA
 import com.onyx.android.ink.ui.catmullRomSmooth
 import com.onyx.android.ink.ui.computePerPointWidths
 import com.onyx.android.ink.ui.computeStrokeOutlineGeometry
+import com.onyx.android.ink.ui.resolveStyledSampleRanges
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -643,29 +644,51 @@ internal class InkGlRenderer : GLSurfaceView.Renderer {
             return FloatArray(0)
         }
         val widths = computePerPointWidths(samples, style)
-        val geometry = computeStrokeOutlineGeometry(samples, widths) ?: return FloatArray(0)
-        if (geometry.count == 1) {
-            val p = samples.first()
-            val radius = (widths.firstOrNull() ?: style.baseWidth).coerceAtLeast(0.5f) / 2f
-            return floatArrayOf(
-                p.x - radius,
-                p.y - radius,
-                p.x + radius,
-                p.y - radius,
-                p.x - radius,
-                p.y + radius,
-                p.x + radius,
-                p.y - radius,
-                p.x + radius,
-                p.y + radius,
-                p.x - radius,
-                p.y + radius,
+        val ranges = resolveStyledSampleRanges(samples, style)
+        val vertexList = ArrayList<Float>(samples.size * 12)
+        ranges.forEach { range ->
+            if (range.first > range.last || range.last >= samples.size) {
+                return@forEach
+            }
+            appendMeshVerticesForRange(
+                samples = samples,
+                widths = widths,
+                style = style,
+                range = range,
+                outVertices = vertexList,
             )
         }
+        return vertexList.toFloatArray()
+    }
 
+    private fun appendMeshVerticesForRange(
+        samples: List<com.onyx.android.ink.ui.StrokeRenderPoint>,
+        widths: List<Float>,
+        style: StrokeStyle,
+        range: IntRange,
+        outVertices: MutableList<Float>,
+    ) {
+        val rangeSamples = samples.subList(range.first, range.last + 1)
+        val rangeWidths = widths.subList(range.first, range.last + 1)
+        val geometry = computeStrokeOutlineGeometry(rangeSamples, rangeWidths) ?: return
+        if (geometry.count == 1) {
+            val p = rangeSamples.first()
+            val radius = (rangeWidths.firstOrNull() ?: style.baseWidth).coerceAtLeast(0.5f) / 2f
+            outVertices += p.x - radius
+            outVertices += p.y - radius
+            outVertices += p.x + radius
+            outVertices += p.y - radius
+            outVertices += p.x - radius
+            outVertices += p.y + radius
+            outVertices += p.x + radius
+            outVertices += p.y - radius
+            outVertices += p.x + radius
+            outVertices += p.y + radius
+            outVertices += p.x - radius
+            outVertices += p.y + radius
+            return
+        }
         val count = geometry.count
-        val vertices = FloatArray((count - 1) * 12)
-        var cursor = 0
         for (index in 0 until count - 1) {
             val lx0 = geometry.leftX[index]
             val ly0 = geometry.leftY[index]
@@ -676,21 +699,20 @@ internal class InkGlRenderer : GLSurfaceView.Renderer {
             val rx1 = geometry.rightX[index + 1]
             val ry1 = geometry.rightY[index + 1]
 
-            vertices[cursor++] = lx0
-            vertices[cursor++] = ly0
-            vertices[cursor++] = rx0
-            vertices[cursor++] = ry0
-            vertices[cursor++] = lx1
-            vertices[cursor++] = ly1
+            outVertices += lx0
+            outVertices += ly0
+            outVertices += rx0
+            outVertices += ry0
+            outVertices += lx1
+            outVertices += ly1
 
-            vertices[cursor++] = rx0
-            vertices[cursor++] = ry0
-            vertices[cursor++] = rx1
-            vertices[cursor++] = ry1
-            vertices[cursor++] = lx1
-            vertices[cursor++] = ly1
+            outVertices += rx0
+            outVertices += ry0
+            outVertices += rx1
+            outVertices += ry1
+            outVertices += lx1
+            outVertices += ly1
         }
-        return vertices
     }
 
     private fun evictCommittedMeshBudget() {

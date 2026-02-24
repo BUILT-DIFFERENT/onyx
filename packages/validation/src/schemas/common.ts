@@ -10,6 +10,7 @@ export const StrokeStyleSchema = z.object({
   baseWidth: z.number(),
   minWidthFactor: z.number(),
   maxWidthFactor: z.number(),
+  lineStyle: z.enum(['solid', 'dashed', 'dotted']).optional(),
   nibRotation: z.boolean(),
 });
 

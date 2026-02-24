@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /**
  * NoteSchema - JSON-serializable API contract for Note
- * See docs/schema-audit.md for canonical sync API contract
+ * Canonical sync API contracts live under packages/validation/src/schemas and tests/contracts/fixtures.
  *
  * Note: folderId is intentionally excluded - it's a local-only field
  * deletedAt uses "absent OR number" semantics - omit field if not deleted

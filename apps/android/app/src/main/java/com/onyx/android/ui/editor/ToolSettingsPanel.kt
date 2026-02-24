@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.BrushPreset
+import com.onyx.android.ink.model.StrokeLineStyle
 import com.onyx.android.ink.model.Tool
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -124,6 +125,12 @@ internal fun ToolSettingsPanel(
                         valueRange = 0f..1f,
                         steps = TOOL_SETTINGS_DIALOG_SLIDER_STEPS,
                     )
+                    LineStyleSelector(
+                        selectedStyle = brush.lineStyle,
+                        onStyleSelected = { lineStyle ->
+                            onBrushChange(brush.copy(lineStyle = lineStyle))
+                        },
+                    )
                 }
 
                 ToolPanelType.HIGHLIGHTER -> {
@@ -192,6 +199,12 @@ internal fun ToolSettingsPanel(
                         valueRange = 0f..1f,
                         steps = TOOL_SETTINGS_DIALOG_SLIDER_STEPS,
                     )
+                    LineStyleSelector(
+                        selectedStyle = brush.lineStyle,
+                        onStyleSelected = { lineStyle ->
+                            onBrushChange(brush.copy(lineStyle = lineStyle))
+                        },
+                    )
                 }
 
                 ToolPanelType.ERASER -> {
@@ -245,6 +258,32 @@ internal fun ToolSettingsPanel(
                 modifier = Modifier.align(Alignment.End),
             ) {
                 Text("Done")
+            }
+        }
+    }
+}
+
+@Composable
+private fun LineStyleSelector(
+    selectedStyle: StrokeLineStyle,
+    onStyleSelected: (StrokeLineStyle) -> Unit,
+) {
+    Text(text = "Line style", style = MaterialTheme.typography.bodyMedium)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(TOOLBAR_ITEM_SPACING_DP.dp),
+    ) {
+        StrokeLineStyle.entries.forEach { lineStyle ->
+            TextButton(onClick = { onStyleSelected(lineStyle) }) {
+                Text(
+                    text = lineStyle.name.lowercase().replaceFirstChar { it.uppercase() },
+                    color =
+                        if (lineStyle == selectedStyle) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                )
             }
         }
     }

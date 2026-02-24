@@ -71,6 +71,8 @@ import com.onyx.android.pdf.PdfDocumentRenderer
 import com.onyx.android.pdf.PdfIncorrectPasswordException
 import com.onyx.android.pdf.PdfPasswordRequiredException
 import com.onyx.android.pdf.PdfPasswordStore
+import com.onyx.android.pdf.PdfSearchMatch
+import com.onyx.android.pdf.findPdfSearchMatches
 import com.onyx.android.pdf.openPdfDocumentRenderer
 import com.onyx.android.pdf.renderThumbnail
 import kotlinx.coroutines.Dispatchers
@@ -587,6 +589,10 @@ private fun rememberNoteEditorUiState(
     var isSegmentEraserEnabled by rememberSaveable { mutableStateOf(false) }
     var activeInsertAction by rememberSaveable { mutableStateOf(InsertAction.NONE) }
     var pendingImageUri by rememberSaveable { mutableStateOf<String?>(null) }
+    var pdfSearchQuery by rememberSaveable { mutableStateOf("") }
+    var pdfSearchMatches by remember { mutableStateOf<List<PdfSearchMatch>>(emptyList()) }
+    var pdfSearchActiveIndex by rememberSaveable { mutableStateOf(-1) }
+    var isPdfSearchRunning by remember { mutableStateOf(false) }
     var lassoSelection by remember { mutableStateOf(LassoSelection()) }
     val templateConfig by viewModel.currentTemplateConfig.collectAsState()
     val templateState = remember(templateConfig) { templateConfig.toUiState() }
@@ -657,6 +663,72 @@ private fun rememberNoteEditorUiState(
         pendingImageUri = null
         viewModel.selectObject(null)
     }
+    val applySearchMatch: (Int) -> Unit = { requestedIndex ->
+        val match = pdfSearchMatches.getOrNull(requestedIndex)
+        if (match != null && pageState.pages.isNotEmpty()) {
+            val pageTargetIndex =
+                pageState.pages.indexOfFirst { page ->
+                    page.pdfPageNo == match.pageIndex || page.indexInNote == match.pageIndex
+                }
+            val resolvedPageIndex =
+                if (pageTargetIndex >= 0) {
+                    pageTargetIndex
+                } else {
+                    requestedIndex.coerceIn(0, pageState.pages.lastIndex)
+                }
+            val resolvedPage = pageState.pages.getOrNull(resolvedPageIndex)
+            if (resolvedPage != null) {
+                if (resolvedPageIndex != pageState.currentPageIndex) {
+                    viewModel.navigateBy(resolvedPageIndex - pageState.currentPageIndex)
+                }
+                viewModel.setSearchHighlight(
+                    pageId = resolvedPage.pageId,
+                    pageIndex = resolvedPage.indexInNote,
+                    bounds = match.bounds,
+                )
+                pdfSearchActiveIndex = requestedIndex
+            }
+        }
+    }
+    val runPdfSearch: (String) -> Unit = { rawQuery ->
+        val query = rawQuery.trim()
+        pdfSearchQuery = rawQuery
+        if (query.isBlank()) {
+            pdfSearchMatches = emptyList()
+            pdfSearchActiveIndex = -1
+            isPdfSearchRunning = false
+            viewModel.clearSearchHighlight()
+        } else {
+            val renderer = pdfState.pdfRenderer
+            if (renderer == null) {
+                pdfSearchMatches = emptyList()
+                pdfSearchActiveIndex = -1
+                viewModel.clearSearchHighlight()
+            } else {
+                coroutineScope.launch {
+                    isPdfSearchRunning = true
+                    val pageCharacters =
+                        withContext(Dispatchers.Default) {
+                            (0 until renderer.getPageCount()).associateWith { pageIndex ->
+                                renderer.getCharacters(pageIndex)
+                            }
+                        }
+                    val matches =
+                        withContext(Dispatchers.Default) {
+                            findPdfSearchMatches(query = query, charactersByPageIndex = pageCharacters)
+                        }
+                    pdfSearchMatches = matches
+                    isPdfSearchRunning = false
+                    if (matches.isEmpty()) {
+                        pdfSearchActiveIndex = -1
+                        viewModel.clearSearchHighlight()
+                    } else {
+                        applySearchMatch(0)
+                    }
+                }
+            }
+        }
+    }
     val topBarState =
         buildTopBarState(
             pageState,
@@ -685,6 +757,30 @@ private fun rememberNoteEditorUiState(
             onToggleTextSelectionMode = {
                 if (pdfState.isPdfPage) {
                     isTextSelectionMode = !isTextSelectionMode
+                }
+            },
+            pdfSearchQuery = pdfSearchQuery,
+            pdfSearchStatusText =
+                if (isPdfSearchRunning && pdfSearchQuery.isNotBlank()) {
+                    "Searching..."
+                } else if (pdfSearchQuery.isBlank()) {
+                    ""
+                } else {
+                    "${if (pdfSearchActiveIndex >= 0) pdfSearchActiveIndex + 1 else 0}/${pdfSearchMatches.size}"
+                },
+            onPdfSearchQuerySubmit = runPdfSearch,
+            onPdfSearchPrevious = {
+                if (pdfSearchMatches.isNotEmpty()) {
+                    val current = if (pdfSearchActiveIndex >= 0) pdfSearchActiveIndex else 0
+                    val previous = (current - 1 + pdfSearchMatches.size) % pdfSearchMatches.size
+                    applySearchMatch(previous)
+                }
+            },
+            onPdfSearchNext = {
+                if (pdfSearchMatches.isNotEmpty()) {
+                    val current = if (pdfSearchActiveIndex >= 0) pdfSearchActiveIndex else -1
+                    val next = (current + 1).mod(pdfSearchMatches.size)
+                    applySearchMatch(next)
                 }
             },
             onJumpToPage = { targetPageIndex ->
@@ -1102,6 +1198,10 @@ private fun rememberMultiPageUiState(
     var activeInsertAction by rememberSaveable { mutableStateOf(InsertAction.NONE) }
     var isZoomLocked by rememberSaveable { mutableStateOf(false) }
     var pendingImageUri by rememberSaveable { mutableStateOf<String?>(null) }
+    var pdfSearchQuery by rememberSaveable { mutableStateOf("") }
+    var pdfSearchMatches by remember { mutableStateOf<List<PdfSearchMatch>>(emptyList()) }
+    var pdfSearchActiveIndex by rememberSaveable { mutableStateOf(-1) }
+    var isPdfSearchRunning by remember { mutableStateOf(false) }
     val lassoSelectionsByPageId = remember { mutableStateMapOf<String, LassoSelection>() }
     val templateConfigByPageId by viewModel.templateConfigByPageId.collectAsState()
     val currentTemplateConfig by viewModel.currentTemplateConfig.collectAsState()
@@ -1119,6 +1219,8 @@ private fun rememberMultiPageUiState(
     val recognizedTextByPage by viewModel.recognizedTextByPage.collectAsState()
     val convertedTextBlocksByPage by viewModel.convertedTextBlocksByPage.collectAsState()
     val searchHighlightBounds by viewModel.searchHighlightBounds.collectAsState()
+    val searchHighlightPageId by viewModel.searchHighlightPageId.collectAsState()
+    val searchHighlightPageIndex by viewModel.searchHighlightPageIndex.collectAsState()
     val pageById = remember(pageState.pages) { pageState.pages.associateBy { it.pageId } }
     val viewportWidth = viewportSize.width.toFloat()
     val pickImageLauncher =
@@ -1172,6 +1274,69 @@ private fun rememberMultiPageUiState(
         activeInsertAction = InsertAction.NONE
         pendingImageUri = null
         viewModel.selectObject(null)
+    }
+    val applySearchMatch: (Int) -> Unit = { requestedIndex ->
+        val match = pdfSearchMatches.getOrNull(requestedIndex)
+        if (match != null && pageState.pages.isNotEmpty()) {
+            val pageTargetIndex =
+                pageState.pages.indexOfFirst { page ->
+                    page.pdfPageNo == match.pageIndex || page.indexInNote == match.pageIndex
+                }
+            val resolvedPageIndex =
+                if (pageTargetIndex >= 0) {
+                    pageTargetIndex
+                } else {
+                    requestedIndex.coerceIn(0, pageState.pages.lastIndex)
+                }
+            val resolvedPage = pageState.pages.getOrNull(resolvedPageIndex)
+            if (resolvedPage != null) {
+                if (resolvedPageIndex != pageState.currentPageIndex) {
+                    viewModel.navigateBy(resolvedPageIndex - pageState.currentPageIndex)
+                }
+                viewModel.setSearchHighlight(
+                    pageId = resolvedPage.pageId,
+                    pageIndex = resolvedPage.indexInNote,
+                    bounds = match.bounds,
+                )
+                pdfSearchActiveIndex = requestedIndex
+            }
+        }
+    }
+    val runPdfSearch: (String) -> Unit = { rawQuery ->
+        val query = rawQuery.trim()
+        pdfSearchQuery = rawQuery
+        if (query.isBlank()) {
+            pdfSearchMatches = emptyList()
+            pdfSearchActiveIndex = -1
+            isPdfSearchRunning = false
+            viewModel.clearSearchHighlight()
+        } else if (pdfRenderer == null) {
+            pdfSearchMatches = emptyList()
+            pdfSearchActiveIndex = -1
+            viewModel.clearSearchHighlight()
+        } else {
+            coroutineScope.launch {
+                isPdfSearchRunning = true
+                val pageCharacters =
+                    withContext(Dispatchers.Default) {
+                        (0 until pdfRenderer.getPageCount()).associateWith { pageIndex ->
+                            pdfRenderer.getCharacters(pageIndex)
+                        }
+                    }
+                val matches =
+                    withContext(Dispatchers.Default) {
+                        findPdfSearchMatches(query = query, charactersByPageIndex = pageCharacters)
+                    }
+                pdfSearchMatches = matches
+                isPdfSearchRunning = false
+                if (matches.isEmpty()) {
+                    pdfSearchActiveIndex = -1
+                    viewModel.clearSearchHighlight()
+                } else {
+                    applySearchMatch(0)
+                }
+            }
+        }
     }
     LaunchedEffect(searchHighlightBounds) {
         if (searchHighlightBounds != null) {
@@ -1227,8 +1392,8 @@ private fun rememberMultiPageUiState(
                     if (
                         searchHighlightBounds != null &&
                         (
-                            page.pageId == viewModel.searchHighlightPageId ||
-                                page.indexInNote == viewModel.searchHighlightPageIndex
+                            page.pageId == searchHighlightPageId ||
+                                page.indexInNote == searchHighlightPageIndex
                         )
                     ) {
                         searchHighlightBounds
@@ -1266,6 +1431,30 @@ private fun rememberMultiPageUiState(
             onToggleTextSelectionMode = {
                 if (pdfRenderer != null) {
                     isTextSelectionMode = !isTextSelectionMode
+                }
+            },
+            pdfSearchQuery = pdfSearchQuery,
+            pdfSearchStatusText =
+                if (isPdfSearchRunning && pdfSearchQuery.isNotBlank()) {
+                    "Searching..."
+                } else if (pdfSearchQuery.isBlank()) {
+                    ""
+                } else {
+                    "${if (pdfSearchActiveIndex >= 0) pdfSearchActiveIndex + 1 else 0}/${pdfSearchMatches.size}"
+                },
+            onPdfSearchQuerySubmit = runPdfSearch,
+            onPdfSearchPrevious = {
+                if (pdfSearchMatches.isNotEmpty()) {
+                    val current = if (pdfSearchActiveIndex >= 0) pdfSearchActiveIndex else 0
+                    val previous = (current - 1 + pdfSearchMatches.size) % pdfSearchMatches.size
+                    applySearchMatch(previous)
+                }
+            },
+            onPdfSearchNext = {
+                if (pdfSearchMatches.isNotEmpty()) {
+                    val current = if (pdfSearchActiveIndex >= 0) pdfSearchActiveIndex else -1
+                    val next = (current + 1).mod(pdfSearchMatches.size)
+                    applySearchMatch(next)
                 }
             },
             onJumpToPage = { targetPageIndex ->

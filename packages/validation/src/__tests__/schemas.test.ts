@@ -335,6 +335,7 @@ describe('StrokeSchema', () => {
     baseWidth: 1.5,
     minWidthFactor: 0.85,
     maxWidthFactor: 1.15,
+    lineStyle: 'solid' as const,
     nibRotation: false,
   };
 
@@ -422,6 +423,7 @@ describe('StrokeSchema', () => {
       baseWidth: 1.5,
       minWidthFactor: 0.85,
       maxWidthFactor: 1.15,
+      lineStyle: 'dashed' as const,
       nibRotation: false,
     };
     const stroke = { ...validStroke, style: styleWithoutColor };

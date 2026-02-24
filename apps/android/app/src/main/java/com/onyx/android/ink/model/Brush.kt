@@ -16,6 +16,7 @@ data class Brush(
     val smoothingLevel: Float = 0.35f,
     // 0..1 controls start/end taper intensity.
     val endTaperStrength: Float = 0.35f,
+    val lineStyle: StrokeLineStyle = StrokeLineStyle.SOLID,
 ) {
     fun toStrokeStyle(): StrokeStyle =
         StrokeStyle(
@@ -26,6 +27,7 @@ data class Brush(
             maxWidthFactor = maxWidthFactor,
             smoothingLevel = smoothingLevel,
             endTaperStrength = endTaperStrength,
+            lineStyle = lineStyle,
             nibRotation = false,
         )
 }

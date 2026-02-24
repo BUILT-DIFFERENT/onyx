@@ -7,6 +7,7 @@
     "baseWidth": 2.0,
     "minWidthFactor": 0.5,
     "maxWidthFactor": 1.5,
+    "lineStyle": "solid",
     "nibRotation": false
   },
   "bounds": {

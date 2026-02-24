@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.drawscope.withTransform
 import com.onyx.android.ink.gl.GlBrush
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Stroke
+import com.onyx.android.ink.model.StrokeLineStyle
 import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.StrokeStyle
 import com.onyx.android.ink.model.Tool
@@ -44,6 +45,10 @@ private const val MIN_RENDERED_WIDTH_FACTOR = 0.18f
 private const val PATH_CACHE_MAX_ENTRIES = 500
 private const val MIN_WIDTH_FOR_OUTLINE = 0.01f
 internal const val HIGHLIGHTER_STROKE_ALPHA = 0.35f
+private const val DASH_ON_MULTIPLIER = 4f
+private const val DASH_OFF_MULTIPLIER = 2.2f
+private const val DOT_ON_MULTIPLIER = 1.1f
+private const val DOT_OFF_MULTIPLIER = 1.7f
 
 /**
  * Thread-safe LRU-bounded color cache to avoid per-frame Color.parseColor() calls.
@@ -195,8 +200,73 @@ private fun buildStrokePathCacheEntry(
 ): StrokePathCacheEntry {
     val samples = catmullRomSmooth(points, style.smoothingLevel)
     val widths = computePerPointWidths(samples, style)
-    val path = buildVariableWidthOutline(samples, widths)
+    val path = Path()
+    val ranges = resolveStyledSampleRanges(samples, style)
+    ranges.forEach { range ->
+        if (range.first > range.last || range.last >= samples.size) {
+            return@forEach
+        }
+        val segmentPath =
+            buildVariableWidthOutline(
+                samples = samples.subList(range.first, range.last + 1),
+                widths = widths.subList(range.first, range.last + 1),
+            )
+        path.addPath(segmentPath)
+    }
     return StrokePathCacheEntry(path = path)
+}
+
+@Suppress("CyclomaticComplexMethod")
+internal fun resolveStyledSampleRanges(
+    samples: List<StrokeRenderPoint>,
+    style: StrokeStyle,
+): List<IntRange> {
+    if (samples.isEmpty()) {
+        return emptyList()
+    }
+    if (samples.size == 1) {
+        return listOf(0..0)
+    }
+    if (style.lineStyle == StrokeLineStyle.SOLID) {
+        return listOf(0..samples.lastIndex)
+    }
+    val unit = style.baseWidth.coerceAtLeast(0.5f)
+    val (drawLength, gapLength) =
+        when (style.lineStyle) {
+            StrokeLineStyle.SOLID -> unit to unit
+            StrokeLineStyle.DASHED -> (unit * DASH_ON_MULTIPLIER) to (unit * DASH_OFF_MULTIPLIER)
+            StrokeLineStyle.DOTTED -> (unit * DOT_ON_MULTIPLIER) to (unit * DOT_OFF_MULTIPLIER)
+        }
+    val cycleLength = (drawLength + gapLength).coerceAtLeast(MIN_WIDTH_FOR_OUTLINE)
+    val cumulative = FloatArray(samples.size)
+    for (index in 1 until samples.size) {
+        val dx = samples[index].x - samples[index - 1].x
+        val dy = samples[index].y - samples[index - 1].y
+        cumulative[index] = cumulative[index - 1] + sqrt(dx * dx + dy * dy)
+    }
+    val ranges = mutableListOf<IntRange>()
+    var startIndex: Int? = null
+    for (index in samples.indices) {
+        val phase = cumulative[index] % cycleLength
+        val shouldDraw = phase <= drawLength
+        if (shouldDraw && startIndex == null) {
+            startIndex = (index - 1).coerceAtLeast(0)
+        }
+        if (!shouldDraw && startIndex != null) {
+            val endIndex = index.coerceAtMost(samples.lastIndex)
+            if (endIndex - startIndex >= 1) {
+                ranges += startIndex..endIndex
+            }
+            startIndex = null
+        }
+    }
+    if (startIndex != null && samples.lastIndex - startIndex >= 1) {
+        ranges += startIndex..samples.lastIndex
+    }
+    if (ranges.isEmpty()) {
+        return listOf(0..samples.lastIndex)
+    }
+    return ranges
 }
 
 /**

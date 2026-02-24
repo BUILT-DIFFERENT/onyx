@@ -3,6 +3,7 @@ package com.onyx.android.data.repository
 import com.onyx.android.data.dao.EditorSettingsDao
 import com.onyx.android.data.entity.EditorSettingsEntity
 import com.onyx.android.ink.model.Brush
+import com.onyx.android.ink.model.StrokeLineStyle
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.input.DoubleFingerMode
 import com.onyx.android.input.DoubleTapZoomAction
@@ -51,6 +52,7 @@ class EditorSettingsRepository
                     penMaxWidthFactor = settings.penBrush.maxWidthFactor,
                     penSmoothingLevel = settings.penBrush.smoothingLevel,
                     penEndTaperStrength = settings.penBrush.endTaperStrength,
+                    penLineStyle = settings.penBrush.lineStyle.name,
                     highlighterTool = settings.highlighterBrush.tool.name,
                     highlighterColor = settings.highlighterBrush.color,
                     highlighterBaseWidth = settings.highlighterBrush.baseWidth,
@@ -58,6 +60,7 @@ class EditorSettingsRepository
                     highlighterMaxWidthFactor = settings.highlighterBrush.maxWidthFactor,
                     highlighterSmoothingLevel = settings.highlighterBrush.smoothingLevel,
                     highlighterEndTaperStrength = settings.highlighterBrush.endTaperStrength,
+                    highlighterLineStyle = settings.highlighterBrush.lineStyle.name,
                     eraserBaseWidth = settings.eraserBaseWidth,
                     lastNonEraserTool = settings.lastNonEraserTool.name,
                     singleFingerMode = settings.inputSettings.singleFingerMode.name,
@@ -81,6 +84,9 @@ class EditorSettingsRepository
             val penTool = runCatching { Tool.valueOf(penTool) }.getOrDefault(Tool.PEN)
             val highlighterTool = runCatching { Tool.valueOf(highlighterTool) }.getOrDefault(Tool.HIGHLIGHTER)
             val lastTool = runCatching { Tool.valueOf(lastNonEraserTool) }.getOrDefault(Tool.PEN)
+            val penLineStyle = runCatching { StrokeLineStyle.valueOf(penLineStyle) }.getOrDefault(StrokeLineStyle.SOLID)
+            val highlighterLineStyle =
+                runCatching { StrokeLineStyle.valueOf(highlighterLineStyle) }.getOrDefault(StrokeLineStyle.SOLID)
             val singleFingerMode =
                 runCatching { SingleFingerMode.valueOf(singleFingerMode) }
                     .getOrDefault(SingleFingerMode.PAN)
@@ -122,6 +128,7 @@ class EditorSettingsRepository
                         maxWidthFactor = penMaxWidthFactor,
                         smoothingLevel = penSmoothingLevel,
                         endTaperStrength = penEndTaperStrength,
+                        lineStyle = penLineStyle,
                     ),
                 highlighterBrush =
                     Brush(
@@ -132,6 +139,7 @@ class EditorSettingsRepository
                         maxWidthFactor = highlighterMaxWidthFactor,
                         smoothingLevel = highlighterSmoothingLevel,
                         endTaperStrength = highlighterEndTaperStrength,
+                        lineStyle = highlighterLineStyle,
                     ),
                 eraserBaseWidth = eraserBaseWidth,
                 lastNonEraserTool = lastTool,
