@@ -40,15 +40,38 @@ class NoteLaunchPreferences(
         prefs.edit().putString(KEY_NOTE_NAMING_RULE, rule.storageValue).apply()
     }
 
+    fun getHomeViewMode(): String =
+        prefs.getString(
+            KEY_HOME_VIEW_MODE,
+            DEFAULT_HOME_VIEW_MODE,
+        ) ?: DEFAULT_HOME_VIEW_MODE
+
+    fun setHomeViewMode(mode: String) {
+        prefs.edit().putString(KEY_HOME_VIEW_MODE, mode).apply()
+    }
+
+    fun getExpandedFolderIds(): Set<String> =
+        prefs
+            .getStringSet(KEY_EXPANDED_FOLDER_IDS, emptySet())
+            ?.toSet()
+            ?: emptySet()
+
+    fun setExpandedFolderIds(folderIds: Set<String>) {
+        prefs.edit().putStringSet(KEY_EXPANDED_FOLDER_IDS, folderIds.toSet()).apply()
+    }
+
     fun buildDateTimeTitle(timestampMs: Long): String = DATE_TIME_FORMATTER.format(Date(timestampMs))
 
     companion object {
         private const val PREFS_NAME = "onyx_note_launch_preferences"
         private const val KEY_RESUME_LAST_PAGE = "resume_last_page"
         private const val KEY_NOTE_NAMING_RULE = "note_naming_rule"
+        private const val KEY_HOME_VIEW_MODE = "home_view_mode"
+        private const val KEY_EXPANDED_FOLDER_IDS = "expanded_folder_ids"
 
         private const val DEFAULT_NOTE_NAMING_RULE = "untitled_counter"
         private const val DEFAULT_RESUME_LAST_PAGE = true
+        private const val DEFAULT_HOME_VIEW_MODE = "list"
 
         private val DATE_TIME_FORMATTER =
             SimpleDateFormat(

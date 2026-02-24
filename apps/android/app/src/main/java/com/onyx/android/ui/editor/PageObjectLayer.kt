@@ -47,6 +47,8 @@ import com.onyx.android.objects.model.InsertAction
 import com.onyx.android.objects.model.PageObject
 import com.onyx.android.objects.model.PageObjectKind
 import com.onyx.android.objects.model.ShapeType
+import com.onyx.android.objects.model.TextAlign
+import com.onyx.android.objects.model.TextPayload
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -72,7 +74,7 @@ internal fun PageObjectLayer(
     onShapeObjectCreate: (ShapeType, Float, Float, Float, Float) -> Unit,
     onTextObjectCreate: (Float, Float) -> Unit,
     onImageObjectCreate: (Float, Float) -> Unit,
-    onTextObjectEdit: (PageObject, String) -> Unit,
+    onTextObjectEdit: (PageObject, TextPayload) -> Unit,
     onObjectSelected: (String?) -> Unit,
     onObjectTransformed: (PageObject, PageObject) -> Unit,
     onDuplicateObject: (PageObject) -> Unit,
@@ -84,11 +86,11 @@ internal fun PageObjectLayer(
     var draftInsertStart by remember { mutableStateOf<Offset?>(null) }
     var draftInsertCurrent by remember { mutableStateOf<Offset?>(null) }
     var draftObject by remember { mutableStateOf<PageObject?>(null) }
-    var textEditValue by remember { mutableStateOf(TEXT_DEFAULT) }
+    var textEditPayload by remember { mutableStateOf(TextPayload(text = TEXT_DEFAULT)) }
 
     LaunchedEffect(selectedObjectId) {
         draftObject = null
-        textEditValue = selectedObject?.textPayload?.text ?: TEXT_DEFAULT
+        textEditPayload = selectedObject?.textPayload ?: TextPayload(text = TEXT_DEFAULT)
     }
 
     val resolvedSelectedObject = draftObject ?: selectedObject
@@ -300,9 +302,9 @@ internal fun PageObjectLayer(
                 val fieldWidthDp = with(density) { max(96f, selectedRect.width).toDp() }
                 val fieldHeightDp = with(density) { max(56f, selectedRect.height).toDp() }
                 OutlinedTextField(
-                    value = textEditValue,
+                    value = textEditPayload.text,
                     onValueChange = { updated ->
-                        textEditValue = updated
+                        textEditPayload = textEditPayload.copy(text = updated)
                     },
                     singleLine = false,
                     label = { Text("Text object") },
@@ -316,6 +318,67 @@ internal fun PageObjectLayer(
                             }.size(width = fieldWidthDp, height = fieldHeightDp)
                             .testTag("text-object-editor"),
                 )
+                Row(
+                    modifier =
+                        Modifier
+                            .offset {
+                                IntOffset(
+                                    selectedRect.left.roundToInt(),
+                                    max(0f, selectedRect.top - 80f).roundToInt(),
+                                )
+                            }.background(OBJECT_ACTION_BG, RoundedCornerShape(8.dp))
+                            .testTag("text-format-actions"),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    TextButton(
+                        onClick = { textEditPayload = textEditPayload.copy(bold = !textEditPayload.bold) },
+                        modifier = Modifier.testTag("text-format-bold"),
+                    ) {
+                        Text(if (textEditPayload.bold) "B*" else "B", color = Color.White)
+                    }
+                    TextButton(
+                        onClick = { textEditPayload = textEditPayload.copy(italic = !textEditPayload.italic) },
+                        modifier = Modifier.testTag("text-format-italic"),
+                    ) {
+                        Text(if (textEditPayload.italic) "I*" else "I", color = Color.White)
+                    }
+                    TextButton(
+                        onClick = { textEditPayload = textEditPayload.copy(underline = !textEditPayload.underline) },
+                        modifier = Modifier.testTag("text-format-underline"),
+                    ) {
+                        Text(if (textEditPayload.underline) "U*" else "U", color = Color.White)
+                    }
+                    TextButton(
+                        onClick = {
+                            val nextAlign =
+                                when (textEditPayload.align) {
+                                    TextAlign.START -> TextAlign.CENTER
+                                    TextAlign.CENTER -> TextAlign.END
+                                    TextAlign.END -> TextAlign.START
+                                }
+                            textEditPayload = textEditPayload.copy(align = nextAlign)
+                        },
+                        modifier = Modifier.testTag("text-format-align"),
+                    ) {
+                        Text("Align:${textEditPayload.align.name.take(1)}", color = Color.White)
+                    }
+                    TextButton(
+                        onClick = {
+                            textEditPayload = textEditPayload.copy(fontSizeSp = max(10f, textEditPayload.fontSizeSp - 1f))
+                        },
+                        modifier = Modifier.testTag("text-format-size-down"),
+                    ) {
+                        Text("A-", color = Color.White)
+                    }
+                    TextButton(
+                        onClick = {
+                            textEditPayload = textEditPayload.copy(fontSizeSp = min(72f, textEditPayload.fontSizeSp + 1f))
+                        },
+                        modifier = Modifier.testTag("text-format-size-up"),
+                    ) {
+                        Text("A+", color = Color.White)
+                    }
+                }
             }
 
             Row(
@@ -332,7 +395,13 @@ internal fun PageObjectLayer(
             ) {
                 if (resolvedSelectedObject.kind == PageObjectKind.TEXT) {
                     TextButton(
-                        onClick = { onTextObjectEdit(resolvedSelectedObject, textEditValue.ifBlank { TEXT_DEFAULT }) },
+                        onClick = {
+                            val safeText = textEditPayload.text.ifBlank { TEXT_DEFAULT }
+                            onTextObjectEdit(
+                                resolvedSelectedObject,
+                                textEditPayload.copy(text = safeText),
+                            )
+                        },
                         modifier = Modifier.testTag("text-save-action"),
                     ) {
                         Text("Save text", color = Color.White)

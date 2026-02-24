@@ -18,3 +18,13 @@ internal fun EmptyNotesMessage(modifier: Modifier = Modifier) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
+
+@Composable
+internal fun SharedNotesPlaceholderMessage(modifier: Modifier = Modifier) {
+    Text(
+        text = "No shared notes yet. Shared sync metadata is still in progress.",
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}

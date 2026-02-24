@@ -144,11 +144,16 @@ fun NoteEditorScreen(
     noteId: String,
     onNavigateBack: () -> Unit,
 ) {
-    var keepScreenOn by rememberSaveable { mutableStateOf(false) }
-    var hideSystemBars by rememberSaveable { mutableStateOf(true) }
+    val viewModel: NoteEditorViewModel = hiltViewModel()
+    val editorSettings by viewModel.editorSettings.collectAsState()
+    var keepScreenOn by rememberSaveable { mutableStateOf(editorSettings.keepScreenOnInEditor) }
+    var hideSystemBars by rememberSaveable { mutableStateOf(editorSettings.hideSystemBarsInEditor) }
+    LaunchedEffect(editorSettings.keepScreenOnInEditor, editorSettings.hideSystemBarsInEditor) {
+        keepScreenOn = editorSettings.keepScreenOnInEditor
+        hideSystemBars = editorSettings.hideSystemBarsInEditor
+    }
     NoteEditorStatusBarEffect(hideSystemBars = hideSystemBars)
     NoteEditorKeepScreenOnEffect(keepScreenOn = keepScreenOn)
-    val viewModel: NoteEditorViewModel = hiltViewModel()
     NoteEditorScreenContent(
         noteId = noteId,
         viewModel = viewModel,
@@ -156,8 +161,26 @@ fun NoteEditorScreen(
         pdfPasswordStore = viewModel.pdfPasswordStore,
         keepScreenOn = keepScreenOn,
         hideSystemBars = hideSystemBars,
-        onKeepScreenOnChanged = { keepScreenOn = it },
-        onHideSystemBarsChanged = { hideSystemBars = it },
+        onKeepScreenOnChanged = { enabled ->
+            keepScreenOn = enabled
+            if (editorSettings.keepScreenOnInEditor != enabled) {
+                viewModel.updateEditorSettings(
+                    editorSettings.copy(
+                        keepScreenOnInEditor = enabled,
+                    ),
+                )
+            }
+        },
+        onHideSystemBarsChanged = { hidden ->
+            hideSystemBars = hidden
+            if (editorSettings.hideSystemBarsInEditor != hidden) {
+                viewModel.updateEditorSettings(
+                    editorSettings.copy(
+                        hideSystemBarsInEditor = hidden,
+                    ),
+                )
+            }
+        },
         onNavigateBack = onNavigateBack,
     )
 }
@@ -885,6 +908,9 @@ private fun rememberNoteEditorUiState(
             {
                 viewModel.updateCurrentPageTemplate(it.toConfig())
             },
+            {
+                viewModel.updateTemplateForAllPages(templateState.toConfig())
+            },
         )
     val onTransformGesture: (Float, Float, Float, Float, Float) -> Unit =
         { zoomChange, panChangeX, panChangeY, centroidX, centroidY ->
@@ -1160,8 +1186,8 @@ private fun rememberNoteEditorUiState(
                     pendingImageUri = null
                 }
             },
-            onTextObjectEdit = { pageObject, text ->
-                val updatedObject = viewModel.updateTextObjectPayload(pageObject, text)
+            onTextObjectEdit = { pageObject, payload ->
+                val updatedObject = viewModel.updateTextObjectPayload(pageObject, payload)
                 undoController.onObjectTransformed(
                     pageId = pageObject.pageId,
                     before = pageObject,
@@ -1632,6 +1658,9 @@ private fun rememberMultiPageUiState(
             { state ->
                 viewModel.updateCurrentPageTemplate(state.toConfig())
             },
+            {
+                viewModel.updateTemplateForAllPages(templateState.toConfig())
+            },
         )
 
     val thumbnailCache = remember(pdfRenderer) { mutableStateMapOf<Int, android.graphics.Bitmap?>() }
@@ -1794,8 +1823,8 @@ private fun rememberMultiPageUiState(
                 activeInsertAction = InsertAction.NONE
                 pendingImageUri = null
             },
-            onTextObjectEdit = { pageId, pageObject, text ->
-                val updatedObject = viewModel.updateTextObjectPayload(pageObject, text)
+            onTextObjectEdit = { pageId, pageObject, payload ->
+                val updatedObject = viewModel.updateTextObjectPayload(pageObject, payload)
                 undoController.onObjectTransformed(
                     pageId = pageId,
                     before = pageObject,
@@ -1968,6 +1997,8 @@ private fun rememberBrushState(
                 eraserBaseWidth = eraserBaseWidth,
                 lastNonEraserTool = lastNonEraserTool,
                 inputSettings = inputSettings,
+                keepScreenOnInEditor = editorSettings.keepScreenOnInEditor,
+                hideSystemBarsInEditor = editorSettings.hideSystemBarsInEditor,
             ),
         )
     }
@@ -2323,6 +2354,7 @@ private fun buildToolbarState(
     onClearPageRequested: () -> Unit,
     onInsertActionSelected: (InsertAction) -> Unit,
     onTemplateChange: (PageTemplateState) -> Unit,
+    onTemplateApplyToAllPages: () -> Unit,
 ): NoteEditorToolbarState =
     NoteEditorToolbarState(
         brush = brush,
@@ -2342,6 +2374,7 @@ private fun buildToolbarState(
         onClearPageRequested = onClearPageRequested,
         onInsertActionSelected = onInsertActionSelected,
         onTemplateChange = onTemplateChange,
+        onTemplateApplyToAllPages = onTemplateApplyToAllPages,
     )
 
 private fun InputSettings.allowsAnyFingerGesture(): Boolean =

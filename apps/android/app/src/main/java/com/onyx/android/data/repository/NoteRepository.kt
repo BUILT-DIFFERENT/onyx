@@ -146,6 +146,7 @@ class NoteRepository(
         private const val DEFAULT_PAGE_WIDTH_PT = 612f
         private const val DEFAULT_PAGE_HEIGHT_PT = 792f
         private const val PAPER_TEMPLATE_PREFIX = "paper:"
+        private const val PAPER_CUSTOM_PREFIX = "custom:"
         private const val PAPER_A4 = "a4"
         private const val PAPER_LETTER = "letter"
         private const val PAPER_PHONE = "phone"
@@ -153,6 +154,8 @@ class NoteRepository(
         private const val PAPER_A4_HEIGHT_PT = 842f
         private const val PAPER_PHONE_WIDTH_PT = 360f
         private const val PAPER_PHONE_HEIGHT_PT = 640f
+        private const val PAPER_CUSTOM_MIN_PT = 120f
+        private const val PAPER_CUSTOM_MAX_PT = 2000f
         private val INK_RESULT_COLOR = Color(0xFF0A84FF)
         private val PDF_RESULT_COLOR = Color(0xFFF2994A)
         private val NOTE_METADATA_RESULT_COLOR = Color(0xFF34A853)
@@ -218,6 +221,18 @@ class NoteRepository(
 
     fun setNoteNamingRule(rule: NoteNamingRule) {
         noteLaunchPreferences.setNoteNamingRule(rule)
+    }
+
+    fun getHomeViewMode(): String = noteLaunchPreferences.getHomeViewMode()
+
+    fun setHomeViewMode(mode: String) {
+        noteLaunchPreferences.setHomeViewMode(mode)
+    }
+
+    fun getExpandedFolderIds(): Set<String> = noteLaunchPreferences.getExpandedFolderIds()
+
+    fun setExpandedFolderIds(folderIds: Set<String>) {
+        noteLaunchPreferences.setExpandedFolderIds(folderIds)
     }
 
     suspend fun updateLastOpenedPage(
@@ -287,12 +302,32 @@ class NoteRepository(
     }
 
     private fun resolvePaperSize(templateId: String?): Pair<Float, Float> =
-        when (templateId?.removePrefix(PAPER_TEMPLATE_PREFIX)) {
+        when (val normalizedTemplate = templateId?.removePrefix(PAPER_TEMPLATE_PREFIX)) {
             PAPER_A4 -> PAPER_A4_WIDTH_PT to PAPER_A4_HEIGHT_PT
             PAPER_PHONE -> PAPER_PHONE_WIDTH_PT to PAPER_PHONE_HEIGHT_PT
             PAPER_LETTER -> DEFAULT_PAGE_WIDTH_PT to DEFAULT_PAGE_HEIGHT_PT
-            else -> DEFAULT_PAGE_WIDTH_PT to DEFAULT_PAGE_HEIGHT_PT
+            else -> {
+                parseCustomPaperSize(normalizedTemplate) ?: (DEFAULT_PAGE_WIDTH_PT to DEFAULT_PAGE_HEIGHT_PT)
+            }
         }
+
+    @Suppress("ReturnCount")
+    private fun parseCustomPaperSize(templateToken: String?): Pair<Float, Float>? {
+        val token = templateToken ?: return null
+        if (!token.startsWith(PAPER_CUSTOM_PREFIX)) {
+            return null
+        }
+        val payload = token.removePrefix(PAPER_CUSTOM_PREFIX)
+        val valueToken = payload.substringBefore(':')
+        val separatorIndex = valueToken.indexOf('x')
+        if (separatorIndex <= 0 || separatorIndex >= valueToken.lastIndex) {
+            return null
+        }
+        val widthPt = valueToken.substring(0, separatorIndex).toFloatOrNull() ?: return null
+        val heightPt = valueToken.substring(separatorIndex + 1).toFloatOrNull() ?: return null
+        return widthPt.coerceIn(PAPER_CUSTOM_MIN_PT, PAPER_CUSTOM_MAX_PT) to
+            heightPt.coerceIn(PAPER_CUSTOM_MIN_PT, PAPER_CUSTOM_MAX_PT)
+    }
 
     private suspend fun generateInitialNoteTitle(now: Long): String =
         when (noteLaunchPreferences.getNoteNamingRule()) {
@@ -454,6 +489,46 @@ class NoteRepository(
         )
         pageDao.updateTemplate(pageId = pageId, templateId = templateId, updatedAt = now)
         noteDao.updateTimestamp(page.noteId, now)
+    }
+
+    suspend fun saveTemplateForNote(
+        noteId: String,
+        backgroundKind: String,
+        spacing: Float,
+        colorHex: String,
+    ) {
+        val pages = pageDao.getPagesForNoteSync(noteId)
+        if (pages.isEmpty()) {
+            return
+        }
+        val now = System.currentTimeMillis()
+        if (backgroundKind == PageTemplateConfig.KIND_BLANK) {
+            pages.forEach { page ->
+                pageDao.updateTemplate(pageId = page.pageId, templateId = null, updatedAt = now)
+            }
+            noteDao.updateTimestamp(noteId, now)
+            return
+        }
+
+        val normalizedKind = normalizeBackgroundKind(backgroundKind)
+        val normalizedSpacing = spacing.coerceIn(TEMPLATE_MIN_SPACING, TEMPLATE_MAX_SPACING)
+        val normalizedColor = normalizeColorHex(colorHex)
+        val templateId = "$noteId-$PAGE_TEMPLATE_ID_SUFFIX"
+        pageTemplateDao.insert(
+            com.onyx.android.data.entity.PageTemplateEntity(
+                templateId = templateId,
+                name = templateName(normalizedKind, normalizedSpacing),
+                backgroundKind = normalizedKind,
+                spacing = normalizedSpacing,
+                color = normalizedColor,
+                isBuiltIn = false,
+                createdAt = now,
+            ),
+        )
+        pages.forEach { page ->
+            pageDao.updateTemplate(pageId = page.pageId, templateId = templateId, updatedAt = now)
+        }
+        noteDao.updateTimestamp(noteId, now)
     }
 
     @Suppress("LongParameterList")

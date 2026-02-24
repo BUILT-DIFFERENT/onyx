@@ -257,6 +257,8 @@ class EditorSettingsRepositoryTest {
                     highlighterEndTaperStrength = 0.35f,
                     lastNonEraserTool = "PEN",
                     latencyOptimizationMode = "FAST_EXPERIMENTAL",
+                    keepScreenOnInEditor = true,
+                    hideSystemBarsInEditor = false,
                     updatedAt = 123L,
                 )
             val dao =
@@ -272,5 +274,7 @@ class EditorSettingsRepositoryTest {
                 LatencyOptimizationMode.FAST_EXPERIMENTAL,
                 result!!.inputSettings.latencyOptimizationMode,
             )
+            assertEquals(true, result.keepScreenOnInEditor)
+            assertEquals(false, result.hideSystemBarsInEditor)
         }
 }

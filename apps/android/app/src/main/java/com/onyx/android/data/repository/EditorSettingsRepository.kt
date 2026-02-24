@@ -25,6 +25,8 @@ data class EditorSettings(
     val eraserBaseWidth: Float = 12f,
     val lastNonEraserTool: Tool,
     val inputSettings: InputSettings = InputSettings(),
+    val keepScreenOnInEditor: Boolean = false,
+    val hideSystemBarsInEditor: Boolean = true,
 )
 
 @Singleton
@@ -73,6 +75,8 @@ class EditorSettingsRepository
                     twoFingerTapAction = settings.inputSettings.twoFingerTapAction.name,
                     threeFingerTapAction = settings.inputSettings.threeFingerTapAction.name,
                     latencyOptimizationMode = settings.inputSettings.latencyOptimizationMode.name,
+                    keepScreenOnInEditor = settings.keepScreenOnInEditor,
+                    hideSystemBarsInEditor = settings.hideSystemBarsInEditor,
                     updatedAt = System.currentTimeMillis(),
                 )
             editorSettingsDao.saveSettings(entity)
@@ -156,6 +160,8 @@ class EditorSettingsRepository
                         threeFingerTapAction = threeFingerTapAction,
                         latencyOptimizationMode = latencyOptimizationMode,
                     ),
+                keepScreenOnInEditor = keepScreenOnInEditor,
+                hideSystemBarsInEditor = hideSystemBarsInEditor,
             )
         }
 
@@ -176,6 +182,8 @@ class EditorSettingsRepository
                     eraserBaseWidth = DEFAULT_ERASER_BASE_WIDTH,
                     lastNonEraserTool = Tool.PEN,
                     inputSettings = InputSettings(),
+                    keepScreenOnInEditor = false,
+                    hideSystemBarsInEditor = true,
                 )
         }
     }

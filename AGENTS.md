@@ -49,6 +49,7 @@
 - Storage/export surface clarification: `SET-04` storage dashboard and `PDF-03` export/share controls currently live under the Home top-bar overflow and note-row context menu in `apps/android/app/src/main/java/com/onyx/android/ui/HomeScreen.kt`, not a separate settings/export screen.
 - Docs path clarification: `docs/README.md` and `docs/architecture/testing.md` are currently absent in this tree; use `docs/architecture/competitive-gap-backlog.md` and feature-specific docs under `docs/architecture/` as current architecture/testing source references.
 - Cmd runtime tooling clarification: some `cmd` sessions may also miss common built-ins like `where`/`findstr`; prefer `type` for direct reads and `bun`/Gradle tasks for verification workflows in those environments.
+- Competitive backlog tracking clarification: checklist state in `docs/architecture/competitive-gap-backlog.md` now marks foundation scaffolds as complete; use each item's `What is missing` block (and wave assignment) to track remaining parity/polish work.
 
 ## Context7 Library IDs (Project Stack)
 

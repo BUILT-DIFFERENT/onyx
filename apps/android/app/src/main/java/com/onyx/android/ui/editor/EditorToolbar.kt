@@ -104,6 +104,7 @@ import com.onyx.android.ui.NoteEditorToolbarState
 import com.onyx.android.ui.NoteEditorTopBarState
 import com.onyx.android.ui.PageTemplateState
 import com.onyx.android.ui.spacingRangeForTemplate
+import java.util.Locale
 
 internal const val HEX_COLOR_LENGTH_RGB = 7
 internal const val MIN_COLOR_CHANNEL = 0
@@ -124,6 +125,12 @@ private const val TITLE_INPUT_TEST_TAG = "note-title-input"
 private const val PAPER_TEMPLATE_LETTER = "paper:letter"
 private const val PAPER_TEMPLATE_A4 = "paper:a4"
 private const val PAPER_TEMPLATE_PHONE = "paper:phone"
+private const val PAPER_TEMPLATE_CUSTOM_PREFIX = "paper:custom:"
+private const val CUSTOM_PAPER_UNIT_PT = "pt"
+private const val CUSTOM_PAPER_UNIT_MM = "mm"
+private const val CUSTOM_PAPER_UNIT_IN = "in"
+private const val CUSTOM_PAPER_MIN_PT = 120f
+private const val CUSTOM_PAPER_MAX_PT = 2000f
 internal const val TOOLBAR_ROW_HEIGHT_DP = 48
 internal const val TOOLBAR_VERTICAL_PADDING_DP = 8
 internal const val TOOLBAR_HORIZONTAL_PADDING_DP = 12
@@ -600,6 +607,7 @@ internal fun EditorToolbar(
                         templateState = toolbarState.templateState,
                         enabled = isEditingEnabled,
                         onTemplateChange = toolbarState.onTemplateChange,
+                        onTemplateApplyToAllPages = toolbarState.onTemplateApplyToAllPages,
                     )
                 }
 
@@ -1383,6 +1391,7 @@ private fun TemplateButton(
     templateState: PageTemplateState,
     enabled: Boolean,
     onTemplateChange: (PageTemplateState) -> Unit,
+    onTemplateApplyToAllPages: () -> Unit,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val currentKind = templateState.backgroundKind
@@ -1407,6 +1416,7 @@ private fun TemplateButton(
                 templateState = templateState,
                 onDismiss = { isExpanded = false },
                 onTemplateChange = onTemplateChange,
+                onTemplateApplyToAllPages = onTemplateApplyToAllPages,
             )
         }
     }
@@ -1417,7 +1427,14 @@ private fun TemplateSettingsPanel(
     templateState: PageTemplateState,
     onDismiss: () -> Unit,
     onTemplateChange: (PageTemplateState) -> Unit,
+    onTemplateApplyToAllPages: () -> Unit,
 ) {
+    var showCustomPaperDialog by rememberSaveable { mutableStateOf(false) }
+    var customWidthInput by rememberSaveable { mutableStateOf("612") }
+    var customHeightInput by rememberSaveable { mutableStateOf("792") }
+    var customPaperUnit by rememberSaveable { mutableStateOf(CUSTOM_PAPER_UNIT_PT) }
+    var customPaperError by rememberSaveable { mutableStateOf<String?>(null) }
+
     Card(
         modifier =
             Modifier
@@ -1493,10 +1510,15 @@ private fun TemplateSettingsPanel(
                     PAPER_TEMPLATE_A4 to "A4",
                     PAPER_TEMPLATE_PHONE to "Phone",
                 )
+            val customPaper = parseCustomPaperTemplate(templateState.templateId)
+            val isCustomPaperSelected = customPaper != null
             val currentPaperTemplate =
                 when (templateState.templateId) {
                     PAPER_TEMPLATE_A4 -> PAPER_TEMPLATE_A4
                     PAPER_TEMPLATE_PHONE -> PAPER_TEMPLATE_PHONE
+                    templateState.templateId?.takeIf { it.startsWith(PAPER_TEMPLATE_CUSTOM_PREFIX) } -> {
+                        templateState.templateId
+                    }
                     else -> PAPER_TEMPLATE_LETTER
                 }
             Row(
@@ -1521,11 +1543,46 @@ private fun TemplateSettingsPanel(
                     }
                 }
             }
+            TextButton(
+                onClick = {
+                    val seed = customPaper ?: defaultCustomPaperSize(CUSTOM_PAPER_UNIT_PT)
+                    customWidthInput = formatDimensionForInput(seed.widthInUnit)
+                    customHeightInput = formatDimensionForInput(seed.heightInUnit)
+                    customPaperUnit = seed.unit
+                    customPaperError = null
+                    showCustomPaperDialog = true
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text =
+                        if (isCustomPaperSelected) {
+                            "Custom (" +
+                                "${formatDimensionForInput(customPaper?.widthInUnit ?: 0f)} x " +
+                                "${formatDimensionForInput(customPaper?.heightInUnit ?: 0f)} " +
+                                "${customPaper?.unit ?: CUSTOM_PAPER_UNIT_PT})"
+                        } else {
+                            "Custom size"
+                        },
+                    color =
+                        if (isCustomPaperSelected) {
+                            NOTEWISE_SELECTED
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                )
+            }
             Text(
-                text = "New pages will use this size preset.",
+                text = "New pages will use this size preset. Custom size is scaffolded via template id.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            TextButton(
+                onClick = onTemplateApplyToAllPages,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(text = "Apply current template to all pages")
+            }
 
             if (templateState.backgroundKind != "blank") {
                 val spacingRange = spacingRangeForTemplate(templateState.backgroundKind)
@@ -1549,7 +1606,229 @@ private fun TemplateSettingsPanel(
             }
         }
     }
+    if (showCustomPaperDialog) {
+        CustomPaperSizeDialog(
+            widthInput = customWidthInput,
+            heightInput = customHeightInput,
+            unit = customPaperUnit,
+            errorMessage = customPaperError,
+            onWidthInputChange = { value ->
+                customWidthInput = value
+                customPaperError = null
+            },
+            onHeightInputChange = { value ->
+                customHeightInput = value
+                customPaperError = null
+            },
+            onUnitChange = { unit ->
+                customPaperUnit = unit
+                customPaperError = null
+            },
+            onDismiss = {
+                showCustomPaperDialog = false
+                customPaperError = null
+            },
+            onApply = {
+                val customTemplateId =
+                    buildCustomPaperTemplateId(
+                        widthInput = customWidthInput,
+                        heightInput = customHeightInput,
+                        unit = customPaperUnit,
+                    )
+                if (customTemplateId == null) {
+                    customPaperError =
+                        "Enter width/height within " +
+                        "${formatDimensionForInput(CUSTOM_PAPER_MIN_PT)}-" +
+                        "${formatDimensionForInput(CUSTOM_PAPER_MAX_PT)} pt equivalent."
+                } else {
+                    onTemplateChange(templateState.copy(templateId = customTemplateId))
+                    showCustomPaperDialog = false
+                    customPaperError = null
+                }
+            },
+        )
+    }
 }
+
+@Composable
+private fun CustomPaperSizeDialog(
+    widthInput: String,
+    heightInput: String,
+    unit: String,
+    errorMessage: String?,
+    onWidthInputChange: (String) -> Unit,
+    onHeightInputChange: (String) -> Unit,
+    onUnitChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onApply: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Custom paper size") },
+        text = {
+            androidx.compose.foundation.layout.Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OutlinedTextField(
+                    value = widthInput,
+                    onValueChange = onWidthInputChange,
+                    label = { Text("Width") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
+                    singleLine = true,
+                )
+                OutlinedTextField(
+                    value = heightInput,
+                    onValueChange = onHeightInputChange,
+                    label = { Text("Height") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                    singleLine = true,
+                )
+                InputSettingsSelector(
+                    label = "Unit",
+                    selected = unit.uppercase(Locale.US),
+                    options =
+                        listOf(CUSTOM_PAPER_UNIT_PT, CUSTOM_PAPER_UNIT_MM, CUSTOM_PAPER_UNIT_IN).map { value ->
+                            value.uppercase(Locale.US)
+                        },
+                    onSelect = { selected -> onUnitChange(selected.lowercase(Locale.US)) },
+                )
+                Text(
+                    text = "Valid range: 120pt to 2000pt equivalent per dimension.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        confirmButton = {
+            Button(onClick = onApply) {
+                Text("Apply")
+            }
+        },
+    )
+}
+
+internal data class CustomPaperSizeTemplate(
+    val widthPt: Float,
+    val heightPt: Float,
+    val unit: String,
+    val widthInUnit: Float,
+    val heightInUnit: Float,
+)
+
+@Suppress("ReturnCount")
+internal fun parseCustomPaperTemplate(templateId: String?): CustomPaperSizeTemplate? {
+    val value = templateId ?: return null
+    if (!value.startsWith(PAPER_TEMPLATE_CUSTOM_PREFIX)) {
+        return null
+    }
+    val payload = value.removePrefix(PAPER_TEMPLATE_CUSTOM_PREFIX)
+    val dimensionsToken = payload.substringBefore(':')
+    val separatorIndex = dimensionsToken.indexOf('x')
+    if (separatorIndex <= 0 || separatorIndex >= dimensionsToken.lastIndex) {
+        return null
+    }
+    val widthPt = dimensionsToken.substring(0, separatorIndex).toFloatOrNull() ?: return null
+    val heightPt = dimensionsToken.substring(separatorIndex + 1).toFloatOrNull() ?: return null
+    val normalizedUnit = normalizeCustomPaperUnit(payload.substringAfter(':', CUSTOM_PAPER_UNIT_PT))
+    val clampedWidthPt = widthPt.coerceIn(CUSTOM_PAPER_MIN_PT, CUSTOM_PAPER_MAX_PT)
+    val clampedHeightPt = heightPt.coerceIn(CUSTOM_PAPER_MIN_PT, CUSTOM_PAPER_MAX_PT)
+    return CustomPaperSizeTemplate(
+        widthPt = clampedWidthPt,
+        heightPt = clampedHeightPt,
+        unit = normalizedUnit,
+        widthInUnit = convertFromPoints(clampedWidthPt, normalizedUnit),
+        heightInUnit = convertFromPoints(clampedHeightPt, normalizedUnit),
+    )
+}
+
+@Suppress("ReturnCount")
+internal fun buildCustomPaperTemplateId(
+    widthInput: String,
+    heightInput: String,
+    unit: String,
+): String? {
+    val widthValue = widthInput.trim().toFloatOrNull() ?: return null
+    val heightValue = heightInput.trim().toFloatOrNull() ?: return null
+    if (widthValue <= 0f || heightValue <= 0f) {
+        return null
+    }
+    val normalizedUnit = normalizeCustomPaperUnit(unit)
+    val widthPt = convertToPoints(widthValue, normalizedUnit)
+    val heightPt = convertToPoints(heightValue, normalizedUnit)
+    if (
+        widthPt !in CUSTOM_PAPER_MIN_PT..CUSTOM_PAPER_MAX_PT ||
+        heightPt !in CUSTOM_PAPER_MIN_PT..CUSTOM_PAPER_MAX_PT
+    ) {
+        return null
+    }
+    return String.format(
+        Locale.US,
+        "%s%.2fx%.2f:%s",
+        PAPER_TEMPLATE_CUSTOM_PREFIX,
+        widthPt,
+        heightPt,
+        normalizedUnit,
+    )
+}
+
+internal fun defaultCustomPaperSize(unit: String): CustomPaperSizeTemplate {
+    val normalizedUnit = normalizeCustomPaperUnit(unit)
+    return CustomPaperSizeTemplate(
+        widthPt = 612f,
+        heightPt = 792f,
+        unit = normalizedUnit,
+        widthInUnit = convertFromPoints(612f, normalizedUnit),
+        heightInUnit = convertFromPoints(792f, normalizedUnit),
+    )
+}
+
+internal fun formatDimensionForInput(value: Float): String {
+    val roundedToTwo = ((value * 100f).toInt()) / 100f
+    return if (roundedToTwo % 1f == 0f) {
+        roundedToTwo.toInt().toString()
+    } else {
+        String.format(Locale.US, "%.2f", roundedToTwo)
+    }
+}
+
+private fun normalizeCustomPaperUnit(unit: String): String =
+    when (unit.lowercase(Locale.US)) {
+        CUSTOM_PAPER_UNIT_MM -> CUSTOM_PAPER_UNIT_MM
+        CUSTOM_PAPER_UNIT_IN -> CUSTOM_PAPER_UNIT_IN
+        else -> CUSTOM_PAPER_UNIT_PT
+    }
+
+private fun convertToPoints(
+    value: Float,
+    unit: String,
+): Float =
+    when (normalizeCustomPaperUnit(unit)) {
+        CUSTOM_PAPER_UNIT_MM -> value * (72f / 25.4f)
+        CUSTOM_PAPER_UNIT_IN -> value * 72f
+        else -> value
+    }
+
+private fun convertFromPoints(
+    valuePt: Float,
+    unit: String,
+): Float =
+    when (normalizeCustomPaperUnit(unit)) {
+        CUSTOM_PAPER_UNIT_MM -> valuePt * (25.4f / 72f)
+        CUSTOM_PAPER_UNIT_IN -> valuePt / 72f
+        else -> valuePt
+    }
 
 @Composable
 private fun InsertMenuItem(

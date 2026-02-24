@@ -81,6 +81,7 @@ import com.onyx.android.input.SingleFingerMode
 import com.onyx.android.objects.model.InsertAction
 import com.onyx.android.objects.model.PageObject
 import com.onyx.android.objects.model.ShapeType
+import com.onyx.android.objects.model.TextPayload
 import com.onyx.android.pdf.DEFAULT_PDF_TILE_SIZE_PX
 import com.onyx.android.pdf.PdfDocumentRenderer
 import com.onyx.android.pdf.PdfTileKey
@@ -391,8 +392,8 @@ private fun MultiPageEditorContent(
                         onImageObjectCreate = { x, y ->
                             contentState.onImageObjectCreate(pageState.page.pageId, x, y)
                         },
-                        onTextObjectEdit = { pageObject, text ->
-                            contentState.onTextObjectEdit(pageState.page.pageId, pageObject, text)
+                        onTextObjectEdit = { pageObject, payload ->
+                            contentState.onTextObjectEdit(pageState.page.pageId, pageObject, payload)
                         },
                         onObjectSelected = contentState.onObjectSelected,
                         onObjectTransformed = { before, after ->
@@ -469,7 +470,7 @@ private fun PageItem(
     onShapeObjectCreate: (ShapeType, Float, Float, Float, Float) -> Unit,
     onTextObjectCreate: (Float, Float) -> Unit,
     onImageObjectCreate: (Float, Float) -> Unit,
-    onTextObjectEdit: (PageObject, String) -> Unit,
+    onTextObjectEdit: (PageObject, TextPayload) -> Unit,
     onObjectSelected: (String?) -> Unit,
     onObjectTransformed: (PageObject, PageObject) -> Unit,
     onDuplicateObject: (PageObject) -> Unit,

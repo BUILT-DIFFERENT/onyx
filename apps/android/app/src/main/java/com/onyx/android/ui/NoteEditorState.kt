@@ -15,6 +15,7 @@ import com.onyx.android.input.InputSettings
 import com.onyx.android.objects.model.InsertAction
 import com.onyx.android.objects.model.PageObject
 import com.onyx.android.objects.model.ShapeType
+import com.onyx.android.objects.model.TextPayload
 import com.onyx.android.pdf.PdfDocumentRenderer
 import com.onyx.android.pdf.PdfPageLink
 import com.onyx.android.pdf.PdfTextChar
@@ -101,6 +102,7 @@ internal data class NoteEditorToolbarState(
     val onClearPageRequested: () -> Unit = {},
     val onInsertActionSelected: (InsertAction) -> Unit = {},
     val onTemplateChange: (PageTemplateState) -> Unit,
+    val onTemplateApplyToAllPages: () -> Unit = {},
 )
 
 internal enum class EraserFilter {
@@ -166,7 +168,7 @@ internal data class NoteEditorContentState(
     val onShapeObjectCreate: (ShapeType, Float, Float, Float, Float) -> Unit = { _, _, _, _, _ -> },
     val onTextObjectCreate: (Float, Float) -> Unit = { _, _ -> },
     val onImageObjectCreate: (Float, Float) -> Unit = { _, _ -> },
-    val onTextObjectEdit: (PageObject, String) -> Unit = { _, _ -> },
+    val onTextObjectEdit: (PageObject, TextPayload) -> Unit = { _, _ -> },
     val onObjectSelected: (String?) -> Unit = {},
     val onObjectTransformed: (PageObject, PageObject) -> Unit = { _, _ -> },
     val onDuplicateObject: (PageObject) -> Unit = {},
@@ -261,7 +263,7 @@ internal data class MultiPageContentState(
     val onShapeObjectCreate: (String, ShapeType, Float, Float, Float, Float) -> Unit = { _, _, _, _, _, _ -> },
     val onTextObjectCreate: (String, Float, Float) -> Unit = { _, _, _ -> },
     val onImageObjectCreate: (String, Float, Float) -> Unit = { _, _, _ -> },
-    val onTextObjectEdit: (String, PageObject, String) -> Unit = { _, _, _ -> },
+    val onTextObjectEdit: (String, PageObject, TextPayload) -> Unit = { _, _, _ -> },
     val onObjectSelected: (String?) -> Unit = {},
     val onObjectTransformed: (String, PageObject, PageObject) -> Unit = { _, _, _ -> },
     val onDuplicateObject: (String, PageObject) -> Unit = { _, _ -> },

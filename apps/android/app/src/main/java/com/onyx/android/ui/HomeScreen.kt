@@ -46,9 +46,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.List
@@ -126,6 +128,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -144,6 +147,8 @@ private const val MAX_PDF_FILE_SIZE_BYTES = 50L * 1024 * 1024
 private const val MAX_PDF_PAGE_COUNT = 100
 private const val BYTES_PER_MB: Long = 1024L * 1024L
 private const val MIN_WARNING_MB = 1L
+private const val HOME_VIEW_MODE_LIST = "list"
+private const val HOME_VIEW_MODE_GRID = "grid"
 
 /**
  * Predefined color palette for tags.
@@ -202,6 +207,11 @@ internal enum class HomeViewMode {
     GRID,
 }
 
+private data class FolderTreeNode(
+    val folder: FolderEntity,
+    val children: List<FolderTreeNode>,
+)
+
 private data class HomeScreenState(
     val searchQuery: String,
     val searchResults: List<SearchResult>,
@@ -229,6 +239,8 @@ private data class HomeScreenState(
     val showBatchAddTagDialog: Boolean = false,
     val destination: HomeDestination = HomeDestination.ALL,
     val viewMode: HomeViewMode = HomeViewMode.LIST,
+    val expandedFolderIds: Set<String> = emptySet(),
+    val folderNoteCounts: Map<String, Int> = emptyMap(),
     val resumeLastPageEnabled: Boolean = true,
     val noteNamingRule: NoteNamingRule = NoteNamingRule.UNTITLED_COUNTER,
     val showStorageDialog: Boolean = false,
@@ -306,6 +318,7 @@ private data class HomeScreenActions(
     val onConfirmBatchAddTag: (String) -> Unit,
     val onSelectDestination: (HomeDestination) -> Unit,
     val onToggleViewMode: () -> Unit,
+    val onToggleFolderExpanded: (String) -> Unit,
     val onToggleResumeLastPage: () -> Unit,
     val onCycleNoteNamingRule: () -> Unit,
     val onShowStorageDialog: () -> Unit,
@@ -345,6 +358,9 @@ fun HomeScreen(
     val tags by viewModel.tags.collectAsState()
     val selectedTagFilter by viewModel.selectedTagFilter.collectAsState()
     val noteTags by viewModel.noteTags.collectAsState()
+    val folderNoteCounts by viewModel.folderNoteCounts.collectAsState()
+    val expandedFolderIds by viewModel.expandedFolderIds.collectAsState()
+    val viewMode by viewModel.viewMode.collectAsState()
     val resumeLastPageEnabled by viewModel.resumeLastPageEnabled.collectAsState()
     val noteNamingRule by viewModel.noteNamingRule.collectAsState()
     var notePendingDelete by remember { mutableStateOf<NoteEntity?>(null) }
@@ -365,7 +381,6 @@ fun HomeScreen(
     var showBatchMoveDialog by remember { mutableStateOf(false) }
     var showBatchAddTagDialog by remember { mutableStateOf(false) }
     var destination by remember { mutableStateOf(HomeDestination.ALL) }
-    var viewMode by remember { mutableStateOf(HomeViewMode.LIST) }
     var showStorageDialog by remember { mutableStateOf(false) }
     var storageBreakdown by remember { mutableStateOf<StorageBreakdown?>(null) }
     var showClearCacheConfirmation by remember { mutableStateOf(false) }
@@ -437,6 +452,8 @@ fun HomeScreen(
             showBatchAddTagDialog = showBatchAddTagDialog,
             destination = destination,
             viewMode = viewMode,
+            expandedFolderIds = expandedFolderIds,
+            folderNoteCounts = folderNoteCounts,
             resumeLastPageEnabled = resumeLastPageEnabled,
             noteNamingRule = noteNamingRule,
             showStorageDialog = showStorageDialog,
@@ -668,13 +685,10 @@ fun HomeScreen(
                 viewModel.setDestination(selectedDestination)
             },
             onToggleViewMode = {
-                viewMode =
-                    if (viewMode == HomeViewMode.LIST) {
-                        HomeViewMode.GRID
-                    } else {
-                        HomeViewMode.LIST
-                    }
+                val nextMode = if (viewMode == HomeViewMode.LIST) HomeViewMode.GRID else HomeViewMode.LIST
+                viewModel.setViewMode(nextMode)
             },
+            onToggleFolderExpanded = viewModel::toggleFolderExpanded,
             onToggleResumeLastPage = {
                 viewModel.setResumeLastPageEnabled(!resumeLastPageEnabled)
             },
@@ -1965,7 +1979,10 @@ private fun HomeContentBody(
         ) {
             FolderSection(
                 folders = state.folders,
+                folderNoteCounts = state.folderNoteCounts,
+                expandedFolderIds = state.expandedFolderIds,
                 onSelectFolder = actions.onSelectFolder,
+                onToggleFolderExpanded = actions.onToggleFolderExpanded,
                 onCreateFolder = actions.onShowCreateFolderDialog,
                 onDeleteFolder = actions.onRequestDeleteFolder,
                 modifier = Modifier.fillMaxWidth(),
@@ -2101,7 +2118,11 @@ private fun HomeListContent(
         }
 
         else -> {
-            EmptyNotesMessage(modifier)
+            if (destination == HomeDestination.SHARED) {
+                SharedNotesPlaceholderMessage(modifier)
+            } else {
+                EmptyNotesMessage(modifier)
+            }
         }
     }
 }
@@ -2554,11 +2575,15 @@ private fun formatTimestamp(timestamp: Long): String {
 @Composable
 private fun FolderSection(
     folders: List<FolderEntity>,
+    folderNoteCounts: Map<String, Int>,
+    expandedFolderIds: Set<String>,
     onSelectFolder: (FolderEntity) -> Unit,
+    onToggleFolderExpanded: (String) -> Unit,
     onCreateFolder: () -> Unit,
     onDeleteFolder: (FolderEntity) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val folderTree = remember(folders) { buildFolderTree(folders) }
     Column(modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
             text = "Folders",
@@ -2577,39 +2602,16 @@ private fun FolderSection(
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(vertical = 4.dp),
             ) {
-                items(folders, key = { it.folderId }) { folder ->
-                    var showContextMenu by remember { mutableStateOf(false) }
-                    Surface(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 2.dp)
-                                .combinedClickable(
-                                    role = Role.Button,
-                                    onClick = { onSelectFolder(folder) },
-                                    onLongClick = { showContextMenu = true },
-                                ),
-                        tonalElevation = 1.dp,
-                        shape = MaterialTheme.shapes.small,
-                    ) {
-                        Text(
-                            text = folder.name,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(12.dp),
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = showContextMenu,
-                        onDismissRequest = { showContextMenu = false },
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Delete folder") },
-                            onClick = {
-                                showContextMenu = false
-                                onDeleteFolder(folder)
-                            },
-                        )
-                    }
+                items(folderTree, key = { it.folder.folderId }) { node ->
+                    FolderTreeItem(
+                        node = node,
+                        level = 0,
+                        folderNoteCounts = folderNoteCounts,
+                        expandedFolderIds = expandedFolderIds,
+                        onSelectFolder = onSelectFolder,
+                        onToggleFolderExpanded = onToggleFolderExpanded,
+                        onDeleteFolder = onDeleteFolder,
+                    )
                 }
             }
         }
@@ -2624,6 +2626,119 @@ private fun FolderSection(
             )
             Text(text = "New Folder")
         }
+    }
+}
+
+private fun buildFolderTree(folders: List<FolderEntity>): List<FolderTreeNode> {
+    if (folders.isEmpty()) {
+        return emptyList()
+    }
+    val childrenByParent = folders.groupBy { it.parentId }
+
+    fun buildNode(folder: FolderEntity): FolderTreeNode =
+        FolderTreeNode(
+            folder = folder,
+            children = childrenByParent[folder.folderId].orEmpty().map(::buildNode),
+        )
+    return childrenByParent[null].orEmpty().map(::buildNode)
+}
+
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+private fun FolderTreeItem(
+    node: FolderTreeNode,
+    level: Int,
+    folderNoteCounts: Map<String, Int>,
+    expandedFolderIds: Set<String>,
+    onSelectFolder: (FolderEntity) -> Unit,
+    onToggleFolderExpanded: (String) -> Unit,
+    onDeleteFolder: (FolderEntity) -> Unit,
+) {
+    var showContextMenu by remember { mutableStateOf(false) }
+    val isExpanded = node.folder.folderId in expandedFolderIds
+    val hasChildren = node.children.isNotEmpty()
+    Surface(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 2.dp)
+                .combinedClickable(
+                    role = Role.Button,
+                    onClick = { onSelectFolder(node.folder) },
+                    onLongClick = { showContextMenu = true },
+                ),
+        tonalElevation = 1.dp,
+        shape = MaterialTheme.shapes.small,
+    ) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = (12 + (level * 16)).dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (hasChildren) {
+                IconButton(onClick = { onToggleFolderExpanded(node.folder.folderId) }) {
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.ExpandMore else Icons.Default.ChevronRight,
+                        contentDescription = if (isExpanded) "Collapse folder" else "Expand folder",
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.width(40.dp))
+            }
+            Icon(
+                imageVector = Icons.Default.Folder,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                text = node.folder.name,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f).padding(start = 8.dp),
+            )
+            FolderCountBadge(count = folderNoteCounts[node.folder.folderId] ?: 0)
+        }
+    }
+    DropdownMenu(
+        expanded = showContextMenu,
+        onDismissRequest = { showContextMenu = false },
+    ) {
+        DropdownMenuItem(
+            text = { Text("Delete folder") },
+            onClick = {
+                showContextMenu = false
+                onDeleteFolder(node.folder)
+            },
+        )
+    }
+    if (hasChildren && isExpanded) {
+        node.children.forEach { child ->
+            FolderTreeItem(
+                node = child,
+                level = level + 1,
+                folderNoteCounts = folderNoteCounts,
+                expandedFolderIds = expandedFolderIds,
+                onSelectFolder = onSelectFolder,
+                onToggleFolderExpanded = onToggleFolderExpanded,
+                onDeleteFolder = onDeleteFolder,
+            )
+        }
+    }
+}
+
+@Composable
+private fun FolderCountBadge(count: Int) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = MaterialTheme.shapes.small,
+    ) {
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+        )
     }
 }
 
@@ -2812,6 +2927,7 @@ private fun sharePdfArtifact(
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @HiltViewModel
+@Suppress("LargeClass")
 internal class HomeScreenViewModel
     @Inject
     constructor(
@@ -2852,6 +2968,10 @@ internal class HomeScreenViewModel
         val dateRangeFilter: StateFlow<DateRange?> = _dateRangeFilter.asStateFlow()
         private val _destination = MutableStateFlow(HomeDestination.ALL)
         val destination: StateFlow<HomeDestination> = _destination.asStateFlow()
+        private val _viewMode = MutableStateFlow(repository.getHomeViewMode().toHomeViewMode())
+        val viewMode: StateFlow<HomeViewMode> = _viewMode.asStateFlow()
+        private val _expandedFolderIds = MutableStateFlow(repository.getExpandedFolderIds())
+        val expandedFolderIds: StateFlow<Set<String>> = _expandedFolderIds.asStateFlow()
         private val _resumeLastPageEnabled = MutableStateFlow(repository.isResumeLastPageEnabled())
         val resumeLastPageEnabled: StateFlow<Boolean> = _resumeLastPageEnabled.asStateFlow()
         private val _noteNamingRule = MutableStateFlow(repository.getNoteNamingRule())
@@ -2909,6 +3029,16 @@ internal class HomeScreenViewModel
             repository
                 .getFolders()
                 .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+        val folderNoteCounts: StateFlow<Map<String, Int>> =
+            repository
+                .getAllNotes()
+                .map { noteList ->
+                    noteList
+                        .mapNotNull { note -> note.folderId }
+                        .groupingBy { folderId -> folderId }
+                        .eachCount()
+                }.stateIn(viewModelScope, SharingStarted.Lazily, emptyMap())
 
         val tags: StateFlow<List<TagEntity>> =
             repository
@@ -2970,6 +3100,22 @@ internal class HomeScreenViewModel
                 _selectedTagFilter.value = null
                 _dateRangeFilter.value = null
             }
+        }
+
+        fun setViewMode(mode: HomeViewMode) {
+            _viewMode.value = mode
+            repository.setHomeViewMode(mode.toStorageValue())
+        }
+
+        fun toggleFolderExpanded(folderId: String) {
+            val updated =
+                if (folderId in _expandedFolderIds.value) {
+                    _expandedFolderIds.value - folderId
+                } else {
+                    _expandedFolderIds.value + folderId
+                }
+            _expandedFolderIds.value = updated
+            repository.setExpandedFolderIds(updated)
         }
 
         fun setResumeLastPageEnabled(enabled: Boolean) {
@@ -3460,4 +3606,16 @@ internal class HomeScreenViewModel
                 )
             }
         }
+    }
+
+private fun String.toHomeViewMode(): HomeViewMode =
+    when (lowercase(Locale.US)) {
+        HOME_VIEW_MODE_GRID -> HomeViewMode.GRID
+        else -> HomeViewMode.LIST
+    }
+
+private fun HomeViewMode.toStorageValue(): String =
+    when (this) {
+        HomeViewMode.LIST -> HOME_VIEW_MODE_LIST
+        HomeViewMode.GRID -> HOME_VIEW_MODE_GRID
     }

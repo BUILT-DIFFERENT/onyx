@@ -32,6 +32,8 @@ import com.onyx.android.recognition.MyScriptPageManager
 import com.onyx.android.recognition.OverlayBounds
 import com.onyx.android.recognition.RecognitionMode
 import com.onyx.android.recognition.RecognitionSettings
+import com.onyx.android.recognition.ShapeRecognitionCandidate
+import com.onyx.android.recognition.detectShapeCandidate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -545,6 +547,31 @@ internal class NoteEditorViewModel
             }
         }
 
+        fun updateTemplateForAllPages(config: PageTemplateConfig) {
+            val normalized = normalizeTemplateConfig(config)
+            _templateConfigByPageId.value =
+                _pages.value.associate { page ->
+                    page.pageId to normalized
+                }
+            _currentTemplateConfig.value = normalized
+            viewModelScope.launch {
+                runCatching {
+                    repository.saveTemplateForNote(
+                        noteId = noteId,
+                        backgroundKind = normalized.backgroundKind,
+                        spacing = normalized.spacing,
+                        colorHex = normalized.colorHex,
+                    )
+                    refreshPages(
+                        selectPageId = currentPageId,
+                        selectIndex = _currentPageIndex.value,
+                    )
+                }.onFailure { throwable ->
+                    reportError("Failed to apply template to all pages.", throwable)
+                }
+            }
+        }
+
         fun addStroke(
             stroke: Stroke,
             persist: Boolean,
@@ -556,6 +583,10 @@ internal class NoteEditorViewModel
                 enqueueStrokeWrite {
                     repository.saveStroke(pageId, stroke)
                 }
+            }
+            val pageId = currentPageId
+            if (pageId != null && tryAutoBeautifySinglePageStroke(pageId = pageId, stroke = stroke, persist = persist)) {
+                return
             }
             // Only update recognition if this is the active recognition page
             if (updateRecognition && currentPageId == _activeRecognitionPageId.value && shouldRunRecognition()) {
@@ -700,6 +731,9 @@ internal class NoteEditorViewModel
                 enqueueStrokeWrite {
                     repository.saveStroke(pageId, stroke)
                 }
+            }
+            if (tryAutoBeautifyStrokeForPage(pageId = pageId, stroke = stroke, persist = persist)) {
+                return
             }
             if (updateRecognition && pageId == currentPageId && shouldRunRecognition()) {
                 myScriptPageManager?.addStroke(stroke)
@@ -991,6 +1025,33 @@ internal class NoteEditorViewModel
             )
         }
 
+        private fun createShapeObjectFromRecognition(
+            pageId: String,
+            candidate: ShapeRecognitionCandidate,
+            sourceStroke: Stroke,
+        ): PageObject {
+            val baseObject =
+                createShapeObject(
+                    pageId = pageId,
+                    shapeType = candidate.shapeType,
+                    x = candidate.x,
+                    y = candidate.y,
+                    width = candidate.width,
+                    height = candidate.height,
+                )
+            val payload =
+                ShapePayload(
+                    shapeType = candidate.shapeType,
+                    strokeColor = sourceStroke.style.color,
+                    strokeWidth = sourceStroke.style.baseWidth,
+                    fillColor = null,
+                )
+            return baseObject.copy(
+                payloadJson = objectJson.encodeToString(ShapePayload.serializer(), payload),
+                shapePayload = payload,
+            )
+        }
+
         fun createTextObject(
             pageId: String,
             x: Float,
@@ -1056,13 +1117,11 @@ internal class NoteEditorViewModel
 
         fun updateTextObjectPayload(
             pageObject: PageObject,
-            text: String,
+            payload: TextPayload,
         ): PageObject {
-            val currentPayload = pageObject.textPayload ?: TextPayload()
-            val updatedPayload = currentPayload.copy(text = text)
             return pageObject.copy(
-                payloadJson = objectJson.encodeToString(TextPayload.serializer(), updatedPayload),
-                textPayload = updatedPayload,
+                payloadJson = objectJson.encodeToString(TextPayload.serializer(), payload),
+                textPayload = payload,
                 updatedAt = System.currentTimeMillis(),
             )
         }
@@ -1490,6 +1549,74 @@ internal class NoteEditorViewModel
                 j = i
             }
             return inside
+        }
+
+        private fun shouldRunShapeBeautification(stroke: Stroke): Boolean =
+            recognitionSettings.isShapeBeautificationEnabled() &&
+                stroke.style.tool != Tool.ERASER &&
+                stroke.style.tool != Tool.LASSO
+
+        @Suppress("ReturnCount")
+        private fun tryAutoBeautifySinglePageStroke(
+            pageId: String,
+            stroke: Stroke,
+            persist: Boolean,
+        ): Boolean {
+            if (!shouldRunShapeBeautification(stroke)) {
+                return false
+            }
+            val candidate = detectShapeCandidate(stroke) ?: return false
+            val shapeObject = createShapeObjectFromRecognition(pageId = pageId, candidate = candidate, sourceStroke = stroke)
+            _strokes.value = _strokes.value.filterNot { existing -> existing.id == stroke.id }
+            val updatedObjects = (_pageObjects.value + shapeObject).sortedBy { objectItem -> objectItem.zIndex }
+            _pageObjects.value = updatedObjects
+            updatePageObjectCacheForPage(pageId, updatedObjects)
+            if (persist) {
+                enqueueStrokeWrite {
+                    repository.deleteStroke(stroke.id)
+                    repository.upsertPageObject(shapeObject)
+                }
+            }
+            if (pageId == _activeRecognitionPageId.value && shouldRunRecognition()) {
+                myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, _strokes.value)
+            }
+            return true
+        }
+
+        @Suppress("ReturnCount")
+        private fun tryAutoBeautifyStrokeForPage(
+            pageId: String,
+            stroke: Stroke,
+            persist: Boolean,
+        ): Boolean {
+            if (!shouldRunShapeBeautification(stroke)) {
+                return false
+            }
+            val candidate = detectShapeCandidate(stroke) ?: return false
+            val shapeObject = createShapeObjectFromRecognition(pageId = pageId, candidate = candidate, sourceStroke = stroke)
+            val currentCache = _pageStrokesCache.value.toMutableMap()
+            val reducedStrokes = currentCache[pageId].orEmpty().filterNot { existing -> existing.id == stroke.id }
+            currentCache[pageId] = reducedStrokes
+            _pageStrokesCache.value = currentCache
+
+            val currentObjectCache = _pageObjectsCache.value.toMutableMap()
+            val updatedObjects = (currentObjectCache[pageId].orEmpty() + shapeObject).sortedBy { objectItem -> objectItem.zIndex }
+            currentObjectCache[pageId] = updatedObjects
+            _pageObjectsCache.value = currentObjectCache
+            if (pageId == currentPageId) {
+                _strokes.value = reducedStrokes
+                _pageObjects.value = updatedObjects
+            }
+            if (persist) {
+                enqueueStrokeWrite {
+                    repository.deleteStroke(stroke.id)
+                    repository.upsertPageObject(shapeObject)
+                }
+            }
+            if (pageId == _activeRecognitionPageId.value && shouldRunRecognition()) {
+                myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, reducedStrokes)
+            }
+            return true
         }
 
         override fun onCleared() {

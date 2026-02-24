@@ -35,5 +35,7 @@ data class EditorSettingsEntity(
     val twoFingerTapAction: String = "UNDO",
     val threeFingerTapAction: String = "REDO",
     val latencyOptimizationMode: String = "NORMAL",
+    val keepScreenOnInEditor: Boolean = false,
+    val hideSystemBarsInEditor: Boolean = true,
     val updatedAt: Long = 0L,
 )
