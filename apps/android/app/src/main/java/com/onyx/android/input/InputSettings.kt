@@ -14,6 +14,7 @@ enum class DoubleFingerMode {
 
 enum class StylusButtonAction {
     ERASER_HOLD,
+    ERASER_TOGGLE,
     NO_ACTION,
 }
 

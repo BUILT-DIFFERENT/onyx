@@ -1087,6 +1087,103 @@ class InkCanvasTouchRoutingTest {
     }
 
     @Test
+    fun stylusButtonToggle_togglesEraserModeAcrossStrokes() {
+        val view = GlInkSurfaceView(context)
+        val runtime = createRuntime()
+        val stylusButtonStates = mutableListOf<Boolean>()
+        val interaction =
+            createInteraction(
+                inputSettings =
+                    InputSettings(
+                        stylusPrimaryAction = StylusButtonAction.ERASER_TOGGLE,
+                        stylusSecondaryAction = StylusButtonAction.NO_ACTION,
+                        stylusLongHoldAction = StylusButtonAction.NO_ACTION,
+                    ),
+                onStylusButtonEraserActiveChanged = { isActive -> stylusButtonStates += isActive },
+            )
+
+        val firstDownTime = 2050L
+        val firstDownWithButton =
+            singlePointerEvent(
+                downTime = firstDownTime,
+                eventTime = firstDownTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 44f,
+                y = 44f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                buttonState = MotionEvent.BUTTON_STYLUS_PRIMARY,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val firstUp =
+            singlePointerEvent(
+                downTime = firstDownTime,
+                eventTime = firstDownTime + 16L,
+                action = MotionEvent.ACTION_UP,
+                x = 46f,
+                y = 46f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                buttonState = 0,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val secondDownNoButton =
+            singlePointerEvent(
+                downTime = firstDownTime + 40L,
+                eventTime = firstDownTime + 40L,
+                action = MotionEvent.ACTION_DOWN,
+                x = 52f,
+                y = 52f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                buttonState = 0,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val secondUp =
+            singlePointerEvent(
+                downTime = firstDownTime + 40L,
+                eventTime = firstDownTime + 56L,
+                action = MotionEvent.ACTION_UP,
+                x = 54f,
+                y = 54f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                buttonState = 0,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val thirdDownWithButton =
+            singlePointerEvent(
+                downTime = firstDownTime + 80L,
+                eventTime = firstDownTime + 80L,
+                action = MotionEvent.ACTION_DOWN,
+                x = 60f,
+                y = 60f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                buttonState = MotionEvent.BUTTON_STYLUS_PRIMARY,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, firstDownWithButton, interaction, runtime))
+            assertEquals(PointerMode.ERASE, runtime.activePointerModes[DEFAULT_POINTER_ID])
+            assertTrue(runtime.isStylusButtonEraserActive)
+            assertTrue(handleTouchEvent(view, firstUp, interaction, runtime))
+            assertTrue(handleTouchEvent(view, secondDownNoButton, interaction, runtime))
+            assertEquals(PointerMode.ERASE, runtime.activePointerModes[DEFAULT_POINTER_ID])
+            assertTrue(runtime.isStylusButtonEraserActive)
+            assertTrue(handleTouchEvent(view, secondUp, interaction, runtime))
+            assertTrue(handleTouchEvent(view, thirdDownWithButton, interaction, runtime))
+            assertEquals(PointerMode.DRAW, runtime.activePointerModes[DEFAULT_POINTER_ID])
+            assertFalse(runtime.isStylusButtonEraserActive)
+        } finally {
+            firstDownWithButton.recycle()
+            firstUp.recycle()
+            secondDownNoButton.recycle()
+            secondUp.recycle()
+            thirdDownWithButton.recycle()
+        }
+
+        assertTrue(stylusButtonStates.contains(true))
+        assertTrue(stylusButtonStates.contains(false))
+    }
+
+    @Test
     fun fingerDoubleTap_triggersConfiguredCallback() {
         val view = GlInkSurfaceView(context)
         val runtime = createRuntime()

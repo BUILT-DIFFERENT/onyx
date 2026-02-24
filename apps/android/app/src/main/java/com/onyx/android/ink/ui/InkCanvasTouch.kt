@@ -228,6 +228,7 @@ private fun syncStylusEraserState(
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
 ) {
+    syncStylusToggleState(event, interaction, runtime)
     syncStylusLongHoldState(event, interaction, runtime)
     val isButtonActive =
         when (event.actionMasked) {
@@ -237,8 +238,25 @@ private fun syncStylusEraserState(
 
             else -> isStylusButtonPressed(event, interaction)
         }
-    val isActive = isButtonActive || runtime.stylusLongHoldActivePointerIds.isNotEmpty()
+    val isActive =
+        isButtonActive ||
+            runtime.stylusLongHoldActivePointerIds.isNotEmpty() ||
+            runtime.isStylusToggleEraserEnabled
     updateStylusButtonEraserState(isActive, interaction, runtime)
+}
+
+private fun syncStylusToggleState(
+    event: MotionEvent,
+    interaction: InkCanvasInteraction,
+    runtime: InkCanvasRuntime,
+) {
+    val togglePressed =
+        shouldTreatStylusPrimaryAsToggle(event, interaction) ||
+            shouldTreatStylusSecondaryAsToggle(event, interaction)
+    if (togglePressed && !runtime.isStylusToggleButtonPressed) {
+        runtime.isStylusToggleEraserEnabled = !runtime.isStylusToggleEraserEnabled
+    }
+    runtime.isStylusToggleButtonPressed = togglePressed
 }
 
 private fun syncStylusLongHoldState(
@@ -316,12 +334,30 @@ private fun shouldTreatStylusPrimaryAsEraser(
         (event.buttonState and MotionEvent.BUTTON_STYLUS_PRIMARY == MotionEvent.BUTTON_STYLUS_PRIMARY)
 }
 
+private fun shouldTreatStylusPrimaryAsToggle(
+    event: MotionEvent,
+    interaction: InkCanvasInteraction?,
+): Boolean {
+    val action = interaction?.inputSettings?.stylusPrimaryAction ?: StylusButtonAction.ERASER_HOLD
+    return action == StylusButtonAction.ERASER_TOGGLE &&
+        (event.buttonState and MotionEvent.BUTTON_STYLUS_PRIMARY == MotionEvent.BUTTON_STYLUS_PRIMARY)
+}
+
 private fun shouldTreatStylusSecondaryAsEraser(
     event: MotionEvent,
     interaction: InkCanvasInteraction?,
 ): Boolean {
     val action = interaction?.inputSettings?.stylusSecondaryAction ?: StylusButtonAction.ERASER_HOLD
     return action == StylusButtonAction.ERASER_HOLD &&
+        (event.buttonState and MotionEvent.BUTTON_STYLUS_SECONDARY == MotionEvent.BUTTON_STYLUS_SECONDARY)
+}
+
+private fun shouldTreatStylusSecondaryAsToggle(
+    event: MotionEvent,
+    interaction: InkCanvasInteraction?,
+): Boolean {
+    val action = interaction?.inputSettings?.stylusSecondaryAction ?: StylusButtonAction.ERASER_HOLD
+    return action == StylusButtonAction.ERASER_TOGGLE &&
         (event.buttonState and MotionEvent.BUTTON_STYLUS_SECONDARY == MotionEvent.BUTTON_STYLUS_SECONDARY)
 }
 

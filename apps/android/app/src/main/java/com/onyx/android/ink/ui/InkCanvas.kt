@@ -80,6 +80,8 @@ internal class InkCanvasRuntime(
     var lastStylusTapTimeMs = 0L
     var lastStylusTapX = 0f
     var lastStylusTapY = 0f
+    var isStylusToggleEraserEnabled = false
+    var isStylusToggleButtonPressed = false
     var multiFingerTapStartTimeMs = 0L
     var multiFingerTapStartCentroidX = 0f
     var multiFingerTapStartCentroidY = 0f

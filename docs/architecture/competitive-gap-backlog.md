@@ -654,12 +654,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Validation gate: Performance benchmarks comparing profile frame time and perceived latency.
 
 - [ ] `GEST-06` Full stylus-button mapping (primary/secondary/long-hold)
-  - Status: `Strong Partial (Wave K-InputSettingsRouting)`
+  - Status: `Strong Partial+ (Wave P-StylusToggleAction)`
   - Competitor behavior: Notewise supports rich button remapping including hold-to-erase and switch-to-last-tool.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`
-  - What exists now: Primary/secondary/long-hold settings are persisted and exposed in toolbar input settings; touch router enforces primary/secondary eraser-hold behavior and long-hold eraser activation.
-  - What is missing: Additional stylus actions beyond `ERASER_HOLD|NO_ACTION` (for example switch-to-last-tool) and richer conflict-priority policy.
-  - Exact change needed: Expand stylus action enum + runtime dispatch for advanced mappings and add interaction tests per mapping permutation.
+  - What exists now: Primary/secondary/long-hold settings are persisted and exposed in toolbar input settings; touch router enforces `ERASER_HOLD`, `ERASER_TOGGLE`, and long-hold eraser activation.
+  - What is missing: Additional stylus actions beyond eraser-focused mappings (for example switch-to-last-tool) and richer conflict-priority policy.
+  - Exact change needed: Expand stylus action enum + runtime dispatch for tool-switch mappings and add interaction tests per mapping permutation.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Input-mapping tests for each stylus action and persistence round-trip.
