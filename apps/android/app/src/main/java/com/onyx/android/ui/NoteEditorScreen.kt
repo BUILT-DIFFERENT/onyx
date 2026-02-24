@@ -671,6 +671,7 @@ private fun rememberNoteEditorUiState(
     val customTemplates by viewModel.customTemplates.collectAsState()
     val undoController = remember(viewModel) { UndoController(viewModel, MAX_UNDO_ACTIONS) }
     var isReadOnly by rememberSaveable { mutableStateOf(false) }
+    var hasShownPdfThemeNotice by rememberSaveable { mutableStateOf(false) }
     var isTextSelectionMode by rememberSaveable { mutableStateOf(false) }
     var isZoomLocked by rememberSaveable { mutableStateOf(false) }
     var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
@@ -755,6 +756,12 @@ private fun rememberNoteEditorUiState(
         activeInsertAction = InsertAction.NONE
         pendingImageUri = null
         viewModel.selectObject(null)
+    }
+    LaunchedEffect(pdfState.isPdfPage) {
+        if (pdfState.isPdfPage && !hasShownPdfThemeNotice) {
+            hasShownPdfThemeNotice = true
+            snackbarHostState.showSnackbar("PDF backgrounds are source-accurate and do not follow app dark mode.")
+        }
     }
     val applySearchMatch: (Int) -> Unit = { requestedIndex ->
         val match = pdfSearchMatches.getOrNull(requestedIndex)
@@ -1381,6 +1388,7 @@ private fun rememberMultiPageUiState(
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    var hasShownPdfThemeNotice by rememberSaveable { mutableStateOf(false) }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
     var eraserMode by rememberSaveable { mutableStateOf(EraserMode.STROKE) }
     var eraserFilter by rememberSaveable { mutableStateOf(EraserFilter.ALL_STROKES) }
@@ -1466,6 +1474,12 @@ private fun rememberMultiPageUiState(
         viewModel = viewModel,
         undoController = undoController,
     )
+    LaunchedEffect(pdfRenderer != null) {
+        if (pdfRenderer != null && !hasShownPdfThemeNotice) {
+            hasShownPdfThemeNotice = true
+            snackbarHostState.showSnackbar("PDF backgrounds are source-accurate and do not follow app dark mode.")
+        }
+    }
     LaunchedEffect(pageState.currentPage?.pageId) {
         isStylusButtonEraserActive = false
         isTextSelectionMode = false

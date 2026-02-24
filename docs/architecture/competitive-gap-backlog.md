@@ -629,8 +629,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave V2`
   - Validation gate: Integration tests for snapped bounds on known PDF text fixtures.
 
-- [ ] `PDF-08` Explicit dark-mode handling notice for PDF backgrounds
-  - Status: `Missing`
+- [x] `PDF-08` Explicit dark-mode handling notice for PDF backgrounds
+  - Status: `Done (Wave AC-PdfDarkModeNoticeParity)`
   - Competitor behavior: Samsung clearly informs users when dark mode does not alter PDF page backgrounds.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`
   - What exists now: No explicit UX messaging for theme behavior on PDF backgrounds.
@@ -745,12 +745,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave V1`
   - Validation gate: Cross-note query tests with highlight jump accuracy.
 
-- [ ] `REC-07` Shape recognition and beautification
-  - Status: `Partial (Wave Z-ShapeBeautifierScaffold)`
+- [x] `REC-07` Shape recognition and beautification
+  - Status: `Done (Wave AC-ShapeBeautificationFlow)`
   - Competitor behavior: Intelligent shape cleanup is expected for polished handwritten diagrams.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\ShapeBeautifier.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionSettings.kt`
-  - What exists now: Heuristic shape candidate detection scaffold (line/rectangle/ellipse) and optional auto-beautify routing are added behind a persisted recognition setting (`shape_beautification_enabled`).
-  - What is missing: Tuned precision/recall dataset thresholds, richer geometry replacement policy, and cross-surface sync for recognizer decisions.
+  - What exists now: Heuristic shape candidate detection (line/rectangle/ellipse) is active in editor stroke handling, auto-beautify converts matched strokes into persisted shape objects, and enablement is user-configurable in recognition settings.
+  - What is missing: Precision/recall tuning dataset and cross-surface sync for recognizer decisions.
   - Exact change needed: Add recognition pass for geometric primitives and convert qualifying strokes into editable shape objects.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave V2`
