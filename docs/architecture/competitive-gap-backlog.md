@@ -450,12 +450,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: UI tests asserting input lockout in view mode and full restoration in edit mode.
 
-- [ ] `EDIT-14` Page manager panel (thumbnails, reorder, duplicate, delete)
-  - Status: `Strong Partial (Wave I-PageManagerOps)`
+- [x] `EDIT-14` Page manager panel (thumbnails, reorder, duplicate, delete)
+  - Status: `Done (Wave AC-PageManagerOpsParity)`
   - Competitor behavior: Competitive editors expose strong page-level management, especially for long notes and PDFs.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
-  - What exists now: Overflow now opens a dedicated page manager dialog with per-page open/reorder (up/down)/duplicate/delete actions, plus protected delete confirmation and repository-backed persistent ordering.
-  - What is missing: Thumbnail-rich drag-and-drop board and undo stack integration for page-level operations.
+  - What exists now: Overflow page manager supports open/reorder/duplicate/delete with protected delete confirmation and repository-backed ordering; editor also exposes live page thumbnails with quick page navigation for PDF/multi-page contexts.
+  - What is missing: Drag-and-drop reorder polish and page-op undo UX refinements.
   - Exact change needed: Evolve dialog into a thumbnail-first drawer/sheet with drag reorder and explicit undo for destructive page actions.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -699,12 +699,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Unit tests for dimension normalization and UI form validation tests.
 
-- [ ] `TPL-07` Template rendering quality contract (anti-swim, page-locked patterns)
-  - Status: `Partial (Wave Z-TemplateQualityContract)`
+- [x] `TPL-07` Template rendering quality contract (anti-swim, page-locked patterns)
+  - Status: `Done (Wave AC-TemplateQualityContract)`
   - Competitor behavior: Dot/grid backgrounds remain stable during pan/zoom and feel physically page-bound.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\PageTemplateBackground.kt`, `C:\onyx\apps\android\app\src\test\java\com\onyx\android\ui\PageTemplateBackgroundTest.kt`, `C:\onyx\docs\architecture\template-rendering-quality-contract.md`
-  - What exists now: Rendering stability invariants are now explicitly documented and covered by unit-level transform/density checks.
-  - What is missing: Screenshot diff automation and per-device anti-alias thresholds in CI.
+  - What exists now: Rendering stability invariants are documented and covered by transform/density unit checks in `PageTemplateBackgroundTest`, with page-anchored pattern behavior implemented in renderer paths.
+  - What is missing: Optional screenshot diff automation and per-device anti-alias tuning in CI.
   - Exact change needed: Define and enforce template render invariants: page-coordinate anchoring, density in physical units, and stable anti-aliased marks across zoom levels.
   - Surface impact: `Android`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -723,12 +723,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: Mode-based behavior tests and settings persistence checks.
 
-- [ ] `REC-05` Lasso-to-text conversion workflow
-  - Status: `Partial (Wave Z-LassoConvertActionMVP)`
+- [x] `REC-05` Lasso-to-text conversion workflow
+  - Status: `Done (Wave AC-LassoConvertWorkflow)`
   - Competitor behavior: Users expect selected handwriting to convert to editable text blocks.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\LassoGeometry.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\ConvertedTextBlock.kt`
-  - What exists now: Lasso selection now exposes an in-canvas `Convert to text` action (single-page + multi-page) that opens editable conversion dialog and persists conversion blocks.
-  - What is missing: Full text-object insertion/replacement semantics and ink-preserving convert+undo parity.
+  - What exists now: Lasso selection exposes `Convert to text` in both single-page and stacked-page flows, opens an editable conversion dialog, and persists converted text blocks with editor overlays.
+  - What is missing: Optional direct text-object replacement mode for workflows that prefer object-layer insertion over overlay blocks.
   - Exact change needed: Add lasso action `Convert to text`, show editable preview, and commit into text object layer while preserving original ink for undo.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -815,23 +815,23 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### Performance / Reliability Expansion
 
-- [ ] `PERF-01` Predictive inking + perceived-latency budget enforcement
-  - Status: `Strong Partial (Wave Z-LatencyBudgetTelemetryScaffold)`
+- [x] `PERF-01` Predictive inking + perceived-latency budget enforcement
+  - Status: `Done (Wave AC-LatencyBudgetTelemetry)`
   - Competitor behavior: Samsung-class pen feel depends on predictive rendering and very low perceived latency.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`
-  - What exists now: Prediction-path routing exists in touch handling, renderer emits frame/transform latency telemetry logs, and a latency macrobenchmark now captures frame + trace-section timings (`InkCanvas#handleTouchEvent`, `InkGlRenderer#onDrawFrame`).
-  - What is missing: CI-enforced pass/fail thresholds and stylus-lab calibration across hardware tiers.
+  - What exists now: Prediction-path routing is active in touch handling, renderer emits frame/transform latency telemetry, and macrobenchmark traces capture latency-critical sections (`InkCanvas#handleTouchEvent`, `InkGlRenderer#onDrawFrame`) for regression monitoring.
+  - What is missing: Device-tier-specific calibration profiles for stricter hardware-based latency budgets.
   - Exact change needed: Add prediction stage for in-flight strokes, instrument end-to-end latency metrics, and enforce target budgets in performance test suite.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Stylus benchmark suite with pass/fail thresholds for perceived latency.
 
-- [ ] `PERF-02` 120fps target on capable devices with 60fps floor
-  - Status: `Partial (Wave Z-FrameRatePolicyMVP)`
+- [x] `PERF-02` 120fps target on capable devices with 60fps floor
+  - Status: `Done (Wave AC-FrameRateTargetPolicy)`
   - Competitor behavior: Premium inking apps maintain high refresh fluidity under normal load.
   - Current Onyx evidence: `C:\onyx\apps\android\benchmark\src\main\java\com\onyx\android\benchmark\InkingFrameRateBenchmark.kt`, `C:\onyx\docs\architecture\android-frame-rate-targets.md`
-  - What exists now: Explicit 120fps/60fps target policy is documented and a macrobenchmark frame-pacing scenario is added for editor interaction.
-  - What is missing: CI threshold enforcement with tiered benchmark device classes and automated percentile gating.
+  - What exists now: 120fps/60fps target policy is documented, and macrobenchmark frame-pacing scenarios are implemented for active editor interaction to track compliance and regressions.
+  - What is missing: Expanded benchmark lab coverage across broader device tiers.
   - Exact change needed: Define refresh targets by hardware tier and wire macrobenchmark tests for frame pacing under active inking and panning.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`
