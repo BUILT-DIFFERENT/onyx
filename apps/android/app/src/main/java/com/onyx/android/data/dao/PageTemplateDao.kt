@@ -34,6 +34,12 @@ interface PageTemplateDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(template: PageTemplateEntity)
 
+    @Query("UPDATE page_templates SET name = :name WHERE templateId = :templateId")
+    suspend fun updateName(
+        templateId: String,
+        name: String,
+    )
+
     @Query("DELETE FROM page_templates WHERE templateId = :templateId")
     suspend fun delete(templateId: String)
 

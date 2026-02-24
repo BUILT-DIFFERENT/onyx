@@ -363,9 +363,13 @@ fun HomeScreen(
     val noteTags by viewModel.noteTags.collectAsState()
     val folderNoteCounts by viewModel.folderNoteCounts.collectAsState()
     val expandedFolderIds by viewModel.expandedFolderIds.collectAsState()
+    val destination by viewModel.destination.collectAsState()
     val viewMode by viewModel.viewMode.collectAsState()
     val resumeLastPageEnabled by viewModel.resumeLastPageEnabled.collectAsState()
     val noteNamingRule by viewModel.noteNamingRule.collectAsState()
+    val sortOption by viewModel.sortOption.collectAsState()
+    val sortDirection by viewModel.sortDirection.collectAsState()
+    val dateRangeFilter by viewModel.dateRangeFilter.collectAsState()
     var notePendingDelete by remember { mutableStateOf<NoteEntity?>(null) }
     var folderPendingDelete by remember { mutableStateOf<FolderEntity?>(null) }
     var tagPendingDelete by remember { mutableStateOf<TagEntity?>(null) }
@@ -383,15 +387,17 @@ fun HomeScreen(
     var showBatchDeleteDialog by remember { mutableStateOf(false) }
     var showBatchMoveDialog by remember { mutableStateOf(false) }
     var showBatchAddTagDialog by remember { mutableStateOf(false) }
-    var destination by remember { mutableStateOf(HomeDestination.ALL) }
     var showStorageDialog by remember { mutableStateOf(false) }
     var storageBreakdown by remember { mutableStateOf<StorageBreakdown?>(null) }
     var showClearCacheConfirmation by remember { mutableStateOf(false) }
     var pendingExportNote by remember { mutableStateOf<NoteEntity?>(null) }
     // Sort/Filter state
-    var sortOption by remember { mutableStateOf(SortOption.MODIFIED) }
-    var sortDirection by remember { mutableStateOf(SortDirection.DESC) }
-    var filterState by remember { mutableStateOf(FilterState()) }
+    val filterState =
+        FilterState(
+            folderId = currentFolder?.folderId,
+            tagId = selectedTagFilter?.tagId,
+            dateRange = dateRangeFilter,
+        )
     var showSortFilterDropdown by remember { mutableStateOf(false) }
     val beginPdfImport: (Uri, String?) -> Unit = { uri, password ->
         viewModel.importPdf(
@@ -689,7 +695,6 @@ fun HomeScreen(
                 selectedNoteIds = emptySet()
             },
             onSelectDestination = { selectedDestination ->
-                destination = selectedDestination
                 viewModel.setDestination(selectedDestination)
             },
             onToggleViewMode = {
@@ -766,19 +771,15 @@ fun HomeScreen(
             onToggleSortFilterDropdown = { showSortFilterDropdown = !showSortFilterDropdown },
             onDismissSortFilterDropdown = { showSortFilterDropdown = false },
             onSortOptionChange = { newSortOption ->
-                sortOption = newSortOption
                 viewModel.setSortOption(newSortOption)
             },
             onSortDirectionChange = { newSortDirection ->
-                sortDirection = newSortDirection
                 viewModel.setSortDirection(newSortDirection)
             },
             onDateRangeFilterChange = { dateRange ->
-                filterState = filterState.copy(dateRange = dateRange)
                 viewModel.setDateRangeFilter(dateRange)
             },
             onClearFilters = {
-                filterState = FilterState()
                 viewModel.clearFilters()
             },
         )
@@ -2131,6 +2132,8 @@ private fun HomeListContent(
         else -> {
             if (destination == HomeDestination.SHARED) {
                 SharedNotesPlaceholderMessage(modifier)
+            } else if (destination == HomeDestination.RECENTS) {
+                RecentsNotesEmptyMessage(modifier)
             } else {
                 EmptyNotesMessage(modifier)
             }
@@ -2199,6 +2202,8 @@ internal fun NotesListContent(
     modifier: Modifier = Modifier,
 ) {
     var activeContextMenuNoteId by remember { mutableStateOf<String?>(null) }
+    val pinnedNotes = notes.filter { note -> note.isPinned }
+    val regularNotes = notes.filterNot { note -> note.isPinned }
     LazyColumn(
         modifier =
             modifier.fillMaxWidth(),
@@ -2210,7 +2215,81 @@ internal fun NotesListContent(
                 bottom = 80.dp,
             ),
     ) {
-        items(notes, key = { it.noteId }) { note ->
+        if (destination == HomeDestination.ALL && pinnedNotes.isNotEmpty()) {
+            item(key = "pinned-header") {
+                SectionHeader(text = "Pinned")
+            }
+            items(pinnedNotes, key = { it.noteId }) { note ->
+                NoteRow(
+                    note = note,
+                    tags = noteTags[note.noteId] ?: emptyList(),
+                    selectionMode = selectionMode,
+                    isSelected = note.noteId in selectedNoteIds,
+                    onClick = {
+                        if (selectionMode) {
+                            onToggleNoteSelection(note.noteId)
+                        } else {
+                            onRequestOpenNote(note, if (resumeLastPageEnabled) note.lastOpenedPageId else null)
+                        }
+                    },
+                    onLongPress = {
+                        if (!selectionMode) {
+                            onEnterSelectionMode(note.noteId)
+                        }
+                    },
+                    onOpenContextMenu = { activeContextMenuNoteId = note.noteId },
+                    isContextMenuExpanded = activeContextMenuNoteId == note.noteId,
+                    onDismissContextMenu = { activeContextMenuNoteId = null },
+                    onDelete = {
+                        activeContextMenuNoteId = null
+                        onRequestDeleteNote(note)
+                    },
+                    onMove = {
+                        activeContextMenuNoteId = null
+                        onMoveNote(note)
+                    },
+                    onManageTags = {
+                        activeContextMenuNoteId = null
+                        onManageTags(note)
+                    },
+                    onExportPdf = {
+                        activeContextMenuNoteId = null
+                        onRequestExportPdf(note)
+                    },
+                    onToggleLock = {
+                        activeContextMenuNoteId = null
+                        onRequestToggleNoteLock(note)
+                    },
+                    onTogglePinned = {
+                        activeContextMenuNoteId = null
+                        onRequestToggleNotePin(note)
+                    },
+                    destination = destination,
+                    onRestore = {
+                        activeContextMenuNoteId = null
+                        onRestoreNote(note.noteId)
+                    },
+                    onDeleteForever = {
+                        activeContextMenuNoteId = null
+                        onPermanentlyDeleteNote(note.noteId)
+                    },
+                    onToggleSelection = { onToggleNoteSelection(note.noteId) },
+                )
+            }
+            if (regularNotes.isNotEmpty()) {
+                item(key = "others-header") {
+                    SectionHeader(text = "Others")
+                }
+            }
+        }
+
+        val listNotes =
+            if (destination == HomeDestination.ALL) {
+                regularNotes
+            } else {
+                notes
+            }
+        items(listNotes, key = { it.noteId }) { note ->
             NoteRow(
                 note = note,
                 tags = noteTags[note.noteId] ?: emptyList(),
@@ -2268,6 +2347,16 @@ internal fun NotesListContent(
             )
         }
     }
+}
+
+@Composable
+private fun SectionHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+    )
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -2987,10 +3076,10 @@ internal class HomeScreenViewModel
         val selectedTagFilter: StateFlow<TagEntity?> = _selectedTagFilter.asStateFlow()
 
         // Sort/Filter state
-        private val _sortOption = MutableStateFlow(SortOption.MODIFIED)
+        private val _sortOption = MutableStateFlow(repository.getHomeSortOption())
         val sortOption: StateFlow<SortOption> = _sortOption.asStateFlow()
 
-        private val _sortDirection = MutableStateFlow(SortDirection.DESC)
+        private val _sortDirection = MutableStateFlow(repository.getHomeSortDirection())
         val sortDirection: StateFlow<SortDirection> = _sortDirection.asStateFlow()
 
         private val _dateRangeFilter = MutableStateFlow<DateRange?>(null)
@@ -3108,10 +3197,12 @@ internal class HomeScreenViewModel
 
         fun setSortOption(option: SortOption) {
             _sortOption.value = option
+            repository.setHomeSortOption(option)
         }
 
         fun setSortDirection(direction: SortDirection) {
             _sortDirection.value = direction
+            repository.setHomeSortDirection(direction)
         }
 
         fun setDateRangeFilter(dateRange: DateRange?) {

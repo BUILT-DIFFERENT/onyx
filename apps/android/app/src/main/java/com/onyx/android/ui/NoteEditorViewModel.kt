@@ -652,6 +652,26 @@ internal class NoteEditorViewModel
             }
         }
 
+        fun renameCustomTemplate(
+            templateId: String,
+            name: String,
+        ) {
+            val normalizedName = name.trim()
+            if (normalizedName.isBlank()) {
+                return
+            }
+            viewModelScope.launch {
+                runCatching {
+                    repository.renameCustomTemplate(
+                        templateId = templateId,
+                        name = normalizedName,
+                    )
+                }.onFailure { throwable ->
+                    reportError("Failed to rename custom template.", throwable)
+                }
+            }
+        }
+
         fun addStroke(
             stroke: Stroke,
             persist: Boolean,

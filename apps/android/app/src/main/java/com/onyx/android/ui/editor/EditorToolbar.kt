@@ -614,6 +614,7 @@ internal fun EditorToolbar(
                         onTemplateApply = toolbarState.onTemplateApply,
                         onSaveCustomTemplate = toolbarState.onSaveCustomTemplate,
                         onDeleteCustomTemplate = toolbarState.onDeleteCustomTemplate,
+                        onRenameCustomTemplate = toolbarState.onRenameCustomTemplate,
                     )
                 }
 
@@ -1401,6 +1402,7 @@ private fun TemplateButton(
     onTemplateApply: (TemplateApplyScope) -> Unit,
     onSaveCustomTemplate: (String) -> Unit,
     onDeleteCustomTemplate: (String) -> Unit,
+    onRenameCustomTemplate: (String, String) -> Unit,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val currentKind = templateState.backgroundKind
@@ -1429,6 +1431,7 @@ private fun TemplateButton(
                 onTemplateApply = onTemplateApply,
                 onSaveCustomTemplate = onSaveCustomTemplate,
                 onDeleteCustomTemplate = onDeleteCustomTemplate,
+                onRenameCustomTemplate = onRenameCustomTemplate,
             )
         }
     }
@@ -1443,6 +1446,7 @@ private fun TemplateSettingsPanel(
     onTemplateApply: (TemplateApplyScope) -> Unit,
     onSaveCustomTemplate: (String) -> Unit,
     onDeleteCustomTemplate: (String) -> Unit,
+    onRenameCustomTemplate: (String, String) -> Unit,
 ) {
     var showCustomPaperDialog by rememberSaveable { mutableStateOf(false) }
     var templateSection by rememberSaveable { mutableStateOf("built_in") }
@@ -1451,6 +1455,8 @@ private fun TemplateSettingsPanel(
     var customPaperUnit by rememberSaveable { mutableStateOf(CUSTOM_PAPER_UNIT_PT) }
     var customPaperError by rememberSaveable { mutableStateOf<String?>(null) }
     var customTemplateName by rememberSaveable { mutableStateOf("") }
+    var renameTemplateId by rememberSaveable { mutableStateOf<String?>(null) }
+    var renameTemplateName by rememberSaveable { mutableStateOf("") }
     var applyScope by rememberSaveable { mutableStateOf(TemplateApplyScope.CURRENT_PAGE) }
 
     Card(
@@ -1582,6 +1588,14 @@ private fun TemplateSettingsPanel(
                         }
                         IconButton(onClick = { onDeleteCustomTemplate(option.templateId) }) {
                             Icon(imageVector = Icons.Filled.Delete, contentDescription = "Delete template")
+                        }
+                        IconButton(
+                            onClick = {
+                                renameTemplateId = option.templateId
+                                renameTemplateName = option.name
+                            },
+                        ) {
+                            Icon(imageVector = Icons.Filled.Edit, contentDescription = "Rename template")
                         }
                     }
                 }
@@ -1772,6 +1786,39 @@ private fun TemplateSettingsPanel(
                     onTemplateChange(templateState.copy(templateId = customTemplateId))
                     showCustomPaperDialog = false
                     customPaperError = null
+                }
+            },
+        )
+    }
+    if (renameTemplateId != null) {
+        AlertDialog(
+            onDismissRequest = { renameTemplateId = null },
+            title = { Text("Rename template") },
+            text = {
+                OutlinedTextField(
+                    value = renameTemplateName,
+                    onValueChange = { renameTemplateName = it },
+                    singleLine = true,
+                    label = { Text("Template name") },
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val templateId = renameTemplateId
+                        if (templateId != null) {
+                            onRenameCustomTemplate(templateId, renameTemplateName)
+                        }
+                        renameTemplateId = null
+                    },
+                    enabled = renameTemplateName.isNotBlank(),
+                ) {
+                    Text("Rename")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { renameTemplateId = null }) {
+                    Text("Cancel")
                 }
             },
         )

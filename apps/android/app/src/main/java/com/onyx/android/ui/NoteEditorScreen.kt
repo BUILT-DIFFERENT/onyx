@@ -930,6 +930,7 @@ private fun rememberNoteEditorUiState(
             },
             { name -> viewModel.saveCurrentTemplateAsCustom(name) },
             viewModel::deleteCustomTemplate,
+            viewModel::renameCustomTemplate,
         )
     val onTransformGesture: (Float, Float, Float, Float, Float) -> Unit =
         { zoomChange, panChangeX, panChangeY, centroidX, centroidY ->
@@ -1699,6 +1700,7 @@ private fun rememberMultiPageUiState(
             },
             { name -> viewModel.saveCurrentTemplateAsCustom(name) },
             viewModel::deleteCustomTemplate,
+            viewModel::renameCustomTemplate,
         )
 
     val thumbnailCache = remember(pdfRenderer) { mutableStateMapOf<Int, android.graphics.Bitmap?>() }
@@ -2445,6 +2447,7 @@ private fun buildToolbarState(
     onTemplateApply: (TemplateApplyScope) -> Unit,
     onSaveCustomTemplate: (String) -> Unit,
     onDeleteCustomTemplate: (String) -> Unit,
+    onRenameCustomTemplate: (String, String) -> Unit,
 ): NoteEditorToolbarState =
     NoteEditorToolbarState(
         brush = brush,
@@ -2468,6 +2471,7 @@ private fun buildToolbarState(
         onTemplateApply = onTemplateApply,
         onSaveCustomTemplate = onSaveCustomTemplate,
         onDeleteCustomTemplate = onDeleteCustomTemplate,
+        onRenameCustomTemplate = onRenameCustomTemplate,
     )
 
 private fun InputSettings.allowsAnyFingerGesture(): Boolean =

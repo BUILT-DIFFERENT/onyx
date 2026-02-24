@@ -21,6 +21,7 @@ enum class NoteNamingRule(
     }
 }
 
+@Suppress("TooManyFunctions")
 class NoteLaunchPreferences(
     context: Context,
 ) {
@@ -60,6 +61,24 @@ class NoteLaunchPreferences(
         prefs.edit().putStringSet(KEY_EXPANDED_FOLDER_IDS, folderIds.toSet()).apply()
     }
 
+    fun getHomeSortOption(): SortOption =
+        SortOption.entries.firstOrNull { option ->
+            option.name == prefs.getString(KEY_HOME_SORT_OPTION, null)
+        } ?: DEFAULT_HOME_SORT_OPTION
+
+    fun setHomeSortOption(option: SortOption) {
+        prefs.edit().putString(KEY_HOME_SORT_OPTION, option.name).apply()
+    }
+
+    fun getHomeSortDirection(): SortDirection =
+        SortDirection.entries.firstOrNull { direction ->
+            direction.name == prefs.getString(KEY_HOME_SORT_DIRECTION, null)
+        } ?: DEFAULT_HOME_SORT_DIRECTION
+
+    fun setHomeSortDirection(direction: SortDirection) {
+        prefs.edit().putString(KEY_HOME_SORT_DIRECTION, direction.name).apply()
+    }
+
     fun buildDateTimeTitle(timestampMs: Long): String = DATE_TIME_FORMATTER.format(Date(timestampMs))
 
     companion object {
@@ -68,10 +87,14 @@ class NoteLaunchPreferences(
         private const val KEY_NOTE_NAMING_RULE = "note_naming_rule"
         private const val KEY_HOME_VIEW_MODE = "home_view_mode"
         private const val KEY_EXPANDED_FOLDER_IDS = "expanded_folder_ids"
+        private const val KEY_HOME_SORT_OPTION = "home_sort_option"
+        private const val KEY_HOME_SORT_DIRECTION = "home_sort_direction"
 
         private const val DEFAULT_NOTE_NAMING_RULE = "untitled_counter"
         private const val DEFAULT_RESUME_LAST_PAGE = true
         private const val DEFAULT_HOME_VIEW_MODE = "list"
+        private val DEFAULT_HOME_SORT_OPTION = SortOption.MODIFIED
+        private val DEFAULT_HOME_SORT_DIRECTION = SortDirection.DESC
 
         private val DATE_TIME_FORMATTER =
             SimpleDateFormat(

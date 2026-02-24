@@ -248,6 +248,18 @@ class NoteRepository(
         noteLaunchPreferences.setExpandedFolderIds(folderIds)
     }
 
+    fun getHomeSortOption(): SortOption = noteLaunchPreferences.getHomeSortOption()
+
+    fun setHomeSortOption(option: SortOption) {
+        noteLaunchPreferences.setHomeSortOption(option)
+    }
+
+    fun getHomeSortDirection(): SortDirection = noteLaunchPreferences.getHomeSortDirection()
+
+    fun setHomeSortDirection(direction: SortDirection) {
+        noteLaunchPreferences.setHomeSortDirection(direction)
+    }
+
     suspend fun updateLastOpenedPage(
         noteId: String,
         pageId: String?,
@@ -619,6 +631,17 @@ class NoteRepository(
             return
         }
         pageTemplateDao.delete(templateId)
+    }
+
+    suspend fun renameCustomTemplate(
+        templateId: String,
+        name: String,
+    ) {
+        val template = pageTemplateDao.getById(templateId)
+        val normalizedName = name.trim()
+        if (template != null && !template.isBuiltIn && normalizedName.isNotBlank()) {
+            pageTemplateDao.updateName(templateId = templateId, name = normalizedName)
+        }
     }
 
     suspend fun updatePaperSizeForNote(

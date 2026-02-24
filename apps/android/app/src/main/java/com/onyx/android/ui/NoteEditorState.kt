@@ -122,6 +122,7 @@ internal data class NoteEditorToolbarState(
     val onTemplateApply: (TemplateApplyScope) -> Unit = {},
     val onSaveCustomTemplate: (String) -> Unit = {},
     val onDeleteCustomTemplate: (String) -> Unit = {},
+    val onRenameCustomTemplate: (String, String) -> Unit = { _, _ -> },
 )
 
 internal enum class EraserFilter {

@@ -28,3 +28,13 @@ internal fun SharedNotesPlaceholderMessage(modifier: Modifier = Modifier) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
+
+@Composable
+internal fun RecentsNotesEmptyMessage(modifier: Modifier = Modifier) {
+    Text(
+        text = "No recent notes yet. Open a note and it will appear here.",
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}

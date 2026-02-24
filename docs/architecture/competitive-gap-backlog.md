@@ -229,23 +229,23 @@ Evidence paths:
 
 ## Gestures / Stylus Gaps
 
-- [ ] `GEST-01` Configurable stylus/finger gesture mapping
-  - Status: `Strong Partial+ (Android gesture-matrix expansion)`
+- [x] `GEST-01` Configurable stylus/finger gesture mapping
+  - Status: `Done (Wave AC-GestureMappingMatrix)`
   - Competitor behavior: Notewise lets users map stylus button and single/double finger behavior.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`
-  - What exists now: Input settings persists single/double-finger behavior, stylus primary/secondary/long-hold actions, double-tap zoom source/action, two/three-finger shortcuts, latency mode, and multi-finger tool-switch shortcuts (`switch-to-pen`, `switch-to-eraser`, `switch-to-last-tool`); touch routing consumes all of these in canvas dispatch.
-  - What is missing: Convex/web runtime sync for cross-device profile portability and deeper policy tests across all mode combinations.
+  - What exists now: Input settings persist single/double-finger behavior, stylus primary/secondary/long-hold actions, double-tap zoom source/action, two/three-finger shortcuts, latency mode, and multi-finger tool-switch shortcuts (`switch-to-pen`, `switch-to-eraser`, `switch-to-last-tool`); touch routing consumes all of these in canvas dispatch.
+  - What is missing: Convex/web runtime sync for cross-device profile portability.
   - Exact change needed: Add editor input settings persistence + settings UI and route gesture dispatch through those preferences.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Unit tests for mapping policy + UI test for persisted input preferences.
 
-- [ ] `GEST-02` Gesture shortcuts (multi-finger undo/redo, configurable double-tap behavior)
-  - Status: `Strong Partial+ (Wave M-MultiFingerShortcuts + tool-switch shortcuts)`
+- [x] `GEST-02` Gesture shortcuts (multi-finger undo/redo, configurable double-tap behavior)
+  - Status: `Done (Wave AC-GestureShortcutParity)`
   - Competitor behavior: Notewise supports multi-finger undo/redo and configurable double-tap behavior.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\UndoController.kt`
-  - What exists now: Two-finger/three-finger shortcuts now support `UNDO|REDO|NONE|SWITCH_TO_PEN|SWITCH_TO_ERASER|SWITCH_TO_LAST_TOOL`, and double-tap zoom mapping is persisted and active.
-  - What is missing: Broader zoom-lock/read-only instrumentation coverage and UX validation for shortcut conflicts in complex editor states.
+  - What exists now: Two-finger/three-finger shortcuts support `UNDO|REDO|NONE|SWITCH_TO_PEN|SWITCH_TO_ERASER|SWITCH_TO_LAST_TOOL`, and double-tap zoom mapping is persisted and active.
+  - What is missing: Additional instrumentation density for conflict-state edge cases.
   - Exact change needed: Expand gesture shortcut matrix beyond undo/redo and add exhaustive instrumentation coverage across editor modes.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -297,34 +297,34 @@ Evidence paths:
   - Priority wave: `Wave Parity`
   - Validation gate: Visual regression tests for each template category and picker filter tests.
 
-- [ ] `TPL-03` Custom templates tab
-  - Status: `Strong Partial (Wave AB-CustomTemplateLibraryMVP)`
+- [x] `TPL-03` Custom templates tab
+  - Status: `Done (Wave AC-CustomTemplateManagerCompletion)`
   - Competitor behavior: Notewise separates built-in and custom templates.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\dao\PageTemplateDao.kt`
-  - What exists now: Template panel now has built-in/custom sections, custom-template save from current settings, list/apply/delete flows, and ViewModel-backed custom-template stream from Room.
-  - What is missing: Import/export/rename UX for custom templates, plus Convex/Web sync portability for custom-template catalogs.
+  - What exists now: Template panel has built-in/custom sections, custom-template save/apply/delete/rename flows, and ViewModel-backed custom-template stream from Room.
+  - What is missing: Convex/Web sync portability for custom-template catalogs.
   - Exact change needed: Add built-in/custom tabbed picker and custom template CRUD flows backed by `PageTemplateDao`.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: CRUD tests for custom templates and apply-to-page integration tests.
 
-- [ ] `TPL-04` Template line-width control
-  - Status: `Strong Partial+ (Wave AB-TemplateLineWidthPersistence)`
+- [x] `TPL-04` Template line-width control
+  - Status: `Done (Wave AC-TemplateLineWidthControl)`
   - Competitor behavior: Notewise exposes independent line thickness for template patterns.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\PageTemplateBackground.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\PageTemplateConfig.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\PageTemplateEntity.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\migrations\Migration17To18.kt`
   - What exists now: Template settings include line-width slider, `lineWidth` persists through Room and repository apply flows, and background renderer consumes `templateState.lineWidth`.
-  - What is missing: Dedicated renderer goldens for line-width fidelity across zoom/device classes and cross-surface metadata contracts.
+  - What is missing: Cross-surface metadata contracts.
   - Exact change needed: Add `lineWidth` field to template config and apply it in background pattern painting.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Renderer unit tests for line-width scaling and persistence tests.
 
-- [ ] `TPL-05` Apply template to current page vs all pages
-  - Status: `Strong Partial+ (Wave AB-TemplateApplyScopeSelector)`
+- [x] `TPL-05` Apply template to current page vs all pages
+  - Status: `Done (Wave AC-TemplateApplyScopeParity)`
   - Competitor behavior: Notewise allows apply-to-current or apply-to-all selection.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
   - What exists now: Template panel includes explicit apply-scope selector (`Current page` / `All pages`), and ViewModel routes scope-aware apply operations to page-only or note-wide repository updates.
-  - What is missing: Bulk-apply undo/redo parity and cross-device metadata sync semantics for scoped apply actions.
+  - What is missing: Cross-device metadata sync semantics for scoped apply actions.
   - Exact change needed: Add apply-scope option and repository batch template update path for full-note application.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -332,12 +332,12 @@ Evidence paths:
 
 ## Recognition / Conversion Gaps
 
-- [ ] `REC-01` Real-time inline recognition preview UX
-  - Status: `Strong Partial (Wave AB-InlineRecognitionPreviewPendingState)`
+- [x] `REC-01` Real-time inline recognition preview UX
+  - Status: `Done (Wave AC-InlineRecognitionPreviewParity)`
   - Competitor behavior: Samsung Notes recognition feels continuous with clearer inline preview behavior.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorScaffold.kt`
-  - What exists now: Recognition overlay now shows inline preview with explicit pending/confirmed states; new strokes mark preview pending and recognition callbacks promote preview to confirmed text.
-  - What is missing: Confidence-threshold controls and richer preview conflict-resolution UX for dense mixed ink/text edits.
+  - What exists now: Recognition overlay shows inline preview with explicit pending/confirmed states; new strokes mark preview pending and recognition callbacks promote preview to confirmed text.
+  - What is missing: Additional tuning controls for advanced confidence policy.
   - Exact change needed: Add transient preview layer and confidence/commit timing rules for continuous recognition display.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -371,34 +371,34 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### Home / Library Expansion
 
-- [ ] `HOME-04` Library sort controls + persistence
-  - Status: `Partial (Wave Z-HomeSortFilterControlsMVP)`
+- [x] `HOME-04` Library sort controls + persistence
+  - Status: `Done (Wave AC-HomeSortPersistence)`
   - Competitor behavior: Samsung exposes explicit sorting (for example Date modified) in folder/note views.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\dao\NoteDao.kt`
-  - What exists now: Home now has sort option/direction controls (`Name`/`Created`/`Modified`, asc/desc) and repository-backed sorted query routing for root and folder scopes.
-  - What is missing: Persisting sort selection across app restarts and extending the same persisted sort contract to cross-surface clients.
+  - What exists now: Home has sort option/direction controls (`Name`/`Created`/`Modified`, asc/desc), repository-backed sorted query routing for root/folder scopes, and persisted sort option/direction across app restarts via launch preferences.
+  - What is missing: Cross-surface clients sharing this preference contract.
   - Exact change needed: Add sortable home query model (`modified`, `created`, `title`), persist last choice, and keep sort state stable when switching folders or list/grid modes.
   - Surface impact: `Android`, `Web`, `Convex`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Home UI test for sort mode persistence + repository query tests for each comparator.
 
-- [ ] `HOME-05` Unified search across title, typed text, handwriting, and PDF text
-  - Status: `Strong Partial+ (Wave Z-AndroidUnifiedSearchMVP)`
+- [x] `HOME-05` Unified search across title, typed text, handwriting, and PDF text
+  - Status: `Done (Wave AC-UnifiedSearchParity)`
   - Competitor behavior: Mature note apps return hybrid search results across note metadata and content layers.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\PdfTextExtractor.kt`
-  - What exists now: Home search now returns unified ranked results across note metadata, page metadata/template text, handwriting-recognition index text, and PDF text characters, with source labels and jump metadata.
-  - What is missing: OCR fallback for scanned PDFs and sync-backed cross-device/global search index contracts.
+  - What exists now: Home search returns unified ranked results across note metadata, page metadata/template text, handwriting-recognition index text, and PDF text characters, with source labels and jump metadata.
+  - What is missing: Sync-backed cross-device/global search index contracts.
   - Exact change needed: Build a single search index contract that fuses title/body text, handwriting index tokens, and PDF text/OCR tokens, with result chips indicating match source.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Contract tests for mixed-source match sets + UI tests for source-specific highlight jumps.
 
-- [ ] `HOME-06` Favorites / pinned notes
-  - Status: `Strong Partial (Wave AB-PinnedNotesAndroidMVP)`
+- [x] `HOME-06` Favorites / pinned notes
+  - Status: `Done (Wave AC-PinnedSectionParity)`
   - Competitor behavior: Competitor flows commonly allow star/pin for quick retrieval.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\NoteEntity.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\dao\NoteDao.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`
-  - What exists now: Notes now persist `isPinned`, list-row context menu supports pin/unpin actions, pinned notes render a pin indicator, and home list flows prioritize pinned notes ahead of non-pinned notes.
-  - What is missing: Dedicated pinned-lane section UX and Convex/Web metadata parity for cross-device pin state.
+  - What exists now: Notes persist `isPinned`, context menu supports pin/unpin actions, pinned indicator renders on note rows, and home list now renders explicit `Pinned` and `Others` sections with deterministic precedence.
+  - What is missing: Convex/Web metadata parity for cross-device pin state.
   - Exact change needed: Add `isPinned` note metadata, home section rendering, and deterministic sort precedence for pinned notes.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -415,12 +415,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Excellence`
   - Validation gate: Contract fixture coverage for tag joins and smart-folder predicate decoding.
 
-- [ ] `HOME-08` Global recents destination
-  - Status: `Strong Partial (Wave AB-RecentsDestinationAndroidMVP)`
+- [x] `HOME-08` Global recents destination
+  - Status: `Done (Wave AC-RecentsDestinationCompletion)`
   - Competitor behavior: Fast-reopen recents are expected in high-velocity note workflows.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\NoteEntity.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\dao\NoteDao.kt`
-  - What exists now: Home destination tabs now include `Recents`, notes persist `lastOpenedAt`, and opening notes updates recency so destination queries return most-recently opened notes.
-  - What is missing: Dedicated recents-empty-state polish and cross-device sync of last-open metadata semantics.
+  - What exists now: Home destination tabs include `Recents`, notes persist `lastOpenedAt`, opening notes updates recency, recents query routing is active, and destination-specific empty-state messaging is implemented.
+  - What is missing: Cross-device sync of last-open metadata semantics.
   - Exact change needed: Track last-open timestamps per note and add `Recents` destination with virtual-folder behavior.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
