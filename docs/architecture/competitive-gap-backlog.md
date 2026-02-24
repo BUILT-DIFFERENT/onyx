@@ -85,7 +85,7 @@ Evidence paths:
 - [x] `EDIT-03` Text object tool
   - Status: `Done (Wave G-InsertParity runtime MVP)`
   - Competitor behavior: Competitor editors provide explicit typed text objects separate from handwriting conversion.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\ConvertedTextBlock.kt`
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\PageObjectLayer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`
   - What exists now: Text insert route creates persisted text objects with in-canvas edit/save, move/resize, duplicate/delete, and undo/redo.
   - What is missing: Rich formatting strip parity (lists/alignment controls beyond MVP) and advanced typography controls.
   - Exact change needed: Introduce text object entity and editing UI, keeping recognition overlays as a separate data path.
@@ -346,7 +346,7 @@ Evidence paths:
 - [x] `REC-02` Interactive ink gestures as recognizer actions (scratch-out/scribble)
   - Status: `Done (Wave AC-ScratchOutUndoableCommands)`
   - Competitor behavior: Competitor flows support gesture-based recognition edits.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\ConvertedTextBlock.kt`
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionOverlayModels.kt`
   - What exists now: Scratch-out heuristic detects scribble strokes, removes intersecting converted-text blocks, persists overlay updates, and now records converted-text replacement actions in undo/redo history for command-safe reversal.
   - What is missing: Additional recognizer gesture families (join/split/insert) and cross-surface command sync semantics.
   - Exact change needed: Add recognizer gesture command pipeline (scratch-out/delete, join/split behaviors) with undo/redo support.
@@ -385,7 +385,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
 - [x] `HOME-05` Unified search across title, typed text, handwriting, and PDF text
   - Status: `Done (Wave AC-UnifiedSearchParity)`
   - Competitor behavior: Mature note apps return hybrid search results across note metadata and content layers.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\PdfTextExtractor.kt`
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\TextSelectionModel.kt`
   - What exists now: Home search returns unified ranked results across note metadata, page metadata/template text, handwriting-recognition index text, and PDF text characters, with source labels and jump metadata.
   - What is missing: Sync-backed cross-device/global search index contracts.
   - Exact change needed: Build a single search index contract that fuses title/body text, handwriting index tokens, and PDF text/OCR tokens, with result chips indicating match source.
@@ -610,7 +610,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
 - [x] `PDF-06` Insert blank pages between imported PDF pages
   - Status: `Done (Wave AC-PdfBlankPageInsertParity)`
   - Competitor behavior: Competitive annotation apps allow whitespace insertion between source pages.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\PageRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`
   - What exists now: Imported PDF page sequence is fixed.
   - What is missing: Mixed PDF/background pages with user-inserted blank pages.
   - Exact change needed: Support `blank` page insertion at arbitrary index while preserving original PDF page binding metadata.
@@ -645,7 +645,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
 - [x] `GEST-05` Latency optimization modes (Normal/Fast Experimental)
   - Status: `Done (Wave AC-LatencyModesParity)`
   - Competitor behavior: Notewise exposes latency optimization choices for device-specific tuning.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorSettings.kt`
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`
   - What exists now: Input settings now expose persisted `NORMAL` vs `FAST_EXPERIMENTAL` latency profile, with runtime wiring that forces motion prediction in fast mode and applies lower smoothing for lower perceived latency.
   - What is missing: Dedicated benchmark guardrails and device-tier auto tuning.
   - Exact change needed: Add latency profile setting, wire profile params into input prediction/smoothing, and present experimental disclaimer text.
@@ -726,7 +726,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
 - [x] `REC-05` Lasso-to-text conversion workflow
   - Status: `Done (Wave AC-LassoConvertWorkflow)`
   - Competitor behavior: Users expect selected handwriting to convert to editable text blocks.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\LassoGeometry.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\ConvertedTextBlock.kt`
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\LassoGeometry.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionOverlayModels.kt`
   - What exists now: Lasso selection exposes `Convert to text` in both single-page and stacked-page flows, opens an editable conversion dialog, and persists converted text blocks with editor overlays.
   - What is missing: Optional direct text-object replacement mode for workflows that prefer object-layer insertion over overlay blocks.
   - Exact change needed: Add lasso action `Convert to text`, show editable preview, and commit into text object layer while preserving original ink for undo.
@@ -748,7 +748,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
 - [x] `REC-07` Shape recognition and beautification
   - Status: `Done (Wave AC-ShapeBeautificationFlow)`
   - Competitor behavior: Intelligent shape cleanup is expected for polished handwritten diagrams.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\ShapeBeautifier.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionSettings.kt`
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\ShapeRecognitionCandidate.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionSettings.kt`
   - What exists now: Heuristic shape candidate detection (line/rectangle/ellipse) is active in editor stroke handling, auto-beautify converts matched strokes into persisted shape objects, and enablement is user-configurable in recognition settings.
   - What is missing: Precision/recall tuning dataset and cross-surface sync for recognizer decisions.
   - Exact change needed: Add recognition pass for geometric primitives and convert qualifying strokes into editable shape objects.
@@ -851,7 +851,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
 - [x] `PERF-04` Stress profile for very large notes/PDFs
   - Status: `Done (Wave AC-StressProfileMatrixBenchmarks)`
   - Competitor behavior: Mature apps handle thousands of strokes and long PDFs without visible stutter.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\androidTest`, `C:\onyx\docs\architecture\testing.md`
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\androidTest`, `C:\onyx\docs\architecture\stress-profile-matrix.md`
   - What exists now: Stress profile matrix is documented in `docs/architecture/stress-profile-matrix.md`, and macrobenchmarks (`LargeNoteStressBenchmark`, `InkingFrameRateBenchmark`, `InkLatencyBenchmark`) capture frame and memory behavior for heavy interaction loops.
   - What is missing: CI percentile threshold hard-gating and wider device-lab automation.
   - Exact change needed: Add performance fixtures for `N` strokes/page, `M` pages/note, and mixed PDF+ink workloads with memory/frame budget assertions.
