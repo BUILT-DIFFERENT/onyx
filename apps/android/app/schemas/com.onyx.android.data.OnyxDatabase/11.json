@@ -1,0 +1,961 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 11,
+    "identityHash": "7e50c942c8b6136992352a2256e4aad3",
+    "entities": [
+      {
+        "tableName": "notes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`noteId` TEXT NOT NULL, `ownerUserId` TEXT NOT NULL, `title` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `deletedAt` INTEGER, `folderId` TEXT, PRIMARY KEY(`noteId`))",
+        "fields": [
+          {
+            "fieldPath": "noteId",
+            "columnName": "noteId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ownerUserId",
+            "columnName": "ownerUserId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deletedAt",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "folderId",
+            "columnName": "folderId",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "noteId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_notes_folderId",
+            "unique": false,
+            "columnNames": [
+              "folderId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_notes_folderId` ON `${TABLE_NAME}` (`folderId`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "pages",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`pageId` TEXT NOT NULL, `noteId` TEXT NOT NULL, `kind` TEXT NOT NULL, `geometryKind` TEXT NOT NULL, `indexInNote` INTEGER NOT NULL, `width` REAL NOT NULL, `height` REAL NOT NULL, `unit` TEXT NOT NULL, `pdfAssetId` TEXT, `pdfPageNo` INTEGER, `templateId` TEXT, `updatedAt` INTEGER NOT NULL, `contentLamportMax` INTEGER NOT NULL, PRIMARY KEY(`pageId`))",
+        "fields": [
+          {
+            "fieldPath": "pageId",
+            "columnName": "pageId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noteId",
+            "columnName": "noteId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "geometryKind",
+            "columnName": "geometryKind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "indexInNote",
+            "columnName": "indexInNote",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "width",
+            "columnName": "width",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "height",
+            "columnName": "height",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unit",
+            "columnName": "unit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pdfAssetId",
+            "columnName": "pdfAssetId",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "pdfPageNo",
+            "columnName": "pdfPageNo",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "templateId",
+            "columnName": "templateId",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "contentLamportMax",
+            "columnName": "contentLamportMax",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "pageId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_pages_noteId",
+            "unique": false,
+            "columnNames": [
+              "noteId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pages_noteId` ON `${TABLE_NAME}` (`noteId`)"
+          },
+          {
+            "name": "index_pages_templateId",
+            "unique": false,
+            "columnNames": [
+              "templateId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pages_templateId` ON `${TABLE_NAME}` (`templateId`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "strokes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`strokeId` TEXT NOT NULL, `pageId` TEXT NOT NULL, `strokeData` BLOB NOT NULL, `style` TEXT NOT NULL, `bounds` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `createdLamport` INTEGER NOT NULL, PRIMARY KEY(`strokeId`))",
+        "fields": [
+          {
+            "fieldPath": "strokeId",
+            "columnName": "strokeId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pageId",
+            "columnName": "pageId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "strokeData",
+            "columnName": "strokeData",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "style",
+            "columnName": "style",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bounds",
+            "columnName": "bounds",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdLamport",
+            "columnName": "createdLamport",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "strokeId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "recognition_index",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`pageId` TEXT NOT NULL, `noteId` TEXT NOT NULL, `recognizedText` TEXT, `recognizedAtLamport` INTEGER, `recognizerVersion` TEXT, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`pageId`))",
+        "fields": [
+          {
+            "fieldPath": "pageId",
+            "columnName": "pageId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noteId",
+            "columnName": "noteId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recognizedText",
+            "columnName": "recognizedText",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "recognizedAtLamport",
+            "columnName": "recognizedAtLamport",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "recognizerVersion",
+            "columnName": "recognizerVersion",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "pageId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "ftsVersion": "FTS4",
+        "ftsOptions": {
+          "tokenizer": "simple",
+          "tokenizerArgs": [],
+          "contentTable": "recognition_index",
+          "languageIdColumnName": "",
+          "matchInfo": "FTS4",
+          "notIndexedColumns": [],
+          "prefixSizes": [],
+          "preferredOrder": "ASC"
+        },
+        "contentSyncTriggers": [
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_recognition_fts_BEFORE_UPDATE BEFORE UPDATE ON `recognition_index` BEGIN DELETE FROM `recognition_fts` WHERE `docid`=OLD.`rowid`; END",
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_recognition_fts_BEFORE_DELETE BEFORE DELETE ON `recognition_index` BEGIN DELETE FROM `recognition_fts` WHERE `docid`=OLD.`rowid`; END",
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_recognition_fts_AFTER_UPDATE AFTER UPDATE ON `recognition_index` BEGIN INSERT INTO `recognition_fts`(`docid`, `recognizedText`) VALUES (NEW.`rowid`, NEW.`recognizedText`); END",
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_recognition_fts_AFTER_INSERT AFTER INSERT ON `recognition_index` BEGIN INSERT INTO `recognition_fts`(`docid`, `recognizedText`) VALUES (NEW.`rowid`, NEW.`recognizedText`); END"
+        ],
+        "tableName": "recognition_fts",
+        "createSql": "CREATE VIRTUAL TABLE IF NOT EXISTS `${TABLE_NAME}` USING FTS4(`recognizedText` TEXT NOT NULL, content=`recognition_index`)",
+        "fields": [
+          {
+            "fieldPath": "recognizedText",
+            "columnName": "recognizedText",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": []
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "folders",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`folderId` TEXT NOT NULL, `name` TEXT NOT NULL, `parentId` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`folderId`))",
+        "fields": [
+          {
+            "fieldPath": "folderId",
+            "columnName": "folderId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "parentId",
+            "columnName": "parentId",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "folderId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_folders_parentId",
+            "unique": false,
+            "columnNames": [
+              "parentId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_folders_parentId` ON `${TABLE_NAME}` (`parentId`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "tags",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tagId` TEXT NOT NULL, `name` TEXT NOT NULL, `color` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`tagId`))",
+        "fields": [
+          {
+            "fieldPath": "tagId",
+            "columnName": "tagId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "color",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "tagId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "NoteTagCrossRef",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`noteId` TEXT NOT NULL, `tagId` TEXT NOT NULL, PRIMARY KEY(`noteId`, `tagId`))",
+        "fields": [
+          {
+            "fieldPath": "noteId",
+            "columnName": "noteId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tagId",
+            "columnName": "tagId",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "noteId",
+            "tagId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_NoteTagCrossRef_noteId",
+            "unique": false,
+            "columnNames": [
+              "noteId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_NoteTagCrossRef_noteId` ON `${TABLE_NAME}` (`noteId`)"
+          },
+          {
+            "name": "index_NoteTagCrossRef_tagId",
+            "unique": false,
+            "columnNames": [
+              "tagId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_NoteTagCrossRef_tagId` ON `${TABLE_NAME}` (`tagId`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "thumbnails",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`noteId` TEXT NOT NULL, `filePath` TEXT NOT NULL, `contentHash` TEXT NOT NULL, `generatedAt` INTEGER NOT NULL, PRIMARY KEY(`noteId`))",
+        "fields": [
+          {
+            "fieldPath": "noteId",
+            "columnName": "noteId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "filePath",
+            "columnName": "filePath",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "contentHash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "generatedAt",
+            "columnName": "generatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "noteId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "page_templates",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`templateId` TEXT NOT NULL, `name` TEXT NOT NULL, `backgroundKind` TEXT NOT NULL, `spacing` REAL, `color` TEXT, `isBuiltIn` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`templateId`))",
+        "fields": [
+          {
+            "fieldPath": "templateId",
+            "columnName": "templateId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "backgroundKind",
+            "columnName": "backgroundKind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "spacing",
+            "columnName": "spacing",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "color",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isBuiltIn",
+            "columnName": "isBuiltIn",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "templateId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "editor_settings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`settingsId` TEXT NOT NULL, `selectedTool` TEXT NOT NULL, `penTool` TEXT NOT NULL, `penColor` TEXT NOT NULL, `penBaseWidth` REAL NOT NULL, `penMinWidthFactor` REAL NOT NULL, `penMaxWidthFactor` REAL NOT NULL, `penSmoothingLevel` REAL NOT NULL, `penEndTaperStrength` REAL NOT NULL, `highlighterTool` TEXT NOT NULL, `highlighterColor` TEXT NOT NULL, `highlighterBaseWidth` REAL NOT NULL, `highlighterMinWidthFactor` REAL NOT NULL, `highlighterMaxWidthFactor` REAL NOT NULL, `highlighterSmoothingLevel` REAL NOT NULL, `highlighterEndTaperStrength` REAL NOT NULL, `lastNonEraserTool` TEXT NOT NULL, `singleFingerMode` TEXT NOT NULL, `doubleFingerMode` TEXT NOT NULL, `stylusPrimaryAction` TEXT NOT NULL, `stylusSecondaryAction` TEXT NOT NULL, `stylusLongHoldAction` TEXT NOT NULL, `doubleTapZoomAction` TEXT NOT NULL, `doubleTapZoomPointerMode` TEXT NOT NULL, `twoFingerTapAction` TEXT NOT NULL, `threeFingerTapAction` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`settingsId`))",
+        "fields": [
+          {
+            "fieldPath": "settingsId",
+            "columnName": "settingsId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "selectedTool",
+            "columnName": "selectedTool",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "penTool",
+            "columnName": "penTool",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "penColor",
+            "columnName": "penColor",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "penBaseWidth",
+            "columnName": "penBaseWidth",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "penMinWidthFactor",
+            "columnName": "penMinWidthFactor",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "penMaxWidthFactor",
+            "columnName": "penMaxWidthFactor",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "penSmoothingLevel",
+            "columnName": "penSmoothingLevel",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "penEndTaperStrength",
+            "columnName": "penEndTaperStrength",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "highlighterTool",
+            "columnName": "highlighterTool",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "highlighterColor",
+            "columnName": "highlighterColor",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "highlighterBaseWidth",
+            "columnName": "highlighterBaseWidth",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "highlighterMinWidthFactor",
+            "columnName": "highlighterMinWidthFactor",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "highlighterMaxWidthFactor",
+            "columnName": "highlighterMaxWidthFactor",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "highlighterSmoothingLevel",
+            "columnName": "highlighterSmoothingLevel",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "highlighterEndTaperStrength",
+            "columnName": "highlighterEndTaperStrength",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastNonEraserTool",
+            "columnName": "lastNonEraserTool",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "singleFingerMode",
+            "columnName": "singleFingerMode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "doubleFingerMode",
+            "columnName": "doubleFingerMode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stylusPrimaryAction",
+            "columnName": "stylusPrimaryAction",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stylusSecondaryAction",
+            "columnName": "stylusSecondaryAction",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stylusLongHoldAction",
+            "columnName": "stylusLongHoldAction",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "doubleTapZoomAction",
+            "columnName": "doubleTapZoomAction",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "doubleTapZoomPointerMode",
+            "columnName": "doubleTapZoomPointerMode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "twoFingerTapAction",
+            "columnName": "twoFingerTapAction",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "threeFingerTapAction",
+            "columnName": "threeFingerTapAction",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "settingsId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "operation_log",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`opId` TEXT NOT NULL, `noteId` TEXT NOT NULL, `deviceId` TEXT NOT NULL, `lamportClock` INTEGER NOT NULL, `operationType` TEXT NOT NULL, `payload` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`opId`))",
+        "fields": [
+          {
+            "fieldPath": "opId",
+            "columnName": "opId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noteId",
+            "columnName": "noteId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deviceId",
+            "columnName": "deviceId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lamportClock",
+            "columnName": "lamportClock",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "operationType",
+            "columnName": "operationType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "payload",
+            "columnName": "payload",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "opId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_operation_log_noteId",
+            "unique": false,
+            "columnNames": [
+              "noteId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_operation_log_noteId` ON `${TABLE_NAME}` (`noteId`)"
+          },
+          {
+            "name": "index_operation_log_lamportClock",
+            "unique": false,
+            "columnNames": [
+              "lamportClock"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_operation_log_lamportClock` ON `${TABLE_NAME}` (`lamportClock`)"
+          },
+          {
+            "name": "index_operation_log_noteId_lamportClock",
+            "unique": false,
+            "columnNames": [
+              "noteId",
+              "lamportClock"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_operation_log_noteId_lamportClock` ON `${TABLE_NAME}` (`noteId`, `lamportClock`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "page_objects",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`objectId` TEXT NOT NULL, `pageId` TEXT NOT NULL, `noteId` TEXT NOT NULL, `kind` TEXT NOT NULL, `zIndex` INTEGER NOT NULL, `x` REAL NOT NULL, `y` REAL NOT NULL, `width` REAL NOT NULL, `height` REAL NOT NULL, `rotationDeg` REAL NOT NULL, `payloadJson` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `deletedAt` INTEGER, PRIMARY KEY(`objectId`))",
+        "fields": [
+          {
+            "fieldPath": "objectId",
+            "columnName": "objectId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pageId",
+            "columnName": "pageId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noteId",
+            "columnName": "noteId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zIndex",
+            "columnName": "zIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "x",
+            "columnName": "x",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "y",
+            "columnName": "y",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "width",
+            "columnName": "width",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "height",
+            "columnName": "height",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rotationDeg",
+            "columnName": "rotationDeg",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "payloadJson",
+            "columnName": "payloadJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deletedAt",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "objectId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_page_objects_pageId",
+            "unique": false,
+            "columnNames": [
+              "pageId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_page_objects_pageId` ON `${TABLE_NAME}` (`pageId`)"
+          },
+          {
+            "name": "index_page_objects_noteId",
+            "unique": false,
+            "columnNames": [
+              "noteId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_page_objects_noteId` ON `${TABLE_NAME}` (`noteId`)"
+          },
+          {
+            "name": "index_page_objects_kind",
+            "unique": false,
+            "columnNames": [
+              "kind"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_page_objects_kind` ON `${TABLE_NAME}` (`kind`)"
+          },
+          {
+            "name": "index_page_objects_pageId_zIndex",
+            "unique": false,
+            "columnNames": [
+              "pageId",
+              "zIndex"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_page_objects_pageId_zIndex` ON `${TABLE_NAME}` (`pageId`, `zIndex`)"
+          }
+        ],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7e50c942c8b6136992352a2256e4aad3')"
+    ]
+  }
+}

@@ -28,6 +28,7 @@ data class EditorSettingsEntity(
     val stylusSecondaryAction: String = "ERASER_HOLD",
     val stylusLongHoldAction: String = "NO_ACTION",
     val doubleTapZoomAction: String = "NONE",
+    val doubleTapZoomPointerMode: String = "FINGER_ONLY",
     val twoFingerTapAction: String = "UNDO",
     val threeFingerTapAction: String = "REDO",
     val updatedAt: Long = 0L,

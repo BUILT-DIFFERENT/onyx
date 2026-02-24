@@ -676,12 +676,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Validation gate: Instrumented tests for each profile combination under stylus-present and stylus-absent scenarios.
 
 - [ ] `GEST-08` Double-tap zoom-level shortcut
-  - Status: `Strong Partial (Wave L-DoubleTapZoom)`
+  - Status: `Strong Partial+ (Wave O-StylusDoubleTapZoom)`
   - Competitor behavior: Notewise optionally maps double tap to zoom-level change.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
-  - What exists now: Configurable `doubleTapZoomAction` (`NONE|CYCLE_PRESET|FIT_TO_PAGE`) is persisted, editable in input settings, and routed in editor touch handling.
-  - What is missing: Additional policy controls (e.g. stylus double-tap mapping and per-mode overrides) plus broader UI test coverage with zoom-lock permutations.
-  - Exact change needed: Extend gesture policy matrix and add dedicated zoom-lock + multi-page parity instrumentation scenarios.
+  - What exists now: Configurable `doubleTapZoomAction` (`NONE|CYCLE_PRESET|FIT_TO_PAGE`) and pointer-source policy (`FINGER_ONLY|FINGER_AND_STYLUS`) are persisted, editable in input settings, and routed in editor touch handling.
+  - What is missing: Broader UI/instrumentation coverage with zoom-lock and multi-page permutations.
+  - Exact change needed: Add dedicated zoom-lock + multi-page parity instrumentation scenarios for finger and stylus source modes.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Gesture tests confirming map-to-action with and without zoom lock enabled.

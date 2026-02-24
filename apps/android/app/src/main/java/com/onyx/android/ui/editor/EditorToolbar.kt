@@ -91,6 +91,7 @@ import com.onyx.android.config.QuickColorPaletteStore
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.input.DoubleFingerMode
 import com.onyx.android.input.DoubleTapZoomAction
+import com.onyx.android.input.DoubleTapZoomPointerMode
 import com.onyx.android.input.InputSettings
 import com.onyx.android.input.MultiFingerTapAction
 import com.onyx.android.input.SingleFingerMode
@@ -999,6 +1000,18 @@ private fun InputSettingsDialog(
                         onSettingsChange(
                             settings.copy(
                                 doubleTapZoomAction = DoubleTapZoomAction.valueOf(selected),
+                            ),
+                        )
+                    },
+                )
+                InputSettingsSelector(
+                    label = "Double tap source",
+                    selected = settings.doubleTapZoomPointerMode.name,
+                    options = DoubleTapZoomPointerMode.entries.map { it.name },
+                    onSelect = { selected ->
+                        onSettingsChange(
+                            settings.copy(
+                                doubleTapZoomPointerMode = DoubleTapZoomPointerMode.valueOf(selected),
                             ),
                         )
                     },

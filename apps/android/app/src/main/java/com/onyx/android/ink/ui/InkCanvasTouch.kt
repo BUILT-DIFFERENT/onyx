@@ -25,6 +25,7 @@ import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.input.DoubleFingerMode
+import com.onyx.android.input.DoubleTapZoomPointerMode
 import com.onyx.android.input.InputSettings
 import com.onyx.android.input.MultiFingerTapAction
 import com.onyx.android.input.SingleFingerMode
@@ -383,9 +384,9 @@ private fun handlePointerDown(
     if (!interaction.allowEditing) {
         return true
     }
-    if (pointerIsDoubleTapGesture(event, actionIndex, interaction, runtime)) {
+    if (pointerIsDoubleTapGesture(event, actionIndex, interaction, runtime, pointerIsStylusStream)) {
         interaction.onDoubleTapGesture()
-        resetLastTap(runtime)
+        resetTapTracking(runtime)
         return true
     }
     val pointerMode = resolvePointerMode(event, actionIndex, interaction, runtime, pointerIsStylusStream)
@@ -458,17 +459,30 @@ private fun pointerIsDoubleTapGesture(
     pointerIndex: Int,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
+    pointerIsStylusStream: Boolean,
 ): Boolean {
     if (event.pointerCount != 1) {
         return false
     }
-    if (!isPointerDefinitelyFinger(event, pointerIndex)) {
+    val isFingerTap = isPointerDefinitelyFinger(event, pointerIndex)
+    val isStylusTap = pointerIsStylusStream || isStylusToolType(event.getToolType(pointerIndex))
+    if (!isFingerTap && !isStylusTap) {
         return false
     }
-    if (interaction.inputSettings.singleFingerMode == SingleFingerMode.DRAW) {
+    if (isFingerTap && interaction.inputSettings.singleFingerMode == SingleFingerMode.DRAW) {
         return false
     }
-    val previousTapTime = runtime.lastFingerTapTimeMs
+    if (isStylusTap &&
+        interaction.inputSettings.doubleTapZoomPointerMode != DoubleTapZoomPointerMode.FINGER_AND_STYLUS
+    ) {
+        return false
+    }
+    val previousTapTime =
+        if (isStylusTap) {
+            runtime.lastStylusTapTimeMs
+        } else {
+            runtime.lastFingerTapTimeMs
+        }
     if (previousTapTime <= 0L) {
         return false
     }
@@ -478,8 +492,14 @@ private fun pointerIsDoubleTapGesture(
     }
     val tapDistance =
         hypot(
-            (event.getX(pointerIndex) - runtime.lastFingerTapX).toDouble(),
-            (event.getY(pointerIndex) - runtime.lastFingerTapY).toDouble(),
+            (
+                event.getX(pointerIndex) -
+                    if (isStylusTap) runtime.lastStylusTapX else runtime.lastFingerTapX
+            ).toDouble(),
+            (
+                event.getY(pointerIndex) -
+                    if (isStylusTap) runtime.lastStylusTapY else runtime.lastFingerTapY
+            ).toDouble(),
         )
     return tapDistance <= DOUBLE_TAP_MAX_DISTANCE_PX
 }
@@ -494,10 +514,23 @@ private fun recordLastFingerTap(
     runtime.lastFingerTapY = event.getY(pointerIndex)
 }
 
-private fun resetLastTap(runtime: InkCanvasRuntime) {
+private fun recordLastStylusTap(
+    event: MotionEvent,
+    pointerIndex: Int,
+    runtime: InkCanvasRuntime,
+) {
+    runtime.lastStylusTapTimeMs = event.eventTime
+    runtime.lastStylusTapX = event.getX(pointerIndex)
+    runtime.lastStylusTapY = event.getY(pointerIndex)
+}
+
+private fun resetTapTracking(runtime: InkCanvasRuntime) {
     runtime.lastFingerTapTimeMs = 0L
     runtime.lastFingerTapX = 0f
     runtime.lastFingerTapY = 0f
+    runtime.lastStylusTapTimeMs = 0L
+    runtime.lastStylusTapX = 0f
+    runtime.lastStylusTapY = 0f
 }
 
 private fun handlePointerMove(
@@ -741,6 +774,11 @@ private fun handlePointerUp(
         runtime.hoverPreviewState.hide()
         if (isPointerDefinitelyFinger(event, actionIndex)) {
             recordLastFingerTap(event, actionIndex, runtime)
+        } else if (
+            pointerWasStylusStream &&
+            interaction.inputSettings.doubleTapZoomPointerMode == DoubleTapZoomPointerMode.FINGER_AND_STYLUS
+        ) {
+            recordLastStylusTap(event, actionIndex, runtime)
         }
         handled = true
     } else {
@@ -802,8 +840,13 @@ private fun handlePointerUp(
             runtime.hoverPreviewState.hide()
             if (isPointerDefinitelyFinger(event, actionIndex)) {
                 recordLastFingerTap(event, actionIndex, runtime)
+            } else if (
+                pointerWasStylusStream &&
+                interaction.inputSettings.doubleTapZoomPointerMode == DoubleTapZoomPointerMode.FINGER_AND_STYLUS
+            ) {
+                recordLastStylusTap(event, actionIndex, runtime)
             } else {
-                resetLastTap(runtime)
+                resetTapTracking(runtime)
             }
             handled = true
         }
@@ -909,7 +952,7 @@ private fun handleCancel(
     runtime.stylusPointerIds.clear()
     runtime.stylusLongHoldStartTimes.clear()
     runtime.stylusLongHoldActivePointerIds.clear()
-    resetLastTap(runtime)
+    resetTapTracking(runtime)
     resetMultiFingerTap(runtime)
     runtime.panVelocityTracker?.recycle()
     runtime.panVelocityTracker = null

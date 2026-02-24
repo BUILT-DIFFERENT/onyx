@@ -6,6 +6,7 @@ import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.input.DoubleFingerMode
 import com.onyx.android.input.DoubleTapZoomAction
+import com.onyx.android.input.DoubleTapZoomPointerMode
 import com.onyx.android.input.InputSettings
 import com.onyx.android.input.MultiFingerTapAction
 import com.onyx.android.input.SingleFingerMode
@@ -62,6 +63,7 @@ class EditorSettingsRepository
                     stylusSecondaryAction = settings.inputSettings.stylusSecondaryAction.name,
                     stylusLongHoldAction = settings.inputSettings.stylusLongHoldAction.name,
                     doubleTapZoomAction = settings.inputSettings.doubleTapZoomAction.name,
+                    doubleTapZoomPointerMode = settings.inputSettings.doubleTapZoomPointerMode.name,
                     twoFingerTapAction = settings.inputSettings.twoFingerTapAction.name,
                     threeFingerTapAction = settings.inputSettings.threeFingerTapAction.name,
                     updatedAt = System.currentTimeMillis(),
@@ -92,6 +94,9 @@ class EditorSettingsRepository
             val doubleTapZoomAction =
                 runCatching { DoubleTapZoomAction.valueOf(doubleTapZoomAction) }
                     .getOrDefault(DoubleTapZoomAction.NONE)
+            val doubleTapZoomPointerMode =
+                runCatching { DoubleTapZoomPointerMode.valueOf(doubleTapZoomPointerMode) }
+                    .getOrDefault(DoubleTapZoomPointerMode.FINGER_ONLY)
             val twoFingerTapAction =
                 runCatching { MultiFingerTapAction.valueOf(twoFingerTapAction) }
                     .getOrDefault(MultiFingerTapAction.UNDO)
@@ -130,6 +135,7 @@ class EditorSettingsRepository
                         stylusSecondaryAction = stylusSecondaryAction,
                         stylusLongHoldAction = stylusLongHoldAction,
                         doubleTapZoomAction = doubleTapZoomAction,
+                        doubleTapZoomPointerMode = doubleTapZoomPointerMode,
                         twoFingerTapAction = twoFingerTapAction,
                         threeFingerTapAction = threeFingerTapAction,
                     ),

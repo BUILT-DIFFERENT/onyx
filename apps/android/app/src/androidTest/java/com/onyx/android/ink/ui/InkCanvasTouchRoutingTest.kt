@@ -16,6 +16,7 @@ import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.input.DoubleFingerMode
 import com.onyx.android.input.DoubleTapZoomAction
+import com.onyx.android.input.DoubleTapZoomPointerMode
 import com.onyx.android.input.InputSettings
 import com.onyx.android.input.MultiFingerTapAction
 import com.onyx.android.input.SingleFingerMode
@@ -1140,6 +1141,126 @@ class InkCanvasTouchRoutingTest {
         }
 
         assertEquals(1, doubleTapCount)
+    }
+
+    @Test
+    fun stylusDoubleTap_triggersCallbackWhenEnabled() {
+        val view = GlInkSurfaceView(context)
+        val runtime = createRuntime()
+        var doubleTapCount = 0
+        val interaction =
+            createInteraction(
+                inputSettings =
+                    InputSettings(
+                        doubleTapZoomAction = DoubleTapZoomAction.CYCLE_PRESET,
+                        doubleTapZoomPointerMode = DoubleTapZoomPointerMode.FINGER_AND_STYLUS,
+                    ),
+                onDoubleTapGesture = { doubleTapCount += 1 },
+            )
+
+        val downTime = 2400L
+        val firstDown =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 60f,
+                y = 60f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val firstUp =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 16L,
+                action = MotionEvent.ACTION_UP,
+                x = 60f,
+                y = 60f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val secondDown =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 120L,
+                action = MotionEvent.ACTION_DOWN,
+                x = 62f,
+                y = 62f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, firstDown, interaction, runtime))
+            assertTrue(handleTouchEvent(view, firstUp, interaction, runtime))
+            assertTrue(handleTouchEvent(view, secondDown, interaction, runtime))
+        } finally {
+            firstDown.recycle()
+            firstUp.recycle()
+            secondDown.recycle()
+        }
+
+        assertEquals(1, doubleTapCount)
+    }
+
+    @Test
+    fun stylusDoubleTap_doesNotTriggerCallbackWhenDisabled() {
+        val view = GlInkSurfaceView(context)
+        val runtime = createRuntime()
+        var doubleTapCount = 0
+        val interaction =
+            createInteraction(
+                inputSettings =
+                    InputSettings(
+                        doubleTapZoomAction = DoubleTapZoomAction.CYCLE_PRESET,
+                        doubleTapZoomPointerMode = DoubleTapZoomPointerMode.FINGER_ONLY,
+                    ),
+                onDoubleTapGesture = { doubleTapCount += 1 },
+            )
+
+        val downTime = 2500L
+        val firstDown =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 60f,
+                y = 60f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val firstUp =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 16L,
+                action = MotionEvent.ACTION_UP,
+                x = 60f,
+                y = 60f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val secondDown =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 120L,
+                action = MotionEvent.ACTION_DOWN,
+                x = 62f,
+                y = 62f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, firstDown, interaction, runtime))
+            assertTrue(handleTouchEvent(view, firstUp, interaction, runtime))
+            assertTrue(handleTouchEvent(view, secondDown, interaction, runtime))
+        } finally {
+            firstDown.recycle()
+            firstUp.recycle()
+            secondDown.recycle()
+        }
+
+        assertEquals(0, doubleTapCount)
     }
 
     @Test

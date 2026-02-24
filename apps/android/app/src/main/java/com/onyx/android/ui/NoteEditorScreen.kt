@@ -1967,6 +1967,7 @@ private fun buildToolbarState(
 private fun InputSettings.allowsAnyFingerGesture(): Boolean =
     singleFingerMode != SingleFingerMode.IGNORE ||
         doubleFingerMode != DoubleFingerMode.IGNORE ||
+        doubleTapZoomAction != DoubleTapZoomAction.NONE ||
         twoFingerTapAction != MultiFingerTapAction.NONE ||
         threeFingerTapAction != MultiFingerTapAction.NONE
 

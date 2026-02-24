@@ -23,6 +23,11 @@ enum class DoubleTapZoomAction {
     FIT_TO_PAGE,
 }
 
+enum class DoubleTapZoomPointerMode {
+    FINGER_ONLY,
+    FINGER_AND_STYLUS,
+}
+
 enum class MultiFingerTapAction {
     NONE,
     UNDO,
@@ -36,6 +41,7 @@ data class InputSettings(
     val stylusSecondaryAction: StylusButtonAction = StylusButtonAction.ERASER_HOLD,
     val stylusLongHoldAction: StylusButtonAction = StylusButtonAction.NO_ACTION,
     val doubleTapZoomAction: DoubleTapZoomAction = DoubleTapZoomAction.NONE,
+    val doubleTapZoomPointerMode: DoubleTapZoomPointerMode = DoubleTapZoomPointerMode.FINGER_ONLY,
     val twoFingerTapAction: MultiFingerTapAction = MultiFingerTapAction.UNDO,
     val threeFingerTapAction: MultiFingerTapAction = MultiFingerTapAction.REDO,
 )
