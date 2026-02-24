@@ -1,6 +1,7 @@
 package com.onyx.android.data
 
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.onyx.android.data.migrations.MIGRATION_11_12
 import com.onyx.android.data.migrations.MIGRATION_4_5
 import io.mockk.every
 import io.mockk.mockk
@@ -94,5 +95,16 @@ class OnyxDatabaseTest {
 
         assert(executedSql.any { it.contains("CREATE TABLE IF NOT EXISTS editor_settings") })
         assert(executedSql.any { it.contains("INSERT OR IGNORE INTO editor_settings") })
+    }
+
+    @Test
+    fun `migration 11 to 12 adds latency optimization mode to editor settings`() {
+        val database = mockk<SupportSQLiteDatabase>(relaxed = true)
+        val executedSql = mutableListOf<String>()
+        every { database.execSQL(capture(executedSql)) } returns Unit
+
+        MIGRATION_11_12.migrate(database)
+
+        assert(executedSql.any { it.contains("ADD COLUMN latencyOptimizationMode TEXT NOT NULL DEFAULT 'NORMAL'") })
     }
 }

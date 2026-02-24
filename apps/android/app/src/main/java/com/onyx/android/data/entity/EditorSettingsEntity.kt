@@ -31,5 +31,6 @@ data class EditorSettingsEntity(
     val doubleTapZoomPointerMode: String = "FINGER_ONLY",
     val twoFingerTapAction: String = "UNDO",
     val threeFingerTapAction: String = "REDO",
+    val latencyOptimizationMode: String = "NORMAL",
     val updatedAt: Long = 0L,
 )

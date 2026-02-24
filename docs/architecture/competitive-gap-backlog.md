@@ -643,11 +643,11 @@ This addendum expands scope without removing prior backlog work. It captures eve
 ### Gesture / Stylus Expansion
 
 - [ ] `GEST-05` Latency optimization modes (Normal/Fast Experimental)
-  - Status: `Missing`
+  - Status: `Strong Partial (Wave Q-LatencyModes MVP)`
   - Competitor behavior: Notewise exposes latency optimization choices for device-specific tuning.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorSettings.kt`
-  - What exists now: Single rendering/input profile.
-  - What is missing: User-selectable latency profile and performance guardrails.
+  - What exists now: Input settings now expose persisted `NORMAL` vs `FAST_EXPERIMENTAL` latency profile, with runtime wiring that forces motion prediction in fast mode and applies lower smoothing for lower perceived latency.
+  - What is missing: Dedicated benchmark guardrails and device-tier auto tuning.
   - Exact change needed: Add latency profile setting, wire profile params into input prediction/smoothing, and present experimental disclaimer text.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`

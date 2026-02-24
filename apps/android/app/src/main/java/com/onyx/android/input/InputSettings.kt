@@ -35,6 +35,11 @@ enum class MultiFingerTapAction {
     REDO,
 }
 
+enum class LatencyOptimizationMode {
+    NORMAL,
+    FAST_EXPERIMENTAL,
+}
+
 data class InputSettings(
     val singleFingerMode: SingleFingerMode = SingleFingerMode.PAN,
     val doubleFingerMode: DoubleFingerMode = DoubleFingerMode.ZOOM_PAN,
@@ -45,4 +50,5 @@ data class InputSettings(
     val doubleTapZoomPointerMode: DoubleTapZoomPointerMode = DoubleTapZoomPointerMode.FINGER_ONLY,
     val twoFingerTapAction: MultiFingerTapAction = MultiFingerTapAction.UNDO,
     val threeFingerTapAction: MultiFingerTapAction = MultiFingerTapAction.REDO,
+    val latencyOptimizationMode: LatencyOptimizationMode = LatencyOptimizationMode.NORMAL,
 )

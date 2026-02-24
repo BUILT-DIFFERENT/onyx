@@ -93,6 +93,7 @@ import com.onyx.android.input.DoubleFingerMode
 import com.onyx.android.input.DoubleTapZoomAction
 import com.onyx.android.input.DoubleTapZoomPointerMode
 import com.onyx.android.input.InputSettings
+import com.onyx.android.input.LatencyOptimizationMode
 import com.onyx.android.input.MultiFingerTapAction
 import com.onyx.android.input.SingleFingerMode
 import com.onyx.android.input.StylusButtonAction
@@ -1028,6 +1029,25 @@ private fun InputSettingsDialog(
                         )
                     },
                 )
+                InputSettingsSelector(
+                    label = "Latency profile",
+                    selected = settings.latencyOptimizationMode.name,
+                    options = LatencyOptimizationMode.entries.map { it.name },
+                    onSelect = { selected ->
+                        onSettingsChange(
+                            settings.copy(
+                                latencyOptimizationMode = LatencyOptimizationMode.valueOf(selected),
+                            ),
+                        )
+                    },
+                )
+                if (settings.latencyOptimizationMode == LatencyOptimizationMode.FAST_EXPERIMENTAL) {
+                    Text(
+                        text = "Fast Experimental may reduce line smoothing and can be less stable on some devices.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 InputSettingsSelector(
                     label = "Three-finger tap",
                     selected = settings.threeFingerTapAction.name,

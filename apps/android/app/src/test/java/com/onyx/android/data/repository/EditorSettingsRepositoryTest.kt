@@ -2,6 +2,7 @@ package com.onyx.android.data.repository
 
 import com.onyx.android.data.entity.EditorSettingsEntity
 import com.onyx.android.ink.model.Tool
+import com.onyx.android.input.LatencyOptimizationMode
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -168,7 +169,8 @@ class EditorSettingsRepositoryTest {
                             entity.penBaseWidth == 4.0f &&
                             entity.highlighterColor == "#654321" &&
                             entity.highlighterBaseWidth == 8.0f &&
-                            entity.lastNonEraserTool == "HIGHLIGHTER"
+                            entity.lastNonEraserTool == "HIGHLIGHTER" &&
+                            entity.latencyOptimizationMode == "NORMAL"
                     },
                 )
             }
@@ -185,6 +187,7 @@ class EditorSettingsRepositoryTest {
         assertEquals(Tool.HIGHLIGHTER, defaults.highlighterBrush.tool)
         assertEquals("#B31E88E5", defaults.highlighterBrush.color)
         assertEquals(Tool.PEN, defaults.lastNonEraserTool)
+        assertEquals(LatencyOptimizationMode.NORMAL, defaults.inputSettings.latencyOptimizationMode)
     }
 
     @Test
@@ -224,5 +227,46 @@ class EditorSettingsRepositoryTest {
             assertEquals(Tool.PEN, result.penBrush.tool)
             assertEquals(Tool.HIGHLIGHTER, result.highlighterBrush.tool)
             assertEquals(Tool.PEN, result.lastNonEraserTool)
+            assertEquals(LatencyOptimizationMode.NORMAL, result.inputSettings.latencyOptimizationMode)
+        }
+
+    @Test
+    fun `getSettings maps latency optimization mode`() =
+        runTest {
+            val entity =
+                EditorSettingsEntity(
+                    settingsId = "default",
+                    selectedTool = "PEN",
+                    penTool = "PEN",
+                    penColor = "#000000",
+                    penBaseWidth = 2.0f,
+                    penMinWidthFactor = 0.85f,
+                    penMaxWidthFactor = 1.15f,
+                    penSmoothingLevel = 0.35f,
+                    penEndTaperStrength = 0.35f,
+                    highlighterTool = "HIGHLIGHTER",
+                    highlighterColor = "#B31E88E5",
+                    highlighterBaseWidth = 6.5f,
+                    highlighterMinWidthFactor = 0.85f,
+                    highlighterMaxWidthFactor = 1.15f,
+                    highlighterSmoothingLevel = 0.35f,
+                    highlighterEndTaperStrength = 0.35f,
+                    lastNonEraserTool = "PEN",
+                    latencyOptimizationMode = "FAST_EXPERIMENTAL",
+                    updatedAt = 123L,
+                )
+            val dao =
+                mockk<com.onyx.android.data.dao.EditorSettingsDao> {
+                    every { getSettings() } returns flowOf(entity)
+                }
+            val repository = EditorSettingsRepository(dao)
+
+            val result = repository.getSettings().first()
+
+            assertNotNull(result)
+            assertEquals(
+                LatencyOptimizationMode.FAST_EXPERIMENTAL,
+                result!!.inputSettings.latencyOptimizationMode,
+            )
         }
 }

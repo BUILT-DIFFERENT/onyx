@@ -8,6 +8,7 @@ import com.onyx.android.input.DoubleFingerMode
 import com.onyx.android.input.DoubleTapZoomAction
 import com.onyx.android.input.DoubleTapZoomPointerMode
 import com.onyx.android.input.InputSettings
+import com.onyx.android.input.LatencyOptimizationMode
 import com.onyx.android.input.MultiFingerTapAction
 import com.onyx.android.input.SingleFingerMode
 import com.onyx.android.input.StylusButtonAction
@@ -66,6 +67,7 @@ class EditorSettingsRepository
                     doubleTapZoomPointerMode = settings.inputSettings.doubleTapZoomPointerMode.name,
                     twoFingerTapAction = settings.inputSettings.twoFingerTapAction.name,
                     threeFingerTapAction = settings.inputSettings.threeFingerTapAction.name,
+                    latencyOptimizationMode = settings.inputSettings.latencyOptimizationMode.name,
                     updatedAt = System.currentTimeMillis(),
                 )
             editorSettingsDao.saveSettings(entity)
@@ -103,6 +105,9 @@ class EditorSettingsRepository
             val threeFingerTapAction =
                 runCatching { MultiFingerTapAction.valueOf(threeFingerTapAction) }
                     .getOrDefault(MultiFingerTapAction.REDO)
+            val latencyOptimizationMode =
+                runCatching { LatencyOptimizationMode.valueOf(latencyOptimizationMode) }
+                    .getOrDefault(LatencyOptimizationMode.NORMAL)
 
             return EditorSettings(
                 selectedTool = selected,
@@ -138,6 +143,7 @@ class EditorSettingsRepository
                         doubleTapZoomPointerMode = doubleTapZoomPointerMode,
                         twoFingerTapAction = twoFingerTapAction,
                         threeFingerTapAction = threeFingerTapAction,
+                        latencyOptimizationMode = latencyOptimizationMode,
                     ),
             )
         }

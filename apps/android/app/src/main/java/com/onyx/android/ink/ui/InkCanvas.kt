@@ -28,6 +28,7 @@ import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.input.InputSettings
+import com.onyx.android.input.LatencyOptimizationMode
 import android.graphics.Path as AndroidPath
 
 internal enum class PointerMode {
@@ -40,6 +41,7 @@ private const val GL_HOVER_ERASER_COLOR = 0xFF6B6B6B.toInt()
 private const val GL_HOVER_ERASER_ALPHA = 0.6f
 private const val GL_HOVER_PEN_ALPHA = 0.35f
 private const val GL_MIN_HOVER_SCREEN_RADIUS = 0.1f
+private const val FAST_MODE_SMOOTHING_MULTIPLIER = 0.6f
 
 @Suppress("LongParameterList")
 internal class InkCanvasRuntime(
@@ -153,8 +155,11 @@ fun InkCanvas(
     val currentAllowFingerGestures by rememberUpdatedState(state.allowFingerGestures)
     val currentInputSettings by rememberUpdatedState(state.inputSettings)
     val currentCallbacks by rememberUpdatedState(callbacks)
+    val currentLatencyMode by rememberUpdatedState(state.inputSettings.latencyOptimizationMode)
     val context = LocalContext.current
     val flagStore = remember(context) { FeatureFlagStore.getInstance(context) }
+    val runtimeBrush by rememberUpdatedState(adjustBrushForLatencyMode(currentBrush, currentLatencyMode))
+    val predictionEnabledForMode by rememberUpdatedState(resolvePredictionEnabled(flagStore, currentLatencyMode))
     val hoverPreviewState = remember { HoverPreviewState() }
 
     val runtime =
@@ -196,7 +201,7 @@ fun InkCanvas(
                 syncMotionPredictionAdapter(
                     runtime = runtime,
                     context = context,
-                    enabled = flagStore.get(FeatureFlag.INK_PREDICTION_ENABLED),
+                    enabled = predictionEnabledForMode,
                 )
                 GlInkSurfaceView(context).apply {
                     // GL view handles all stroke rendering and touch input with low-latency updates.
@@ -231,7 +236,7 @@ fun InkCanvas(
                         try {
                             val interaction =
                                 InkCanvasInteraction(
-                                    brush = currentBrush,
+                                    brush = runtimeBrush,
                                     isSegmentEraserEnabled = currentSegmentEraserEnabled,
                                     lassoSelection = currentLassoSelection,
                                     viewTransform = currentTransform,
@@ -274,7 +279,7 @@ fun InkCanvas(
                         try {
                             val interaction =
                                 InkCanvasInteraction(
-                                    brush = currentBrush,
+                                    brush = runtimeBrush,
                                     isSegmentEraserEnabled = currentSegmentEraserEnabled,
                                     lassoSelection = currentLassoSelection,
                                     viewTransform = currentTransform,
@@ -316,7 +321,7 @@ fun InkCanvas(
                     syncMotionPredictionAdapter(
                         runtime = runtime,
                         context = inProgressView.context,
-                        enabled = flagStore.get(FeatureFlag.INK_PREDICTION_ENABLED),
+                        enabled = predictionEnabledForMode,
                     )
                     val persistedIds = currentStrokes.asSequence().map { it.id }.toHashSet()
                     inProgressView.maskPath =
@@ -369,6 +374,27 @@ fun InkCanvas(
         )
     }
 }
+
+private fun adjustBrushForLatencyMode(
+    brush: Brush,
+    mode: LatencyOptimizationMode,
+): Brush =
+    when (mode) {
+        LatencyOptimizationMode.NORMAL -> brush
+        LatencyOptimizationMode.FAST_EXPERIMENTAL ->
+            brush.copy(
+                smoothingLevel = (brush.smoothingLevel * FAST_MODE_SMOOTHING_MULTIPLIER).coerceAtLeast(0f),
+            )
+    }
+
+private fun resolvePredictionEnabled(
+    featureFlagStore: FeatureFlagStore,
+    mode: LatencyOptimizationMode,
+): Boolean =
+    when (mode) {
+        LatencyOptimizationMode.NORMAL -> featureFlagStore.get(FeatureFlag.INK_PREDICTION_ENABLED)
+        LatencyOptimizationMode.FAST_EXPERIMENTAL -> true
+    }
 
 @Suppress("ReturnCount")
 private fun shouldConsumeCanvasTouchEvent(
