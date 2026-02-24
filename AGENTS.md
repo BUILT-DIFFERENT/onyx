@@ -36,6 +36,7 @@
 - Command workflow clarification: root `bun run lint`/`lint:all` now run formatting first, and `bun run android:lint` runs Android format (`ktlintFormat`) before lint checks to reduce style-only reruns.
 - Page manager parity clarification: `EDIT-14` currently has persistent reorder/duplicate/delete operations via the editor overflow dialog in `NoteEditorScreen.kt`, but thumbnail-grid drag/drop parity and page-operation undo are still pending.
 - Eraser size clarification: eraser diameter now persists as `EditorSettings.eraserBaseWidth` / `editor_settings.eraserBaseWidth` (Room v13) and segment-eraser hit radius scales from that value in `InkCanvasTouch.kt`.
+- Eraser cursor clarification: eraser interactions now actively drive `HoverPreviewState` during touch erase paths (not hover-only), so cursor visibility/position assertions should include drag lifecycle (`down/move` visible, `up/cancel` hidden).
 
 ## Context7 Library IDs (Project Stack)
 

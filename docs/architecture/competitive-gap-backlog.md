@@ -573,11 +573,11 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Validation gate: Transform unit tests for snap thresholds + interaction tests for ruler-assisted lines.
 
 - [ ] `EDIT-25` Area eraser visual cursor parity
-  - Status: `Missing`
+  - Status: `Strong Partial (Wave S-EraserCursorOverlay)`
   - Competitor behavior: Samsung shows a live circular eraser cursor while area erasing.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
-  - What exists now: Area erase path planned, but no explicit eraser cursor overlay contract.
-  - What is missing: Cursor overlay, center marker, and size feedback tied to eraser radius.
+  - What exists now: Active eraser gestures now drive a live eraser cursor overlay (not hover-only), and cursor radius tracks configured eraser size during erase interactions.
+  - What is missing: Center marker polish and dedicated area-eraser mode cursor semantics beyond current stroke/segment erase flows.
   - Exact change needed: Add eraser cursor overlay layer that reflects current radius and input centroid in real time.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`

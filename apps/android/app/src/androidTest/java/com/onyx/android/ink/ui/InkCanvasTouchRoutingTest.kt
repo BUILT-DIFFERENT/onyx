@@ -1599,6 +1599,69 @@ class InkCanvasTouchRoutingTest {
     }
 
     @Test
+    fun eraserTouch_showsAndUpdatesHoverCursor_untilPointerUp() {
+        val view = GlInkSurfaceView(context)
+        val runtime = createRuntime()
+        val interaction =
+            createInteraction(
+                brush = Brush(tool = Tool.ERASER, baseWidth = 16f),
+                strokes = listOf(sampleStroke()),
+            )
+
+        val downTime = 1420L
+        val down =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 44f,
+                y = 46f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val move =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 16L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 62f,
+                y = 64f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val up =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 32L,
+                action = MotionEvent.ACTION_UP,
+                x = 62f,
+                y = 64f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, down, interaction, runtime))
+            assertTrue(runtime.hoverPreviewState.isVisible)
+            assertEquals(Tool.ERASER, runtime.hoverPreviewState.tool)
+            assertEquals(44f, runtime.hoverPreviewState.x, DELTA)
+            assertEquals(46f, runtime.hoverPreviewState.y, DELTA)
+
+            assertTrue(handleTouchEvent(view, move, interaction, runtime))
+            assertTrue(runtime.hoverPreviewState.isVisible)
+            assertEquals(62f, runtime.hoverPreviewState.x, DELTA)
+            assertEquals(64f, runtime.hoverPreviewState.y, DELTA)
+
+            assertTrue(handleTouchEvent(view, up, interaction, runtime))
+            assertFalse(runtime.hoverPreviewState.isVisible)
+        } finally {
+            down.recycle()
+            move.recycle()
+            up.recycle()
+        }
+    }
+
+    @Test
     fun offPageStrokeStart_isIgnored() {
         val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
@@ -1922,6 +1985,7 @@ private fun createRuntime(): InkCanvasRuntime =
     )
 
 private fun createInteraction(
+    brush: Brush = Brush(tool = Tool.PEN),
     strokes: List<Stroke> = emptyList(),
     pageWidth: Float = 1000f,
     pageHeight: Float = 1000f,
@@ -1939,7 +2003,7 @@ private fun createInteraction(
     onStrokeRenderFinished: (Long) -> Unit = {},
 ): InkCanvasInteraction =
     InkCanvasInteraction(
-        brush = Brush(tool = Tool.PEN),
+        brush = brush,
         lassoSelection = LassoSelection(),
         viewTransform = ViewTransform.DEFAULT,
         strokes = strokes,

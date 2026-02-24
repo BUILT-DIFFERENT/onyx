@@ -668,6 +668,11 @@ private fun handleEraserAtPointer(
     runtime: InkCanvasRuntime,
 ): Boolean {
     val pointerId = event.getPointerId(pointerIndex)
+    runtime.hoverPreviewState.show(
+        x = event.getX(pointerIndex),
+        y = event.getY(pointerIndex),
+        tool = Tool.ERASER,
+    )
     val currentPagePoint =
         Pair(
             interaction.viewTransform.screenToPageX(event.getX(pointerIndex)),
