@@ -2,6 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { NoteSchema } from '../schemas/note';
 import { PageSchema } from '../schemas/page';
 import { PageObjectSchema } from '../schemas/pageObject';
+import {
+  ExportMetadataSchema,
+  GestureSettingsSchema,
+  TemplateScopeSchema,
+} from '../schemas/featureMetadata';
 import { SearchIndexTokenSchema } from '../schemas/searchIndexToken';
 import { StrokeSchema } from '../schemas/stroke';
 
@@ -526,6 +531,94 @@ describe('SearchIndexTokenSchema', () => {
       SearchIndexTokenSchema.parse({
         ...validHandwritingToken,
         indexVersion: 0,
+      }),
+    ).toThrow();
+  });
+});
+
+describe('GestureSettingsSchema', () => {
+  const validSettings = {
+    profileId: '191e8400-e29b-41d4-a716-446655440018',
+    ownerUserId: 'user_123',
+    singleFingerMode: 'PAN' as const,
+    doubleFingerMode: 'ZOOM_PAN' as const,
+    stylusPrimaryAction: 'ERASER_HOLD' as const,
+    stylusSecondaryAction: 'ERASER_TOGGLE' as const,
+    stylusLongHoldAction: 'NO_ACTION' as const,
+    doubleTapZoomAction: 'CYCLE_PRESET' as const,
+    doubleTapZoomPointerMode: 'FINGER_ONLY' as const,
+    twoFingerTapAction: 'UNDO' as const,
+    threeFingerTapAction: 'REDO' as const,
+    latencyOptimizationMode: 'NORMAL' as const,
+    updatedAt: 1708300817000,
+  };
+
+  it('parses valid gesture settings', () => {
+    const result = GestureSettingsSchema.parse(validSettings);
+    expect(result.twoFingerTapAction).toBe('UNDO');
+  });
+
+  it('rejects invalid enum values', () => {
+    expect(() =>
+      GestureSettingsSchema.parse({
+        ...validSettings,
+        singleFingerMode: 'INVALID',
+      }),
+    ).toThrow();
+  });
+});
+
+describe('TemplateScopeSchema', () => {
+  const validTemplateScope = {
+    scopeId: '291e8400-e29b-41d4-a716-446655440019',
+    noteId: '550e8400-e29b-41d4-a716-446655440000',
+    templateId: null,
+    backgroundKind: 'grid' as const,
+    spacing: 24,
+    colorHex: '#E0E0E0',
+    paperSize: 'a4' as const,
+    lineWidth: 1.2,
+    category: 'default' as const,
+    applyScope: 'allPages' as const,
+    updatedAt: 1708300819000,
+  };
+
+  it('parses valid template scope metadata', () => {
+    const result = TemplateScopeSchema.parse(validTemplateScope);
+    expect(result.applyScope).toBe('allPages');
+  });
+
+  it('rejects invalid color hex', () => {
+    expect(() =>
+      TemplateScopeSchema.parse({
+        ...validTemplateScope,
+        colorHex: 'blue',
+      }),
+    ).toThrow();
+  });
+});
+
+describe('ExportMetadataSchema', () => {
+  const validExport = {
+    exportId: '391e8400-e29b-41d4-a716-446655440020',
+    noteId: '550e8400-e29b-41d4-a716-446655440000',
+    ownerUserId: 'user_123',
+    format: 'pdf' as const,
+    mode: 'flattened' as const,
+    status: 'queued' as const,
+    requestedAt: 1708300820000,
+  };
+
+  it('parses valid export metadata', () => {
+    const result = ExportMetadataSchema.parse(validExport);
+    expect(result.mode).toBe('flattened');
+  });
+
+  it('rejects invalid status', () => {
+    expect(() =>
+      ExportMetadataSchema.parse({
+        ...validExport,
+        status: 'done',
       }),
     ).toThrow();
   });

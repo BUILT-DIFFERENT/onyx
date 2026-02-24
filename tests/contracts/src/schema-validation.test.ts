@@ -1,7 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { NoteSchema, PageObjectSchema, PageSchema, SearchIndexTokenSchema, StrokeSchema } from '@onyx/validation';
+import {
+  ExportMetadataSchema,
+  GestureSettingsSchema,
+  NoteSchema,
+  PageObjectSchema,
+  PageSchema,
+  SearchIndexTokenSchema,
+  StrokeSchema,
+  TemplateScopeSchema,
+} from '@onyx/validation';
 
 const fixturesDir = join(__dirname, '../fixtures');
 
@@ -117,6 +126,29 @@ describe('Contract Fixtures Validation', () => {
       expect(result.source).toBe('pdfOcr');
       expect(result.token).toBe('diagram');
       expect(result.indexVersion).toBeTypeOf('number');
+    });
+  });
+
+  describe('Feature metadata schemas', () => {
+    it('validates gesture-settings.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'gesture-settings.fixture.json'), 'utf-8'));
+      const result = GestureSettingsSchema.parse(fixture);
+      expect(result.singleFingerMode).toBe('PAN');
+      expect(result.threeFingerTapAction).toBe('REDO');
+    });
+
+    it('validates template-scope.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'template-scope.fixture.json'), 'utf-8'));
+      const result = TemplateScopeSchema.parse(fixture);
+      expect(result.backgroundKind).toBe('grid');
+      expect(result.applyScope).toBe('allPages');
+    });
+
+    it('validates export-metadata.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'export-metadata.fixture.json'), 'utf-8'));
+      const result = ExportMetadataSchema.parse(fixture);
+      expect(result.format).toBe('pdf');
+      expect(result.mode).toBe('flattened');
     });
   });
 });

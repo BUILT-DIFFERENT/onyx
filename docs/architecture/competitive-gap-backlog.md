@@ -870,22 +870,22 @@ Proposed public API/interface/type updates to align with backlog items:
 - New export/share contract surface for flattened vs layered annotation output metadata (Android + Convex consumers).
 
 - [ ] `XSURF-01` Convex schema/contracts for new feature metadata
-  - Status: `Strong Partial+ (Wave G attachment object contracts landed)`
+  - Status: `Strong Partial++ (Wave V-FeatureMetadataContracts)`
   - Competitor behavior: Not a UI feature by itself; required to support parity features across devices.
-  - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\docs\architecture\system-overview.md`
-  - What exists now: Contracts now cover shape/image/text/audio/sticky/scan/file page-object metadata with fixture validation.
-  - What is missing: Gesture/template/export metadata surfaces still need canonical contract fixtures.
+  - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\packages\validation\src\schemas\featureMetadata.ts`, `C:\onyx\tests\contracts\fixtures\gesture-settings.fixture.json`, `C:\onyx\tests\contracts\fixtures\template-scope.fixture.json`, `C:\onyx\tests\contracts\fixtures\export-metadata.fixture.json`, `C:\onyx\docs\architecture\feature-metadata-contracts.md`
+  - What exists now: Contracts now cover object unions, search index metadata, gesture settings, template scope metadata, and export metadata with fixture validation.
+  - What is missing: Runtime sync mutation/query surfaces and feature-specific conflict resolution execution paths.
   - Exact change needed: Add Convex schema and contract fixtures for object tools, template scope, gesture settings, and export metadata before cross-device sync rollout.
   - Surface impact: `Convex`, `Android`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Contract fixture test suite and schema drift checks in CI.
 
 - [ ] `XSURF-02` Web implications tracking for view-only surface
-  - Status: `Strong Partial+ (fallback matrix expanded for attachment object kinds)`
+  - Status: `Strong Partial++ (fallback matrix expanded for feature metadata contracts)`
   - Competitor behavior: Not competitor-visible directly; needed so web does not break on new Android-authored metadata.
-  - Current Onyx evidence: `C:\onyx\apps\web\README.md`, `C:\onyx\docs\architecture\system-overview.md`
-  - What exists now: Web is view-only and does not yet define behavior for incoming advanced object metadata.
-  - What is missing: Compatibility matrix and fallback rendering rules for unsupported editor features.
+  - Current Onyx evidence: `C:\onyx\apps\web\README.md`, `C:\onyx\docs\architecture\web-object-fallback-matrix.md`
+  - What exists now: Fallback matrix now specifies decode/ignore semantics for object union kinds plus gesture/template/export/search metadata families.
+  - What is missing: Runtime web decode implementation tests and any user-facing unsupported-feature messaging.
   - Exact change needed: Define and implement web decode/fallback behavior for each new metadata field with explicit unsupported-feature affordances.
   - Surface impact: `Web`, `Convex`, `Docs/QA`
   - Priority wave: `Wave Foundation`

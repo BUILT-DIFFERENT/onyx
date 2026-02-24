@@ -133,4 +133,51 @@ export default defineSchema({
     .index('by_page', ['pageId'])
     .index('by_note_source', ['noteId', 'source'])
     .index('by_note_token', ['noteId', 'token']),
+  gestureSettings: defineTable({
+    profileId: v.string(),
+    ownerUserId: v.string(),
+    singleFingerMode: v.union(v.literal('DRAW'), v.literal('PAN'), v.literal('IGNORE')),
+    doubleFingerMode: v.union(v.literal('ZOOM_PAN'), v.literal('PAN_ONLY'), v.literal('IGNORE')),
+    stylusPrimaryAction: v.union(v.literal('ERASER_HOLD'), v.literal('ERASER_TOGGLE'), v.literal('NO_ACTION')),
+    stylusSecondaryAction: v.union(v.literal('ERASER_HOLD'), v.literal('ERASER_TOGGLE'), v.literal('NO_ACTION')),
+    stylusLongHoldAction: v.union(v.literal('ERASER_HOLD'), v.literal('ERASER_TOGGLE'), v.literal('NO_ACTION')),
+    doubleTapZoomAction: v.union(v.literal('NONE'), v.literal('CYCLE_PRESET'), v.literal('FIT_TO_PAGE')),
+    doubleTapZoomPointerMode: v.union(v.literal('FINGER_ONLY'), v.literal('FINGER_AND_STYLUS')),
+    twoFingerTapAction: v.union(v.literal('NONE'), v.literal('UNDO'), v.literal('REDO')),
+    threeFingerTapAction: v.union(v.literal('NONE'), v.literal('UNDO'), v.literal('REDO')),
+    latencyOptimizationMode: v.union(v.literal('NORMAL'), v.literal('FAST_EXPERIMENTAL')),
+    updatedAt: v.number(),
+  })
+    .index('by_profile_id', ['profileId'])
+    .index('by_owner', ['ownerUserId']),
+  templateScopes: defineTable({
+    scopeId: v.string(),
+    noteId: v.string(),
+    templateId: v.optional(v.union(v.string(), v.null())),
+    backgroundKind: v.union(v.literal('blank'), v.literal('grid'), v.literal('lined'), v.literal('dotted')),
+    spacing: v.number(),
+    colorHex: v.string(),
+    paperSize: v.optional(v.union(v.literal('a4'), v.literal('letter'), v.literal('infinite'))),
+    lineWidth: v.optional(v.number()),
+    category: v.optional(v.union(v.literal('default'), v.literal('planner'), v.literal('music'), v.literal('custom'))),
+    applyScope: v.union(v.literal('currentPage'), v.literal('allPages'), v.literal('newPages')),
+    updatedAt: v.number(),
+  })
+    .index('by_scope_id', ['scopeId'])
+    .index('by_note', ['noteId']),
+  exportMetadata: defineTable({
+    exportId: v.string(),
+    noteId: v.string(),
+    ownerUserId: v.string(),
+    format: v.literal('pdf'),
+    mode: v.union(v.literal('flattened'), v.literal('layered')),
+    status: v.union(v.literal('queued'), v.literal('running'), v.literal('succeeded'), v.literal('failed')),
+    assetId: v.optional(v.union(v.string(), v.null())),
+    requestedAt: v.number(),
+    completedAt: v.optional(v.union(v.number(), v.null())),
+    errorMessage: v.optional(v.string()),
+  })
+    .index('by_export_id', ['exportId'])
+    .index('by_note', ['noteId'])
+    .index('by_owner', ['ownerUserId']),
 });

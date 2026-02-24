@@ -1,0 +1,15 @@
+{
+  "profileId": "191e8400-e29b-41d4-a716-446655440018",
+  "ownerUserId": "user_123",
+  "singleFingerMode": "PAN",
+  "doubleFingerMode": "ZOOM_PAN",
+  "stylusPrimaryAction": "ERASER_HOLD",
+  "stylusSecondaryAction": "ERASER_TOGGLE",
+  "stylusLongHoldAction": "NO_ACTION",
+  "doubleTapZoomAction": "CYCLE_PRESET",
+  "doubleTapZoomPointerMode": "FINGER_ONLY",
+  "twoFingerTapAction": "UNDO",
+  "threeFingerTapAction": "REDO",
+  "latencyOptimizationMode": "NORMAL",
+  "updatedAt": 1708300817000
+}

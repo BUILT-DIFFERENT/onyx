@@ -33,6 +33,17 @@ Web currently acts as a view-only surface for note metadata. This matrix defines
 2. Rendering fallback must not block note open.
 3. Partial object decode success should still return successfully parsed objects.
 
+## Non-Object Metadata Fallback (Current Wave Expansion)
+
+Web decode should also tolerate new metadata contracts that are not yet rendered in web runtime:
+
+| Contract | Decode behavior | Runtime behavior | User-visible affordance |
+| --- | --- | --- | --- |
+| `gestureSettings` | Parse if available; ignore unknown enum values by dropping invalid profile only | Not consumed in web editor (view-only) | None |
+| `templateScopes` | Parse and keep metadata for future template fidelity | No direct rendering changes in this wave | None |
+| `exportMetadata` | Parse and keep status/mode metadata | No export management UI in this wave | Optional informational badge in future |
+| `searchIndexTokens` | Parse and preserve where available | Search UI not wired yet; do not fail note open | None |
+
 ## Test Expectations
 
 1. Contract tests validate `shape`, `image`, `text`, `audio`, `sticky`, `scan`, and `file` fixtures.

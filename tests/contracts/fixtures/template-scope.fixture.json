@@ -1,0 +1,13 @@
+{
+  "scopeId": "291e8400-e29b-41d4-a716-446655440019",
+  "noteId": "550e8400-e29b-41d4-a716-446655440000",
+  "templateId": null,
+  "backgroundKind": "grid",
+  "spacing": 24,
+  "colorHex": "#E0E0E0",
+  "paperSize": "a4",
+  "lineWidth": 1.2,
+  "category": "default",
+  "applyScope": "allPages",
+  "updatedAt": 1708300819000
+}
