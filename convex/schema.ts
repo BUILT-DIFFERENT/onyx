@@ -77,6 +77,14 @@ export default defineSchema({
         sizeBytes: v.optional(v.number()),
       }),
     ),
+    sync: v.optional(
+      v.object({
+        objectRevision: v.number(),
+        parentRevision: v.optional(v.number()),
+        lastMutationId: v.string(),
+        conflictPolicy: v.union(v.literal('lastWriteWins'), v.literal('manualResolve')),
+      }),
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
     deletedAt: v.optional(v.number()),
@@ -86,4 +94,43 @@ export default defineSchema({
     .index('by_note', ['noteId'])
     .index('by_kind', ['kind'])
     .index('by_page_zindex', ['pageId', 'zIndex']),
+  searchIndexTokens: defineTable({
+    tokenId: v.string(),
+    noteId: v.string(),
+    pageId: v.string(),
+    token: v.string(),
+    displayText: v.optional(v.string()),
+    source: v.union(v.literal('handwriting'), v.literal('pdfOcr')),
+    bounds: v.object({
+      x: v.number(),
+      y: v.number(),
+      width: v.number(),
+      height: v.number(),
+      rotationDeg: v.optional(v.number()),
+    }),
+    indexVersion: v.number(),
+    mergeKey: v.string(),
+    sourceRevision: v.number(),
+    sourceUpdatedAt: v.number(),
+    indexedAt: v.number(),
+    payload: v.union(
+      v.object({
+        recognitionProvider: v.optional(v.union(v.literal('myscript'), v.literal('mlkit'), v.literal('other'))),
+        confidence: v.optional(v.number()),
+        strokeIds: v.optional(v.array(v.string())),
+      }),
+      v.object({
+        pdfAssetId: v.string(),
+        pdfPageNo: v.number(),
+        ocrEngine: v.optional(v.union(v.literal('pdfium'), v.literal('mlkit'), v.literal('tesseract'), v.literal('other'))),
+        confidence: v.optional(v.number()),
+      }),
+    ),
+    deletedAt: v.optional(v.number()),
+  })
+    .index('by_token_id', ['tokenId'])
+    .index('by_note', ['noteId'])
+    .index('by_page', ['pageId'])
+    .index('by_note_source', ['noteId', 'source'])
+    .index('by_note_token', ['noteId', 'token']),
 });

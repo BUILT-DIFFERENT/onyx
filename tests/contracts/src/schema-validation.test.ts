@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { NoteSchema, PageObjectSchema, PageSchema, StrokeSchema } from '@onyx/validation';
+import { NoteSchema, PageObjectSchema, PageSchema, SearchIndexTokenSchema, StrokeSchema } from '@onyx/validation';
 
 const fixturesDir = join(__dirname, '../fixtures');
 
@@ -91,6 +91,32 @@ describe('Contract Fixtures Validation', () => {
         const result = PageObjectSchema.parse(fixture);
         expect(result.kind).toBe(kind);
       }
+    });
+
+    it('validates page-object-shape-conflict.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'page-object-shape-conflict.fixture.json'), 'utf-8'));
+      const result = PageObjectSchema.parse(fixture);
+      expect(result.kind).toBe('shape');
+      expect(result.sync?.objectRevision).toBe(7);
+      expect(result.sync?.conflictPolicy).toBe('lastWriteWins');
+    });
+  });
+
+  describe('SearchIndexTokenSchema', () => {
+    it('validates search-index-handwriting-token.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'search-index-handwriting-token.fixture.json'), 'utf-8'));
+      const result = SearchIndexTokenSchema.parse(fixture);
+      expect(result.source).toBe('handwriting');
+      expect(result.token).toBe('meeting');
+      expect(result.indexVersion).toBeTypeOf('number');
+    });
+
+    it('validates search-index-pdf-ocr-token.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'search-index-pdf-ocr-token.fixture.json'), 'utf-8'));
+      const result = SearchIndexTokenSchema.parse(fixture);
+      expect(result.source).toBe('pdfOcr');
+      expect(result.token).toBe('diagram');
+      expect(result.indexVersion).toBeTypeOf('number');
     });
   });
 });

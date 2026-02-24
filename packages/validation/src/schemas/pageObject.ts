@@ -14,6 +14,15 @@ const PageObjectBaseSchema = z
     createdAt: z.number().int(),
     updatedAt: z.number().int(),
     deletedAt: z.number().int().nullable().optional(),
+    sync: z
+      .object({
+        objectRevision: z.number().int().nonnegative(),
+        parentRevision: z.number().int().nonnegative().optional(),
+        lastMutationId: z.string().min(1),
+        conflictPolicy: z.enum(['lastWriteWins', 'manualResolve']),
+      })
+      .strict()
+      .optional(),
   })
   .strict();
 

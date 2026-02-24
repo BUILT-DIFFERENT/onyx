@@ -904,26 +904,26 @@ Proposed public API/interface/type updates to align with backlog items:
   - Validation gate: Contract fixtures for each attachment object type.
 
 - [ ] `XSURF-04` Search-index contracts (handwriting tokens + PDF OCR tokens)
-  - Status: `Missing`
+  - Status: `Strong Partial (Wave T-SearchIndexContracts)`
   - Competitor behavior: Required to support unified search parity across devices.
-  - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\PdfTextExtractor.kt`
-  - What exists now: No shared schema for recognition/OCR index payloads.
-  - What is missing: Versioned index schema and merge strategy across update sources.
+  - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\packages\validation\src\schemas\searchIndexToken.ts`, `C:\onyx\tests\contracts\fixtures\search-index-handwriting-token.fixture.json`, `C:\onyx\tests\contracts\fixtures\search-index-pdf-ocr-token.fixture.json`, `C:\onyx\docs\architecture\search-index-contracts.md`
+  - What exists now: Shared versioned search-token contract is defined for handwriting and PDF OCR sources with fixtures and merge-policy documentation.
+  - What is missing: Runtime token generation, persistence writes, sync mutation/query paths, and web search UI consumption.
   - Exact change needed: Add search token contracts, index versioning, and conflict-safe merge rules for handwriting and OCR updates.
   - Surface impact: `Convex`, `Android`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
-  - Validation gate: Schema migration tests and mixed-source index merge fixtures.
+  - Validation gate: Contract schema tests and mixed-source fixtures for handwriting + OCR payloads.
 
 - [ ] `XSURF-05` Sync conflict policy + metadata for edits at page/object granularity
-  - Status: `Missing`
+  - Status: `Weak Partial (Wave U-ConflictMetadataContracts)`
   - Competitor behavior: Needed for cross-device reliability once parity features are synced.
-  - Current Onyx evidence: `C:\onyx\docs\architecture\system-overview.md`, `C:\onyx\convex\schema.ts`
-  - What exists now: Baseline sync assumptions without expanded object/attachment conflict policy.
-  - What is missing: Conflict strategy definitions and metadata fields for reconciling concurrent edits.
+  - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\packages\validation\src\schemas\pageObject.ts`, `C:\onyx\tests\contracts\fixtures\page-object-shape-conflict.fixture.json`, `C:\onyx\docs\architecture\object-sync-conflict-policy.md`
+  - What exists now: Page-object contract now includes optional revision/conflict metadata scaffold plus documented deterministic merge ordering.
+  - What is missing: Runtime revision increments, live conflict reconciliation in Convex mutations/queries, and conflict resolution UX.
   - Exact change needed: Define conflict resolution semantics (last-write, merge, or user-resolve) by object category and persist revision metadata accordingly.
   - Surface impact: `Convex`, `Android`, `Web`, `Docs/QA`
   - Priority wave: `Wave V2`
-  - Validation gate: Contract tests covering concurrent edit conflict scenarios.
+  - Validation gate: Contract fixtures validating conflict metadata shape and policy enums.
 
 ## Balanced Priority Waves
 

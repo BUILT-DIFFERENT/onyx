@@ -2,6 +2,7 @@
 export { NoteSchema, type Note } from './schemas/note';
 export { PageSchema, type Page } from './schemas/page';
 export { PageObjectSchema, type PageObject } from './schemas/pageObject';
+export { SearchIndexTokenSchema, type SearchIndexToken } from './schemas/searchIndexToken';
 export { StrokeSchema, type Stroke } from './schemas/stroke';
 
 // Supporting schemas

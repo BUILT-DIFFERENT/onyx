@@ -1,0 +1,25 @@
+{
+  "objectId": "f90e8400-e29b-41d4-a716-446655440017",
+  "pageId": "660e8400-e29b-41d4-a716-446655440001",
+  "noteId": "550e8400-e29b-41d4-a716-446655440000",
+  "kind": "shape",
+  "zIndex": 9,
+  "x": 32,
+  "y": 64,
+  "width": 140,
+  "height": 90,
+  "rotationDeg": 0,
+  "payload": {
+    "shapeType": "ellipse",
+    "strokeColor": "#3949AB",
+    "strokeWidth": 3
+  },
+  "sync": {
+    "objectRevision": 7,
+    "parentRevision": 6,
+    "lastMutationId": "android:note-editor:1708300812000",
+    "conflictPolicy": "lastWriteWins"
+  },
+  "createdAt": 1708300811000,
+  "updatedAt": 1708300812000
+}

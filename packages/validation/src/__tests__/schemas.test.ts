@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { NoteSchema } from '../schemas/note';
 import { PageSchema } from '../schemas/page';
 import { PageObjectSchema } from '../schemas/pageObject';
+import { SearchIndexTokenSchema } from '../schemas/searchIndexToken';
 import { StrokeSchema } from '../schemas/stroke';
 
 // ============================================================================
@@ -306,6 +307,20 @@ describe('PageObjectSchema', () => {
       }),
     ).toThrow();
   });
+
+  it('accepts optional sync conflict metadata scaffold', () => {
+    const result = PageObjectSchema.parse({
+      ...validShapeObject,
+      sync: {
+        objectRevision: 7,
+        parentRevision: 6,
+        lastMutationId: 'android:note-editor:1708300807000',
+        conflictPolicy: 'lastWriteWins' as const,
+      },
+    });
+    expect(result.sync?.objectRevision).toBe(7);
+    expect(result.sync?.conflictPolicy).toBe('lastWriteWins');
+  });
 });
 
 describe('StrokeSchema', () => {
@@ -435,5 +450,83 @@ describe('StrokeSchema', () => {
   it('rejects non-integer createdLamport', () => {
     const invalidStroke = { ...validStroke, createdLamport: 1.5 };
     expect(() => StrokeSchema.parse(invalidStroke)).toThrow();
+  });
+});
+
+describe('SearchIndexTokenSchema', () => {
+  const validHandwritingToken = {
+    tokenId: 'f80e8400-e29b-41d4-a716-446655440015',
+    noteId: '550e8400-e29b-41d4-a716-446655440000',
+    pageId: '660e8400-e29b-41d4-a716-446655440001',
+    token: 'meeting',
+    displayText: 'Meeting',
+    source: 'handwriting' as const,
+    bounds: {
+      x: 120,
+      y: 200,
+      width: 88,
+      height: 24,
+    },
+    indexVersion: 1,
+    mergeKey:
+      'note:550e8400-e29b-41d4-a716-446655440000|page:660e8400-e29b-41d4-a716-446655440001|src:handwriting|token:meeting',
+    sourceRevision: 3,
+    sourceUpdatedAt: 1708300805000,
+    indexedAt: 1708300807000,
+    payload: {
+      recognitionProvider: 'myscript' as const,
+      confidence: 0.93,
+      strokeIds: ['770e8400-e29b-41d4-a716-446655440002'],
+    },
+  };
+
+  it('parses valid handwriting token payload', () => {
+    const result = SearchIndexTokenSchema.parse(validHandwritingToken);
+    expect(result.source).toBe('handwriting');
+    if (result.source !== 'handwriting') {
+      throw new Error('Expected handwriting token');
+    }
+    expect(result.payload.confidence).toBe(0.93);
+  });
+
+  it('parses valid pdf ocr token payload', () => {
+    const result = SearchIndexTokenSchema.parse({
+      ...validHandwritingToken,
+      tokenId: '081e8400-e29b-41d4-a716-446655440016',
+      source: 'pdfOcr' as const,
+      payload: {
+        pdfAssetId: 'pdf_asset_1',
+        pdfPageNo: 4,
+        ocrEngine: 'pdfium' as const,
+        confidence: 0.86,
+      },
+    });
+    expect(result.source).toBe('pdfOcr');
+    if (result.source !== 'pdfOcr') {
+      throw new Error('Expected pdf ocr token');
+    }
+    expect(result.payload.pdfPageNo).toBe(4);
+  });
+
+  it('rejects payload mismatch for source', () => {
+    expect(() =>
+      SearchIndexTokenSchema.parse({
+        ...validHandwritingToken,
+        source: 'handwriting' as const,
+        payload: {
+          pdfAssetId: 'pdf_asset_1',
+          pdfPageNo: 1,
+        },
+      }),
+    ).toThrow();
+  });
+
+  it('rejects non-positive indexVersion', () => {
+    expect(() =>
+      SearchIndexTokenSchema.parse({
+        ...validHandwritingToken,
+        indexVersion: 0,
+      }),
+    ).toThrow();
   });
 });

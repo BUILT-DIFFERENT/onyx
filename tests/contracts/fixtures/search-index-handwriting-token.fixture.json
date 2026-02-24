@@ -1,0 +1,24 @@
+{
+  "tokenId": "f80e8400-e29b-41d4-a716-446655440015",
+  "noteId": "550e8400-e29b-41d4-a716-446655440000",
+  "pageId": "660e8400-e29b-41d4-a716-446655440001",
+  "token": "meeting",
+  "displayText": "Meeting",
+  "source": "handwriting",
+  "bounds": {
+    "x": 120,
+    "y": 200,
+    "width": 88,
+    "height": 24
+  },
+  "indexVersion": 1,
+  "mergeKey": "note:550e8400-e29b-41d4-a716-446655440000|page:660e8400-e29b-41d4-a716-446655440001|src:handwriting|token:meeting",
+  "sourceRevision": 3,
+  "sourceUpdatedAt": 1708300805000,
+  "indexedAt": 1708300807000,
+  "payload": {
+    "recognitionProvider": "myscript",
+    "confidence": 0.93,
+    "strokeIds": ["770e8400-e29b-41d4-a716-446655440002"]
+  }
+}

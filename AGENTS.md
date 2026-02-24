@@ -37,6 +37,8 @@
 - Page manager parity clarification: `EDIT-14` currently has persistent reorder/duplicate/delete operations via the editor overflow dialog in `NoteEditorScreen.kt`, but thumbnail-grid drag/drop parity and page-operation undo are still pending.
 - Eraser size clarification: eraser diameter now persists as `EditorSettings.eraserBaseWidth` / `editor_settings.eraserBaseWidth` (Room v13) and segment-eraser hit radius scales from that value in `InkCanvasTouch.kt`.
 - Eraser cursor clarification: eraser interactions now actively drive `HoverPreviewState` during touch erase paths (not hover-only), so cursor visibility/position assertions should include drag lifecycle (`down/move` visible, `up/cancel` hidden).
+- Search-index contract clarification: canonical cross-surface token schema is `packages/validation/src/schemas/searchIndexToken.ts` with fixtures in `tests/contracts/fixtures/search-index-*.fixture.json`; runtime indexing/sync remains intentionally separate from this contract-only wave.
+- Conflict-metadata clarification: page-object sync metadata scaffold (`sync.objectRevision/parentRevision/lastMutationId/conflictPolicy`) is contract-only in this wave; runtime mutation/query reconciliation is intentionally deferred.
 
 ## Context7 Library IDs (Project Stack)
 

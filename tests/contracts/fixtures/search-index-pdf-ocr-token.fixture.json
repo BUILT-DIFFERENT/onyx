@@ -1,0 +1,25 @@
+{
+  "tokenId": "081e8400-e29b-41d4-a716-446655440016",
+  "noteId": "550e8400-e29b-41d4-a716-446655440000",
+  "pageId": "660e8400-e29b-41d4-a716-446655440001",
+  "token": "diagram",
+  "displayText": "Diagram",
+  "source": "pdfOcr",
+  "bounds": {
+    "x": 212,
+    "y": 148,
+    "width": 74,
+    "height": 20
+  },
+  "indexVersion": 1,
+  "mergeKey": "note:550e8400-e29b-41d4-a716-446655440000|page:660e8400-e29b-41d4-a716-446655440001|src:pdfOcr|token:diagram",
+  "sourceRevision": 5,
+  "sourceUpdatedAt": 1708300810000,
+  "indexedAt": 1708300811000,
+  "payload": {
+    "pdfAssetId": "pdf_asset_1",
+    "pdfPageNo": 4,
+    "ocrEngine": "pdfium",
+    "confidence": 0.86
+  }
+}
