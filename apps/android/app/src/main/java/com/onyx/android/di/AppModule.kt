@@ -9,6 +9,7 @@ import com.onyx.android.data.dao.PageDao
 import com.onyx.android.data.dao.PageObjectDao
 import com.onyx.android.data.dao.PageTemplateDao
 import com.onyx.android.data.repository.NoteLaunchPreferences
+import com.onyx.android.data.repository.NoteLockStore
 import com.onyx.android.data.repository.NoteRepository
 import com.onyx.android.data.repository.StorageRepository
 import com.onyx.android.data.serialization.StrokeSerializer
@@ -73,6 +74,12 @@ object AppModule {
     fun provideNoteLaunchPreferences(
         @ApplicationContext context: Context,
     ): NoteLaunchPreferences = NoteLaunchPreferences(context)
+
+    @Provides
+    @Singleton
+    fun provideNoteLockStore(
+        @ApplicationContext context: Context,
+    ): NoteLockStore = NoteLockStore(context)
 
     @Provides
     @Singleton

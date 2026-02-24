@@ -916,6 +916,14 @@ class NoteRepository(
         noteDao.updateTitle(noteId = noteId, title = title, updatedAt = now)
     }
 
+    suspend fun setNoteLocked(
+        noteId: String,
+        isLocked: Boolean,
+    ) {
+        val now = System.currentTimeMillis()
+        noteDao.updateLockState(noteId = noteId, isLocked = isLocked, updatedAt = now)
+    }
+
     @Suppress("LongMethod", "NestedBlockDepth", "CyclomaticComplexMethod")
     fun searchNotes(query: String): Flow<List<SearchResult>> {
         val normalizedQuery = query.trim()
@@ -927,6 +935,10 @@ class NoteRepository(
             val templateNameCache = mutableMapOf<String, String?>()
             val pdfRendererCache = mutableMapOf<String, PdfiumRenderer?>()
             val ranked = mutableListOf<RankedResult>()
+            val recognitionByPageId =
+                recognitionDao
+                    .searchByText(normalizedQuery)
+                    .associateBy(RecognitionIndexEntity::pageId)
 
             try {
                 notes.forEach { note ->
@@ -1009,7 +1021,7 @@ class NoteRepository(
                                 )
                         }
 
-                        val recognitionText = recognitionDao.getByPageId(page.pageId)?.recognizedText
+                        val recognitionText = recognitionByPageId[page.pageId]?.recognizedText
                         if (
                             !recognitionText.isNullOrBlank() &&
                             recognitionText.contains(normalizedQuery, ignoreCase = true)

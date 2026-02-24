@@ -52,6 +52,7 @@ import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Search
@@ -95,6 +96,7 @@ import com.onyx.android.data.entity.TagEntity
 import com.onyx.android.data.repository.DateRange
 import com.onyx.android.data.repository.DuplicateTagNameException
 import com.onyx.android.data.repository.FilterState
+import com.onyx.android.data.repository.NoteLockStore
 import com.onyx.android.data.repository.NoteNamingRule
 import com.onyx.android.data.repository.NoteRepository
 import com.onyx.android.data.repository.SearchResult
@@ -177,6 +179,18 @@ private data class PdfPasswordPromptState(
     val password: String = "",
 )
 
+private enum class NoteLockPromptMode {
+    OPEN_LOCKED_NOTE,
+    TOGGLE_NOTE_LOCK,
+}
+
+private data class NoteLockPromptState(
+    val note: NoteEntity,
+    val pageId: String?,
+    val mode: NoteLockPromptMode,
+    val passcode: String = "",
+)
+
 internal enum class HomeDestination {
     ALL,
     SHARED,
@@ -201,6 +215,7 @@ private data class HomeScreenState(
     val folderPendingDelete: FolderEntity?,
     val tagPendingDelete: TagEntity?,
     val passwordPrompt: PdfPasswordPromptState?,
+    val noteLockPrompt: NoteLockPromptState?,
     val warningMessage: String?,
     val errorMessage: String?,
     val showCreateFolderDialog: Boolean,
@@ -240,6 +255,9 @@ private data class HomeScreenActions(
     val onDismissPasswordPrompt: () -> Unit,
     val onPasswordChange: (String) -> Unit,
     val onConfirmPasswordPrompt: () -> Unit,
+    val onDismissNoteLockPrompt: () -> Unit,
+    val onNoteLockPasscodeChange: (String) -> Unit,
+    val onConfirmNoteLockPrompt: () -> Unit,
     val onSearchQueryChange: (String) -> Unit,
     val onNavigateToSearchResult: (SearchResult) -> Unit,
     val onImportPdf: () -> Unit,
@@ -248,6 +266,8 @@ private data class HomeScreenActions(
     val onConfirmDeleteNote: (String) -> Unit,
     val onDismissDeleteNote: () -> Unit,
     val onNavigateToEditor: (String, String?) -> Unit,
+    val onRequestOpenNote: (NoteEntity, String?) -> Unit,
+    val onRequestToggleNoteLock: (NoteEntity) -> Unit,
     val onNavigateToDeveloperFlags: () -> Unit,
     val onSelectFolder: (FolderEntity?) -> Unit,
     val onShowCreateFolderDialog: () -> Unit,
@@ -331,6 +351,7 @@ fun HomeScreen(
     var folderPendingDelete by remember { mutableStateOf<FolderEntity?>(null) }
     var tagPendingDelete by remember { mutableStateOf<TagEntity?>(null) }
     var passwordPrompt by remember { mutableStateOf<PdfPasswordPromptState?>(null) }
+    var noteLockPrompt by remember { mutableStateOf<NoteLockPromptState?>(null) }
     var warningMessage by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showCreateFolderDialog by remember { mutableStateOf(false) }
@@ -369,6 +390,18 @@ fun HomeScreen(
                 ),
         )
     }
+    val openNoteWithLockGuard: (NoteEntity, String?) -> Unit = { note, pageId ->
+        if (!note.isLocked) {
+            onNavigateToEditor(note.noteId, pageId)
+        } else {
+            noteLockPrompt =
+                NoteLockPromptState(
+                    note = note,
+                    pageId = pageId,
+                    mode = NoteLockPromptMode.OPEN_LOCKED_NOTE,
+                )
+        }
+    }
     val openPdfLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             if (uri != null) {
@@ -390,6 +423,7 @@ fun HomeScreen(
             folderPendingDelete = folderPendingDelete,
             tagPendingDelete = tagPendingDelete,
             passwordPrompt = passwordPrompt,
+            noteLockPrompt = noteLockPrompt,
             warningMessage = warningMessage,
             errorMessage = errorMessage,
             showCreateFolderDialog = showCreateFolderDialog,
@@ -430,6 +464,57 @@ fun HomeScreen(
                     passwordPrompt = null
                     beginPdfImport(currentPrompt.uri, currentPrompt.password)
                 }
+            },
+            onDismissNoteLockPrompt = { noteLockPrompt = null },
+            onNoteLockPasscodeChange = { passcode ->
+                noteLockPrompt = noteLockPrompt?.copy(passcode = passcode)
+            },
+            onConfirmNoteLockPrompt = {
+                val prompt = noteLockPrompt ?: return@HomeScreenActions
+                val passcode = prompt.passcode
+                if (passcode.length < 4) {
+                    errorMessage = "Passcode must be at least 4 characters."
+                    return@HomeScreenActions
+                }
+                when (prompt.mode) {
+                    NoteLockPromptMode.OPEN_LOCKED_NOTE -> {
+                        viewModel.verifyNotePasscode(
+                            passcode = passcode,
+                            onSuccess = {
+                                noteLockPrompt = null
+                                onNavigateToEditor(prompt.note.noteId, prompt.pageId)
+                            },
+                            onError = { message -> errorMessage = message },
+                        )
+                    }
+
+                    NoteLockPromptMode.TOGGLE_NOTE_LOCK -> {
+                        if (prompt.note.isLocked) {
+                            viewModel.unlockNote(
+                                noteId = prompt.note.noteId,
+                                passcode = passcode,
+                                onSuccess = { noteLockPrompt = null },
+                                onError = { message -> errorMessage = message },
+                            )
+                        } else {
+                            viewModel.lockNote(
+                                noteId = prompt.note.noteId,
+                                passcode = passcode,
+                                onSuccess = { noteLockPrompt = null },
+                                onError = { message -> errorMessage = message },
+                            )
+                        }
+                    }
+                }
+            },
+            onRequestOpenNote = openNoteWithLockGuard,
+            onRequestToggleNoteLock = { note ->
+                noteLockPrompt =
+                    NoteLockPromptState(
+                        note = note,
+                        pageId = null,
+                        mode = NoteLockPromptMode.TOGGLE_NOTE_LOCK,
+                    )
             },
             onSearchQueryChange = viewModel::onSearchQueryChange,
             onNavigateToSearchResult = onNavigateToSearchResult,
@@ -844,6 +929,12 @@ private fun HomeDialogs(
         onPasswordChange = actions.onPasswordChange,
         onConfirm = actions.onConfirmPasswordPrompt,
     )
+    NoteLockPromptDialog(
+        prompt = state.noteLockPrompt,
+        onDismiss = actions.onDismissNoteLockPrompt,
+        onPasscodeChange = actions.onNoteLockPasscodeChange,
+        onConfirm = actions.onConfirmNoteLockPrompt,
+    )
     HomeDeleteDialog(
         notePendingDelete = state.notePendingDelete,
         onDismiss = actions.onDismissDeleteNote,
@@ -1095,6 +1186,51 @@ private fun HomePasswordPromptDialog(
         confirmButton = {
             Button(onClick = onConfirm) {
                 Text(text = "Open")
+            }
+        },
+    )
+}
+
+@Composable
+private fun NoteLockPromptDialog(
+    prompt: NoteLockPromptState?,
+    onDismiss: () -> Unit,
+    onPasscodeChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+) {
+    if (prompt == null) {
+        return
+    }
+    val title = prompt.note.title.ifBlank { "Untitled Note" }
+    val actionLabel =
+        when (prompt.mode) {
+            NoteLockPromptMode.OPEN_LOCKED_NOTE -> "Unlock"
+            NoteLockPromptMode.TOGGLE_NOTE_LOCK -> if (prompt.note.isLocked) "Unlock" else "Lock"
+        }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "$actionLabel note") },
+        text = {
+            Column {
+                Text(text = title)
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = prompt.passcode,
+                    onValueChange = onPasscodeChange,
+                    label = { Text(text = "Passcode") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                )
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text(text = "Cancel")
+            }
+        },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text(text = actionLabel)
             }
         },
     )
@@ -1885,7 +2021,8 @@ private fun HomeContentBody(
 
         HomeListContent(
             state = state,
-            onNavigateToEditor = actions.onNavigateToEditor,
+            onRequestOpenNote = actions.onRequestOpenNote,
+            onRequestToggleNoteLock = actions.onRequestToggleNoteLock,
             resumeLastPageEnabled = state.resumeLastPageEnabled,
             onNavigateToSearchResult = actions.onNavigateToSearchResult,
             onRequestDeleteNote = actions.onRequestDeleteNote,
@@ -1906,7 +2043,8 @@ private fun HomeContentBody(
 @Composable
 private fun HomeListContent(
     state: HomeScreenState,
-    onNavigateToEditor: (String, String?) -> Unit,
+    onRequestOpenNote: (NoteEntity, String?) -> Unit,
+    onRequestToggleNoteLock: (NoteEntity) -> Unit,
     resumeLastPageEnabled: Boolean,
     onNavigateToSearchResult: (SearchResult) -> Unit,
     onRequestDeleteNote: (NoteEntity) -> Unit,
@@ -1934,7 +2072,7 @@ private fun HomeListContent(
             NotesGridContent(
                 notes = state.notes,
                 noteTags = state.noteTags,
-                onNavigateToEditor = onNavigateToEditor,
+                onRequestOpenNote = onRequestOpenNote,
                 resumeLastPageEnabled = resumeLastPageEnabled,
                 modifier = modifier,
             )
@@ -1946,12 +2084,13 @@ private fun HomeListContent(
                 noteTags = state.noteTags,
                 selectionMode = state.selectionMode,
                 selectedNoteIds = state.selectedNoteIds,
-                onNavigateToEditor = onNavigateToEditor,
+                onRequestOpenNote = onRequestOpenNote,
                 resumeLastPageEnabled = resumeLastPageEnabled,
                 onRequestDeleteNote = onRequestDeleteNote,
                 onMoveNote = onMoveNote,
                 onManageTags = onManageTags,
                 onRequestExportPdf = onRequestExportPdf,
+                onRequestToggleNoteLock = onRequestToggleNoteLock,
                 onEnterSelectionMode = onEnterSelectionMode,
                 onToggleNoteSelection = onToggleNoteSelection,
                 destination = destination,
@@ -2012,12 +2151,13 @@ internal fun NotesListContent(
     noteTags: Map<String, List<TagEntity>>,
     selectionMode: Boolean,
     selectedNoteIds: Set<String>,
-    onNavigateToEditor: (String, String?) -> Unit,
+    onRequestOpenNote: (NoteEntity, String?) -> Unit,
     resumeLastPageEnabled: Boolean,
     onRequestDeleteNote: (NoteEntity) -> Unit,
     onMoveNote: (NoteEntity) -> Unit,
     onManageTags: (NoteEntity) -> Unit,
     onRequestExportPdf: (NoteEntity) -> Unit,
+    onRequestToggleNoteLock: (NoteEntity) -> Unit,
     onEnterSelectionMode: (String) -> Unit,
     onToggleNoteSelection: (String) -> Unit,
     destination: HomeDestination = HomeDestination.ALL,
@@ -2047,10 +2187,7 @@ internal fun NotesListContent(
                     if (selectionMode) {
                         onToggleNoteSelection(note.noteId)
                     } else {
-                        onNavigateToEditor(
-                            note.noteId,
-                            if (resumeLastPageEnabled) note.lastOpenedPageId else null,
-                        )
+                        onRequestOpenNote(note, if (resumeLastPageEnabled) note.lastOpenedPageId else null)
                     }
                 },
                 onLongPress = {
@@ -2077,6 +2214,10 @@ internal fun NotesListContent(
                     activeContextMenuNoteId = null
                     onRequestExportPdf(note)
                 },
+                onToggleLock = {
+                    activeContextMenuNoteId = null
+                    onRequestToggleNoteLock(note)
+                },
                 destination = destination,
                 onRestore = {
                     activeContextMenuNoteId = null
@@ -2097,7 +2238,7 @@ internal fun NotesListContent(
 private fun NotesGridContent(
     notes: List<NoteEntity>,
     noteTags: Map<String, List<TagEntity>>,
-    onNavigateToEditor: (String, String?) -> Unit,
+    onRequestOpenNote: (NoteEntity, String?) -> Unit,
     resumeLastPageEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -2114,10 +2255,7 @@ private fun NotesGridContent(
                     Modifier
                         .fillMaxWidth()
                         .clickable {
-                            onNavigateToEditor(
-                                note.noteId,
-                                if (resumeLastPageEnabled) note.lastOpenedPageId else null,
-                            )
+                            onRequestOpenNote(note, if (resumeLastPageEnabled) note.lastOpenedPageId else null)
                         },
                 tonalElevation = 1.dp,
                 shape = MaterialTheme.shapes.medium,
@@ -2209,6 +2347,7 @@ private fun NoteRow(
     onMove: () -> Unit,
     onManageTags: () -> Unit,
     onExportPdf: () -> Unit,
+    onToggleLock: () -> Unit,
     destination: HomeDestination = HomeDestination.ALL,
     onRestore: () -> Unit = {},
     onDeleteForever: () -> Unit = {},
@@ -2253,10 +2392,21 @@ private fun NoteRow(
                             .weight(1f)
                             .padding(16.dp),
                 ) {
-                    Text(
-                        text = note.title.ifEmpty { "Untitled Note" },
-                        style = MaterialTheme.typography.titleMedium,
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = note.title.ifEmpty { "Untitled Note" },
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (note.isLocked) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Locked note",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 8.dp),
+                            )
+                        }
+                    }
                     Text(
                         text = "Updated $updatedLabel",
                         style = MaterialTheme.typography.bodySmall,
@@ -2319,6 +2469,10 @@ private fun NoteRow(
                     DropdownMenuItem(
                         text = { Text("Export PDF...") },
                         onClick = onExportPdf,
+                    )
+                    DropdownMenuItem(
+                        text = { Text(if (note.isLocked) "Unlock note..." else "Lock note...") },
+                        onClick = onToggleLock,
                     )
                     DropdownMenuItem(
                         text = { Text("Delete note") },
@@ -2667,6 +2821,7 @@ internal class HomeScreenViewModel
         private val pdfPasswordStore: PdfPasswordStore,
         private val pdfExportRepository: PdfExportRepository,
         private val storageRepository: StorageRepository,
+        private val noteLockStore: NoteLockStore,
     ) : ViewModel() {
         private data class HomeQueryState(
             val destination: HomeDestination,
@@ -2825,6 +2980,66 @@ internal class HomeScreenViewModel
         fun setNoteNamingRule(rule: NoteNamingRule) {
             repository.setNoteNamingRule(rule)
             _noteNamingRule.value = rule
+        }
+
+        fun verifyNotePasscode(
+            passcode: String,
+            onSuccess: () -> Unit,
+            onError: (String) -> Unit,
+        ) {
+            if (!noteLockStore.verifyPasscode(passcode)) {
+                onError("Incorrect passcode.")
+                return
+            }
+            onSuccess()
+        }
+
+        fun lockNote(
+            noteId: String,
+            passcode: String,
+            onSuccess: () -> Unit,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    if (!noteLockStore.hasPasscode()) {
+                        noteLockStore.setPasscode(passcode)
+                    } else if (!noteLockStore.verifyPasscode(passcode)) {
+                        error("Incorrect passcode.")
+                    }
+                    repository.setNoteLocked(noteId = noteId, isLocked = true)
+                }.onSuccess {
+                    onSuccess()
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    onError(throwable.message ?: "Unable to lock note.")
+                }
+            }
+        }
+
+        fun unlockNote(
+            noteId: String,
+            passcode: String,
+            onSuccess: () -> Unit,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    if (!noteLockStore.verifyPasscode(passcode)) {
+                        error("Incorrect passcode.")
+                    }
+                    repository.setNoteLocked(noteId = noteId, isLocked = false)
+                }.onSuccess {
+                    onSuccess()
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    onError(throwable.message ?: "Unable to unlock note.")
+                }
+            }
         }
 
         fun loadStorageBreakdown(

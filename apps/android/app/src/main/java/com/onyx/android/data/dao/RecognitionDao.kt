@@ -21,6 +21,16 @@ interface RecognitionDao {
     )
     fun search(query: String): Flow<List<RecognitionIndexEntity>>
 
+    @Query(
+        """
+        SELECT * FROM recognition_index
+        WHERE recognizedText IS NOT NULL
+          AND recognizedText != ''
+          AND recognizedText LIKE '%' || :query || '%'
+        """,
+    )
+    suspend fun searchByText(query: String): List<RecognitionIndexEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(recognition: RecognitionIndexEntity)
 

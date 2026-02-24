@@ -47,6 +47,7 @@
 - Paper-size scaffold clarification: current `TPL-01` partial stores paper preset selection in `PageTemplateState.templateId` (`paper:letter|paper:a4|paper:phone`) and `NoteRepository.createPageForNote` derives new-page dimensions from the latest page templateId; this is a transitional convention until a dedicated paper-size field is added.
 - Settings-surface clarification: there is no standalone `apps/android/app/src/main/java/com/onyx/android/ui/settings/SettingsScreen.kt` in the current tree; editor/home preference controls are currently implemented in `NoteEditorScreen.kt` and `HomeScreen.kt`.
 - Storage/export surface clarification: `SET-04` storage dashboard and `PDF-03` export/share controls currently live under the Home top-bar overflow and note-row context menu in `apps/android/app/src/main/java/com/onyx/android/ui/HomeScreen.kt`, not a separate settings/export screen.
+- Docs path clarification: `docs/README.md` and `docs/architecture/testing.md` are currently absent in this tree; use `docs/architecture/competitive-gap-backlog.md` and feature-specific docs under `docs/architecture/` as current architecture/testing source references.
 
 ## Context7 Library IDs (Project Stack)
 

@@ -735,11 +735,11 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Validation gate: End-to-end tests for lasso conversion commit/revert and layout preservation.
 
 - [ ] `REC-06` Search-level handwriting indexing across note corpus
-  - Status: `Missing`
+  - Status: `Partial (Wave Z-HandwritingIndexSearchMVP)`
   - Competitor behavior: Competitive search can find handwritten keywords across library, not only current page.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
-  - What exists now: Recognition is page-local for conversion overlays.
-  - What is missing: Persisted handwriting token index with note/page anchors.
+  - What exists now: Recognition text is persisted in `recognition_index`/`recognition_fts` with page+note anchors; home search now resolves cross-note ink matches through corpus-level recognition lookup and ranked search results.
+  - What is missing: Token-region granularity (sub-line anchors), runtime Convex sync writes, and dedicated web query consumption.
   - Exact change needed: Generate and sync searchable handwriting token index keyed by note/page/region for global search.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave V1`
@@ -770,11 +770,11 @@ This addendum expands scope without removing prior backlog work. It captures eve
 ### Settings / Security Expansion
 
 - [ ] `SET-01` Note password lock and unlock flow
-  - Status: `Missing`
+  - Status: `Partial (Wave Z-NoteLockMVP)`
   - Competitor behavior: Notewise exposes password protection in app settings.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\settings\SettingsScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\NoteEntity.kt`
-  - What exists now: No note-level lock setting.
-  - What is missing: Password gate model, protected note launch flow, and lock-state indicators.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\NoteEntity.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteLockStore.kt`
+  - What exists now: Notes now persist lock state (`isLocked`, `lockUpdatedAt`), context-menu lock/unlock actions are wired in Home, and locked note opens require passcode verification via local secure hash+salt storage.
+  - What is missing: Dedicated settings/password-reset UX, biometric option, and cross-surface lock metadata sync.
   - Exact change needed: Add password lock settings with secure credential storage and protected note open/edit lifecycle.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave V1`
@@ -827,11 +827,11 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Validation gate: Stylus benchmark suite with pass/fail thresholds for perceived latency.
 
 - [ ] `PERF-02` 120fps target on capable devices with 60fps floor
-  - Status: `Missing`
+  - Status: `Partial (Wave Z-FrameRatePolicyMVP)`
   - Competitor behavior: Premium inking apps maintain high refresh fluidity under normal load.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`
-  - What exists now: No explicit FPS target policy in acceptance criteria.
-  - What is missing: Device-class performance targets and measurement pipeline.
+  - Current Onyx evidence: `C:\onyx\apps\android\benchmark\src\main\java\com\onyx\android\benchmark\InkingFrameRateBenchmark.kt`, `C:\onyx\docs\architecture\android-frame-rate-targets.md`
+  - What exists now: Explicit 120fps/60fps target policy is documented and a macrobenchmark frame-pacing scenario is added for editor interaction.
+  - What is missing: CI threshold enforcement with tiered benchmark device classes and automated percentile gating.
   - Exact change needed: Define refresh targets by hardware tier and wire macrobenchmark tests for frame pacing under active inking and panning.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`

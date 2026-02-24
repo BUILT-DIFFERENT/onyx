@@ -820,4 +820,31 @@ class OnyxDatabaseMigrationTest {
                 }
         }
     }
+
+    @Test
+    fun migration_15_to_16_adds_note_lock_columns_with_defaults() {
+        runBlocking {
+            migrationTestHelper.createDatabase(testDatabaseName, 15).use { db ->
+                db.execSQL(
+                    "INSERT INTO notes (noteId, ownerUserId, title, createdAt, updatedAt, deletedAt, folderId, lastOpenedPageId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    arrayOf("note-lock-test", "user-001", "Locked note", testTimestamp, testTimestamp, null, null, null),
+                )
+            }
+
+            migrationTestHelper
+                .runMigrationsAndValidate(
+                    testDatabaseName,
+                    16,
+                    true,
+                    com.onyx.android.data.migrations.MIGRATION_15_16,
+                ).use { db ->
+                    val cursor = db.query("SELECT isLocked, lockUpdatedAt FROM notes WHERE noteId = ?", arrayOf("note-lock-test"))
+                    cursor.use {
+                        assertTrue(it.moveToFirst())
+                        assertEquals(0, it.getInt(it.getColumnIndexOrThrow("isLocked")))
+                        assertTrue(it.isNull(it.getColumnIndexOrThrow("lockUpdatedAt")))
+                    }
+                }
+        }
+    }
 }

@@ -34,6 +34,21 @@ interface NoteDao {
         pageId: String?,
     )
 
+    @Query(
+        """
+        UPDATE notes
+        SET isLocked = :isLocked,
+            lockUpdatedAt = :updatedAt,
+            updatedAt = :updatedAt
+        WHERE noteId = :noteId
+        """,
+    )
+    suspend fun updateLockState(
+        noteId: String,
+        isLocked: Boolean,
+        updatedAt: Long,
+    )
+
     @Query("UPDATE notes SET title = :title, updatedAt = :updatedAt WHERE noteId = :noteId")
     suspend fun updateTitle(
         noteId: String,
