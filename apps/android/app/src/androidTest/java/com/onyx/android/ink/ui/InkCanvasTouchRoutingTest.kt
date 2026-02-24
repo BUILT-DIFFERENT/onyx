@@ -14,7 +14,10 @@ import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.StrokeStyle
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.input.DoubleFingerMode
 import com.onyx.android.input.InputSettings
+import com.onyx.android.input.SingleFingerMode
+import com.onyx.android.input.StylusButtonAction
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -704,6 +707,245 @@ class InkCanvasTouchRoutingTest {
     }
 
     @Test
+    fun singleFingerIgnore_doesNotDrawOrPan() {
+        val view = GlInkSurfaceView(context)
+        val runtime = createRuntime()
+        var strokeFinishedCount = 0
+        val transformCalls = mutableListOf<TransformCall>()
+        val interaction =
+            createInteraction(
+                inputSettings =
+                    InputSettings(
+                        singleFingerMode = SingleFingerMode.IGNORE,
+                        doubleFingerMode = DoubleFingerMode.ZOOM_PAN,
+                    ),
+                onStrokeFinished = { strokeFinishedCount += 1 },
+                onTransformGesture = { zoom, panX, panY, centroidX, centroidY ->
+                    transformCalls += TransformCall(zoom, panX, panY, centroidX, centroidY)
+                },
+            )
+
+        val downTime = 1400L
+        val down =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 40f,
+                y = 40f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+        val move =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 1420L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 72f,
+                y = 70f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+        val up =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 1440L,
+                action = MotionEvent.ACTION_UP,
+                x = 72f,
+                y = 70f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+
+        try {
+            assertFalse(handleTouchEvent(view, down, interaction, runtime))
+            assertFalse(handleTouchEvent(view, move, interaction, runtime))
+            assertFalse(handleTouchEvent(view, up, interaction, runtime))
+        } finally {
+            down.recycle()
+            move.recycle()
+            up.recycle()
+        }
+
+        assertEquals(0, strokeFinishedCount)
+        assertTrue(transformCalls.isEmpty())
+        assertFalse(runtime.isSingleFingerPanning)
+        assertFalse(runtime.isTransforming)
+    }
+
+    @Test
+    fun doubleFingerIgnore_blocksPinchAndSecondFingerDrawing() {
+        val view = GlInkSurfaceView(context)
+        val runtime = createRuntime()
+        val transformCalls = mutableListOf<TransformCall>()
+        var strokeFinishedCount = 0
+        val interaction =
+            createInteraction(
+                inputSettings =
+                    InputSettings(
+                        singleFingerMode = SingleFingerMode.DRAW,
+                        doubleFingerMode = DoubleFingerMode.IGNORE,
+                    ),
+                onStrokeFinished = { strokeFinishedCount += 1 },
+                onTransformGesture = { zoom, panX, panY, centroidX, centroidY ->
+                    transformCalls += TransformCall(zoom, panX, panY, centroidX, centroidY)
+                },
+            )
+
+        val downTime = 1600L
+        val firstDown =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 20f,
+                y = 20f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+        val secondDown =
+            twoPointerEvent(
+                downTime = downTime,
+                eventTime = 1616L,
+                action = MotionEvent.ACTION_POINTER_DOWN or (1 shl MotionEvent.ACTION_POINTER_INDEX_SHIFT),
+                firstPointerId = 0,
+                firstToolType = MotionEvent.TOOL_TYPE_FINGER,
+                firstX = 20f,
+                firstY = 20f,
+                secondPointerId = 1,
+                secondToolType = MotionEvent.TOOL_TYPE_FINGER,
+                secondX = 70f,
+                secondY = 20f,
+            )
+        val move =
+            twoPointerEvent(
+                downTime = downTime,
+                eventTime = 1632L,
+                action = MotionEvent.ACTION_MOVE,
+                firstPointerId = 0,
+                firstToolType = MotionEvent.TOOL_TYPE_FINGER,
+                firstX = 28f,
+                firstY = 24f,
+                secondPointerId = 1,
+                secondToolType = MotionEvent.TOOL_TYPE_FINGER,
+                secondX = 76f,
+                secondY = 26f,
+            )
+        val secondUp =
+            twoPointerEvent(
+                downTime = downTime,
+                eventTime = 1648L,
+                action = MotionEvent.ACTION_POINTER_UP or (1 shl MotionEvent.ACTION_POINTER_INDEX_SHIFT),
+                firstPointerId = 0,
+                firstToolType = MotionEvent.TOOL_TYPE_FINGER,
+                firstX = 28f,
+                firstY = 24f,
+                secondPointerId = 1,
+                secondToolType = MotionEvent.TOOL_TYPE_FINGER,
+                secondX = 76f,
+                secondY = 26f,
+            )
+        val firstUp =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = 1660L,
+                action = MotionEvent.ACTION_UP,
+                x = 28f,
+                y = 24f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, firstDown, interaction, runtime))
+            assertFalse(handleTouchEvent(view, secondDown, interaction, runtime))
+            assertFalse(handleTouchEvent(view, move, interaction, runtime))
+            assertFalse(runtime.isTransforming)
+            assertFalse(runtime.isSingleFingerPanning)
+            assertFalse(handleTouchEvent(view, secondUp, interaction, runtime))
+            assertTrue(handleTouchEvent(view, firstUp, interaction, runtime))
+        } finally {
+            firstDown.recycle()
+            secondDown.recycle()
+            move.recycle()
+            secondUp.recycle()
+            firstUp.recycle()
+        }
+
+        assertEquals(1, strokeFinishedCount)
+        assertTrue(transformCalls.isEmpty())
+    }
+
+    @Test
+    fun stylusLongHoldEraser_activatesAfterDelay() {
+        val view = GlInkSurfaceView(context)
+        val runtime = createRuntime()
+        val stylusStates = mutableListOf<Boolean>()
+        val interaction =
+            createInteraction(
+                inputSettings =
+                    InputSettings(
+                        stylusLongHoldAction = StylusButtonAction.ERASER_HOLD,
+                    ),
+                onStylusButtonEraserActiveChanged = { stylusStates += it },
+            )
+
+        val downTime = 1800L
+        val down =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 100f,
+                y = 100f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val preHoldMove =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 200L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 103f,
+                y = 102f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val postHoldMove =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 420L,
+                action = MotionEvent.ACTION_MOVE,
+                x = 107f,
+                y = 106f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+        val up =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 460L,
+                action = MotionEvent.ACTION_UP,
+                x = 107f,
+                y = 106f,
+                toolType = MotionEvent.TOOL_TYPE_STYLUS,
+                source = InputDevice.SOURCE_STYLUS,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, down, interaction, runtime))
+            assertTrue(handleTouchEvent(view, preHoldMove, interaction, runtime))
+            assertFalse(runtime.isStylusButtonEraserActive)
+            assertTrue(handleTouchEvent(view, postHoldMove, interaction, runtime))
+            assertTrue(runtime.isStylusButtonEraserActive)
+            assertTrue(handleTouchEvent(view, up, interaction, runtime))
+        } finally {
+            down.recycle()
+            preHoldMove.recycle()
+            postHoldMove.recycle()
+            up.recycle()
+        }
+
+        assertTrue(stylusStates.contains(true))
+        assertTrue(stylusStates.contains(false))
+    }
+
+    @Test
     fun stylusButtonEraser_latchesForCurrentPointerUntilLift() {
         val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
@@ -1135,6 +1377,8 @@ private fun createRuntime(): InkCanvasRuntime =
         pendingCommittedStrokes = mutableMapOf(),
         hoverPreviewState = HoverPreviewState(),
         finishedStrokePathCache = mutableMapOf(),
+        stylusLongHoldStartTimes = mutableMapOf(),
+        stylusLongHoldActivePointerIds = mutableSetOf(),
     )
 
 private fun createInteraction(

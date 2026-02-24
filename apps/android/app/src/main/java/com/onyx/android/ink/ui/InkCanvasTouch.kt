@@ -24,6 +24,7 @@ import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.input.DoubleFingerMode
 import com.onyx.android.input.InputSettings
 import com.onyx.android.input.SingleFingerMode
 import com.onyx.android.input.StylusButtonAction
@@ -38,6 +39,7 @@ private const val HOVER_ERASER_COLOR = 0xFF6B6B6B.toInt()
 private const val HOVER_ERASER_ALPHA = 0.6f
 private const val HOVER_PEN_ALPHA = 0.35f
 private const val MIN_HOVER_RADIUS = 0.1f
+private const val STYLUS_LONG_HOLD_ERASER_DELAY_MS = 350L
 
 internal data class InkCanvasInteraction(
     val brush: Brush,
@@ -76,7 +78,7 @@ internal fun handleTouchEvent(
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
 ): Boolean {
-    syncStylusButtonEraserState(event, interaction, runtime)
+    syncStylusEraserState(event, interaction, runtime)
     if (!interaction.allowFingerGestures && !eventHasStylusStream(event, runtime)) {
         return false
     }
@@ -180,7 +182,7 @@ internal fun handleGenericMotionEvent(
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
 ): Boolean {
-    syncStylusButtonEraserState(event, interaction, runtime)
+    syncStylusEraserState(event, interaction, runtime)
     return when (event.actionMasked) {
         MotionEvent.ACTION_HOVER_ENTER,
         MotionEvent.ACTION_HOVER_MOVE,
@@ -211,23 +213,13 @@ internal fun handleGenericMotionEvent(
     }
 }
 
-private fun syncStylusButtonEraserState(
+private fun syncStylusEraserState(
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
 ) {
-    val shouldUpdate =
-        when (event.actionMasked) {
-            MotionEvent.ACTION_CANCEL,
-            MotionEvent.ACTION_HOVER_EXIT,
-            -> true
-
-            else -> eventHasStylusStream(event, runtime)
-        }
-    if (!shouldUpdate) {
-        return
-    }
-    val isActive =
+    syncStylusLongHoldState(event, interaction, runtime)
+    val isButtonActive =
         when (event.actionMasked) {
             MotionEvent.ACTION_CANCEL,
             MotionEvent.ACTION_HOVER_EXIT,
@@ -235,7 +227,62 @@ private fun syncStylusButtonEraserState(
 
             else -> isStylusButtonPressed(event, interaction)
         }
+    val isActive = isButtonActive || runtime.stylusLongHoldActivePointerIds.isNotEmpty()
     updateStylusButtonEraserState(isActive, interaction, runtime)
+}
+
+private fun syncStylusLongHoldState(
+    event: MotionEvent,
+    interaction: InkCanvasInteraction,
+    runtime: InkCanvasRuntime,
+) {
+    when (event.actionMasked) {
+        MotionEvent.ACTION_DOWN,
+        MotionEvent.ACTION_POINTER_DOWN,
+        -> {
+            val index = event.actionIndex
+            if (isPointerStylusStream(event, index, runtime)) {
+                val pointerId = event.getPointerId(index)
+                runtime.stylusLongHoldStartTimes[pointerId] = event.eventTime
+                runtime.stylusLongHoldActivePointerIds.remove(pointerId)
+            }
+        }
+
+        MotionEvent.ACTION_MOVE,
+        MotionEvent.ACTION_HOVER_ENTER,
+        MotionEvent.ACTION_HOVER_MOVE,
+        -> {
+            if (interaction.inputSettings.stylusLongHoldAction == StylusButtonAction.ERASER_HOLD) {
+                for (index in 0 until event.pointerCount) {
+                    if (!isPointerStylusStream(event, index, runtime)) {
+                        continue
+                    }
+                    val pointerId = event.getPointerId(index)
+                    val startTime = runtime.stylusLongHoldStartTimes[pointerId] ?: event.eventTime
+                    if (event.eventTime - startTime >= STYLUS_LONG_HOLD_ERASER_DELAY_MS) {
+                        runtime.stylusLongHoldActivePointerIds.add(pointerId)
+                    }
+                }
+            } else {
+                runtime.stylusLongHoldActivePointerIds.clear()
+            }
+        }
+
+        MotionEvent.ACTION_POINTER_UP,
+        MotionEvent.ACTION_UP,
+        -> {
+            val pointerId = event.getPointerId(event.actionIndex)
+            runtime.stylusLongHoldStartTimes.remove(pointerId)
+            runtime.stylusLongHoldActivePointerIds.remove(pointerId)
+        }
+
+        MotionEvent.ACTION_CANCEL,
+        MotionEvent.ACTION_HOVER_EXIT,
+        -> {
+            runtime.stylusLongHoldStartTimes.clear()
+            runtime.stylusLongHoldActivePointerIds.clear()
+        }
+    }
 }
 
 private fun updateStylusButtonEraserState(
@@ -317,6 +364,9 @@ private fun handlePointerDown(
         runtime.stylusPointerIds.add(pointerId)
     } else {
         runtime.stylusPointerIds.remove(pointerId)
+        if (event.pointerCount > 1 && interaction.inputSettings.doubleFingerMode == DoubleFingerMode.IGNORE) {
+            return false
+        }
         if (interaction.inputSettings.singleFingerMode != SingleFingerMode.DRAW) {
             return false
         }
@@ -418,6 +468,17 @@ private fun handlePointerMove(
             }
 
             PointerMode.DRAW -> {
+                val shouldPromoteStylusToEraser =
+                    runtime.isStylusButtonEraserActive &&
+                        runtime.stylusPointerIds.contains(movePointerId) &&
+                        interaction.brush.tool != Tool.ERASER
+                if (shouldPromoteStylusToEraser) {
+                    cancelActiveStroke(view, event, movePointerId, runtime)
+                    runtime.activePointerModes[movePointerId] = PointerMode.ERASE
+                    handleEraserAtPointer(event, index, interaction, runtime)
+                    handled = true
+                    continue
+                }
                 val strokeId = runtime.activeStrokeIds[movePointerId]
                 if (strokeId != null) {
                     val startTime = runtime.activeStrokeStartTimes[movePointerId] ?: event.eventTime
@@ -777,6 +838,8 @@ private fun handleCancel(
     runtime.activeStrokePoints.clear()
     runtime.activeStrokeStartTimes.clear()
     runtime.stylusPointerIds.clear()
+    runtime.stylusLongHoldStartTimes.clear()
+    runtime.stylusLongHoldActivePointerIds.clear()
     runtime.panVelocityTracker?.recycle()
     runtime.panVelocityTracker = null
     view.setStrokeRenderingActive(false)

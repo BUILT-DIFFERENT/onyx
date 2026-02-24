@@ -14,18 +14,19 @@
     "test": "turbo run test --filter=!@onyx/android",
     "test:all": "turbo run test",
     "e2e": "turbo run e2e --filter=@onyx/web",
-    "lint": "turbo run lint --filter=!@onyx/android",
-    "lint:all": "turbo run lint",
+    "lint": "bun run format && turbo run lint --filter=!@onyx/android",
+    "lint:all": "bun run format:all && turbo run lint",
     "lint:quick": "turbo run lint:quick --filter=!@onyx/android",
     "lint:fix": "turbo run lint:fix --filter=!@onyx/android",
     "typecheck": "turbo run typecheck --filter=!@onyx/android",
     "typecheck:quick": "turbo run typecheck:quick --filter=!@onyx/android",
     "format": "turbo run format --filter=!@onyx/android",
+    "format:all": "turbo run format",
     "format:check": "turbo run format:check --filter=!@onyx/android",
     "clean": "turbo run clean",
     "android:build": "turbo run build --filter=@onyx/android",
     "android:test": "turbo run test --filter=@onyx/android",
-    "android:lint": "turbo run lint --filter=@onyx/android",
+    "android:lint": "turbo run format --filter=@onyx/android && turbo run lint --filter=@onyx/android",
     "ktlint": "turbo run ktlint --filter=@onyx/android",
     "detekt": "turbo run detekt --filter=@onyx/android",
     "prepare": "simple-git-hooks"
@@ -52,6 +53,6 @@
     "vitest": "^1.6.0"
   },
   "simple-git-hooks": {
-    "pre-commit": "bun run lint && bun run typecheck"
+    "pre-commit": "bun run lint:all && bun run typecheck"
   }
 }

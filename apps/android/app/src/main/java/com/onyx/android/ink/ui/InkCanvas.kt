@@ -54,6 +54,8 @@ internal class InkCanvasRuntime(
     val pendingCommittedStrokes: MutableMap<String, Stroke>,
     val hoverPreviewState: HoverPreviewState,
     val finishedStrokePathCache: MutableMap<String, StrokePathCacheEntry>,
+    val stylusLongHoldStartTimes: MutableMap<Int, Long>,
+    val stylusLongHoldActivePointerIds: MutableSet<Int>,
 ) {
     var activeStrokeRenderVersion by mutableIntStateOf(0)
     var motionPredictionAdapter: MotionPredictionAdapter? = null
@@ -153,6 +155,8 @@ fun InkCanvas(
                 pendingCommittedStrokes = mutableMapOf(),
                 hoverPreviewState = hoverPreviewState,
                 finishedStrokePathCache = mutableMapOf(),
+                stylusLongHoldStartTimes = mutableMapOf(),
+                stylusLongHoldActivePointerIds = mutableSetOf(),
             )
         }
 

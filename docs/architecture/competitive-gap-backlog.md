@@ -657,9 +657,9 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Status: `Strong Partial (Wave K-InputSettingsRouting)`
   - Competitor behavior: Notewise supports rich button remapping including hold-to-erase and switch-to-last-tool.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`
-  - What exists now: Primary/secondary/long-hold settings are persisted and exposed in toolbar input settings; touch router enforces primary/secondary eraser-hold behavior.
-  - What is missing: Additional stylus actions beyond `ERASER_HOLD|NO_ACTION` (for example switch-to-last-tool) and long-hold runtime mapping.
-  - Exact change needed: Expand stylus action enum + runtime dispatch for advanced mappings and add interaction tests per mapping.
+  - What exists now: Primary/secondary/long-hold settings are persisted and exposed in toolbar input settings; touch router enforces primary/secondary eraser-hold behavior and long-hold eraser activation.
+  - What is missing: Additional stylus actions beyond `ERASER_HOLD|NO_ACTION` (for example switch-to-last-tool) and richer conflict-priority policy.
+  - Exact change needed: Expand stylus action enum + runtime dispatch for advanced mappings and add interaction tests per mapping permutation.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Input-mapping tests for each stylus action and persistence round-trip.
@@ -668,8 +668,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Status: `Strong Partial (Wave K-InputSettingsRouting)`
   - Competitor behavior: Notewise lets users set single-finger and double-finger behavior independently.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`
-  - What exists now: Configurable `singleFinger` (`DRAW|PAN|IGNORE`) and `doubleFinger` (`ZOOM_PAN|IGNORE`) profiles are persisted, surfaced in UI, and routed by the gesture engine.
-  - What is missing: Additional parity modes (for example dedicated double-finger scroll profile) and full profile-matrix instrumentation coverage.
+  - What exists now: Configurable `singleFinger` (`DRAW|PAN|IGNORE`) and `doubleFinger` (`ZOOM_PAN|IGNORE`) profiles are persisted, surfaced in UI, and routed by the gesture engine with explicit second-finger ignore enforcement.
+  - What is missing: Additional parity modes (for example dedicated double-finger scroll profile) and exhaustive profile-matrix instrumentation coverage.
   - Exact change needed: Add remaining profile variants and expand instrumented tests across stylus-present/stylus-absent combinations.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`
