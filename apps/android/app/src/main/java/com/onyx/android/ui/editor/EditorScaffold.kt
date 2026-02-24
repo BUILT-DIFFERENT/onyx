@@ -404,6 +404,9 @@ private fun MultiPageEditorContent(
                         onStylusButtonEraserActiveChanged = contentState.onStylusButtonEraserActiveChanged,
                         onTransformGesture = contentState.onTransformGesture,
                         onPanGestureEnd = contentState.onPanGestureEnd,
+                        onUndoShortcut = contentState.onUndoShortcut,
+                        onRedoShortcut = contentState.onRedoShortcut,
+                        onDoubleTapZoomRequested = contentState.onDoubleTapZoomRequested,
                     )
                 }
             }
@@ -469,6 +472,9 @@ private fun PageItem(
     onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
     onTransformGesture: (Float, Float, Float, Float, Float) -> Unit,
     onPanGestureEnd: (Float, Float) -> Unit,
+    onUndoShortcut: () -> Unit,
+    onRedoShortcut: () -> Unit,
+    onDoubleTapZoomRequested: () -> Unit,
 ) {
     val renderTransform = pageState.renderTransform
     val viewportWidthPx = (pageState.pageWidth * renderTransform.zoom).roundToInt().coerceAtLeast(1)
@@ -607,6 +613,8 @@ private fun PageItem(
                         onStylusButtonEraserActiveChanged = onStylusButtonEraserActiveChanged,
                         onTransformGesture = onTransformGesture,
                         onPanGestureEnd = onPanGestureEnd,
+                        onUndoShortcut = onUndoShortcut,
+                        onRedoShortcut = onRedoShortcut,
                         onViewportSizeChanged = {},
                         onPageSelected = {},
                         onTemplateChange = {},
@@ -635,6 +643,8 @@ private fun PageItem(
                     onStrokeSplit,
                     onTransformGesture,
                     onPanGestureEnd,
+                    onUndoShortcut,
+                    onRedoShortcut,
                     onStylusButtonEraserActiveChanged,
                 ) {
                     InkCanvasCallbacks(
@@ -645,6 +655,9 @@ private fun PageItem(
                         onLassoResize = if (isReadOnly) ({ _, _, _ -> }) else onLassoResize,
                         onTransformGesture = onTransformGesture,
                         onPanGestureEnd = onPanGestureEnd,
+                        onUndoShortcut = onUndoShortcut,
+                        onRedoShortcut = onRedoShortcut,
+                        onDoubleTapGesture = onDoubleTapZoomRequested,
                         onStylusButtonEraserActiveChanged = onStylusButtonEraserActiveChanged,
                     )
                 }
@@ -879,6 +892,9 @@ private fun NoteEditorContent(
                             },
                         onTransformGesture = contentState.onTransformGesture,
                         onPanGestureEnd = contentState.onPanGestureEnd,
+                        onUndoShortcut = contentState.onUndoShortcut,
+                        onRedoShortcut = contentState.onRedoShortcut,
+                        onDoubleTapGesture = contentState.onDoubleTapZoomRequested,
                         onStylusButtonEraserActiveChanged = contentState.onStylusButtonEraserActiveChanged,
                     )
                 InkCanvas(

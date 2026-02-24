@@ -15,7 +15,9 @@ import com.onyx.android.ink.model.StrokeStyle
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.input.DoubleFingerMode
+import com.onyx.android.input.DoubleTapZoomAction
 import com.onyx.android.input.InputSettings
+import com.onyx.android.input.MultiFingerTapAction
 import com.onyx.android.input.SingleFingerMode
 import com.onyx.android.input.StylusButtonAction
 import org.junit.Assert.assertEquals
@@ -1013,6 +1015,255 @@ class InkCanvasTouchRoutingTest {
     }
 
     @Test
+    fun fingerDoubleTap_triggersConfiguredCallback() {
+        val view = GlInkSurfaceView(context)
+        val runtime = createRuntime()
+        var doubleTapCount = 0
+        val interaction =
+            createInteraction(
+                inputSettings =
+                    InputSettings(
+                        singleFingerMode = SingleFingerMode.PAN,
+                        doubleTapZoomAction = DoubleTapZoomAction.CYCLE_PRESET,
+                    ),
+                onDoubleTapGesture = { doubleTapCount += 1 },
+            )
+
+        val downTime = 2300L
+        val firstDown =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 80f,
+                y = 80f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+        val firstUp =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 16L,
+                action = MotionEvent.ACTION_UP,
+                x = 80f,
+                y = 80f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+        val secondDown =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 120L,
+                action = MotionEvent.ACTION_DOWN,
+                x = 82f,
+                y = 82f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, firstDown, interaction, runtime))
+            assertTrue(handleTouchEvent(view, firstUp, interaction, runtime))
+            assertTrue(handleTouchEvent(view, secondDown, interaction, runtime))
+        } finally {
+            firstDown.recycle()
+            firstUp.recycle()
+            secondDown.recycle()
+        }
+
+        assertEquals(1, doubleTapCount)
+    }
+
+    @Test
+    fun twoFingerTap_triggersUndoShortcut() {
+        val view = GlInkSurfaceView(context)
+        val runtime = createRuntime()
+        var undoCount = 0
+        val interaction =
+            createInteraction(
+                inputSettings =
+                    InputSettings(
+                        singleFingerMode = SingleFingerMode.PAN,
+                        doubleFingerMode = DoubleFingerMode.ZOOM_PAN,
+                        twoFingerTapAction = MultiFingerTapAction.UNDO,
+                    ),
+                onUndoShortcut = { undoCount += 1 },
+            )
+
+        val downTime = 2600L
+        val firstDown =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 80f,
+                y = 80f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+        val secondDown =
+            twoPointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 16L,
+                action = MotionEvent.ACTION_POINTER_DOWN + (1 shl MotionEvent.ACTION_POINTER_INDEX_SHIFT),
+                firstPointerId = 0,
+                firstToolType = MotionEvent.TOOL_TYPE_FINGER,
+                firstX = 80f,
+                firstY = 80f,
+                secondPointerId = 1,
+                secondToolType = MotionEvent.TOOL_TYPE_FINGER,
+                secondX = 120f,
+                secondY = 80f,
+            )
+        val secondUp =
+            twoPointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 64L,
+                action = MotionEvent.ACTION_POINTER_UP + (1 shl MotionEvent.ACTION_POINTER_INDEX_SHIFT),
+                firstPointerId = 0,
+                firstToolType = MotionEvent.TOOL_TYPE_FINGER,
+                firstX = 80f,
+                firstY = 80f,
+                secondPointerId = 1,
+                secondToolType = MotionEvent.TOOL_TYPE_FINGER,
+                secondX = 120f,
+                secondY = 80f,
+            )
+        val firstUp =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 80L,
+                action = MotionEvent.ACTION_UP,
+                x = 80f,
+                y = 80f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, firstDown, interaction, runtime))
+            assertTrue(handleTouchEvent(view, secondDown, interaction, runtime))
+            assertTrue(handleTouchEvent(view, secondUp, interaction, runtime))
+            assertTrue(handleTouchEvent(view, firstUp, interaction, runtime))
+        } finally {
+            firstDown.recycle()
+            secondDown.recycle()
+            secondUp.recycle()
+            firstUp.recycle()
+        }
+
+        assertEquals(1, undoCount)
+    }
+
+    @Test
+    fun threeFingerTap_triggersRedoShortcut() {
+        val view = GlInkSurfaceView(context)
+        val runtime = createRuntime()
+        var redoCount = 0
+        val interaction =
+            createInteraction(
+                inputSettings =
+                    InputSettings(
+                        singleFingerMode = SingleFingerMode.PAN,
+                        doubleFingerMode = DoubleFingerMode.ZOOM_PAN,
+                        threeFingerTapAction = MultiFingerTapAction.REDO,
+                    ),
+                onRedoShortcut = { redoCount += 1 },
+            )
+
+        val downTime = 2900L
+        val firstDown =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 80f,
+                y = 80f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+        val secondDown =
+            twoPointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 16L,
+                action = MotionEvent.ACTION_POINTER_DOWN + (1 shl MotionEvent.ACTION_POINTER_INDEX_SHIFT),
+                firstPointerId = 0,
+                firstToolType = MotionEvent.TOOL_TYPE_FINGER,
+                firstX = 80f,
+                firstY = 80f,
+                secondPointerId = 1,
+                secondToolType = MotionEvent.TOOL_TYPE_FINGER,
+                secondX = 120f,
+                secondY = 80f,
+            )
+        val thirdDown =
+            threePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 32L,
+                action = MotionEvent.ACTION_POINTER_DOWN + (2 shl MotionEvent.ACTION_POINTER_INDEX_SHIFT),
+                firstPointerId = 0,
+                firstX = 80f,
+                firstY = 80f,
+                secondPointerId = 1,
+                secondX = 120f,
+                secondY = 80f,
+                thirdPointerId = 2,
+                thirdX = 100f,
+                thirdY = 110f,
+            )
+        val thirdUp =
+            threePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 56L,
+                action = MotionEvent.ACTION_POINTER_UP + (2 shl MotionEvent.ACTION_POINTER_INDEX_SHIFT),
+                firstPointerId = 0,
+                firstX = 80f,
+                firstY = 80f,
+                secondPointerId = 1,
+                secondX = 120f,
+                secondY = 80f,
+                thirdPointerId = 2,
+                thirdX = 100f,
+                thirdY = 110f,
+            )
+        val secondUp =
+            twoPointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 72L,
+                action = MotionEvent.ACTION_POINTER_UP + (1 shl MotionEvent.ACTION_POINTER_INDEX_SHIFT),
+                firstPointerId = 0,
+                firstToolType = MotionEvent.TOOL_TYPE_FINGER,
+                firstX = 80f,
+                firstY = 80f,
+                secondPointerId = 1,
+                secondToolType = MotionEvent.TOOL_TYPE_FINGER,
+                secondX = 120f,
+                secondY = 80f,
+            )
+        val firstUp =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime + 88L,
+                action = MotionEvent.ACTION_UP,
+                x = 80f,
+                y = 80f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, firstDown, interaction, runtime))
+            assertTrue(handleTouchEvent(view, secondDown, interaction, runtime))
+            assertTrue(handleTouchEvent(view, thirdDown, interaction, runtime))
+            assertTrue(handleTouchEvent(view, thirdUp, interaction, runtime))
+            assertTrue(handleTouchEvent(view, secondUp, interaction, runtime))
+            assertTrue(handleTouchEvent(view, firstUp, interaction, runtime))
+        } finally {
+            firstDown.recycle()
+            secondDown.recycle()
+            thirdDown.recycle()
+            thirdUp.recycle()
+            secondUp.recycle()
+            firstUp.recycle()
+        }
+
+        assertEquals(1, redoCount)
+    }
+
+    @Test
     fun eraserErasesOnDown() {
         val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
@@ -1392,6 +1643,9 @@ private fun createInteraction(
     onStrokeErased: (Stroke) -> Unit = {},
     onTransformGesture: (Float, Float, Float, Float, Float) -> Unit = { _, _, _, _, _ -> },
     onPanGestureEnd: (Float, Float) -> Unit = { _, _ -> },
+    onUndoShortcut: () -> Unit = {},
+    onRedoShortcut: () -> Unit = {},
+    onDoubleTapGesture: () -> Unit = {},
     onStylusButtonEraserActiveChanged: (Boolean) -> Unit = {},
     onStrokeRenderFinished: (Long) -> Unit = {},
 ): InkCanvasInteraction =
@@ -1409,6 +1663,9 @@ private fun createInteraction(
         onStrokeErased = onStrokeErased,
         onTransformGesture = onTransformGesture,
         onPanGestureEnd = onPanGestureEnd,
+        onUndoShortcut = onUndoShortcut,
+        onRedoShortcut = onRedoShortcut,
+        onDoubleTapGesture = onDoubleTapGesture,
         onStylusButtonEraserActiveChanged = onStylusButtonEraserActiveChanged,
         onStrokeRenderFinished = onStrokeRenderFinished,
     )
@@ -1499,6 +1756,74 @@ private fun twoPointerEvent(
         2,
         arrayOf(firstProperties, secondProperties),
         arrayOf(firstCoordinates, secondCoordinates),
+        DEFAULT_META_STATE,
+        DEFAULT_BUTTON_STATE,
+        DEFAULT_X_PRECISION,
+        DEFAULT_Y_PRECISION,
+        DEFAULT_DEVICE_ID,
+        DEFAULT_EDGE_FLAGS,
+        InputDevice.SOURCE_TOUCHSCREEN,
+        DEFAULT_FLAGS,
+    )
+}
+
+private fun threePointerEvent(
+    downTime: Long,
+    eventTime: Long,
+    action: Int,
+    firstPointerId: Int,
+    firstX: Float,
+    firstY: Float,
+    secondPointerId: Int,
+    secondX: Float,
+    secondY: Float,
+    thirdPointerId: Int,
+    thirdX: Float,
+    thirdY: Float,
+): MotionEvent {
+    val firstProperties =
+        MotionEvent.PointerProperties().apply {
+            id = firstPointerId
+            toolType = MotionEvent.TOOL_TYPE_FINGER
+        }
+    val secondProperties =
+        MotionEvent.PointerProperties().apply {
+            id = secondPointerId
+            toolType = MotionEvent.TOOL_TYPE_FINGER
+        }
+    val thirdProperties =
+        MotionEvent.PointerProperties().apply {
+            id = thirdPointerId
+            toolType = MotionEvent.TOOL_TYPE_FINGER
+        }
+    val firstCoordinates =
+        MotionEvent.PointerCoords().apply {
+            x = firstX
+            y = firstY
+            pressure = DEFAULT_PRESSURE
+            size = DEFAULT_SIZE
+        }
+    val secondCoordinates =
+        MotionEvent.PointerCoords().apply {
+            x = secondX
+            y = secondY
+            pressure = DEFAULT_PRESSURE
+            size = DEFAULT_SIZE
+        }
+    val thirdCoordinates =
+        MotionEvent.PointerCoords().apply {
+            x = thirdX
+            y = thirdY
+            pressure = DEFAULT_PRESSURE
+            size = DEFAULT_SIZE
+        }
+    return MotionEvent.obtain(
+        downTime,
+        eventTime,
+        action,
+        3,
+        arrayOf(firstProperties, secondProperties, thirdProperties),
+        arrayOf(firstCoordinates, secondCoordinates, thirdCoordinates),
         DEFAULT_META_STATE,
         DEFAULT_BUTTON_STATE,
         DEFAULT_X_PRECISION,

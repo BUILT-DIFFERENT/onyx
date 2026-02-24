@@ -5,7 +5,9 @@ import com.onyx.android.data.entity.EditorSettingsEntity
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.input.DoubleFingerMode
+import com.onyx.android.input.DoubleTapZoomAction
 import com.onyx.android.input.InputSettings
+import com.onyx.android.input.MultiFingerTapAction
 import com.onyx.android.input.SingleFingerMode
 import com.onyx.android.input.StylusButtonAction
 import kotlinx.coroutines.flow.Flow
@@ -59,11 +61,15 @@ class EditorSettingsRepository
                     stylusPrimaryAction = settings.inputSettings.stylusPrimaryAction.name,
                     stylusSecondaryAction = settings.inputSettings.stylusSecondaryAction.name,
                     stylusLongHoldAction = settings.inputSettings.stylusLongHoldAction.name,
+                    doubleTapZoomAction = settings.inputSettings.doubleTapZoomAction.name,
+                    twoFingerTapAction = settings.inputSettings.twoFingerTapAction.name,
+                    threeFingerTapAction = settings.inputSettings.threeFingerTapAction.name,
                     updatedAt = System.currentTimeMillis(),
                 )
             editorSettingsDao.saveSettings(entity)
         }
 
+        @Suppress("LongMethod")
         private fun EditorSettingsEntity.toSettings(): EditorSettings {
             val selected = runCatching { Tool.valueOf(selectedTool) }.getOrDefault(Tool.PEN)
             val penTool = runCatching { Tool.valueOf(penTool) }.getOrDefault(Tool.PEN)
@@ -83,6 +89,15 @@ class EditorSettingsRepository
             val stylusLongHoldAction =
                 runCatching { StylusButtonAction.valueOf(stylusLongHoldAction) }
                     .getOrDefault(StylusButtonAction.NO_ACTION)
+            val doubleTapZoomAction =
+                runCatching { DoubleTapZoomAction.valueOf(doubleTapZoomAction) }
+                    .getOrDefault(DoubleTapZoomAction.NONE)
+            val twoFingerTapAction =
+                runCatching { MultiFingerTapAction.valueOf(twoFingerTapAction) }
+                    .getOrDefault(MultiFingerTapAction.UNDO)
+            val threeFingerTapAction =
+                runCatching { MultiFingerTapAction.valueOf(threeFingerTapAction) }
+                    .getOrDefault(MultiFingerTapAction.REDO)
 
             return EditorSettings(
                 selectedTool = selected,
@@ -114,6 +129,9 @@ class EditorSettingsRepository
                         stylusPrimaryAction = stylusPrimaryAction,
                         stylusSecondaryAction = stylusSecondaryAction,
                         stylusLongHoldAction = stylusLongHoldAction,
+                        doubleTapZoomAction = doubleTapZoomAction,
+                        twoFingerTapAction = twoFingerTapAction,
+                        threeFingerTapAction = threeFingerTapAction,
                     ),
             )
         }

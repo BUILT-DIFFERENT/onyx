@@ -241,12 +241,12 @@ Evidence paths:
   - Validation gate: Unit tests for mapping policy + UI test for persisted input preferences.
 
 - [ ] `GEST-02` Gesture shortcuts (multi-finger undo/redo, configurable double-tap behavior)
-  - Status: `Missing`
+  - Status: `Strong Partial (Wave M-MultiFingerShortcuts)`
   - Competitor behavior: Notewise supports multi-finger undo/redo and configurable double-tap behavior.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\UndoController.kt`
-  - What exists now: Undo/redo is toolbar-driven.
-  - What is missing: Shortcut gesture recognizers and user-configurable double-tap behavior.
-  - Exact change needed: Add two-finger and three-finger undo/redo recognizers plus configurable double-tap action map.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\UndoController.kt`
+  - What exists now: Configurable two-finger and three-finger tap shortcuts are persisted (`UNDO|REDO|NONE`) and routed to editor undo/redo; configurable double-tap zoom mapping is also persisted and active.
+  - What is missing: Additional shortcut permutations (for example gesture-to-tool switching), plus broader coverage for zoom-lock/read-only permutations in instrumentation.
+  - Exact change needed: Expand gesture shortcut matrix beyond undo/redo and add exhaustive instrumentation coverage across editor modes.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Gesture instrumentation tests for undo/redo and double-tap action mapping.
@@ -676,12 +676,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Validation gate: Instrumented tests for each profile combination under stylus-present and stylus-absent scenarios.
 
 - [ ] `GEST-08` Double-tap zoom-level shortcut
-  - Status: `Missing`
+  - Status: `Strong Partial (Wave L-DoubleTapZoom)`
   - Competitor behavior: Notewise optionally maps double tap to zoom-level change.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorShared.kt`
-  - What exists now: No configurable double-tap zoom behavior.
-  - What is missing: Toggleable gesture and zoom cycle policy.
-  - Exact change needed: Add configurable double-tap action to cycle preset zoom levels or jump to fit-content.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
+  - What exists now: Configurable `doubleTapZoomAction` (`NONE|CYCLE_PRESET|FIT_TO_PAGE`) is persisted, editable in input settings, and routed in editor touch handling.
+  - What is missing: Additional policy controls (e.g. stylus double-tap mapping and per-mode overrides) plus broader UI test coverage with zoom-lock permutations.
+  - Exact change needed: Extend gesture policy matrix and add dedicated zoom-lock + multi-page parity instrumentation scenarios.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Gesture tests confirming map-to-action with and without zoom lock enabled.

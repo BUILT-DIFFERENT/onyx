@@ -90,7 +90,9 @@ import androidx.compose.ui.unit.dp
 import com.onyx.android.config.QuickColorPaletteStore
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.input.DoubleFingerMode
+import com.onyx.android.input.DoubleTapZoomAction
 import com.onyx.android.input.InputSettings
+import com.onyx.android.input.MultiFingerTapAction
 import com.onyx.android.input.SingleFingerMode
 import com.onyx.android.input.StylusButtonAction
 import com.onyx.android.objects.model.InsertAction
@@ -985,6 +987,42 @@ private fun InputSettingsDialog(
                         onSettingsChange(
                             settings.copy(
                                 stylusLongHoldAction = StylusButtonAction.valueOf(selected),
+                            ),
+                        )
+                    },
+                )
+                InputSettingsSelector(
+                    label = "Double tap zoom",
+                    selected = settings.doubleTapZoomAction.name,
+                    options = DoubleTapZoomAction.entries.map { it.name },
+                    onSelect = { selected ->
+                        onSettingsChange(
+                            settings.copy(
+                                doubleTapZoomAction = DoubleTapZoomAction.valueOf(selected),
+                            ),
+                        )
+                    },
+                )
+                InputSettingsSelector(
+                    label = "Two-finger tap",
+                    selected = settings.twoFingerTapAction.name,
+                    options = MultiFingerTapAction.entries.map { it.name },
+                    onSelect = { selected ->
+                        onSettingsChange(
+                            settings.copy(
+                                twoFingerTapAction = MultiFingerTapAction.valueOf(selected),
+                            ),
+                        )
+                    },
+                )
+                InputSettingsSelector(
+                    label = "Three-finger tap",
+                    selected = settings.threeFingerTapAction.name,
+                    options = MultiFingerTapAction.entries.map { it.name },
+                    onSelect = { selected ->
+                        onSettingsChange(
+                            settings.copy(
+                                threeFingerTapAction = MultiFingerTapAction.valueOf(selected),
                             ),
                         )
                     },

@@ -26,8 +26,10 @@ import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.input.DoubleFingerMode
 import com.onyx.android.input.InputSettings
+import com.onyx.android.input.MultiFingerTapAction
 import com.onyx.android.input.SingleFingerMode
 import com.onyx.android.input.StylusButtonAction
+import kotlin.math.hypot
 
 private const val PALM_CONTACT_SIZE_THRESHOLD = 1.0f
 private const val PREDICTED_STROKE_ALPHA = 0.2f
@@ -40,6 +42,10 @@ private const val HOVER_ERASER_ALPHA = 0.6f
 private const val HOVER_PEN_ALPHA = 0.35f
 private const val MIN_HOVER_RADIUS = 0.1f
 private const val STYLUS_LONG_HOLD_ERASER_DELAY_MS = 350L
+private const val DOUBLE_TAP_TIMEOUT_MS = 280L
+private const val DOUBLE_TAP_MAX_DISTANCE_PX = 28f
+private const val TWO_FINGER_POINTER_COUNT = 2
+private const val THREE_FINGER_POINTER_COUNT = 3
 
 internal data class InkCanvasInteraction(
     val brush: Brush,
@@ -68,6 +74,9 @@ internal data class InkCanvasInteraction(
         velocityX: Float,
         velocityY: Float,
     ) -> Unit,
+    val onUndoShortcut: () -> Unit = {},
+    val onRedoShortcut: () -> Unit = {},
+    val onDoubleTapGesture: () -> Unit = {},
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
     val onStrokeRenderFinished: (Long) -> Unit,
 )
@@ -374,6 +383,11 @@ private fun handlePointerDown(
     if (!interaction.allowEditing) {
         return true
     }
+    if (pointerIsDoubleTapGesture(event, actionIndex, interaction, runtime)) {
+        interaction.onDoubleTapGesture()
+        resetLastTap(runtime)
+        return true
+    }
     val pointerMode = resolvePointerMode(event, actionIndex, interaction, runtime, pointerIsStylusStream)
     runtime.activePointerModes[pointerId] = pointerMode
     if (pointerIsStylusStream) {
@@ -437,6 +451,53 @@ private fun handlePointerDown(
     runtime.activeStrokePoints[pointerId] = points
     runtime.invalidateActiveStrokeRender()
     return true
+}
+
+private fun pointerIsDoubleTapGesture(
+    event: MotionEvent,
+    pointerIndex: Int,
+    interaction: InkCanvasInteraction,
+    runtime: InkCanvasRuntime,
+): Boolean {
+    if (event.pointerCount != 1) {
+        return false
+    }
+    if (!isPointerDefinitelyFinger(event, pointerIndex)) {
+        return false
+    }
+    if (interaction.inputSettings.singleFingerMode == SingleFingerMode.DRAW) {
+        return false
+    }
+    val previousTapTime = runtime.lastFingerTapTimeMs
+    if (previousTapTime <= 0L) {
+        return false
+    }
+    val elapsed = event.eventTime - previousTapTime
+    if (elapsed <= 0L || elapsed > DOUBLE_TAP_TIMEOUT_MS) {
+        return false
+    }
+    val tapDistance =
+        hypot(
+            (event.getX(pointerIndex) - runtime.lastFingerTapX).toDouble(),
+            (event.getY(pointerIndex) - runtime.lastFingerTapY).toDouble(),
+        )
+    return tapDistance <= DOUBLE_TAP_MAX_DISTANCE_PX
+}
+
+private fun recordLastFingerTap(
+    event: MotionEvent,
+    pointerIndex: Int,
+    runtime: InkCanvasRuntime,
+) {
+    runtime.lastFingerTapTimeMs = event.eventTime
+    runtime.lastFingerTapX = event.getX(pointerIndex)
+    runtime.lastFingerTapY = event.getY(pointerIndex)
+}
+
+private fun resetLastTap(runtime: InkCanvasRuntime) {
+    runtime.lastFingerTapTimeMs = 0L
+    runtime.lastFingerTapX = 0f
+    runtime.lastFingerTapY = 0f
 }
 
 private fun handlePointerMove(
@@ -678,6 +739,9 @@ private fun handlePointerUp(
     } else if (pointerMode == PointerMode.ERASE) {
         runtime.eraserLastPagePoints.remove(pointerId)
         runtime.hoverPreviewState.hide()
+        if (isPointerDefinitelyFinger(event, actionIndex)) {
+            recordLastFingerTap(event, actionIndex, runtime)
+        }
         handled = true
     } else {
         val strokeId = runtime.activeStrokeIds[pointerId]
@@ -736,6 +800,11 @@ private fun handlePointerUp(
             view.setStrokeRenderingActive(runtime.activeStrokeIds.isNotEmpty())
             runtime.invalidateActiveStrokeRender()
             runtime.hoverPreviewState.hide()
+            if (isPointerDefinitelyFinger(event, actionIndex)) {
+                recordLastFingerTap(event, actionIndex, runtime)
+            } else {
+                resetLastTap(runtime)
+            }
             handled = true
         }
     }
@@ -840,6 +909,8 @@ private fun handleCancel(
     runtime.stylusPointerIds.clear()
     runtime.stylusLongHoldStartTimes.clear()
     runtime.stylusLongHoldActivePointerIds.clear()
+    resetLastTap(runtime)
+    resetMultiFingerTap(runtime)
     runtime.panVelocityTracker?.recycle()
     runtime.panVelocityTracker = null
     view.setStrokeRenderingActive(false)
@@ -849,6 +920,31 @@ private fun handleCancel(
     pushOverlayState(view, interaction, runtime)
     updateStylusButtonEraserState(false, interaction, runtime)
     return true
+}
+
+internal fun dispatchMultiFingerTapShortcut(
+    interaction: InkCanvasInteraction,
+    runtime: InkCanvasRuntime,
+) {
+    val action =
+        when (runtime.multiFingerTapMaxPointerCount) {
+            TWO_FINGER_POINTER_COUNT -> interaction.inputSettings.twoFingerTapAction
+            THREE_FINGER_POINTER_COUNT -> interaction.inputSettings.threeFingerTapAction
+            else -> MultiFingerTapAction.NONE
+        }
+    when (action) {
+        MultiFingerTapAction.NONE -> Unit
+        MultiFingerTapAction.UNDO -> interaction.onUndoShortcut()
+        MultiFingerTapAction.REDO -> interaction.onRedoShortcut()
+    }
+}
+
+internal fun resetMultiFingerTap(runtime: InkCanvasRuntime) {
+    runtime.multiFingerTapStartTimeMs = 0L
+    runtime.multiFingerTapStartCentroidX = 0f
+    runtime.multiFingerTapStartCentroidY = 0f
+    runtime.multiFingerTapMaxPointerCount = 0
+    runtime.multiFingerTapMaxMovementPx = 0f
 }
 
 private fun createStrokeInput(

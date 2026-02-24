@@ -74,6 +74,14 @@ internal class InkCanvasRuntime(
     var previousSingleFingerPanX = 0f
     var previousSingleFingerPanY = 0f
     var panVelocityTracker: VelocityTracker? = null
+    var lastFingerTapTimeMs = 0L
+    var lastFingerTapX = 0f
+    var lastFingerTapY = 0f
+    var multiFingerTapStartTimeMs = 0L
+    var multiFingerTapStartCentroidX = 0f
+    var multiFingerTapStartCentroidY = 0f
+    var multiFingerTapMaxPointerCount = 0
+    var multiFingerTapMaxMovementPx = 0f
 
     fun invalidateActiveStrokeRender() {
         activeStrokeRenderVersion += 1
@@ -116,6 +124,9 @@ data class InkCanvasCallbacks(
         velocityX: Float,
         velocityY: Float,
     ) -> Unit,
+    val onUndoShortcut: () -> Unit = {},
+    val onRedoShortcut: () -> Unit = {},
+    val onDoubleTapGesture: () -> Unit = {},
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
 )
 
@@ -232,6 +243,9 @@ fun InkCanvas(
                                     onLassoResize = currentCallbacks.onLassoResize,
                                     onTransformGesture = currentCallbacks.onTransformGesture,
                                     onPanGestureEnd = currentCallbacks.onPanGestureEnd,
+                                    onUndoShortcut = currentCallbacks.onUndoShortcut,
+                                    onRedoShortcut = currentCallbacks.onRedoShortcut,
+                                    onDoubleTapGesture = currentCallbacks.onDoubleTapGesture,
                                     onStylusButtonEraserActiveChanged =
                                         currentCallbacks.onStylusButtonEraserActiveChanged,
                                     onStrokeRenderFinished = onStrokeRenderFinished,
@@ -272,6 +286,9 @@ fun InkCanvas(
                                     onLassoResize = currentCallbacks.onLassoResize,
                                     onTransformGesture = currentCallbacks.onTransformGesture,
                                     onPanGestureEnd = currentCallbacks.onPanGestureEnd,
+                                    onUndoShortcut = currentCallbacks.onUndoShortcut,
+                                    onRedoShortcut = currentCallbacks.onRedoShortcut,
+                                    onDoubleTapGesture = currentCallbacks.onDoubleTapGesture,
                                     onStylusButtonEraserActiveChanged =
                                         currentCallbacks.onStylusButtonEraserActiveChanged,
                                     onStrokeRenderFinished = onStrokeRenderFinished,

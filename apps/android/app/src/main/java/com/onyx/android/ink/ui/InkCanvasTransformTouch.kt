@@ -28,6 +28,8 @@ private const val MIN_ZOOM_FOR_PAGE_DELTA = 0.001f
 private const val TRANSFORM_SMOOTHING_ALPHA = 0.22f
 private const val PAN_NOISE_THRESHOLD_PX = 0.35f
 private const val ZOOM_NOISE_THRESHOLD = 0.0025f
+private const val MULTI_FINGER_TAP_TIMEOUT_MS = 260L
+private const val MULTI_FINGER_TAP_MAX_MOVEMENT_PX = 24f
 
 private data class TwoPointerTransform(
     val centroidX: Float,
@@ -148,6 +150,7 @@ internal fun handleTransformGesture(
         MotionEvent.ACTION_POINTER_UP -> {
             val remainingPointers = event.pointerCount - 1
             if (remainingPointers < 2) {
+                maybeDispatchMultiFingerTapShortcut(event, interaction, runtime)
                 endTransformGesture(view, interaction, runtime, fling = true)
             } else {
                 setTransformBaseline(event, runtime, excludeActionIndex = true)
@@ -184,6 +187,11 @@ private fun startTransformGesture(
     runtime.isTransforming = true
     view.setGestureRenderingActive(true)
     setTransformBaseline(event, runtime)
+    runtime.multiFingerTapStartTimeMs = event.eventTime
+    runtime.multiFingerTapStartCentroidX = runtime.previousTransformCentroidX
+    runtime.multiFingerTapStartCentroidY = runtime.previousTransformCentroidY
+    runtime.multiFingerTapMaxPointerCount = event.pointerCount
+    runtime.multiFingerTapMaxMovementPx = 0f
     startPanVelocityTracking(event, runtime)
 }
 
@@ -226,6 +234,14 @@ private fun updateTransformGesture(
     }
 
     val rawZoomChange = (smoothedDistance / previousDistance).coerceIn(MIN_ZOOM_CHANGE, MAX_ZOOM_CHANGE)
+    runtime.multiFingerTapMaxPointerCount = maxOf(runtime.multiFingerTapMaxPointerCount, event.pointerCount)
+    val movementSinceStart =
+        hypot(
+            (smoothedCentroidX - runtime.multiFingerTapStartCentroidX).toDouble(),
+            (smoothedCentroidY - runtime.multiFingerTapStartCentroidY).toDouble(),
+        ).toFloat()
+    runtime.multiFingerTapMaxMovementPx =
+        maxOf(runtime.multiFingerTapMaxMovementPx, movementSinceStart)
     val zoomChange = if (abs(rawZoomChange - 1f) < ZOOM_NOISE_THRESHOLD) 1f else rawZoomChange
 
     val rawPanChangeX = smoothedCentroidX - runtime.previousTransformCentroidX
@@ -447,7 +463,26 @@ private fun endTransformGesture(
         runtime.panVelocityTracker?.recycle()
         runtime.panVelocityTracker = null
     }
+    resetMultiFingerTap(runtime)
     view.setGestureRenderingActive(runtime.isSingleFingerPanning)
+}
+
+private fun maybeDispatchMultiFingerTapShortcut(
+    event: MotionEvent,
+    interaction: InkCanvasInteraction,
+    runtime: InkCanvasRuntime,
+) {
+    if (runtime.multiFingerTapStartTimeMs <= 0L) {
+        return
+    }
+    val elapsed = event.eventTime - runtime.multiFingerTapStartTimeMs
+    if (elapsed <= 0L || elapsed > MULTI_FINGER_TAP_TIMEOUT_MS) {
+        return
+    }
+    if (runtime.multiFingerTapMaxMovementPx > MULTI_FINGER_TAP_MAX_MOVEMENT_PX) {
+        return
+    }
+    dispatchMultiFingerTapShortcut(interaction, runtime)
 }
 
 private fun readTwoPointerTransform(

@@ -60,7 +60,9 @@ import com.onyx.android.ink.ui.findStrokesInLasso
 import com.onyx.android.ink.ui.moveStrokes
 import com.onyx.android.ink.ui.resizeStrokes
 import com.onyx.android.input.DoubleFingerMode
+import com.onyx.android.input.DoubleTapZoomAction
 import com.onyx.android.input.InputSettings
+import com.onyx.android.input.MultiFingerTapAction
 import com.onyx.android.input.SingleFingerMode
 import com.onyx.android.objects.model.InsertAction
 import com.onyx.android.pdf.OutlineItem
@@ -92,6 +94,12 @@ private const val SEARCH_HIGHLIGHT_CLEAR_DELAY_MS = 4000L
 private const val MIN_LASSO_POLYGON_POINTS = 3
 private const val MIN_LASSO_SCALE = 0.2f
 private const val MAX_LASSO_SCALE = 5f
+private const val ZOOM_PERCENT_DIVISOR = 100f
+private const val FIT_ZOOM_BASELINE = 1f
+private const val MIN_ZOOM_CHANGE_EPSILON = 0.001f
+
+@Suppress("MagicNumber")
+private val DOUBLE_TAP_ZOOM_PRESETS = listOf(50, 100, 200, 300, 400)
 
 internal sealed interface PdfOpenFailureUiAction {
     data class PromptForPassword(
@@ -978,6 +986,23 @@ private fun rememberNoteEditorUiState(
             onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
             onTransformGesture = onTransformGesture,
             onPanGestureEnd = onPanGestureEnd,
+            onUndoShortcut = undoController::undo,
+            onRedoShortcut = undoController::redo,
+            onDoubleTapZoomRequested = {
+                if (isZoomLocked) {
+                    return@NoteEditorContentState
+                }
+                viewTransform =
+                    applyDoubleTapZoomToTransform(
+                        action = brushState.inputSettings.doubleTapZoomAction,
+                        currentTransform = viewTransform,
+                        zoomLimits = zoomLimits.minZoom..zoomLimits.maxZoom,
+                        pageWidth = pdfState.pageWidth,
+                        pageHeight = pdfState.pageHeight,
+                        viewportWidth = viewportWidth,
+                        viewportHeight = viewportHeight,
+                    )
+            },
             onViewportSizeChanged = { viewportSize = it },
             onPageSelected = { targetIndex -> viewModel.navigateBy(targetIndex - pageState.currentPageIndex) },
             onZoomPresetSelected = { zoomPercent ->
@@ -1450,6 +1475,43 @@ private fun rememberMultiPageUiState(
             onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
             onTransformGesture = { _, _, _, _, _ -> },
             onPanGestureEnd = { _, _ -> },
+            onUndoShortcut = undoController::undo,
+            onRedoShortcut = undoController::redo,
+            onDoubleTapZoomRequested = {
+                if (isZoomLocked) {
+                    return@MultiPageContentState
+                }
+                when (brushState.inputSettings.doubleTapZoomAction) {
+                    DoubleTapZoomAction.NONE -> Unit
+                    DoubleTapZoomAction.CYCLE_PRESET -> {
+                        val nextZoomPercent =
+                            nextZoomPresetPercent((documentZoom * ZOOM_PERCENT_DIVISOR).toInt())
+                        val targetZoom =
+                            (nextZoomPercent / ZOOM_PERCENT_DIVISOR).coerceIn(
+                                STACKED_DOCUMENT_MIN_ZOOM,
+                                STACKED_DOCUMENT_MAX_ZOOM,
+                            )
+                        documentZoom = targetZoom
+                        val minPanX =
+                            if (viewportWidth > 0f) {
+                                (viewportWidth * (1f - documentZoom)).coerceAtMost(0f)
+                            } else {
+                                0f
+                            }
+                        documentPanX = documentPanX.coerceIn(minPanX, 0f)
+                    }
+                    DoubleTapZoomAction.FIT_TO_PAGE -> {
+                        documentZoom = FIT_ZOOM_BASELINE
+                        val minPanX =
+                            if (viewportWidth > 0f) {
+                                (viewportWidth * (1f - documentZoom)).coerceAtMost(0f)
+                            } else {
+                                0f
+                            }
+                        documentPanX = documentPanX.coerceIn(minPanX, 0f)
+                    }
+                }
+            },
             onDocumentZoomChange = { updatedZoom ->
                 if (!isZoomLocked) {
                     val clampedZoom = updatedZoom.coerceIn(STACKED_DOCUMENT_MIN_ZOOM, STACKED_DOCUMENT_MAX_ZOOM)
@@ -1903,4 +1965,56 @@ private fun buildToolbarState(
     )
 
 private fun InputSettings.allowsAnyFingerGesture(): Boolean =
-    singleFingerMode != SingleFingerMode.IGNORE || doubleFingerMode != DoubleFingerMode.IGNORE
+    singleFingerMode != SingleFingerMode.IGNORE ||
+        doubleFingerMode != DoubleFingerMode.IGNORE ||
+        twoFingerTapAction != MultiFingerTapAction.NONE ||
+        threeFingerTapAction != MultiFingerTapAction.NONE
+
+@Suppress("LongParameterList")
+private fun applyDoubleTapZoomToTransform(
+    action: DoubleTapZoomAction,
+    currentTransform: ViewTransform,
+    zoomLimits: ClosedFloatingPointRange<Float>,
+    pageWidth: Float,
+    pageHeight: Float,
+    viewportWidth: Float,
+    viewportHeight: Float,
+): ViewTransform =
+    when (action) {
+        DoubleTapZoomAction.NONE -> currentTransform
+        DoubleTapZoomAction.CYCLE_PRESET -> {
+            val nextZoomPercent =
+                nextZoomPresetPercent((currentTransform.zoom * ZOOM_PERCENT_DIVISOR).toInt())
+            val targetZoom =
+                (nextZoomPercent / ZOOM_PERCENT_DIVISOR).coerceIn(zoomLimits.start, zoomLimits.endInclusive)
+            val zoomChange = (targetZoom / currentTransform.zoom).coerceAtLeast(MIN_ZOOM_CHANGE_EPSILON)
+            applyTransformGesture(
+                current = currentTransform,
+                zoomLimits =
+                    ZoomLimits(
+                        minZoom = zoomLimits.start,
+                        maxZoom = zoomLimits.endInclusive,
+                        fitZoom = FIT_ZOOM_BASELINE,
+                    ),
+                pageWidth = pageWidth,
+                pageHeight = pageHeight,
+                viewportWidth = viewportWidth,
+                viewportHeight = viewportHeight,
+                gesture =
+                    TransformGesture(
+                        zoomChange = zoomChange,
+                        panChangeX = 0f,
+                        panChangeY = 0f,
+                        centroidX = viewportWidth / 2f,
+                        centroidY = viewportHeight / 2f,
+                    ),
+            )
+        }
+
+        DoubleTapZoomAction.FIT_TO_PAGE -> ViewTransform.DEFAULT
+    }
+
+private fun nextZoomPresetPercent(currentZoomPercent: Int): Int {
+    val current = currentZoomPercent.coerceAtLeast(DOUBLE_TAP_ZOOM_PRESETS.first())
+    return DOUBLE_TAP_ZOOM_PRESETS.firstOrNull { preset -> preset > current } ?: DOUBLE_TAP_ZOOM_PRESETS.first()
+}
