@@ -44,6 +44,13 @@ interface PageDao {
         updatedAt: Long,
     )
 
+    @Query("UPDATE pages SET indexInNote = :indexInNote, updatedAt = :updatedAt WHERE pageId = :pageId")
+    suspend fun updateIndex(
+        pageId: String,
+        indexInNote: Int,
+        updatedAt: Long,
+    )
+
     @Query("DELETE FROM pages WHERE pageId = :pageId")
     suspend fun delete(pageId: String)
 }

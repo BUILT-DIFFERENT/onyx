@@ -116,11 +116,11 @@ Evidence paths:
   - Validation gate: Compose UI tests for style toggle persistence and object re-open fidelity.
 
 - [ ] `EDIT-06` Multi-pen preset exposure in UI
-  - Status: `Partial`
+  - Status: `Strong Partial (Wave J-ColorPresetUX)`
   - Competitor behavior: Notewise exposes fountain/ball/calligraphy style presets directly in the pen UI.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\model\BrushPreset.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\config\BrushPresetStore.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`
-  - What exists now: Preset types exist in model/store, but toolbar selection flow is incomplete.
-  - What is missing: User-facing preset picker and active preset persistence affordance.
+  - What exists now: Pen/highlighter settings panels now expose tap-to-apply preset chips wired into brush state and persisted editor settings.
+  - What is missing: User-defined preset authoring/management beyond built-in preset chips.
   - Exact change needed: Add pen preset picker in toolbar and wire selected preset into editor brush state and settings persistence.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -451,12 +451,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Validation gate: UI tests asserting input lockout in view mode and full restoration in edit mode.
 
 - [ ] `EDIT-14` Page manager panel (thumbnails, reorder, duplicate, delete)
-  - Status: `Partial`
+  - Status: `Strong Partial (Wave I-PageManagerOps)`
   - Competitor behavior: Competitive editors expose strong page-level management, especially for long notes and PDFs.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\PageRepository.kt`
-  - What exists now: Multi-page flow exists with jump affordances.
-  - What is missing: Full thumbnail manager with explicit reorder/duplicate/delete controls.
-  - Exact change needed: Add a page manager drawer/sheet with thumbnails, drag reorder, duplicate action, and protected delete with undo.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
+  - What exists now: Overflow now opens a dedicated page manager dialog with per-page open/reorder (up/down)/duplicate/delete actions, plus protected delete confirmation and repository-backed persistent ordering.
+  - What is missing: Thumbnail-rich drag-and-drop board and undo stack integration for page-level operations.
+  - Exact change needed: Evolve dialog into a thumbnail-first drawer/sheet with drag reorder and explicit undo for destructive page actions.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Page-order persistence tests and UI drag/drop reorder tests.
@@ -473,22 +473,22 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Validation gate: Compose tests for pill state updates across page navigation and zoom changes.
 
 - [ ] `EDIT-16` Quick color strip + favorite slots in main toolbar
-  - Status: `Missing`
+  - Status: `Strong Partial (Wave J-ColorPresetUX)`
   - Competitor behavior: Samsung keeps color dots one tap away while preserving deeper palette controls.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\config\BrushPresetStore.kt`
-  - What exists now: Color changes are panel-centric.
-  - What is missing: Always-visible quick color row and user-configurable favorite palette.
+  - What exists now: Always-visible quick color strip now uses persistent favorite slots from local store, and long-press opens advanced picker with slot reassignment.
+  - What is missing: Cross-device sync of favorite slot state.
   - Exact change needed: Add toolbar quick-color strip with long-press assignment and sync with pen/highlighter active preset state.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: UI tests for quick color apply + favorite reassignment persistence.
 
 - [ ] `EDIT-17` Advanced color picker parity (swatches, spectrum, HEX/RGB)
-  - Status: `Missing`
+  - Status: `Strong Partial (Wave J-ColorPresetUX)`
   - Competitor behavior: Samsung palette includes swatches, spectrum, and numeric color entry.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\ToolSettingsPanel.kt`
-  - What exists now: Basic palette controls.
-  - What is missing: Numeric entry and full-spectrum selection ergonomics.
+  - What exists now: Advanced picker now includes HEX + RGB numeric controls, RGB spectrum sliders, preview, and swatch taps integrated with quick-color assignment.
+  - What is missing: Full HSV wheel and saved custom swatch library management UI.
   - Exact change needed: Add advanced picker with HEX/RGB inputs, alpha support, and preset save/remove controls.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`

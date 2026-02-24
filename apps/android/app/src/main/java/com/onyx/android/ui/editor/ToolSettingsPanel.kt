@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.onyx.android.ink.model.Brush
+import com.onyx.android.ink.model.BrushPreset
 import com.onyx.android.ink.model.Tool
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -71,6 +72,23 @@ internal fun ToolSettingsPanel(
 
             when (panelType) {
                 ToolPanelType.PEN -> {
+                    BrushPresetRow(
+                        presets = BrushPreset.DEFAULT_PRESETS.filter { preset -> preset.tool == Tool.PEN },
+                        activeBrush = brush,
+                        onPresetSelected = { preset ->
+                            onBrushChange(
+                                brush.copy(
+                                    tool = Tool.PEN,
+                                    color = preset.color,
+                                    baseWidth = preset.baseWidth,
+                                    smoothingLevel = preset.smoothingLevel,
+                                    endTaperStrength = preset.endTaperStrength,
+                                    minWidthFactor = preset.minWidthFactor,
+                                    maxWidthFactor = preset.maxWidthFactor,
+                                ),
+                            )
+                        },
+                    )
                     BrushSizeControl(
                         brush = brush,
                         enabled = true,
@@ -99,6 +117,23 @@ internal fun ToolSettingsPanel(
                 }
 
                 ToolPanelType.HIGHLIGHTER -> {
+                    BrushPresetRow(
+                        presets = BrushPreset.DEFAULT_PRESETS.filter { preset -> preset.tool == Tool.HIGHLIGHTER },
+                        activeBrush = brush,
+                        onPresetSelected = { preset ->
+                            onBrushChange(
+                                brush.copy(
+                                    tool = Tool.HIGHLIGHTER,
+                                    color = applyOpacity(preset.color, resolveOpacity(brush)),
+                                    baseWidth = preset.baseWidth,
+                                    smoothingLevel = preset.smoothingLevel,
+                                    endTaperStrength = preset.endTaperStrength,
+                                    minWidthFactor = preset.minWidthFactor,
+                                    maxWidthFactor = preset.maxWidthFactor,
+                                ),
+                            )
+                        },
+                    )
                     BrushSizeControl(
                         brush = brush,
                         enabled = true,
@@ -231,6 +266,34 @@ private fun BrushSizeControl(
         valueRange = 0f..1f,
         steps = BRUSH_SIZE_STEPS,
     )
+}
+
+@Composable
+private fun BrushPresetRow(
+    presets: List<BrushPreset>,
+    activeBrush: Brush,
+    onPresetSelected: (BrushPreset) -> Unit,
+) {
+    if (presets.isEmpty()) {
+        return
+    }
+    Text(text = "Presets", style = MaterialTheme.typography.bodyMedium)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(TOOLBAR_ITEM_SPACING_DP.dp),
+    ) {
+        presets.forEach { preset ->
+            val active = stripAlpha(activeBrush.color).equals(stripAlpha(preset.color), ignoreCase = true)
+            TextButton(
+                onClick = { onPresetSelected(preset) },
+            ) {
+                Text(
+                    text = preset.name,
+                    color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        }
+    }
 }
 
 internal fun resolveSmoothingLevel(brush: Brush): Float = brush.smoothingLevel.coerceIn(0f, 1f)

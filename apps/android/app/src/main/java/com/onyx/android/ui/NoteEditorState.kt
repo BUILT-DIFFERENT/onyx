@@ -64,6 +64,7 @@ internal data class NoteEditorTopBarState(
     val isTextSelectionMode: Boolean = false,
     val onToggleTextSelectionMode: () -> Unit = {},
     val onJumpToPage: (Int) -> Unit = {},
+    val onOpenPageManager: () -> Unit = {},
     val isRecognitionOverlayEnabled: Boolean = false,
     val onToggleRecognitionOverlay: () -> Unit = {},
 )

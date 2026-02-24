@@ -8,6 +8,14 @@ import android.content.ContextWrapper
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,11 +34,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -152,7 +162,7 @@ private fun NoteEditorStatusBarEffect() {
 }
 
 @Composable
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 private fun NoteEditorScreenContent(
     noteId: String,
     viewModel: NoteEditorViewModel,
@@ -163,11 +173,15 @@ private fun NoteEditorScreenContent(
     val errorMessage by viewModel.errorMessage.collectAsState()
     val editorSettings by viewModel.editorSettings.collectAsState()
     val conversionDraft by viewModel.conversionDraft.collectAsState()
+    val pages by viewModel.pages.collectAsState()
+    val currentPageIndex by viewModel.currentPageIndex.collectAsState()
     var pdfPasswordPrompt by remember { mutableStateOf<EditorPdfPasswordPromptState?>(null) }
     var pdfPasswordInput by rememberSaveable { mutableStateOf("") }
     var pdfOpenErrorMessage by rememberSaveable { mutableStateOf<String?>(null) }
     var pdfOpenRetryNonce by rememberSaveable { mutableStateOf(0) }
     var showOutlineSheet by rememberSaveable { mutableStateOf(false) }
+    var showPageManagerDialog by rememberSaveable { mutableStateOf(false) }
+    var pendingDeletePageId by rememberSaveable { mutableStateOf<String?>(null) }
     var outlineItems by remember { mutableStateOf<List<OutlineItem>>(emptyList()) }
     var conversionText by rememberSaveable { mutableStateOf("") }
     LaunchedEffect(conversionDraft?.pageId, conversionDraft?.editingBlockId) {
@@ -199,7 +213,10 @@ private fun NoteEditorScreenContent(
                 onEditorSettingsChange = viewModel::updateEditorSettings,
             )
         MultiPageEditorScaffold(
-            topBarState = uiState.topBarState,
+            topBarState =
+                uiState.topBarState.copy(
+                    onOpenPageManager = { showPageManagerDialog = true },
+                ),
             toolbarState = uiState.toolbarState,
             multiPageContentState = uiState.multiPageContentState,
             snackbarHostState = uiState.snackbarHostState,
@@ -242,7 +259,10 @@ private fun NoteEditorScreenContent(
                 onEditorSettingsChange = viewModel::updateEditorSettings,
             )
         NoteEditorScaffold(
-            topBarState = uiState.topBarState,
+            topBarState =
+                uiState.topBarState.copy(
+                    onOpenPageManager = { showPageManagerDialog = true },
+                ),
             toolbarState = uiState.toolbarState,
             contentState = uiState.contentState,
             transformState = uiState.transformState,
@@ -297,6 +317,55 @@ private fun NoteEditorScreenContent(
             onSave = { viewModel.commitConversionDraft(conversionText) },
         )
     }
+    if (showPageManagerDialog) {
+        NoteEditorPageManagerDialog(
+            pages = pages,
+            currentPageIndex = currentPageIndex,
+            onDismiss = {
+                showPageManagerDialog = false
+                pendingDeletePageId = null
+            },
+            onJumpToPage = { targetPageIndex ->
+                val offset = targetPageIndex - currentPageIndex
+                if (offset != 0) {
+                    viewModel.navigateBy(offset)
+                }
+            },
+            onMovePageUp = { pageId -> viewModel.movePage(pageId, -1) },
+            onMovePageDown = { pageId -> viewModel.movePage(pageId, 1) },
+            onDuplicatePage = viewModel::duplicatePage,
+            onDeletePageRequest = { pageId -> pendingDeletePageId = pageId },
+        )
+    }
+    val deleteTarget =
+        pendingDeletePageId?.let { pageId ->
+            pages.firstOrNull { page -> page.pageId == pageId }
+        }
+    if (deleteTarget != null) {
+        AlertDialog(
+            onDismissRequest = { pendingDeletePageId = null },
+            title = { Text("Delete page") },
+            text = {
+                Text("Delete page ${deleteTarget.indexInNote + 1}? This cannot be undone from page manager.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deletePage(deleteTarget.pageId)
+                        pendingDeletePageId = null
+                    },
+                    enabled = pages.size > 1,
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { pendingDeletePageId = null }) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
 }
 
 @Composable
@@ -325,6 +394,88 @@ private fun NoteEditorTextConversionDialog(
         confirmButton = {
             Button(onClick = onSave) {
                 Text("Save")
+            }
+        },
+    )
+}
+
+@Composable
+@Suppress("LongMethod", "LongParameterList")
+private fun NoteEditorPageManagerDialog(
+    pages: List<PageEntity>,
+    currentPageIndex: Int,
+    onDismiss: () -> Unit,
+    onJumpToPage: (Int) -> Unit,
+    onMovePageUp: (String) -> Unit,
+    onMovePageDown: (String) -> Unit,
+    onDuplicatePage: (String) -> Unit,
+    onDeletePageRequest: (String) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Page manager") },
+        text = {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                pages.forEachIndexed { index, page ->
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Button(
+                            onClick = { onJumpToPage(index) },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            val marker = if (index == currentPageIndex) "Current" else "Open"
+                            Text("$marker - Page ${index + 1}")
+                        }
+                        Row(
+                            modifier = Modifier.padding(start = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Button(
+                                onClick = { onMovePageUp(page.pageId) },
+                                enabled = index > 0,
+                                modifier = Modifier.width(64.dp),
+                            ) {
+                                Text("Up")
+                            }
+                            Button(
+                                onClick = { onMovePageDown(page.pageId) },
+                                enabled = index < pages.lastIndex,
+                                modifier = Modifier.width(72.dp),
+                            ) {
+                                Text("Down")
+                            }
+                            Button(
+                                onClick = { onDuplicatePage(page.pageId) },
+                                modifier = Modifier.width(70.dp),
+                            ) {
+                                Text("Copy")
+                            }
+                            Button(
+                                onClick = { onDeletePageRequest(page.pageId) },
+                                enabled = pages.size > 1,
+                                modifier = Modifier.width(64.dp),
+                            ) {
+                                Text("Del")
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Done")
             }
         },
     )

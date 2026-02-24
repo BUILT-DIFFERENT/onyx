@@ -240,6 +240,89 @@ class NoteRepository(
         return page
     }
 
+    suspend fun movePage(
+        noteId: String,
+        pageId: String,
+        targetIndex: Int,
+    ) {
+        val pages = pageDao.getPagesForNoteSync(noteId)
+        if (pages.isNotEmpty()) {
+            val currentIndex = pages.indexOfFirst { page -> page.pageId == pageId }
+            val boundedTarget = targetIndex.coerceIn(0, pages.lastIndex)
+            if (currentIndex >= 0 && boundedTarget != currentIndex) {
+                val reordered = pages.toMutableList()
+                val movedPage = reordered.removeAt(currentIndex)
+                reordered.add(boundedTarget, movedPage)
+                resequencePages(noteId = noteId, pages = reordered)
+            }
+        }
+    }
+
+    suspend fun duplicatePage(pageId: String): PageEntity {
+        val source = requireNotNull(pageDao.getById(pageId)) { "Page not found: $pageId" }
+        val noteId = source.noteId
+        val pages = pageDao.getPagesForNoteSync(noteId)
+        val insertIndex = (source.indexInNote + 1).coerceAtMost(pages.size)
+        val now = System.currentTimeMillis()
+        val duplicatedPageId = UUID.randomUUID().toString()
+        val duplicatedPage =
+            source.copy(
+                pageId = duplicatedPageId,
+                indexInNote = insertIndex,
+                updatedAt = now,
+            )
+
+        pages
+            .filter { page -> page.indexInNote >= insertIndex }
+            .sortedBy { page -> page.indexInNote }
+            .forEach { page ->
+                pageDao.updateIndex(page.pageId, page.indexInNote + 1, now)
+            }
+
+        pageDao.insert(duplicatedPage)
+
+        recognitionDao.insert(
+            RecognitionIndexEntity(
+                pageId = duplicatedPageId,
+                noteId = noteId,
+                recognizedText = null,
+                recognizedAtLamport = null,
+                recognizerVersion = null,
+                updatedAt = now,
+            ),
+        )
+
+        val duplicatedStrokes =
+            strokeDao.getByPageId(pageId).map { stroke ->
+                stroke.copy(
+                    strokeId = UUID.randomUUID().toString(),
+                    pageId = duplicatedPageId,
+                    createdAt = now,
+                )
+            }
+        if (duplicatedStrokes.isNotEmpty()) {
+            strokeDao.insertAll(duplicatedStrokes)
+        }
+
+        val duplicatedObjects =
+            pageObjectDao.getByPageId(pageId).map { pageObject ->
+                pageObject.copy(
+                    objectId = UUID.randomUUID().toString(),
+                    pageId = duplicatedPageId,
+                    noteId = noteId,
+                    createdAt = now,
+                    updatedAt = now,
+                    deletedAt = null,
+                )
+            }
+        if (duplicatedObjects.isNotEmpty()) {
+            pageObjectDao.insertAll(duplicatedObjects)
+        }
+
+        noteDao.updateTimestamp(noteId, now)
+        return duplicatedPage
+    }
+
     suspend fun getTemplateConfig(templateId: String?): PageTemplateConfig {
         if (templateId.isNullOrBlank()) {
             return PageTemplateConfig.BLANK
@@ -692,9 +775,27 @@ class NoteRepository(
     }
 
     suspend fun deletePage(pageId: String) {
+        val page = pageDao.getById(pageId) ?: return
+        val now = System.currentTimeMillis()
         strokeDao.deleteAllForPage(pageId)
+        pageObjectDao.deleteAllForPage(pageId)
         recognitionDao.deleteByPageId(pageId)
         pageDao.delete(pageId)
+        val remainingPages = pageDao.getPagesForNoteSync(page.noteId)
+        resequencePages(noteId = page.noteId, pages = remainingPages, timestamp = now)
+    }
+
+    private suspend fun resequencePages(
+        noteId: String,
+        pages: List<PageEntity>,
+        timestamp: Long = System.currentTimeMillis(),
+    ) {
+        pages.forEachIndexed { index, page ->
+            if (page.indexInNote != index) {
+                pageDao.updateIndex(page.pageId, index, timestamp)
+            }
+        }
+        noteDao.updateTimestamp(noteId, timestamp)
     }
 
     suspend fun deleteNote(noteId: String) {

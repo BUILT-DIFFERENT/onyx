@@ -995,6 +995,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun stylusHoverButton_updatesTransientEraserState() {
+        val view = GlInkSurfaceView(context)
         val runtime = createRuntime()
         val stylusButtonStates = mutableListOf<Boolean>()
         val interaction =

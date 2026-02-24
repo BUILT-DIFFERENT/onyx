@@ -76,6 +76,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -86,6 +87,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.onyx.android.config.QuickColorPaletteStore
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.objects.model.InsertAction
 import com.onyx.android.ui.NoteEditorToolbarState
@@ -141,14 +143,6 @@ internal const val HIGHLIGHTER_OPACITY_MIN = 0.1f
 internal const val HIGHLIGHTER_OPACITY_MAX = 0.6f
 internal const val COLOR_PICKER_TEXT_FIELD_WIDTH_DP = 180
 internal const val EDGE_GLOW_ALPHA_MAX = 0.8f
-internal val DEFAULT_PALETTE =
-    listOf(
-        "#111111",
-        "#1E88E5",
-        "#E53935",
-        "#43A047",
-        "#8E24AA",
-    )
 
 internal enum class ToolPanelType {
     PEN,
@@ -167,9 +161,13 @@ internal fun EditorToolbar(
     topBarState: NoteEditorTopBarState,
     toolbarState: NoteEditorToolbarState,
 ) {
+    val context = LocalContext.current
+    val quickColorStore = remember(context) { QuickColorPaletteStore.getInstance(context) }
     var activeToolPanel by rememberSaveable { mutableStateOf<ToolPanelType?>(null) }
     var isColorPickerVisible by rememberSaveable { mutableStateOf(false) }
     var colorPickerInput by rememberSaveable { mutableStateOf(toolbarState.brush.color) }
+    var colorPickerTargetSlotIndex by rememberSaveable { mutableStateOf<Int?>(null) }
+    var favoritePalette by rememberSaveable { mutableStateOf(quickColorStore.getPalette()) }
     var isTitleEditing by rememberSaveable { mutableStateOf(false) }
     var titleDraft by rememberSaveable { mutableStateOf(topBarState.noteTitle) }
     var isOverflowMenuExpanded by rememberSaveable { mutableStateOf(false) }
@@ -227,6 +225,10 @@ internal fun EditorToolbar(
                 color = adjustedColor,
             ),
         )
+    }
+    val saveFavoritePalette: (List<String>) -> Unit = { updatedPalette ->
+        favoritePalette = updatedPalette
+        quickColorStore.savePalette(updatedPalette)
     }
 
     Surface(
@@ -300,6 +302,17 @@ internal fun EditorToolbar(
                                 isOverflowMenuExpanded = false
                                 if (isEditingEnabled) {
                                     topBarState.onCreatePage()
+                                }
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Page manager") },
+                            enabled = isEditingEnabled && topBarState.totalPages > 0,
+                            modifier = Modifier.testTag("open-page-manager"),
+                            onClick = {
+                                isOverflowMenuExpanded = false
+                                if (isEditingEnabled && topBarState.totalPages > 0) {
+                                    topBarState.onOpenPageManager()
                                 }
                             },
                         )
@@ -508,31 +521,46 @@ internal fun EditorToolbar(
 
                 Box {
                     PaletteRow(
+                        favoritePalette = favoritePalette,
                         selectedColor = brush.color,
                         enabled = isEditingEnabled,
                         onColorSelected = { color ->
                             activeToolPanel = null
                             onColorSelected(color)
                         },
-                        onColorLongPress = { color ->
+                        onColorLongPress = { slotIndex, color ->
                             if (isEditingEnabled) {
                                 activeToolPanel = null
                                 colorPickerInput = color
+                                colorPickerTargetSlotIndex = slotIndex
                                 isColorPickerVisible = true
                             }
                         },
                     )
                     DropdownMenu(
                         expanded = isColorPickerVisible,
-                        onDismissRequest = { isColorPickerVisible = false },
+                        onDismissRequest = {
+                            isColorPickerVisible = false
+                            colorPickerTargetSlotIndex = null
+                        },
                     ) {
                         ColorPickerDialog(
                             initialValue = colorPickerInput,
-                            currentBrush = brush,
-                            onDismiss = { isColorPickerVisible = false },
+                            onDismiss = {
+                                isColorPickerVisible = false
+                                colorPickerTargetSlotIndex = null
+                            },
                             onApply = { appliedColor ->
                                 isColorPickerVisible = false
-                                onColorSelected(appliedColor)
+                                colorPickerTargetSlotIndex?.let { slotIndex ->
+                                    if (slotIndex in favoritePalette.indices) {
+                                        val updatedPalette = favoritePalette.toMutableList()
+                                        updatedPalette[slotIndex] = stripAlpha(normalizeHexColor(appliedColor))
+                                        saveFavoritePalette(updatedPalette)
+                                    }
+                                }
+                                colorPickerTargetSlotIndex = null
+                                onColorSelected(stripAlpha(normalizeHexColor(appliedColor)))
                             },
                         )
                     }
@@ -1140,24 +1168,25 @@ private fun InsertMenuItem(
 
 @Composable
 private fun PaletteRow(
+    favoritePalette: List<String>,
     selectedColor: String,
     enabled: Boolean,
     onColorSelected: (String) -> Unit,
-    onColorLongPress: (String) -> Unit,
+    onColorLongPress: (Int, String) -> Unit,
 ) {
     val normalizedSelected = normalizeHexColor(selectedColor).takeLast(HEX_COLOR_LENGTH_RGB - 1)
     Row(
         horizontalArrangement = Arrangement.spacedBy(TOOLBAR_ITEM_SPACING_DP.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        DEFAULT_PALETTE.forEach { color ->
+        favoritePalette.forEachIndexed { index, color ->
             val normalizedPaletteColor = normalizeHexColor(color).takeLast(HEX_COLOR_LENGTH_RGB - 1)
             PaletteSwatch(
                 hexColor = color,
                 isSelected = normalizedSelected == normalizedPaletteColor,
                 enabled = enabled,
                 onClick = { onColorSelected(color) },
-                onLongPress = { onColorLongPress(color) },
+                onLongPress = { onColorLongPress(index, color) },
             )
         }
     }
@@ -1165,7 +1194,7 @@ private fun PaletteRow(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun PaletteSwatch(
+internal fun PaletteSwatch(
     hexColor: String,
     isSelected: Boolean,
     enabled: Boolean,

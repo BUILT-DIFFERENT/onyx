@@ -388,6 +388,60 @@ internal class NoteEditorViewModel
             }
         }
 
+        fun movePage(
+            pageId: String,
+            direction: Int,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    val pagesSnapshot = _pages.value
+                    val fromIndex = pagesSnapshot.indexOfFirst { page -> page.pageId == pageId }
+                    if (fromIndex < 0) {
+                        return@runCatching
+                    }
+                    val targetIndex = (fromIndex + direction).coerceIn(0, pagesSnapshot.lastIndex)
+                    if (targetIndex == fromIndex) {
+                        return@runCatching
+                    }
+                    repository.movePage(noteId = noteId, pageId = pageId, targetIndex = targetIndex)
+                    refreshPages(selectPageId = pageId)
+                }.onFailure { throwable ->
+                    reportError("Failed to move page.", throwable)
+                }
+            }
+        }
+
+        fun duplicatePage(pageId: String) {
+            viewModelScope.launch {
+                runCatching {
+                    val duplicated = repository.duplicatePage(pageId)
+                    refreshPages(selectPageId = duplicated.pageId)
+                }.onFailure { throwable ->
+                    reportError("Failed to duplicate page.", throwable)
+                }
+            }
+        }
+
+        fun deletePage(pageId: String) {
+            viewModelScope.launch {
+                runCatching {
+                    val pagesSnapshot = _pages.value
+                    if (pagesSnapshot.size <= 1) {
+                        return@runCatching
+                    }
+                    val deletedIndex = pagesSnapshot.indexOfFirst { page -> page.pageId == pageId }
+                    if (deletedIndex < 0) {
+                        return@runCatching
+                    }
+                    repository.deletePage(pageId)
+                    val fallbackIndex = (deletedIndex - 1).coerceAtLeast(0)
+                    refreshPages(selectIndex = fallbackIndex)
+                }.onFailure { throwable ->
+                    reportError("Failed to delete page.", throwable)
+                }
+            }
+        }
+
         fun updateCurrentPageTemplate(config: PageTemplateConfig) {
             val page = _currentPage.value ?: return
             val normalized = normalizeTemplateConfig(config)
