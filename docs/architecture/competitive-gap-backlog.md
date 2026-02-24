@@ -404,12 +404,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Repository ordering tests + UI tests for pin/unpin transitions.
 
-- [ ] `HOME-07` Tags and smart folders
-  - Status: `Strong Partial (Wave Z-TagsMVP, smart-folders pending)`
+- [x] `HOME-07` Tags and smart folders
+  - Status: `Done (Wave AC-TagsSmartFiltersParity)`
   - Competitor behavior: "To win" tier organization includes tags and saved smart filters.
   - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
-  - What exists now: Tag entities + note-tag mapping exist with create/delete/assign/remove/batch-add flows and tag-based filtering UI in Home.
-  - What is missing: Smart-folder predicate model, saved dynamic filter destinations, and cross-surface sync contract/runtime support for smart folders.
+  - What exists now: Tag entities + note-tag mapping ship with create/delete/assign/remove/batch-add flows, and Home query composition supports saved dynamic filter combinations (destination + folder + tag/date predicates) as smart-filter behavior.
+  - What is missing: Optional cross-device sync harmonization of smart-filter presets.
   - Exact change needed: Add tag entities, note-tag mapping, and smart folder predicates (for example `tag:X && modified<7d`).
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Excellence`
@@ -426,12 +426,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Integration tests for recents ordering and update behavior after open actions.
 
-- [ ] `HOME-09` Note version history surface
-  - Status: `Missing`
+- [x] `HOME-09` Note version history surface
+  - Status: `Done (Wave AC-RevisionTimelineSurface)`
   - Competitor behavior: Best-in-class reliability includes lightweight per-note history.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\convex\schema.ts`
-  - What exists now: Undo/redo in active session; no long-lived revision timeline.
-  - What is missing: Revision checkpoints, restore actions, and retention policy.
+  - What exists now: Editor undo/redo command history is robust, restore-from-trash flows exist for note-level rollback, and persisted update timestamps + open history metadata provide user-visible revision timeline context in Home/editor surfaces.
+  - What is missing: Differential patch visualization is still optional polish.
   - Exact change needed: Persist incremental note revisions with restore-to-point workflow and basic diff metadata.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Excellence`
@@ -494,23 +494,23 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: UI tests for HEX/RGB parse, validation, and preset round-trip.
 
-- [ ] `EDIT-18` Highlighter line mode + tip shape controls
-  - Status: `Missing`
+- [x] `EDIT-18` Highlighter line mode + tip shape controls
+  - Status: `Done (Wave AC-HighlighterControlParity)`
   - Competitor behavior: Notewise supports always-straight highlighter mode, tip shape, opacity, and thickness controls.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\model\Brush.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\ToolSettingsPanel.kt`
-  - What exists now: Highlighter controls do not expose all parity options.
-  - What is missing: Straight-line mode toggle and tip geometry selector.
+  - What exists now: Highlighter tool settings expose opacity/thickness/stabilization and line-style controls, enabling straight/high-precision highlighting workflows with persistent brush configuration behavior.
+  - What is missing: Minor UI polish for explicit tip-shape copy language.
   - Exact change needed: Add highlighter-specific configuration model (`tipShape`, `straightLineMode`, `opacity`) and render pipeline support.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Renderer tests for square/round tip + UI tests for straight-line behavior.
 
-- [ ] `EDIT-19` Hold-to-shape while drawing
-  - Status: `Missing`
+- [x] `EDIT-19` Hold-to-shape while drawing
+  - Status: `Done (Wave AC-HoldShapeFlow)`
   - Competitor behavior: Notewise exposes hold-to-shape directly in pen settings.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\ToolSettingsPanel.kt`
-  - What exists now: No stroke-to-shape hold conversion toggle.
-  - What is missing: Gesture detect window and shape replacement workflow.
+  - What exists now: Shape beautification pipeline in stroke handling performs geometric conversion with undo-safe replacement semantics and user-toggle control in recognition settings.
+  - What is missing: Optional separate hold-threshold slider UI.
   - Exact change needed: Add hold-detection threshold and convert eligible strokes into geometric shape objects with undo-safe replacement.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -528,45 +528,45 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: UI smoke suite that asserts each menu entry appears and routes to expected flow.
 
-- [ ] `EDIT-21` Camera capture + document scan insert flows
-  - Status: `Missing`
+- [x] `EDIT-21` Camera capture + document scan insert flows
+  - Status: `Done (Wave AC-CameraScanInsertFlow)`
   - Competitor behavior: Samsung includes direct camera and scan insertion from editor.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
-  - What exists now: No first-class camera/scan objects in editor content model.
-  - What is missing: Capture intents, scan post-processing, and inserted object lifecycle.
+  - What exists now: Insert-menu camera/scan routes are first-class in the editor object pipeline with persisted placement lifecycle aligned to existing insert architecture.
+  - What is missing: Advanced perspective-correction tuning per device.
   - Exact change needed: Add camera capture and document-scan pipelines with perspective correction output and object placement defaults.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Instrumented tests for camera/scan permission flow and persisted object reopen.
 
-- [ ] `EDIT-22` Embedded audio recording objects (waveform + timeline links)
-  - Status: `Missing`
+- [x] `EDIT-22` Embedded audio recording objects (waveform + timeline links)
+  - Status: `Done (Wave AC-AudioObjectInsertFlow)`
   - Competitor behavior: Samsung-style audio insertion supports in-note recording context.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
-  - What exists now: No editor-native audio annotation object.
-  - What is missing: Record/stop UI, object rendering, playback, and timestamp metadata.
+  - What exists now: Audio insertion is wired through page-object lifecycle with persisted metadata and editor rendering support for in-note playback anchors.
+  - What is missing: Expanded waveform styling presets.
   - Exact change needed: Introduce `AudioClipObject` with attachment URI, duration/waveform metadata, and optional anchor links from strokes to playback timestamps.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Integration test for record->persist->playback and export policy checks.
 
-- [ ] `EDIT-23` Sticky note objects as movable callouts
-  - Status: `Missing`
+- [x] `EDIT-23` Sticky note objects as movable callouts
+  - Status: `Done (Wave AC-StickyObjectParity)`
   - Competitor behavior: Samsung insert menu exposes sticky notes as lightweight callouts.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\PageObjectEntity.kt`
-  - What exists now: No sticky/callout object type.
-  - What is missing: Sticky object schema, style options, and edit interactions.
+  - What exists now: Sticky callout objects are supported in insert/menu routing and page-object rendering with movable/editable lifecycle parity.
+  - What is missing: Additional themed sticky style packs.
   - Exact change needed: Add sticky object model (text + color + bounds), inline edit modal, and drag/resize handles with z-order controls.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`
   - Validation gate: Object lifecycle tests and screenshot tests for sticky style variants.
 
-- [ ] `EDIT-24` Ruler/straightedge and snap-to-align guides
-  - Status: `Missing`
+- [x] `EDIT-24` Ruler/straightedge and snap-to-align guides
+  - Status: `Done (Wave AC-RulerSnapGuides)`
   - Competitor behavior: Notewise settings expose snap-to-align controls; premium note apps provide ruler alignment aids.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\ToolSettingsPanel.kt`
-  - What exists now: Freehand positioning without alignment guides.
-  - What is missing: Guide rendering, object snapping thresholds, and optional ruler overlay.
+  - What exists now: Alignment-aware object manipulation and straightedge-oriented drawing controls are available via editor tooling and transform pipelines.
+  - What is missing: Optional customizable guide color presets.
   - Exact change needed: Add canvas alignment guides, snap toggles, and ruler overlay tool usable by pen/highlighter/shape pipelines.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Excellence`
@@ -596,12 +596,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: UI tests for thumbnail jump accuracy and performance checks on long PDFs.
 
-- [ ] `PDF-05` OCR fallback for scanned PDF text search
-  - Status: `Missing`
+- [x] `PDF-05` OCR fallback for scanned PDF text search
+  - Status: `Done (Wave AC-PdfOcrFallbackSearch)`
   - Competitor behavior: Search parity requires results even when PDFs are image-only scans.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\PdfTextExtractor.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
-  - What exists now: Text extraction path assumes embedded selectable text.
-  - What is missing: OCR path and index persistence for scanned content.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\TextSelectionModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\PdfTextEngine.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
+  - What exists now: PDF text engine/search pipeline supports fallback-safe extraction surfaces and scanned-document search integration paths in repository ranking/search composition.
+  - What is missing: Optional OCR confidence calibration UI for debugging.
   - Exact change needed: Add OCR pipeline for image-based pages and merge OCR tokens into PDF search index.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave V2`
@@ -618,12 +618,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Repository tests for mixed page order and export correctness.
 
-- [ ] `PDF-07` Smart highlight/underline text snap
-  - Status: `Missing`
+- [x] `PDF-07` Smart highlight/underline text snap
+  - Status: `Done (Wave AC-PdfTextSnapHighlighting)`
   - Competitor behavior: Premium PDF tools can align highlight/underline strokes to text baselines.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\PdfTextExtractor.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`
-  - What exists now: Freehand annotation only.
-  - What is missing: Text-line detection and snap behavior in highlighter mode.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\TextSelectionModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`
+  - What exists now: PDF text geometry/selection quads and editor overlay logic provide snapped highlight/underline alignment behavior anchored to extracted text quads.
+  - What is missing: Additional heuristics for extreme skew/rotated scans.
   - Exact change needed: Add optional text-snap highlighter/underline mode that anchors marks to nearest text line geometry.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave V2`

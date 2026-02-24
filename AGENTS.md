@@ -53,6 +53,7 @@
 - Android lint-style clarification: detekt `MaxLineLength` can still fail after `ktlintFormat` when expression bodies are collapsed to one line; prefer block-body functions (or multiline call chains) in those hotspots to keep both tools green.
 - Competitive backlog status clarification: checklist checkmarks in `docs/architecture/competitive-gap-backlog.md` can drift from reality; treat each item's `Status` plus verified implementation/tests as canonical, and re-sync checkboxes after validation passes.
 - Android naming lint clarification: `ktlint` `property-naming` can reject some newly added private backing fields with leading underscores in this module; for new helper/cache fields, prefer non-underscore names to avoid formatter/lint failures.
+- PDF text-engine path clarification: `PdfTextExtractor` is currently a typealias in `apps/android/app/src/main/java/com/onyx/android/pdf/TextSelectionModel.kt` backed by `PdfTextEngine.kt`; backlog/doc references to a standalone `pdf/PdfTextExtractor.kt` file can be stale.
 
 ## Context7 Library IDs (Project Stack)
 
