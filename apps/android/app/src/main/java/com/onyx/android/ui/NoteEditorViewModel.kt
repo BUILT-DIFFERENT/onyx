@@ -16,6 +16,7 @@ import com.onyx.android.data.repository.NoteRepository
 import com.onyx.android.data.repository.PageTemplateConfig
 import com.onyx.android.ink.algorithm.applyStrokeSplit
 import com.onyx.android.ink.algorithm.restoreStrokeSplit
+import com.onyx.android.ink.model.InkAction
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.objects.model.ImagePayload
@@ -168,6 +169,7 @@ internal class NoteEditorViewModel
 
         private val _recognizedTextByPage = MutableStateFlow<Map<String, String>>(emptyMap())
         val recognizedTextByPage: StateFlow<Map<String, String>> = _recognizedTextByPage.asStateFlow()
+        private val rawRecognitionTextByPageCache = MutableStateFlow<Map<String, String>>(emptyMap())
         private val _recognitionInlinePreviewByPage = MutableStateFlow<Map<String, RecognitionInlinePreview>>(emptyMap())
         val recognitionInlinePreviewByPage: StateFlow<Map<String, RecognitionInlinePreview>> =
             _recognitionInlinePreviewByPage.asStateFlow()
@@ -189,13 +191,11 @@ internal class NoteEditorViewModel
                         return@launch
                     }
                     runCatching {
-                        repository.updateRecognition(pageId, text, "myscript-4.3")
-                        val updated = _recognizedTextByPage.value.toMutableMap()
-                        updated[pageId] = text
-                        _recognizedTextByPage.value = updated
-                        val preview = _recognitionInlinePreviewByPage.value.toMutableMap()
-                        preview[pageId] = RecognitionInlinePreview(text = text, isPending = false)
-                        _recognitionInlinePreviewByPage.value = preview
+                        rawRecognitionTextByPageCache.value =
+                            rawRecognitionTextByPageCache.value.toMutableMap().apply {
+                                this[pageId] = text
+                            }
+                        applyRecognitionTextForPage(pageId = pageId, rawText = text)
                     }.onFailure { throwable ->
                         reportError("Failed to update recognition state.", throwable)
                     }
@@ -366,6 +366,7 @@ internal class NoteEditorViewModel
             }
             _mathRecognitionMode.value = mode
             recognitionSettings.setMathRecognitionMode(mode)
+            refreshRecognitionPresentationForMode(mode)
         }
 
         fun dismissConversionDraft() {
@@ -708,31 +709,45 @@ internal class NoteEditorViewModel
             stroke: Stroke,
             persist: Boolean,
             updateRecognition: Boolean = true,
-        ) {
+        ): InkAction? {
             val pageId = currentPageId
-            val scratchOutApplied = pageId != null && tryApplyScratchOutGesture(pageId = pageId, stroke = stroke)
-            if (!scratchOutApplied) {
-                _strokes.value = _strokes.value + stroke
-                if (persist) {
-                    currentPageId?.let { persistPageId ->
-                        enqueueStrokeWrite {
-                            repository.saveStroke(persistPageId, stroke)
+            val scratchOutMutation = pageId?.let { nonNullPageId -> tryApplyScratchOutGesture(pageId = nonNullPageId, stroke = stroke) }
+            val action =
+                if (scratchOutMutation != null) {
+                    if (pageId != null) {
+                        InkAction.ReplaceConvertedTextBlocks(
+                            pageId = pageId,
+                            before = scratchOutMutation.before,
+                            after = scratchOutMutation.after,
+                        )
+                    } else {
+                        null
+                    }
+                } else {
+                    _strokes.value = _strokes.value + stroke
+                    if (persist) {
+                        currentPageId?.let { persistPageId ->
+                            enqueueStrokeWrite {
+                                repository.saveStroke(persistPageId, stroke)
+                            }
                         }
                     }
+                    val beautified =
+                        pageId != null &&
+                            tryAutoBeautifySinglePageStroke(pageId = pageId, stroke = stroke, persist = persist)
+                    if (!beautified &&
+                        updateRecognition &&
+                        currentPageId == _activeRecognitionPageId.value &&
+                        shouldRunRecognition()
+                    ) {
+                        markRecognitionPreviewPending(currentPageId)
+                        myScriptPageManager?.addStroke(stroke)
+                    }
+                    pageId?.let { nonNullPageId ->
+                        InkAction.AddStroke(stroke = stroke, pageId = nonNullPageId)
+                    }
                 }
-                val beautified =
-                    pageId != null &&
-                        tryAutoBeautifySinglePageStroke(pageId = pageId, stroke = stroke, persist = persist)
-                // Only update recognition if this is the active recognition page
-                if (!beautified &&
-                    updateRecognition &&
-                    currentPageId == _activeRecognitionPageId.value &&
-                    shouldRunRecognition()
-                ) {
-                    markRecognitionPreviewPending(currentPageId)
-                    myScriptPageManager?.addStroke(stroke)
-                }
-            }
+            return action
         }
 
         fun removeStroke(
@@ -862,27 +877,39 @@ internal class NoteEditorViewModel
             pageId: String,
             persist: Boolean,
             updateRecognition: Boolean = true,
-        ) {
-            if (tryApplyScratchOutGesture(pageId = pageId, stroke = stroke)) {
-                return
-            }
-            val currentCache = _pageStrokesCache.value.toMutableMap()
-            val pageStrokes = currentCache[pageId].orEmpty() + stroke
-            currentCache[pageId] = pageStrokes
-            _pageStrokesCache.value = currentCache
+        ): InkAction? {
+            val scratchOutMutation = tryApplyScratchOutGesture(pageId = pageId, stroke = stroke)
+            val action =
+                if (scratchOutMutation != null) {
+                    InkAction.ReplaceConvertedTextBlocks(
+                        pageId = pageId,
+                        before = scratchOutMutation.before,
+                        after = scratchOutMutation.after,
+                    )
+                } else {
+                    val currentCache = _pageStrokesCache.value.toMutableMap()
+                    val pageStrokes = currentCache[pageId].orEmpty() + stroke
+                    currentCache[pageId] = pageStrokes
+                    _pageStrokesCache.value = currentCache
 
-            if (persist) {
-                enqueueStrokeWrite {
-                    repository.saveStroke(pageId, stroke)
+                    if (persist) {
+                        enqueueStrokeWrite {
+                            repository.saveStroke(pageId, stroke)
+                        }
+                    }
+                    val beautified =
+                        tryAutoBeautifyStrokeForPage(pageId = pageId, stroke = stroke, persist = persist)
+                    if (!beautified && updateRecognition && pageId == currentPageId && shouldRunRecognition()) {
+                        markRecognitionPreviewPending(pageId)
+                        myScriptPageManager?.addStroke(stroke)
+                    }
+                    if (beautified) {
+                        null
+                    } else {
+                        InkAction.AddStroke(stroke = stroke, pageId = pageId)
+                    }
                 }
-            }
-            if (tryAutoBeautifyStrokeForPage(pageId = pageId, stroke = stroke, persist = persist)) {
-                return
-            }
-            if (updateRecognition && pageId == currentPageId && shouldRunRecognition()) {
-                markRecognitionPreviewPending(pageId)
-                myScriptPageManager?.addStroke(stroke)
-            }
+            return action
         }
 
         /**
@@ -1134,6 +1161,26 @@ internal class NoteEditorViewModel
                         repository.updatePageObjectGeometry(after)
                     }.onFailure { throwable ->
                         reportError("Failed to update page object.", throwable)
+                    }
+                }
+            }
+        }
+
+        fun replaceConvertedTextBlocksForPage(
+            pageId: String,
+            replacement: List<ConvertedTextBlock>,
+            persist: Boolean,
+        ) {
+            _convertedTextBlocksByPage.value =
+                _convertedTextBlocksByPage.value.toMutableMap().apply {
+                    this[pageId] = replacement
+                }
+            if (persist) {
+                viewModelScope.launch {
+                    runCatching {
+                        repository.saveConvertedTextBlocks(pageId, replacement)
+                    }.onFailure { throwable ->
+                        reportError("Failed to update converted text blocks.", throwable)
                     }
                 }
             }
@@ -1649,6 +1696,10 @@ internal class NoteEditorViewModel
             val textMap = _recognizedTextByPage.value.toMutableMap()
             textMap[pageId] = recognitionText
             _recognizedTextByPage.value = textMap
+            rawRecognitionTextByPageCache.value =
+                rawRecognitionTextByPageCache.value.toMutableMap().apply {
+                    this[pageId] = recognitionText
+                }
             val blocksMap = _convertedTextBlocksByPage.value.toMutableMap()
             blocksMap[pageId] = convertedBlocks
             _convertedTextBlocksByPage.value = blocksMap
@@ -1821,10 +1872,63 @@ internal class NoteEditorViewModel
                 }
         }
 
+        private fun refreshRecognitionPresentationForMode(mode: MathRecognitionMode) {
+            val renderedByPage =
+                rawRecognitionTextByPageCache.value.mapValues { (_, rawText) ->
+                    toMathModeRecognitionText(rawText = rawText, mode = mode)
+                }
+            _recognizedTextByPage.value = renderedByPage
+            _recognitionInlinePreviewByPage.value =
+                _recognitionInlinePreviewByPage.value.toMutableMap().apply {
+                    renderedByPage.forEach { (pageId, text) ->
+                        this[pageId] = RecognitionInlinePreview(text = text, isPending = false)
+                    }
+                }
+        }
+
+        private suspend fun applyRecognitionTextForPage(
+            pageId: String,
+            rawText: String,
+        ) {
+            val renderedText = toMathModeRecognitionText(rawText = rawText, mode = _mathRecognitionMode.value)
+            repository.updateRecognition(pageId, renderedText, "myscript-4.3")
+            _recognizedTextByPage.value =
+                _recognizedTextByPage.value.toMutableMap().apply {
+                    this[pageId] = renderedText
+                }
+            _recognitionInlinePreviewByPage.value =
+                _recognitionInlinePreviewByPage.value.toMutableMap().apply {
+                    this[pageId] = RecognitionInlinePreview(text = renderedText, isPending = false)
+                }
+        }
+
+        private fun toMathModeRecognitionText(
+            rawText: String,
+            mode: MathRecognitionMode,
+        ): String {
+            val normalized = rawText.trim()
+            val rendered =
+                if (mode != MathRecognitionMode.LATEX_ONLY || normalized.isBlank()) {
+                    rawText
+                } else if (normalized.startsWith("\\(") && normalized.endsWith("\\)")) {
+                    normalized
+                } else {
+                    val latexText =
+                        normalized
+                            .replace("×", "\\times ")
+                            .replace("÷", "\\div ")
+                            .replace("≤", "\\leq ")
+                            .replace("≥", "\\geq ")
+                            .replace("√", "\\sqrt{}")
+                    "\\($latexText\\)"
+                }
+            return rendered
+        }
+
         private fun tryApplyScratchOutGesture(
             pageId: String,
             stroke: Stroke,
-        ): Boolean {
+        ): ScratchOutMutation? {
             val existingBlocks = _convertedTextBlocksByPage.value[pageId].orEmpty()
             val canApply = shouldRunRecognition() && isScratchOutGesture(stroke) && existingBlocks.isNotEmpty()
             val removedIds =
@@ -1850,8 +1954,9 @@ internal class NoteEditorViewModel
                         reportError("Failed to apply scratch-out gesture.", throwable)
                     }
                 }
+                return ScratchOutMutation(before = existingBlocks, after = retainedBlocks)
             }
-            return applied
+            return null
         }
 
         private fun isScratchOutGesture(stroke: Stroke): Boolean {
@@ -1880,4 +1985,9 @@ internal class NoteEditorViewModel
                 strokeBounds.x + strokeBounds.w > overlayBounds.x &&
                 strokeBounds.y < overlayBounds.y + overlayBounds.h &&
                 strokeBounds.y + strokeBounds.h > overlayBounds.y
+
+        private data class ScratchOutMutation(
+            val before: List<ConvertedTextBlock>,
+            val after: List<ConvertedTextBlock>,
+        )
     }

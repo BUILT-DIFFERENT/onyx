@@ -1,6 +1,7 @@
 package com.onyx.android.ink.model
 
 import com.onyx.android.objects.model.PageObject
+import com.onyx.android.recognition.ConvertedTextBlock
 
 sealed class InkAction {
     data class AddStroke(
@@ -40,5 +41,11 @@ sealed class InkAction {
         val pageId: String,
         val before: PageObject,
         val after: PageObject,
+    ) : InkAction()
+
+    data class ReplaceConvertedTextBlocks(
+        val pageId: String,
+        val before: List<ConvertedTextBlock>,
+        val after: List<ConvertedTextBlock>,
     ) : InkAction()
 }

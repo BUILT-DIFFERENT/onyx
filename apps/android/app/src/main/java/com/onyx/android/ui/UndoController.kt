@@ -122,6 +122,14 @@ internal class UndoController(
                     )
                 }
             }
+
+            is InkAction.ReplaceConvertedTextBlocks -> {
+                viewModel.replaceConvertedTextBlocksForPage(
+                    pageId = action.pageId,
+                    replacement = action.before,
+                    persist = true,
+                )
+            }
         }
         redoStack.add(action)
     }
@@ -225,6 +233,14 @@ internal class UndoController(
                     )
                 }
             }
+
+            is InkAction.ReplaceConvertedTextBlocks -> {
+                viewModel.replaceConvertedTextBlocksForPage(
+                    pageId = action.pageId,
+                    replacement = action.after,
+                    persist = true,
+                )
+            }
         }
         undoStack.add(action)
         trimUndoStack()
@@ -238,15 +254,19 @@ internal class UndoController(
         if (pageId == null) {
             return
         }
-        if (useMultiPage) {
-            viewModel.addStrokeForPage(stroke, pageId, persist = true)
-        } else {
-            viewModel.addStroke(stroke, persist = true)
+        val action =
+            if (useMultiPage) {
+                viewModel.addStrokeForPage(stroke, pageId, persist = true)
+            } else {
+                viewModel.addStroke(stroke, persist = true)
+            }
+        if (action == null) {
+            return
         }
-        undoStack.add(InkAction.AddStroke(stroke, pageId))
+        undoStack.add(action)
         trimUndoStack()
         redoStack.clear()
-        if (currentPage.kind == "pdf") {
+        if (action is InkAction.AddStroke && currentPage.kind == "pdf") {
             viewModel.upgradePageToMixed(pageId)
         }
         logStrokePoints(stroke)

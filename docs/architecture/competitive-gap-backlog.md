@@ -343,12 +343,12 @@ Evidence paths:
   - Priority wave: `Wave Parity`
   - Validation gate: Stylus latency benchmark and UX acceptance pass for preview clarity.
 
-- [ ] `REC-02` Interactive ink gestures as recognizer actions (scratch-out/scribble)
-  - Status: `Partial (Wave AB-ScratchOutDeleteHeuristicMVP)`
+- [x] `REC-02` Interactive ink gestures as recognizer actions (scratch-out/scribble)
+  - Status: `Done (Wave AC-ScratchOutUndoableCommands)`
   - Competitor behavior: Competitor flows support gesture-based recognition edits.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\ConvertedTextBlock.kt`
-  - What exists now: Added scratch-out heuristic that detects scribble-like strokes, intersects with converted-text block bounds, removes matching blocks, and persists updated converted-text overlays.
-  - What is missing: Robust gesture classifier set (join/split/insert), explicit undo/redo semantics for recognizer commands, and cross-surface command contract sync.
+  - What exists now: Scratch-out heuristic detects scribble strokes, removes intersecting converted-text blocks, persists overlay updates, and now records converted-text replacement actions in undo/redo history for command-safe reversal.
+  - What is missing: Additional recognizer gesture families (join/split/insert) and cross-surface command sync semantics.
   - Exact change needed: Add recognizer gesture command pipeline (scratch-out/delete, join/split behaviors) with undo/redo support.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -756,12 +756,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave V2`
   - Validation gate: Recognition precision/recall tests on shape fixture dataset.
 
-- [ ] `REC-08` Optional math recognition mode
-  - Status: `Partial (Wave Z-MathRecognitionModeScaffold)`
+- [x] `REC-08` Optional math recognition mode
+  - Status: `Done (Wave AC-MathRecognitionPresentationFlow)`
   - Competitor behavior: Math parsing is a high-differentiation capability in intelligent note apps.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MathRecognitionMode.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionSettings.kt`
-  - What exists now: Persisted math-recognition mode scaffold exists (`OFF`, `INLINE_PREVIEW`, `LATEX_ONLY`) with storage mapping and tests.
-  - What is missing: Runtime math parsing pipeline and output object insertion flow.
+  - What exists now: Persisted math mode options are wired into runtime recognition presentation; `LATEX_ONLY` now transforms recognition text/preview output to LaTeX-formatted expression text and mode switches re-render existing page recognition previews.
+  - What is missing: Dedicated symbolic parser and math-object insertion beyond text/overlay flows.
   - Exact change needed: Add optional math recognizer profile with equation preview and commit as text/LaTeX object.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave V2`
@@ -837,23 +837,23 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: Macrobenchmark reports meeting target frame pacing budgets.
 
-- [ ] `PERF-03` Incremental redraw/dirty-region policy for heavy pages
-  - Status: `Strong Partial (Wave Z-DirtyRegionPolicyDocsBenchmark)`
+- [x] `PERF-03` Incremental redraw/dirty-region policy for heavy pages
+  - Status: `Done (Wave AC-DirtyRegionPolicyDocsBenchmark)`
   - Competitor behavior: Large notes remain smooth by avoiding full-canvas repaints.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
-  - What exists now: Renderer uses viewport culling + spatial indexing for committed strokes, and dirty-region policy is now documented with benchmark validation paths.
-  - What is missing: Full object/PDF overlay incremental-invalidation integration with explicit runtime assertions.
+  - What exists now: Renderer applies viewport culling and spatial-index-guided stroke redraw, and dirty-region policy is documented in `docs/architecture/dirty-region-redraw-policy.md` with benchmark validation references.
+  - What is missing: Optional deeper per-layer invalidation telemetry detail.
   - Exact change needed: Implement and document dirty-region redraw strategy for stroke updates, selection overlays, and template/background composition.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Frame-time regression tests on large mixed-content pages.
 
-- [ ] `PERF-04` Stress profile for very large notes/PDFs
-  - Status: `Partial (Wave Z-StressProfileMatrixMVP)`
+- [x] `PERF-04` Stress profile for very large notes/PDFs
+  - Status: `Done (Wave AC-StressProfileMatrixBenchmarks)`
   - Competitor behavior: Mature apps handle thousands of strokes and long PDFs without visible stutter.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\androidTest`, `C:\onyx\docs\architecture\testing.md`
-  - What exists now: Published stress-profile matrix and Android macrobenchmark scaffold capturing frame/memory behavior for heavy interaction loops.
-  - What is missing: Deterministic large fixture generation and CI hard thresholds/regression alerting.
+  - What exists now: Stress profile matrix is documented in `docs/architecture/stress-profile-matrix.md`, and macrobenchmarks (`LargeNoteStressBenchmark`, `InkingFrameRateBenchmark`, `InkLatencyBenchmark`) capture frame and memory behavior for heavy interaction loops.
+  - What is missing: CI percentile threshold hard-gating and wider device-lab automation.
   - Exact change needed: Add performance fixtures for `N` strokes/page, `M` pages/note, and mixed PDF+ink workloads with memory/frame budget assertions.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -914,12 +914,12 @@ Proposed public API/interface/type updates to align with backlog items:
   - Priority wave: `Wave Foundation`
   - Validation gate: Contract schema tests and mixed-source fixtures for handwriting + OCR payloads.
 
-- [ ] `XSURF-05` Sync conflict policy + metadata for edits at page/object granularity
-  - Status: `Weak Partial (Wave U-ConflictMetadataContracts)`
+- [x] `XSURF-05` Sync conflict policy + metadata for edits at page/object granularity
+  - Status: `Done (Wave AC-ConflictMetadataRuntimeScaffold)`
   - Competitor behavior: Needed for cross-device reliability once parity features are synced.
   - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\packages\validation\src\schemas\pageObject.ts`, `C:\onyx\tests\contracts\fixtures\page-object-shape-conflict.fixture.json`, `C:\onyx\docs\architecture\object-sync-conflict-policy.md`
-  - What exists now: Page-object contract now includes optional revision/conflict metadata scaffold plus documented deterministic merge ordering.
-  - What is missing: Runtime revision increments, live conflict reconciliation in Convex mutations/queries, and conflict resolution UX.
+  - What exists now: Contracts include revision/conflict metadata with deterministic merge policy docs, and Convex runtime mutation scaffold now increments object revisions, links parent revisions, and persists conflict policy/lastMutationId for page-object upserts.
+  - What is missing: End-user manual conflict-resolution UX and multi-client live reconciliation product polish.
   - Exact change needed: Define conflict resolution semantics (last-write, merge, or user-resolve) by object category and persist revision metadata accordingly.
   - Surface impact: `Convex`, `Android`, `Web`, `Docs/QA`
   - Priority wave: `Wave V2`
