@@ -216,8 +216,8 @@ Evidence paths:
   - Priority wave: `Wave Parity`
   - Validation gate: Instrumented tests for internal page link and external URL link behavior.
 
-- [ ] `PDF-03` Export/share with flatten-annotations option
-  - Status: `Strong Partial (Wave Z-PdfExportShareMVP + flatten-strokes export)`
+- [x] `PDF-03` Export/share with flatten-annotations option
+  - Status: `Done (Wave AC-PdfExportShareFlattenToggle)`
   - Competitor behavior: Samsung-style workflows include export/share of annotated PDFs with flatten controls.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
   - What exists now: Home note actions include layered vs flattened mode selection; flattened mode now emits a newly rendered PDF where source pages are rasterized and persisted ink strokes are burned into each exported page, with share intent + metadata sidecar output.
@@ -275,8 +275,8 @@ Evidence paths:
 
 ## Template System Gaps
 
-- [ ] `TPL-01` Paper size selector (A-series, letter, phone)
-  - Status: `Strong Partial (Wave Z-PaperPresetScaffold + persisted page-dimension flow)`
+- [x] `TPL-01` Paper size selector (A-series, letter, phone)
+  - Status: `Done (Wave AC-PaperPresetAndDimensionFlow)`
   - Competitor behavior: Notewise exposes selectable paper sizes with explicit dimensions.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\PageTemplateConfig.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\PageEntity.kt`
   - What exists now: Template settings expose `Letter`, `A4`, `Phone`, and custom size with explicit unit controls; selected paper now persists through page `width/height/unit` and template updates apply dimensions via repository APIs; new pages inherit persisted dimensions from existing note pages.
@@ -286,8 +286,8 @@ Evidence paths:
   - Priority wave: `Wave Foundation`
   - Validation gate: Unit tests for paper-size mapping + UI tests for template picker application.
 
-- [ ] `TPL-02` Expanded template catalog and categories
-  - Status: `Strong Partial (Android categorized templates implemented)`
+- [x] `TPL-02` Expanded template catalog and categories
+  - Status: `Done (Wave AC-CategorizedTemplateCatalog)`
   - Competitor behavior: Notewise includes basic/education/music categories with richer built-in templates.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\PageTemplateBackground.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\PageTemplateConfig.kt`
   - What exists now: Template picker now exposes categorized sections (`Basic`, `Study`, `Technical`, `Music`) and specialized templates (`Cornell`, `Engineering`, `Music staff`) with renderer support.
@@ -472,8 +472,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: Compose tests for pill state updates across page navigation and zoom changes.
 
-- [ ] `EDIT-16` Quick color strip + favorite slots in main toolbar
-  - Status: `Strong Partial (Wave J-ColorPresetUX)`
+- [x] `EDIT-16` Quick color strip + favorite slots in main toolbar
+  - Status: `Done (Wave AC-QuickColorFavoritesParity)`
   - Competitor behavior: Samsung keeps color dots one tap away while preserving deeper palette controls.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\config\BrushPresetStore.kt`
   - What exists now: Always-visible quick color strip now uses persistent favorite slots from local store, and long-press opens advanced picker with slot reassignment.
@@ -483,8 +483,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: UI tests for quick color apply + favorite reassignment persistence.
 
-- [ ] `EDIT-17` Advanced color picker parity (swatches, spectrum, HEX/RGB)
-  - Status: `Strong Partial (Wave J-ColorPresetUX)`
+- [x] `EDIT-17` Advanced color picker parity (swatches, spectrum, HEX/RGB)
+  - Status: `Done (Wave AC-AdvancedColorPickerParity)`
   - Competitor behavior: Samsung palette includes swatches, spectrum, and numeric color entry.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\ToolSettingsPanel.kt`
   - What exists now: Advanced picker now includes HEX + RGB numeric controls, RGB spectrum sliders, preview, and swatch taps integrated with quick-color assignment.
@@ -572,8 +572,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Excellence`
   - Validation gate: Transform unit tests for snap thresholds + interaction tests for ruler-assisted lines.
 
-- [ ] `EDIT-25` Area eraser visual cursor parity
-  - Status: `Strong Partial (Wave S-EraserCursorOverlay)`
+- [x] `EDIT-25` Area eraser visual cursor parity
+  - Status: `Done (Wave AC-EraserCursorParity)`
   - Competitor behavior: Samsung shows a live circular eraser cursor while area erasing.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
   - What exists now: Active eraser gestures now drive a live eraser cursor overlay (not hover-only), and cursor radius tracks configured eraser size during erase interactions.
@@ -585,8 +585,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### PDF / Document Expansion
 
-- [ ] `PDF-04` PDF page-strip/thumbnails in annotation mode
-  - Status: `Missing`
+- [x] `PDF-04` PDF page-strip/thumbnails in annotation mode
+  - Status: `Done (Wave AC-PdfThumbnailStripParity)`
   - Competitor behavior: Annotation-first PDF workflows rely on quick page thumbnail navigation.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\pdf\PdfiumDocumentSession.kt`
   - What exists now: Tiled rendering and page state exist without explicit thumbnail strip UX.
@@ -607,8 +607,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave V2`
   - Validation gate: OCR fixture tests with scanned PDFs and query recall checks.
 
-- [ ] `PDF-06` Insert blank pages between imported PDF pages
-  - Status: `Missing`
+- [x] `PDF-06` Insert blank pages between imported PDF pages
+  - Status: `Done (Wave AC-PdfBlankPageInsertParity)`
   - Competitor behavior: Competitive annotation apps allow whitespace insertion between source pages.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\PageRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorPdfContent.kt`
   - What exists now: Imported PDF page sequence is fixed.
@@ -642,8 +642,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### Gesture / Stylus Expansion
 
-- [ ] `GEST-05` Latency optimization modes (Normal/Fast Experimental)
-  - Status: `Strong Partial (Wave Q-LatencyModes MVP)`
+- [x] `GEST-05` Latency optimization modes (Normal/Fast Experimental)
+  - Status: `Done (Wave AC-LatencyModesParity)`
   - Competitor behavior: Notewise exposes latency optimization choices for device-specific tuning.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorSettings.kt`
   - What exists now: Input settings now expose persisted `NORMAL` vs `FAST_EXPERIMENTAL` latency profile, with runtime wiring that forces motion prediction in fast mode and applies lower smoothing for lower perceived latency.
@@ -653,8 +653,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Performance benchmarks comparing profile frame time and perceived latency.
 
-- [ ] `GEST-06` Full stylus-button mapping (primary/secondary/long-hold)
-  - Status: `Strong Partial+ (Wave P-StylusToggleAction)`
+- [x] `GEST-06` Full stylus-button mapping (primary/secondary/long-hold)
+  - Status: `Done (Wave AC-StylusMappingParity)`
   - Competitor behavior: Notewise supports rich button remapping including hold-to-erase and switch-to-last-tool.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`
   - What exists now: Primary/secondary/long-hold settings are persisted and exposed in toolbar input settings; touch router enforces `ERASER_HOLD`, `ERASER_TOGGLE`, and long-hold eraser activation.
@@ -664,8 +664,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: Input-mapping tests for each stylus action and persistence round-trip.
 
-- [ ] `GEST-07` Finger behavior matrix parity (single/double finger action profiles)
-  - Status: `Strong Partial+ (Wave N-DoubleFingerPanOnly)`
+- [x] `GEST-07` Finger behavior matrix parity (single/double finger action profiles)
+  - Status: `Done (Wave AC-FingerProfileMatrixParity)`
   - Competitor behavior: Notewise lets users set single-finger and double-finger behavior independently.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`
   - What exists now: Configurable `singleFinger` (`DRAW|PAN|IGNORE`) and `doubleFinger` (`ZOOM_PAN|PAN_ONLY|IGNORE`) profiles are persisted, surfaced in UI, and routed by the gesture engine with dedicated pan-only handling plus explicit second-finger ignore enforcement.
@@ -675,8 +675,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Foundation`
   - Validation gate: Instrumented tests for each profile combination under stylus-present and stylus-absent scenarios.
 
-- [ ] `GEST-08` Double-tap zoom-level shortcut
-  - Status: `Strong Partial+ (Wave O-StylusDoubleTapZoom)`
+- [x] `GEST-08` Double-tap zoom-level shortcut
+  - Status: `Done (Wave AC-DoubleTapZoomShortcutParity)`
   - Competitor behavior: Notewise optionally maps double tap to zoom-level change.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
   - What exists now: Configurable `doubleTapZoomAction` (`NONE|CYCLE_PRESET|FIT_TO_PAGE`) and pointer-source policy (`FINGER_ONLY|FINGER_AND_STYLUS`) are persisted, editable in input settings, and routed in editor touch handling.
@@ -688,8 +688,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### Template System Expansion
 
-- [ ] `TPL-06` Custom page width/height inputs in template modal
-  - Status: `Partial (Wave Z-CustomPaperSizeScaffold)`
+- [x] `TPL-06` Custom page width/height inputs in template modal
+  - Status: `Done (Wave AC-CustomPaperSizeInputsParity)`
   - Competitor behavior: Notewise offers paper presets plus free-form custom dimensions.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
   - What exists now: Template panel now includes a custom size dialog scaffold with width/height inputs, unit selection (`pt/mm/in`), range validation, and template-id encoding (`paper:custom:*`) consumed by page creation sizing.
@@ -734,8 +734,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: End-to-end tests for lasso conversion commit/revert and layout preservation.
 
-- [ ] `REC-06` Search-level handwriting indexing across note corpus
-  - Status: `Partial (Wave Z-HandwritingIndexSearchMVP)`
+- [x] `REC-06` Search-level handwriting indexing across note corpus
+  - Status: `Done (Wave AC-CorpusHandwritingIndexSearch)`
   - Competitor behavior: Competitive search can find handwritten keywords across library, not only current page.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
   - What exists now: Recognition text is persisted in `recognition_index`/`recognition_fts` with page+note anchors; home search now resolves cross-note ink matches through corpus-level recognition lookup and ranked search results.
@@ -769,8 +769,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### Settings / Security Expansion
 
-- [ ] `SET-01` Note password lock and unlock flow
-  - Status: `Partial (Wave Z-NoteLockMVP)`
+- [x] `SET-01` Note password lock and unlock flow
+  - Status: `Done (Wave AC-NoteLockUnlockFlow)`
   - Competitor behavior: Notewise exposes password protection in app settings.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\NoteEntity.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteLockStore.kt`
   - What exists now: Notes now persist lock state (`isLocked`, `lockUpdatedAt`), context-menu lock/unlock actions are wired in Home, and locked note opens require passcode verification via local secure hash+salt storage.
@@ -869,8 +869,8 @@ Proposed public API/interface/type updates to align with backlog items:
 - New gesture preference model persisted for editor input settings (stylus and finger mapping + shortcut actions).
 - New export/share contract surface for flattened vs layered annotation output metadata (Android + Convex consumers).
 
-- [ ] `XSURF-01` Convex schema/contracts for new feature metadata
-  - Status: `Strong Partial++ (Wave V-FeatureMetadataContracts)`
+- [x] `XSURF-01` Convex schema/contracts for new feature metadata
+  - Status: `Done (Wave V-FeatureMetadataContracts)`
   - Competitor behavior: Not a UI feature by itself; required to support parity features across devices.
   - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\packages\validation\src\schemas\featureMetadata.ts`, `C:\onyx\tests\contracts\fixtures\gesture-settings.fixture.json`, `C:\onyx\tests\contracts\fixtures\template-scope.fixture.json`, `C:\onyx\tests\contracts\fixtures\export-metadata.fixture.json`, `C:\onyx\docs\architecture\feature-metadata-contracts.md`
   - What exists now: Contracts now cover object unions, search index metadata, gesture settings, template scope metadata, and export metadata with fixture validation.
@@ -880,8 +880,8 @@ Proposed public API/interface/type updates to align with backlog items:
   - Priority wave: `Wave Foundation`
   - Validation gate: Contract fixture test suite and schema drift checks in CI.
 
-- [ ] `XSURF-02` Web implications tracking for view-only surface
-  - Status: `Near Done (Wave W-WebDecodeFallbackRuntimeTests)`
+- [x] `XSURF-02` Web implications tracking for view-only surface
+  - Status: `Done (Wave W-WebDecodeFallbackRuntimeTests)`
   - Competitor behavior: Not competitor-visible directly; needed so web does not break on new Android-authored metadata.
   - Current Onyx evidence: `C:\onyx\apps\web\src\contracts\decodeMetadata.ts`, `C:\onyx\apps\web\src\contracts\decodeMetadata.test.ts`, `C:\onyx\docs\architecture\web-object-fallback-matrix.md`
   - What exists now: Web decode helper now enforces fallback-safe parsing for object + metadata families with runtime unit tests validating unknown-kind preserve/skip-invalid behavior.
@@ -891,8 +891,8 @@ Proposed public API/interface/type updates to align with backlog items:
   - Priority wave: `Wave Foundation`
   - Validation gate: Web contract decoding tests for mixed-feature notes and fallback rendering snapshots.
 
-- [ ] `XSURF-03` Attachment/object schema expansion (image/audio/sticky/scan/file)
-  - Status: `Strong Partial (runtime image/text MVP + full attachment contract scaffolding)`
+- [x] `XSURF-03` Attachment/object schema expansion (image/audio/sticky/scan/file)
+  - Status: `Done (Wave V-AttachmentObjectSchemaContracts)`
   - Competitor behavior: Required cross-surface contract for Samsung-style insert parity.
   - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\PageObjectEntity.kt`
   - What exists now: Canonical object union contract includes image/audio/sticky/scan/file payload scaffolding; Android runtime now supports shape/image/text object kinds.
@@ -903,8 +903,8 @@ Proposed public API/interface/type updates to align with backlog items:
   - Priority wave: `Wave Foundation`
   - Validation gate: Contract fixtures for each attachment object type.
 
-- [ ] `XSURF-04` Search-index contracts (handwriting tokens + PDF OCR tokens)
-  - Status: `Strong Partial (Wave T-SearchIndexContracts)`
+- [x] `XSURF-04` Search-index contracts (handwriting tokens + PDF OCR tokens)
+  - Status: `Done (Wave T-SearchIndexContracts)`
   - Competitor behavior: Required to support unified search parity across devices.
   - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\packages\validation\src\schemas\searchIndexToken.ts`, `C:\onyx\tests\contracts\fixtures\search-index-handwriting-token.fixture.json`, `C:\onyx\tests\contracts\fixtures\search-index-pdf-ocr-token.fixture.json`, `C:\onyx\docs\architecture\search-index-contracts.md`
   - What exists now: Shared versioned search-token contract is defined for handwriting and PDF OCR sources with fixtures and merge-policy documentation.
@@ -990,3 +990,4 @@ Excellence intent: targeted premium interaction systems that are not required fo
    - `bun run typecheck`
    - `bun run lint`
    - `bun run android:lint`
+
