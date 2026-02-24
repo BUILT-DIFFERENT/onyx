@@ -73,6 +73,10 @@ internal data class NoteEditorTopBarState(
     val onOpenPageManager: () -> Unit = {},
     val isRecognitionOverlayEnabled: Boolean = false,
     val onToggleRecognitionOverlay: () -> Unit = {},
+    val keepScreenOn: Boolean = false,
+    val hideSystemBars: Boolean = true,
+    val onKeepScreenOnChanged: (Boolean) -> Unit = {},
+    val onHideSystemBarsChanged: (Boolean) -> Unit = {},
 )
 
 internal data class NoteEditorToolbarState(
@@ -80,6 +84,7 @@ internal data class NoteEditorToolbarState(
     val lastNonEraserTool: Tool,
     val isStylusButtonEraserActive: Boolean,
     val isSegmentEraserEnabled: Boolean = false,
+    val eraserMode: EraserMode = EraserMode.STROKE,
     val eraserFilter: EraserFilter = EraserFilter.ALL_STROKES,
     val activeInsertAction: InsertAction = InsertAction.NONE,
     val inputSettings: InputSettings = InputSettings(),
@@ -87,6 +92,7 @@ internal data class NoteEditorToolbarState(
     val onBrushChange: (Brush) -> Unit,
     val onInputSettingsChange: (InputSettings) -> Unit = {},
     val onSegmentEraserEnabledChange: (Boolean) -> Unit = {},
+    val onEraserModeChange: (EraserMode) -> Unit = {},
     val onEraserFilterChange: (EraserFilter) -> Unit = {},
     val onClearPageRequested: () -> Unit = {},
     val onInsertActionSelected: (InsertAction) -> Unit = {},
@@ -97,6 +103,12 @@ internal enum class EraserFilter {
     ALL_STROKES,
     PEN_ONLY,
     HIGHLIGHTER_ONLY,
+}
+
+internal enum class EraserMode {
+    STROKE,
+    SEGMENT,
+    AREA,
 }
 
 internal data class NoteEditorContentState(
@@ -121,6 +133,7 @@ internal data class NoteEditorContentState(
     val brush: Brush,
     val isStylusButtonEraserActive: Boolean,
     val isSegmentEraserEnabled: Boolean = false,
+    val eraserMode: EraserMode = EraserMode.STROKE,
     val eraserFilter: EraserFilter = EraserFilter.ALL_STROKES,
     val activeInsertAction: InsertAction = InsertAction.NONE,
     val interactionMode: InteractionMode,
@@ -153,6 +166,7 @@ internal data class NoteEditorContentState(
     val onDuplicateObject: (PageObject) -> Unit = {},
     val onDeleteObject: (PageObject) -> Unit = {},
     val onSegmentEraserEnabledChange: (Boolean) -> Unit = {},
+    val onEraserModeChange: (EraserMode) -> Unit = {},
     val onEraserFilterChange: (EraserFilter) -> Unit = {},
     val onClearPageRequested: () -> Unit = {},
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,
@@ -209,6 +223,7 @@ internal data class MultiPageContentState(
     val brush: Brush,
     val isStylusButtonEraserActive: Boolean,
     val isSegmentEraserEnabled: Boolean = false,
+    val eraserMode: EraserMode = EraserMode.STROKE,
     val eraserFilter: EraserFilter = EraserFilter.ALL_STROKES,
     val activeInsertAction: InsertAction = InsertAction.NONE,
     val selectedObjectId: String? = null,
@@ -244,6 +259,7 @@ internal data class MultiPageContentState(
     val onDuplicateObject: (String, PageObject) -> Unit = { _, _ -> },
     val onDeleteObject: (String, PageObject) -> Unit = { _, _ -> },
     val onSegmentEraserEnabledChange: (Boolean) -> Unit = {},
+    val onEraserModeChange: (EraserMode) -> Unit = {},
     val onEraserFilterChange: (EraserFilter) -> Unit = {},
     val onClearPageRequested: () -> Unit = {},
     val onStylusButtonEraserActiveChanged: (Boolean) -> Unit,

@@ -31,6 +31,7 @@ import com.onyx.android.ink.model.BrushPreset
 import com.onyx.android.ink.model.StrokeLineStyle
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ui.EraserFilter
+import com.onyx.android.ui.EraserMode
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -40,10 +41,12 @@ internal fun ToolSettingsPanel(
     panelType: ToolPanelType,
     brush: Brush,
     isSegmentEraserEnabled: Boolean = false,
+    eraserMode: EraserMode = EraserMode.STROKE,
     eraserFilter: EraserFilter = EraserFilter.ALL_STROKES,
     onDismiss: () -> Unit,
     onBrushChange: (Brush) -> Unit,
     onSegmentEraserEnabledChange: (Boolean) -> Unit = {},
+    onEraserModeChange: (EraserMode) -> Unit = {},
     onEraserFilterChange: (EraserFilter) -> Unit = {},
     onClearPageRequested: () -> Unit = {},
 ) {
@@ -225,27 +228,30 @@ internal fun ToolSettingsPanel(
                         label = "Eraser size",
                         onBrushChange = onBrushChange,
                     )
+                    Text(text = "Eraser mode", style = MaterialTheme.typography.bodyMedium)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(2.dp),
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text(text = "Segment eraser", style = MaterialTheme.typography.bodyMedium)
-                            Text(
-                                text = "Split strokes where the eraser path intersects.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                        EraserMode.entries.forEach { mode ->
+                            TextButton(onClick = { onEraserModeChange(mode) }) {
+                                Text(
+                                    text = mode.label(),
+                                    color =
+                                        if (mode == eraserMode) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface
+                                        },
+                                )
+                            }
                         }
-                        Switch(
-                            checked = isSegmentEraserEnabled,
-                            onCheckedChange = onSegmentEraserEnabledChange,
-                        )
                     }
+                    // Backward-compatible switch for existing segment-erase tests/routes.
+                    Switch(
+                        checked = isSegmentEraserEnabled,
+                        onCheckedChange = onSegmentEraserEnabledChange,
+                    )
                     Text(text = "Eraser target", style = MaterialTheme.typography.bodyMedium)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -298,6 +304,13 @@ private fun EraserFilter.label(): String =
         EraserFilter.ALL_STROKES -> "All"
         EraserFilter.PEN_ONLY -> "Pen"
         EraserFilter.HIGHLIGHTER_ONLY -> "Highlighter"
+    }
+
+private fun EraserMode.label(): String =
+    when (this) {
+        EraserMode.STROKE -> "Stroke"
+        EraserMode.SEGMENT -> "Segment"
+        EraserMode.AREA -> "Area"
     }
 
 @Composable

@@ -149,11 +149,11 @@ Evidence paths:
   - Validation gate: Unit tests for width response curves and settings persistence checks.
 
 - [ ] `EDIT-09` Area/pixel eraser mode
-  - Status: `Missing`
+  - Status: `Partial (Wave Z-EraserModeScaffold)`
   - Competitor behavior: Samsung Notes and Notewise expose precision area/pixel erasing.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\ToolSettingsPanel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`
-  - What exists now: Stroke and segment erase behavior only.
-  - What is missing: Pixel/area eraser algorithm and mode toggle.
+  - What exists now: Eraser settings now expose explicit mode selection (`Stroke`, `Segment`, `Area`) plus target filters; runtime routes `Area` through the segment-path erase pipeline as a temporary compatibility path.
+  - What is missing: True pixel/area erase geometry diff algorithm and dedicated undo encoding for partial-stroke bitmap-like erasure.
   - Exact change needed: Add `EraserMode` to settings and implement area-based erase path with undo-safe diff encoding.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -276,11 +276,11 @@ Evidence paths:
 ## Template System Gaps
 
 - [ ] `TPL-01` Paper size selector (A-series, letter, phone)
-  - Status: `Missing`
+  - Status: `Partial (Wave Z-PaperPresetScaffold)`
   - Competitor behavior: Notewise exposes selectable paper sizes with explicit dimensions.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\PageTemplateConfig.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\PageEntity.kt`
-  - What exists now: Page dimensions exist but are not exposed through template paper-size presets.
-  - What is missing: Paper-size enum/model and picker UI.
+  - What exists now: Template settings now expose `Letter`, `A4`, and `Phone` paper presets via `templateId` (`paper:*`), and new-page creation derives dimensions from the latest selected paper preset.
+  - What is missing: Dedicated persisted paper-size field (instead of templateId convention), explicit unit controls, and per-note default management UX.
   - Exact change needed: Expand `PageTemplateConfig` with paper-size metadata and apply selected dimensions on page create/apply flows.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -781,11 +781,11 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Validation gate: Security tests for lock enforcement and credential reset flow.
 
 - [ ] `SET-02` Focus/presentation settings (`keep screen on`, `hide system bars`)
-  - Status: `Missing`
+  - Status: `Partial (Wave Z-FocusPresentationMVP)`
   - Competitor behavior: Notewise includes immersion-oriented settings for long sessions/presenting.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\settings\SettingsScreen.kt`
-  - What exists now: Default OS behavior; no explicit controls.
-  - What is missing: User toggles and editor window/flags integration.
+  - What exists now: Editor overflow now exposes `keep screen on` and `hide/show system bars` toggles, with runtime window/insets effects applied in `NoteEditorScreen`.
+  - What is missing: Persistent user preference storage and dedicated settings-screen controls outside the editor.
   - Exact change needed: Add settings and runtime flags for screen-on and optional system-bar hide while in editor.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave V1`

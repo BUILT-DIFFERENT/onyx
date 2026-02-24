@@ -120,6 +120,9 @@ private val NOTEWISE_STROKE = Color(0xFF3B435B)
 private const val NOTEWISE_LEFT_GROUP_WIDTH_DP = 360
 private const val NOTEWISE_RIGHT_GROUP_WIDTH_DP = 128
 private const val TITLE_INPUT_TEST_TAG = "note-title-input"
+private const val PAPER_TEMPLATE_LETTER = "paper:letter"
+private const val PAPER_TEMPLATE_A4 = "paper:a4"
+private const val PAPER_TEMPLATE_PHONE = "paper:phone"
 internal const val TOOLBAR_ROW_HEIGHT_DP = 48
 internal const val TOOLBAR_VERTICAL_PADDING_DP = 8
 internal const val TOOLBAR_HORIZONTAL_PADDING_DP = 12
@@ -362,6 +365,36 @@ internal fun EditorToolbar(
                                 topBarState.onToggleReadOnly()
                             },
                         )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    if (topBarState.keepScreenOn) {
+                                        "Turn keep-screen-on off"
+                                    } else {
+                                        "Turn keep-screen-on on"
+                                    },
+                                )
+                            },
+                            onClick = {
+                                isOverflowMenuExpanded = false
+                                topBarState.onKeepScreenOnChanged(!topBarState.keepScreenOn)
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    if (topBarState.hideSystemBars) {
+                                        "Show system bars"
+                                    } else {
+                                        "Hide system bars"
+                                    },
+                                )
+                            },
+                            onClick = {
+                                isOverflowMenuExpanded = false
+                                topBarState.onHideSystemBarsChanged(!topBarState.hideSystemBars)
+                            },
+                        )
                     }
                 }
             }
@@ -507,10 +540,12 @@ internal fun EditorToolbar(
                             panelType = ToolPanelType.ERASER,
                             brush = brush,
                             isSegmentEraserEnabled = toolbarState.isSegmentEraserEnabled,
+                            eraserMode = toolbarState.eraserMode,
                             eraserFilter = toolbarState.eraserFilter,
                             onDismiss = { activeToolPanel = null },
                             onBrushChange = toolbarState.onBrushChange,
                             onSegmentEraserEnabledChange = toolbarState.onSegmentEraserEnabledChange,
+                            onEraserModeChange = toolbarState.onEraserModeChange,
                             onEraserFilterChange = toolbarState.onEraserFilterChange,
                             onClearPageRequested = toolbarState.onClearPageRequested,
                         )
@@ -1422,6 +1457,48 @@ private fun TemplateSettingsPanel(
                     }
                 }
             }
+
+            HorizontalDivider()
+            Text(text = "Paper size", style = MaterialTheme.typography.bodyMedium)
+            val paperOptions =
+                listOf(
+                    PAPER_TEMPLATE_LETTER to "Letter",
+                    PAPER_TEMPLATE_A4 to "A4",
+                    PAPER_TEMPLATE_PHONE to "Phone",
+                )
+            val currentPaperTemplate =
+                when (templateState.templateId) {
+                    PAPER_TEMPLATE_A4 -> PAPER_TEMPLATE_A4
+                    PAPER_TEMPLATE_PHONE -> PAPER_TEMPLATE_PHONE
+                    else -> PAPER_TEMPLATE_LETTER
+                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                paperOptions.forEach { (templateId, label) ->
+                    TextButton(
+                        onClick = {
+                            onTemplateChange(templateState.copy(templateId = templateId))
+                        },
+                    ) {
+                        Text(
+                            text = label,
+                            color =
+                                if (currentPaperTemplate == templateId) {
+                                    NOTEWISE_SELECTED
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                        )
+                    }
+                }
+            }
+            Text(
+                text = "New pages will use this size preset.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
 
             if (templateState.backgroundKind != "blank") {
                 val spacingRange = spacingRangeForTemplate(templateState.backgroundKind)

@@ -142,6 +142,16 @@ class NoteRepository(
         private const val TEMPLATE_MIN_SPACING = 8f
         private const val TEMPLATE_MAX_SPACING = 80f
         private const val RGB_MASK = 0xFFFFFF
+        private const val DEFAULT_PAGE_WIDTH_PT = 612f
+        private const val DEFAULT_PAGE_HEIGHT_PT = 792f
+        private const val PAPER_TEMPLATE_PREFIX = "paper:"
+        private const val PAPER_A4 = "a4"
+        private const val PAPER_LETTER = "letter"
+        private const val PAPER_PHONE = "phone"
+        private const val PAPER_A4_WIDTH_PT = 595f
+        private const val PAPER_A4_HEIGHT_PT = 842f
+        private const val PAPER_PHONE_WIDTH_PT = 360f
+        private const val PAPER_PHONE_HEIGHT_PT = 640f
         private val INK_RESULT_COLOR = Color(0xFF0A84FF)
         private val PDF_RESULT_COLOR = Color(0xFFF2994A)
         private val NOTE_METADATA_RESULT_COLOR = Color(0xFF34A853)
@@ -212,6 +222,8 @@ class NoteRepository(
         indexInNote: Int,
     ): PageEntity {
         val now = System.currentTimeMillis()
+        val paperTemplateId = pageDao.getPagesForNoteSync(noteId).lastOrNull()?.templateId
+        val (pageWidth, pageHeight) = resolvePaperSize(paperTemplateId)
         val page =
             PageEntity(
                 pageId = UUID.randomUUID().toString(),
@@ -219,8 +231,8 @@ class NoteRepository(
                 kind = "ink",
                 geometryKind = "fixed",
                 indexInNote = indexInNote,
-                width = 612f,
-                height = 792f,
+                width = pageWidth,
+                height = pageHeight,
                 unit = "pt",
                 pdfAssetId = null,
                 pdfPageNo = null,
@@ -243,6 +255,14 @@ class NoteRepository(
         noteDao.updateTimestamp(noteId, now)
         return page
     }
+
+    private fun resolvePaperSize(templateId: String?): Pair<Float, Float> =
+        when (templateId?.removePrefix(PAPER_TEMPLATE_PREFIX)) {
+            PAPER_A4 -> PAPER_A4_WIDTH_PT to PAPER_A4_HEIGHT_PT
+            PAPER_PHONE -> PAPER_PHONE_WIDTH_PT to PAPER_PHONE_HEIGHT_PT
+            PAPER_LETTER -> DEFAULT_PAGE_WIDTH_PT to DEFAULT_PAGE_HEIGHT_PT
+            else -> DEFAULT_PAGE_WIDTH_PT to DEFAULT_PAGE_HEIGHT_PT
+        }
 
     suspend fun movePage(
         noteId: String,

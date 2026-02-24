@@ -142,23 +142,30 @@ fun NoteEditorScreen(
     noteId: String,
     onNavigateBack: () -> Unit,
 ) {
-    NoteEditorStatusBarEffect()
+    var keepScreenOn by rememberSaveable { mutableStateOf(false) }
+    var hideSystemBars by rememberSaveable { mutableStateOf(true) }
+    NoteEditorStatusBarEffect(hideSystemBars = hideSystemBars)
+    NoteEditorKeepScreenOnEffect(keepScreenOn = keepScreenOn)
     val viewModel: NoteEditorViewModel = hiltViewModel()
     NoteEditorScreenContent(
         noteId = noteId,
         viewModel = viewModel,
         pdfAssetStorage = viewModel.pdfAssetStorage,
         pdfPasswordStore = viewModel.pdfPasswordStore,
+        keepScreenOn = keepScreenOn,
+        hideSystemBars = hideSystemBars,
+        onKeepScreenOnChanged = { keepScreenOn = it },
+        onHideSystemBarsChanged = { hideSystemBars = it },
         onNavigateBack = onNavigateBack,
     )
 }
 
 @Composable
-private fun NoteEditorStatusBarEffect() {
+private fun NoteEditorStatusBarEffect(hideSystemBars: Boolean) {
     val context = LocalContext.current
     val view = LocalView.current
 
-    DisposableEffect(context, view) {
+    DisposableEffect(context, view, hideSystemBars) {
         val activity = context.findActivity()
         val window = activity?.window
         if (window == null) {
@@ -166,9 +173,13 @@ private fun NoteEditorStatusBarEffect() {
         }
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
         val previousSystemBarsBehavior = insetsController.systemBarsBehavior
-        insetsController.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        insetsController.hide(WindowInsetsCompat.Type.statusBars())
+        if (hideSystemBars) {
+            insetsController.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            insetsController.hide(WindowInsetsCompat.Type.statusBars())
+        } else {
+            insetsController.show(WindowInsetsCompat.Type.statusBars())
+        }
         onDispose {
             insetsController.show(WindowInsetsCompat.Type.statusBars())
             insetsController.systemBarsBehavior = previousSystemBarsBehavior
@@ -177,12 +188,37 @@ private fun NoteEditorStatusBarEffect() {
 }
 
 @Composable
-@Suppress("LongMethod", "CyclomaticComplexMethod")
+private fun NoteEditorKeepScreenOnEffect(keepScreenOn: Boolean) {
+    val context = LocalContext.current
+    DisposableEffect(context, keepScreenOn) {
+        val window = context.findActivity()?.window
+        if (window == null) {
+            return@DisposableEffect onDispose {}
+        }
+        if (keepScreenOn) {
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        onDispose {
+            if (keepScreenOn) {
+                window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+        }
+    }
+}
+
+@Composable
+@Suppress("LongMethod", "CyclomaticComplexMethod", "LongParameterList")
 private fun NoteEditorScreenContent(
     noteId: String,
     viewModel: NoteEditorViewModel,
     pdfAssetStorage: PdfAssetStorage,
     pdfPasswordStore: PdfPasswordStore,
+    keepScreenOn: Boolean,
+    hideSystemBars: Boolean,
+    onKeepScreenOnChanged: (Boolean) -> Unit,
+    onHideSystemBarsChanged: (Boolean) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -224,6 +260,10 @@ private fun NoteEditorScreenContent(
                 onNavigateBack = onNavigateBack,
                 onOpenOutline = { showOutlineSheet = true },
                 onLoadOutline = { renderer -> outlineItems = renderer.getTableOfContents() },
+                keepScreenOn = keepScreenOn,
+                hideSystemBars = hideSystemBars,
+                onKeepScreenOnChanged = onKeepScreenOnChanged,
+                onHideSystemBarsChanged = onHideSystemBarsChanged,
                 editorSettings = editorSettings,
                 onEditorSettingsChange = viewModel::updateEditorSettings,
             )
@@ -270,6 +310,10 @@ private fun NoteEditorScreenContent(
                 onNavigateBack = onNavigateBack,
                 onOpenOutline = { showOutlineSheet = true },
                 onLoadOutline = { renderer -> outlineItems = renderer.getTableOfContents() },
+                keepScreenOn = keepScreenOn,
+                hideSystemBars = hideSystemBars,
+                onKeepScreenOnChanged = onKeepScreenOnChanged,
+                onHideSystemBarsChanged = onHideSystemBarsChanged,
                 editorSettings = editorSettings,
                 onEditorSettingsChange = viewModel::updateEditorSettings,
             )
@@ -564,6 +608,10 @@ private fun rememberNoteEditorUiState(
     onNavigateBack: () -> Unit,
     onOpenOutline: () -> Unit,
     onLoadOutline: (PdfDocumentRenderer) -> Unit,
+    keepScreenOn: Boolean,
+    hideSystemBars: Boolean,
+    onKeepScreenOnChanged: (Boolean) -> Unit,
+    onHideSystemBarsChanged: (Boolean) -> Unit,
     editorSettings: EditorSettings,
     onEditorSettingsChange: (EditorSettings) -> Unit,
 ): NoteEditorUiState {
@@ -586,7 +634,7 @@ private fun rememberNoteEditorUiState(
     var viewTransform by remember { mutableStateOf(ViewTransform.DEFAULT) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
-    var isSegmentEraserEnabled by rememberSaveable { mutableStateOf(false) }
+    var eraserMode by rememberSaveable { mutableStateOf(EraserMode.STROKE) }
     var eraserFilter by rememberSaveable { mutableStateOf(EraserFilter.ALL_STROKES) }
     var activeInsertAction by rememberSaveable { mutableStateOf(InsertAction.NONE) }
     var pendingImageUri by rememberSaveable { mutableStateOf<String?>(null) }
@@ -659,6 +707,7 @@ private fun rememberNoteEditorUiState(
     LaunchedEffect(pageState.currentPage?.pageId) {
         isStylusButtonEraserActive = false
         isTextSelectionMode = false
+        eraserMode = EraserMode.STROKE
         lassoSelection = LassoSelection()
         eraserFilter = EraserFilter.ALL_STROKES
         activeInsertAction = InsertAction.NONE
@@ -793,20 +842,26 @@ private fun rememberNoteEditorUiState(
             },
             isRecognitionOverlayEnabled = recognitionOverlayEnabled,
             onToggleRecognitionOverlay = viewModel::toggleRecognitionOverlay,
+            keepScreenOn = keepScreenOn,
+            hideSystemBars = hideSystemBars,
+            onKeepScreenOnChanged = onKeepScreenOnChanged,
+            onHideSystemBarsChanged = onHideSystemBarsChanged,
         )
     val toolbarState =
         buildToolbarState(
             brushState.activeBrush,
             brushState.lastNonEraserTool,
             isStylusButtonEraserActive,
-            isSegmentEraserEnabled,
+            isSegmentEraserEnabled = eraserMode != EraserMode.STROKE,
+            eraserMode = eraserMode,
             eraserFilter,
             activeInsertAction,
             brushState.inputSettings,
             templateState,
             brushState.onBrushChange,
             brushState.onInputSettingsChange,
-            { isSegmentEraserEnabled = it },
+            { enabled -> eraserMode = if (enabled) EraserMode.SEGMENT else EraserMode.STROKE },
+            { mode -> eraserMode = mode },
             { eraserFilter = it },
             {
                 viewModel.clearCurrentPageContent()
@@ -946,7 +1001,8 @@ private fun rememberNoteEditorUiState(
             selectedObjectId = selectedObjectId,
             brush = brushState.activeBrush,
             isStylusButtonEraserActive = isStylusButtonEraserActive,
-            isSegmentEraserEnabled = isSegmentEraserEnabled,
+            isSegmentEraserEnabled = eraserMode != EraserMode.STROKE,
+            eraserMode = eraserMode,
             eraserFilter = eraserFilter,
             activeInsertAction = activeInsertAction,
             interactionMode = if (isTextSelectionMode) InteractionMode.TEXT_SELECTION else InteractionMode.DRAW,
@@ -988,7 +1044,10 @@ private fun rememberNoteEditorUiState(
                     strokeCallbacks.onStrokeSplit(original, segments, pageId)
                 }
             },
-            onSegmentEraserEnabledChange = { isSegmentEraserEnabled = it },
+            onSegmentEraserEnabledChange = { enabled ->
+                eraserMode = if (enabled) EraserMode.SEGMENT else EraserMode.STROKE
+            },
+            onEraserModeChange = { mode -> eraserMode = mode },
             onEraserFilterChange = { eraserFilter = it },
             onClearPageRequested = {
                 viewModel.clearCurrentPageContent()
@@ -1190,6 +1249,10 @@ private fun rememberMultiPageUiState(
     onNavigateBack: () -> Unit,
     onOpenOutline: () -> Unit,
     onLoadOutline: (PdfDocumentRenderer) -> Unit,
+    keepScreenOn: Boolean,
+    hideSystemBars: Boolean,
+    onKeepScreenOnChanged: (Boolean) -> Unit,
+    onHideSystemBarsChanged: (Boolean) -> Unit,
     editorSettings: EditorSettings,
     onEditorSettingsChange: (EditorSettings) -> Unit,
 ): MultiPageUiState {
@@ -1208,7 +1271,7 @@ private fun rememberMultiPageUiState(
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
-    var isSegmentEraserEnabled by rememberSaveable { mutableStateOf(false) }
+    var eraserMode by rememberSaveable { mutableStateOf(EraserMode.STROKE) }
     var eraserFilter by rememberSaveable { mutableStateOf(EraserFilter.ALL_STROKES) }
     var activeInsertAction by rememberSaveable { mutableStateOf(InsertAction.NONE) }
     var isZoomLocked by rememberSaveable { mutableStateOf(false) }
@@ -1286,6 +1349,7 @@ private fun rememberMultiPageUiState(
     LaunchedEffect(pageState.currentPage?.pageId) {
         isStylusButtonEraserActive = false
         isTextSelectionMode = false
+        eraserMode = EraserMode.STROKE
         eraserFilter = EraserFilter.ALL_STROKES
         activeInsertAction = InsertAction.NONE
         pendingImageUri = null
@@ -1481,20 +1545,26 @@ private fun rememberMultiPageUiState(
             },
             isRecognitionOverlayEnabled = recognitionOverlayEnabled,
             onToggleRecognitionOverlay = viewModel::toggleRecognitionOverlay,
+            keepScreenOn = keepScreenOn,
+            hideSystemBars = hideSystemBars,
+            onKeepScreenOnChanged = onKeepScreenOnChanged,
+            onHideSystemBarsChanged = onHideSystemBarsChanged,
         )
     val toolbarState =
         buildToolbarState(
             brushState.activeBrush,
             brushState.lastNonEraserTool,
             isStylusButtonEraserActive,
-            isSegmentEraserEnabled,
+            isSegmentEraserEnabled = eraserMode != EraserMode.STROKE,
+            eraserMode = eraserMode,
             eraserFilter,
             activeInsertAction,
             brushState.inputSettings,
             templateState,
             brushState.onBrushChange,
             brushState.onInputSettingsChange,
-            { isSegmentEraserEnabled = it },
+            { enabled -> eraserMode = if (enabled) EraserMode.SEGMENT else EraserMode.STROKE },
+            { mode -> eraserMode = mode },
             { eraserFilter = it },
             {
                 viewModel.clearCurrentPageContent()
@@ -1555,7 +1625,8 @@ private fun rememberMultiPageUiState(
             isReadOnly = isReadOnly,
             brush = brushState.activeBrush,
             isStylusButtonEraserActive = isStylusButtonEraserActive,
-            isSegmentEraserEnabled = isSegmentEraserEnabled,
+            isSegmentEraserEnabled = eraserMode != EraserMode.STROKE,
+            eraserMode = eraserMode,
             eraserFilter = eraserFilter,
             activeInsertAction = activeInsertAction,
             selectedObjectId = selectedObjectId,
@@ -1687,7 +1758,10 @@ private fun rememberMultiPageUiState(
             onDeleteObject = { pageId, pageObject ->
                 undoController.onObjectRemoved(pageId, pageObject)
             },
-            onSegmentEraserEnabledChange = { isSegmentEraserEnabled = it },
+            onSegmentEraserEnabledChange = { enabled ->
+                eraserMode = if (enabled) EraserMode.SEGMENT else EraserMode.STROKE
+            },
+            onEraserModeChange = { mode -> eraserMode = mode },
             onEraserFilterChange = { eraserFilter = it },
             onClearPageRequested = {
                 viewModel.clearCurrentPageContent()
@@ -2176,6 +2250,7 @@ private fun buildToolbarState(
     lastNonEraserTool: Tool,
     isStylusButtonEraserActive: Boolean,
     isSegmentEraserEnabled: Boolean,
+    eraserMode: EraserMode,
     eraserFilter: EraserFilter,
     activeInsertAction: InsertAction,
     inputSettings: InputSettings,
@@ -2183,6 +2258,7 @@ private fun buildToolbarState(
     onBrushChange: (Brush) -> Unit,
     onInputSettingsChange: (InputSettings) -> Unit,
     onSegmentEraserEnabledChange: (Boolean) -> Unit,
+    onEraserModeChange: (EraserMode) -> Unit,
     onEraserFilterChange: (EraserFilter) -> Unit,
     onClearPageRequested: () -> Unit,
     onInsertActionSelected: (InsertAction) -> Unit,
@@ -2193,6 +2269,7 @@ private fun buildToolbarState(
         lastNonEraserTool = lastNonEraserTool,
         isStylusButtonEraserActive = isStylusButtonEraserActive,
         isSegmentEraserEnabled = isSegmentEraserEnabled,
+        eraserMode = eraserMode,
         eraserFilter = eraserFilter,
         activeInsertAction = activeInsertAction,
         inputSettings = inputSettings,
@@ -2200,6 +2277,7 @@ private fun buildToolbarState(
         onBrushChange = onBrushChange,
         onInputSettingsChange = onInputSettingsChange,
         onSegmentEraserEnabledChange = onSegmentEraserEnabledChange,
+        onEraserModeChange = onEraserModeChange,
         onEraserFilterChange = onEraserFilterChange,
         onClearPageRequested = onClearPageRequested,
         onInsertActionSelected = onInsertActionSelected,
