@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.onyx.android.R
 import com.onyx.android.data.entity.PageEntity
+import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
 import com.onyx.android.ink.ui.InkCanvasCallbacks
@@ -236,6 +237,20 @@ private fun PdfPageLayers(
                 viewTransform = contentState.viewTransform,
                 brush = contentState.brush,
                 isSegmentEraserEnabled = contentState.isSegmentEraserEnabled,
+                eraseStrokePredicate =
+                    when (contentState.eraserFilter) {
+                        EraserFilter.ALL_STROKES -> {
+                            { true }
+                        }
+
+                        EraserFilter.PEN_ONLY -> {
+                            { stroke -> stroke.style.tool == Tool.PEN }
+                        }
+
+                        EraserFilter.HIGHLIGHTER_ONLY -> {
+                            { stroke -> stroke.style.tool == Tool.HIGHLIGHTER }
+                        }
+                    },
                 pageWidth = contentState.pageWidth,
                 pageHeight = contentState.pageHeight,
                 allowEditing =

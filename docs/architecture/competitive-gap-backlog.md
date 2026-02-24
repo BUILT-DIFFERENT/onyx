@@ -37,22 +37,22 @@ Evidence paths:
   - Validation gate: Android UI test for nested expansion/selection + contract fixture for folder tree payload.
 
 - [ ] `HOME-02` Shared and Trash destination surfaces
-  - Status: `Missing`
+  - Status: `Strong Partial (Wave Y-HomeDestinationsMVP)`
   - Competitor behavior: Samsung Notes exposes top-level Shared and Trash destinations with dedicated actions.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`
-  - What exists now: Notes can be soft-deleted, but no user-visible Trash/Shared surfaces.
-  - What is missing: Trash list (restore/permanent delete) and shared-note list/actions.
+  - What exists now: Home now exposes `All/Shared/Trash` destinations, with Trash restore/permanent-delete actions wired to repository soft-delete lifecycle.
+  - What is missing: Shared destination currently uses placeholder data (empty state) until share metadata/query surfaces land.
   - Exact change needed: Add home destinations for `Shared` and `Trash`, wire repository queries and restore/purge actions, and define matching Convex metadata fields for share/trash state.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: End-to-end delete->trash->restore flow test and shared-note visibility contract test.
 
 - [ ] `HOME-03` Grid/thumbnail browsing mode
-  - Status: `Missing`
+  - Status: `Strong Partial (Wave Y-HomeDestinationsMVP)`
   - Competitor behavior: Samsung Notes and Notewise both support visual note-card browsing.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\thumbnail\ThumbnailGenerator.kt`
-  - What exists now: Home is list-first; thumbnail generation exists but is not the default browsing UX.
-  - What is missing: Grid card mode, preview thumbnails, and mode toggle persistence.
+  - What exists now: Home app bar now supports list/grid toggle and renders a grid-card browsing mode for standard note views.
+  - What is missing: Grid-mode preference persistence and richer thumbnail-preview cards.
   - Exact change needed: Add list/grid switch, card layout, and thumbnail cache invalidation hooks for note updates.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Parity`
@@ -171,11 +171,11 @@ Evidence paths:
   - Validation gate: Unit test matrix for erase radius behavior + UI state persistence test.
 
 - [ ] `EDIT-11` Eraser type filters + clear-page action
-  - Status: `Missing`
+  - Status: `Partial (Wave Y-EraserFilterClearPageMVP)`
   - Competitor behavior: Notewise supports erase target filters and clear-current-page action.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\ToolSettingsPanel.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\model\Stroke.kt`
-  - What exists now: Eraser targets stroke data uniformly.
-  - What is missing: Filter-by-type erase behavior and one-step page clear command.
+  - What exists now: Eraser panel now includes filter target selection (`All`, `Pen`, `Highlighter`) and a `Clear page` action wired through repository/page state.
+  - What is missing: Clear-page undo/redo semantics and cross-surface sync metadata for filter mode/clear operations.
   - Exact change needed: Add eraser target filter model and page-clear action integrated with undo/redo and recognition refresh.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Parity`

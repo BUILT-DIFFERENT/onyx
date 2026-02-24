@@ -54,6 +54,7 @@ private const val THREE_FINGER_POINTER_COUNT = 3
 internal data class InkCanvasInteraction(
     val brush: Brush,
     val isSegmentEraserEnabled: Boolean = false,
+    val eraseStrokePredicate: (Stroke) -> Boolean = { true },
     val lassoSelection: LassoSelection,
     val viewTransform: ViewTransform,
     val strokes: List<Stroke>,
@@ -688,6 +689,7 @@ private fun handleEraserAtPointer(
                 allStrokes.forEach { stroke -> put(stroke.id, stroke) }
             }.values
             .toList()
+    val erasableStrokes = dedupedStrokes.filter(interaction.eraseStrokePredicate)
 
     if (interaction.isSegmentEraserEnabled) {
         val eraserPathPoints =
@@ -705,7 +707,7 @@ private fun handleEraserAtPointer(
                 interaction.viewTransform.zoom.coerceAtLeast(MIN_TOLERANCE_ZOOM)
         val splitCandidates =
             computeStrokeSplitCandidates(
-                strokes = dedupedStrokes,
+                strokes = erasableStrokes,
                 eraserPathPoints = eraserPathPoints,
                 eraserRadius = eraserRadius,
             )
@@ -719,7 +721,7 @@ private fun handleEraserAtPointer(
         findStrokeToErase(
             screenX = event.getX(pointerIndex),
             screenY = event.getY(pointerIndex),
-            strokes = dedupedStrokes,
+            strokes = erasableStrokes,
             viewTransform = interaction.viewTransform,
         )
     if (erasedStroke != null) {

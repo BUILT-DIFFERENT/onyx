@@ -507,9 +507,12 @@ internal fun EditorToolbar(
                             panelType = ToolPanelType.ERASER,
                             brush = brush,
                             isSegmentEraserEnabled = toolbarState.isSegmentEraserEnabled,
+                            eraserFilter = toolbarState.eraserFilter,
                             onDismiss = { activeToolPanel = null },
                             onBrushChange = toolbarState.onBrushChange,
                             onSegmentEraserEnabledChange = toolbarState.onSegmentEraserEnabledChange,
+                            onEraserFilterChange = toolbarState.onEraserFilterChange,
+                            onClearPageRequested = toolbarState.onClearPageRequested,
                         )
                     }
                 }

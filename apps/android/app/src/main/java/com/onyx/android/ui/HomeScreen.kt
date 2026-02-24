@@ -34,6 +34,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -47,6 +49,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
@@ -118,6 +123,7 @@ import kotlinx.coroutines.withContext
 import java.text.DateFormat
 import java.util.Date
 import javax.inject.Inject
+import androidx.compose.foundation.lazy.grid.items as gridItems
 
 private const val HOME_LOG_TAG = "HomeScreen"
 private const val PDF_MIME_TYPE = "application/pdf"
@@ -162,6 +168,17 @@ private data class PdfPasswordPromptState(
     val password: String = "",
 )
 
+internal enum class HomeDestination {
+    ALL,
+    SHARED,
+    TRASH,
+}
+
+internal enum class HomeViewMode {
+    LIST,
+    GRID,
+}
+
 private data class HomeScreenState(
     val searchQuery: String,
     val searchResults: List<SearchResult>,
@@ -186,6 +203,8 @@ private data class HomeScreenState(
     val showBatchDeleteDialog: Boolean = false,
     val showBatchMoveDialog: Boolean = false,
     val showBatchAddTagDialog: Boolean = false,
+    val destination: HomeDestination = HomeDestination.ALL,
+    val viewMode: HomeViewMode = HomeViewMode.LIST,
     // Sort/Filter state
     val sortOption: SortOption = SortOption.MODIFIED,
     val sortDirection: SortDirection = SortDirection.DESC,
@@ -250,6 +269,10 @@ private data class HomeScreenActions(
     val onShowBatchAddTagDialog: () -> Unit,
     val onDismissBatchAddTagDialog: () -> Unit,
     val onConfirmBatchAddTag: (String) -> Unit,
+    val onSelectDestination: (HomeDestination) -> Unit,
+    val onToggleViewMode: () -> Unit,
+    val onRestoreNote: (String) -> Unit,
+    val onPermanentlyDeleteNote: (String) -> Unit,
     // Sort/Filter actions
     val onToggleSortFilterDropdown: () -> Unit,
     val onDismissSortFilterDropdown: () -> Unit,
@@ -292,6 +315,8 @@ fun HomeScreen(
     var showBatchDeleteDialog by remember { mutableStateOf(false) }
     var showBatchMoveDialog by remember { mutableStateOf(false) }
     var showBatchAddTagDialog by remember { mutableStateOf(false) }
+    var destination by remember { mutableStateOf(HomeDestination.ALL) }
+    var viewMode by remember { mutableStateOf(HomeViewMode.LIST) }
     // Sort/Filter state
     var sortOption by remember { mutableStateOf(SortOption.MODIFIED) }
     var sortDirection by remember { mutableStateOf(SortDirection.DESC) }
@@ -344,6 +369,8 @@ fun HomeScreen(
             showBatchDeleteDialog = showBatchDeleteDialog,
             showBatchMoveDialog = showBatchMoveDialog,
             showBatchAddTagDialog = showBatchAddTagDialog,
+            destination = destination,
+            viewMode = viewMode,
             sortOption = sortOption,
             sortDirection = sortDirection,
             filterState = filterState,
@@ -513,6 +540,30 @@ fun HomeScreen(
                 selectionMode = false
                 selectedNoteIds = emptySet()
             },
+            onSelectDestination = { selectedDestination ->
+                destination = selectedDestination
+                viewModel.setDestination(selectedDestination)
+            },
+            onToggleViewMode = {
+                viewMode =
+                    if (viewMode == HomeViewMode.LIST) {
+                        HomeViewMode.GRID
+                    } else {
+                        HomeViewMode.LIST
+                    }
+            },
+            onRestoreNote = { noteId ->
+                viewModel.restoreNote(
+                    noteId = noteId,
+                    onError = { message -> errorMessage = message },
+                )
+            },
+            onPermanentlyDeleteNote = { noteId ->
+                viewModel.permanentlyDeleteNote(
+                    noteId = noteId,
+                    onError = { message -> errorMessage = message },
+                )
+            },
             // Sort/Filter actions
             onToggleSortFilterDropdown = { showSortFilterDropdown = !showSortFilterDropdown },
             onDismissSortFilterDropdown = { showSortFilterDropdown = false },
@@ -597,6 +648,17 @@ private fun HomeScreenContent(
                             Icon(
                                 imageVector = Icons.Default.PictureAsPdf,
                                 contentDescription = "Import PDF",
+                            )
+                        }
+                        IconButton(onClick = actions.onToggleViewMode) {
+                            Icon(
+                                imageVector =
+                                    if (state.viewMode == HomeViewMode.LIST) {
+                                        Icons.Default.GridView
+                                    } else {
+                                        Icons.Default.List
+                                    },
+                                contentDescription = "Toggle list/grid",
                             )
                         }
                         if (BuildConfig.DEBUG) {
@@ -1499,8 +1561,17 @@ private fun HomeContentBody(
                 .fillMaxSize()
                 .padding(paddingValues),
     ) {
+        DestinationTabs(
+            destination = state.destination,
+            onSelectDestination = actions.onSelectDestination,
+            modifier = Modifier.fillMaxWidth(),
+        )
         // Show folder chips when at root level
-        if (state.currentFolder == null && state.searchQuery.length < MIN_SEARCH_QUERY_LENGTH) {
+        if (
+            state.destination == HomeDestination.ALL &&
+            state.currentFolder == null &&
+            state.searchQuery.length < MIN_SEARCH_QUERY_LENGTH
+        ) {
             FolderSection(
                 folders = state.folders,
                 onSelectFolder = actions.onSelectFolder,
@@ -1511,7 +1582,7 @@ private fun HomeContentBody(
         }
 
         // Show current folder breadcrumb when inside a folder
-        if (state.currentFolder != null) {
+        if (state.destination == HomeDestination.ALL && state.currentFolder != null) {
             FolderBreadcrumb(
                 folder = state.currentFolder,
                 onNavigateToRoot = { actions.onSelectFolder(null) },
@@ -1521,7 +1592,11 @@ private fun HomeContentBody(
         }
 
         // Tag filter section
-        if (state.tags.isNotEmpty() && state.searchQuery.length < MIN_SEARCH_QUERY_LENGTH) {
+        if (
+            state.destination == HomeDestination.ALL &&
+            state.tags.isNotEmpty() &&
+            state.searchQuery.length < MIN_SEARCH_QUERY_LENGTH
+        ) {
             TagFilterSection(
                 tags = state.tags,
                 selectedTag = state.selectedTagFilter,
@@ -1530,7 +1605,11 @@ private fun HomeContentBody(
                 onDeleteTag = actions.onRequestDeleteTag,
                 modifier = Modifier.fillMaxWidth(),
             )
-        } else if (state.tags.isEmpty() && state.searchQuery.length < MIN_SEARCH_QUERY_LENGTH) {
+        } else if (
+            state.destination == HomeDestination.ALL &&
+            state.tags.isEmpty() &&
+            state.searchQuery.length < MIN_SEARCH_QUERY_LENGTH
+        ) {
             // Show "Create tag" button when no tags exist
             Row(
                 modifier =
@@ -1558,6 +1637,10 @@ private fun HomeContentBody(
             onManageTags = actions.onShowManageTagsDialog,
             onEnterSelectionMode = actions.onEnterSelectionMode,
             onToggleNoteSelection = actions.onToggleNoteSelection,
+            destination = state.destination,
+            viewMode = state.viewMode,
+            onRestoreNote = actions.onRestoreNote,
+            onPermanentlyDeleteNote = actions.onPermanentlyDeleteNote,
             modifier = Modifier.weight(1f),
         )
     }
@@ -1573,6 +1656,10 @@ private fun HomeListContent(
     onManageTags: (NoteEntity) -> Unit,
     onEnterSelectionMode: (String) -> Unit,
     onToggleNoteSelection: (String) -> Unit,
+    destination: HomeDestination,
+    viewMode: HomeViewMode,
+    onRestoreNote: (String) -> Unit,
+    onPermanentlyDeleteNote: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when {
@@ -1580,6 +1667,15 @@ private fun HomeListContent(
             SearchResultsContent(
                 searchResults = state.searchResults,
                 onNavigateToSearchResult = onNavigateToSearchResult,
+                modifier = modifier,
+            )
+        }
+
+        state.notes.isNotEmpty() && viewMode == HomeViewMode.GRID && destination != HomeDestination.TRASH -> {
+            NotesGridContent(
+                notes = state.notes,
+                noteTags = state.noteTags,
+                onNavigateToEditor = onNavigateToEditor,
                 modifier = modifier,
             )
         }
@@ -1596,6 +1692,9 @@ private fun HomeListContent(
                 onManageTags = onManageTags,
                 onEnterSelectionMode = onEnterSelectionMode,
                 onToggleNoteSelection = onToggleNoteSelection,
+                destination = destination,
+                onRestoreNote = onRestoreNote,
+                onPermanentlyDeleteNote = onPermanentlyDeleteNote,
                 modifier = modifier,
             )
         }
@@ -1657,6 +1756,9 @@ internal fun NotesListContent(
     onManageTags: (NoteEntity) -> Unit,
     onEnterSelectionMode: (String) -> Unit,
     onToggleNoteSelection: (String) -> Unit,
+    destination: HomeDestination = HomeDestination.ALL,
+    onRestoreNote: (String) -> Unit = {},
+    onPermanentlyDeleteNote: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var activeContextMenuNoteId by remember { mutableStateOf<String?>(null) }
@@ -1689,6 +1791,7 @@ internal fun NotesListContent(
                         onEnterSelectionMode(note.noteId)
                     }
                 },
+                onOpenContextMenu = { activeContextMenuNoteId = note.noteId },
                 isContextMenuExpanded = activeContextMenuNoteId == note.noteId,
                 onDismissContextMenu = { activeContextMenuNoteId = null },
                 onDelete = {
@@ -1703,8 +1806,111 @@ internal fun NotesListContent(
                     activeContextMenuNoteId = null
                     onManageTags(note)
                 },
+                destination = destination,
+                onRestore = {
+                    activeContextMenuNoteId = null
+                    onRestoreNote(note.noteId)
+                },
+                onDeleteForever = {
+                    activeContextMenuNoteId = null
+                    onPermanentlyDeleteNote(note.noteId)
+                },
                 onToggleSelection = { onToggleNoteSelection(note.noteId) },
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun NotesGridContent(
+    notes: List<NoteEntity>,
+    noteTags: Map<String, List<TagEntity>>,
+    onNavigateToEditor: (String, String?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 180.dp),
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 80.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        gridItems(notes, key = { it.noteId }) { note ->
+            Surface(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { onNavigateToEditor(note.noteId, null) },
+                tonalElevation = 1.dp,
+                shape = MaterialTheme.shapes.medium,
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = note.title.ifEmpty { "Untitled Note" },
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Updated ${formatTimestamp(note.updatedAt)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    val tags = noteTags[note.noteId].orEmpty()
+                    if (tags.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            tags.take(3).forEach { tag ->
+                                TagChip(
+                                    tag = tag,
+                                    isSelected = true,
+                                    onClick = {},
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DestinationTabs(
+    destination: HomeDestination,
+    onSelectDestination: (HomeDestination) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        HomeDestination.entries.forEach { candidate ->
+            val selected = candidate == destination
+            Surface(
+                modifier = Modifier.clickable { onSelectDestination(candidate) },
+                shape = MaterialTheme.shapes.small,
+                tonalElevation = if (selected) 2.dp else 0.dp,
+                color =
+                    if (selected) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    },
+            ) {
+                Text(
+                    text = candidate.name.lowercase().replaceFirstChar { it.uppercase() },
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
         }
     }
 }
@@ -1719,11 +1925,15 @@ private fun NoteRow(
     isSelected: Boolean,
     onClick: () -> Unit,
     onLongPress: () -> Unit,
+    onOpenContextMenu: () -> Unit,
     isContextMenuExpanded: Boolean,
     onDismissContextMenu: () -> Unit,
     onDelete: () -> Unit,
     onMove: () -> Unit,
     onManageTags: () -> Unit,
+    destination: HomeDestination = HomeDestination.ALL,
+    onRestore: () -> Unit = {},
+    onDeleteForever: () -> Unit = {},
     onToggleSelection: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxWidth()) {
@@ -1791,6 +2001,17 @@ private fun NoteRow(
                         }
                     }
                 }
+                if (!selectionMode) {
+                    androidx.compose.material3.IconButton(
+                        onClick = onOpenContextMenu,
+                        modifier = Modifier.padding(end = 8.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Note actions",
+                        )
+                    }
+                }
             }
         }
         // Context menu only shown when not in selection mode
@@ -1799,18 +2020,29 @@ private fun NoteRow(
                 expanded = isContextMenuExpanded,
                 onDismissRequest = onDismissContextMenu,
             ) {
-                DropdownMenuItem(
-                    text = { Text("Manage tags") },
-                    onClick = onManageTags,
-                )
-                DropdownMenuItem(
-                    text = { Text("Move to folder") },
-                    onClick = onMove,
-                )
-                DropdownMenuItem(
-                    text = { Text("Delete note") },
-                    onClick = onDelete,
-                )
+                if (destination == HomeDestination.TRASH) {
+                    DropdownMenuItem(
+                        text = { Text("Restore note") },
+                        onClick = onRestore,
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Delete forever") },
+                        onClick = onDeleteForever,
+                    )
+                } else {
+                    DropdownMenuItem(
+                        text = { Text("Manage tags") },
+                        onClick = onManageTags,
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Move to folder") },
+                        onClick = onMove,
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Delete note") },
+                        onClick = onDelete,
+                    )
+                }
             }
         }
     }
@@ -2116,6 +2348,15 @@ internal class HomeScreenViewModel
         private val pdfDocumentInfoReader: PdfDocumentInfoReader,
         private val pdfPasswordStore: PdfPasswordStore,
     ) : ViewModel() {
+        private data class HomeQueryState(
+            val destination: HomeDestination,
+            val folder: FolderEntity?,
+            val tag: TagEntity?,
+            val sort: SortOption,
+            val direction: SortDirection,
+            val dateRange: DateRange?,
+        )
+
         private val _searchQuery = MutableStateFlow("")
         val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
@@ -2134,6 +2375,8 @@ internal class HomeScreenViewModel
 
         private val _dateRangeFilter = MutableStateFlow<DateRange?>(null)
         val dateRangeFilter: StateFlow<DateRange?> = _dateRangeFilter.asStateFlow()
+        private val _destination = MutableStateFlow(HomeDestination.ALL)
+        val destination: StateFlow<HomeDestination> = _destination.asStateFlow()
 
         val searchResults: StateFlow<List<SearchResult>> =
             _searchQuery
@@ -2151,26 +2394,35 @@ internal class HomeScreenViewModel
 
         val notes: StateFlow<List<NoteEntity>> =
             combine(
-                _currentFolder,
-                _selectedTagFilter,
-                _sortOption,
-                _sortDirection,
+                combine(
+                    _destination,
+                    _currentFolder,
+                    _selectedTagFilter,
+                    _sortOption,
+                    _sortDirection,
+                ) { destination, folder, tag, sort, direction ->
+                    HomeQueryState(
+                        destination = destination,
+                        folder = folder,
+                        tag = tag,
+                        sort = sort,
+                        direction = direction,
+                        dateRange = null,
+                    )
+                },
                 _dateRangeFilter,
-            ) { folder, tag, sort, direction, dateRange ->
-                Triple(folder, tag, Pair(sort, direction) to dateRange)
-            }.flatMapLatest { (folder, tag, sortAndFilter) ->
-                val (sortPair, dateRange) = sortAndFilter
-                val (sort, direction) = sortPair
-
-                when {
-                    // Tag filter takes precedence
-                    tag != null -> repository.getNotesByTag(tag.tagId)
-
-                    // Date range filter
-                    dateRange != null -> repository.getNotesByDateRange(folder?.folderId, dateRange)
-
-                    // Sorted notes
-                    else -> repository.getNotesInFolderSorted(folder?.folderId, sort, direction)
+            ) { query, dateRange ->
+                query.copy(dateRange = dateRange)
+            }.flatMapLatest { query ->
+                when (query.destination) {
+                    HomeDestination.TRASH -> repository.getTrashNotes()
+                    HomeDestination.SHARED -> repository.getSharedNotes()
+                    HomeDestination.ALL ->
+                        when {
+                            query.tag != null -> repository.getNotesByTag(query.tag.tagId)
+                            query.dateRange != null -> repository.getNotesByDateRange(query.folder?.folderId, query.dateRange)
+                            else -> repository.getNotesInFolderSorted(query.folder?.folderId, query.sort, query.direction)
+                        }
                 }
             }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
@@ -2232,6 +2484,15 @@ internal class HomeScreenViewModel
             _selectedTagFilter.value = null
         }
 
+        fun setDestination(destination: HomeDestination) {
+            _destination.value = destination
+            if (destination != HomeDestination.ALL) {
+                _currentFolder.value = null
+                _selectedTagFilter.value = null
+                _dateRangeFilter.value = null
+            }
+        }
+
         fun createNote(
             currentFolderId: String?,
             onNavigateToEditor: (String, String?) -> Unit,
@@ -2270,6 +2531,40 @@ internal class HomeScreenViewModel
                     }
                     Log.e(HOME_LOG_TAG, "Delete note failed", throwable)
                     onError("Unable to delete note. Please try again.")
+                }
+            }
+        }
+
+        fun restoreNote(
+            noteId: String,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.restoreNote(noteId)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Restore note failed", throwable)
+                    onError("Unable to restore note. Please try again.")
+                }
+            }
+        }
+
+        fun permanentlyDeleteNote(
+            noteId: String,
+            onError: (String) -> Unit,
+        ) {
+            viewModelScope.launch {
+                runCatching {
+                    repository.permanentlyDeleteNote(noteId)
+                }.onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    Log.e(HOME_LOG_TAG, "Permanent delete failed", throwable)
+                    onError("Unable to permanently delete note. Please try again.")
                 }
             }
         }

@@ -181,6 +181,10 @@ class NoteRepository(
 
     fun getAllNotes(): Flow<List<NoteEntity>> = noteDao.getAllNotes()
 
+    fun getTrashNotes(): Flow<List<NoteEntity>> = noteDao.getDeletedNotes()
+
+    fun getSharedNotes(): Flow<List<NoteEntity>> = flowOf(emptyList())
+
     fun getPagesForNote(noteId: String): Flow<List<PageEntity>> = pageDao.getPagesForNote(noteId)
 
     suspend fun createPage(page: PageEntity): PageEntity {
@@ -801,6 +805,41 @@ class NoteRepository(
     suspend fun deleteNote(noteId: String) {
         val now = System.currentTimeMillis()
         noteDao.softDelete(noteId, now)
+    }
+
+    suspend fun restoreNote(noteId: String) {
+        val now = System.currentTimeMillis()
+        noteDao.restore(noteId = noteId, updatedAt = now)
+    }
+
+    suspend fun permanentlyDeleteNote(noteId: String) {
+        val pages = pageDao.getPagesForNoteSync(noteId)
+        pages.forEach { page ->
+            strokeDao.deleteAllForPage(page.pageId)
+            pageObjectDao.deleteAllForPage(page.pageId)
+            recognitionDao.deleteByPageId(page.pageId)
+            pageDao.delete(page.pageId)
+        }
+        noteDao.hardDelete(noteId)
+    }
+
+    suspend fun clearPageContent(pageId: String) {
+        val page = pageDao.getById(pageId) ?: return
+        val now = System.currentTimeMillis()
+        strokeDao.deleteAllForPage(pageId)
+        pageObjectDao.deleteAllForPage(pageId)
+        recognitionDao.insert(
+            RecognitionIndexEntity(
+                pageId = pageId,
+                noteId = page.noteId,
+                recognizedText = null,
+                recognizedAtLamport = null,
+                recognizerVersion = null,
+                updatedAt = now,
+            ),
+        )
+        pageDao.updateTimestamp(pageId, now)
+        noteDao.updateTimestamp(page.noteId, now)
     }
 
     suspend fun updateNoteTitle(

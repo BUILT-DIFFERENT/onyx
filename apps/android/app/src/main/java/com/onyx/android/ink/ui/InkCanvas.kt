@@ -107,6 +107,7 @@ data class InkCanvasState(
     val brush: Brush,
     val lassoSelection: LassoSelection = LassoSelection(),
     val isSegmentEraserEnabled: Boolean = false,
+    val eraseStrokePredicate: (Stroke) -> Boolean = { true },
     val pageWidth: Float,
     val pageHeight: Float,
     val allowEditing: Boolean = true,
@@ -146,6 +147,7 @@ fun InkCanvas(
 ) {
     val currentBrush by rememberUpdatedState(state.brush)
     val currentSegmentEraserEnabled by rememberUpdatedState(state.isSegmentEraserEnabled)
+    val currentEraseStrokePredicate by rememberUpdatedState(state.eraseStrokePredicate)
     val currentLassoSelection by rememberUpdatedState(state.lassoSelection)
     val currentTransform by rememberUpdatedState(state.viewTransform)
     val currentStrokes by rememberUpdatedState(state.strokes)
@@ -238,6 +240,7 @@ fun InkCanvas(
                                 InkCanvasInteraction(
                                     brush = runtimeBrush,
                                     isSegmentEraserEnabled = currentSegmentEraserEnabled,
+                                    eraseStrokePredicate = currentEraseStrokePredicate,
                                     lassoSelection = currentLassoSelection,
                                     viewTransform = currentTransform,
                                     strokes = currentStrokes,
@@ -281,6 +284,7 @@ fun InkCanvas(
                                 InkCanvasInteraction(
                                     brush = runtimeBrush,
                                     isSegmentEraserEnabled = currentSegmentEraserEnabled,
+                                    eraseStrokePredicate = currentEraseStrokePredicate,
                                     lassoSelection = currentLassoSelection,
                                     viewTransform = currentTransform,
                                     strokes = currentStrokes,

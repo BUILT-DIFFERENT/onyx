@@ -43,6 +43,7 @@
 - Feature-metadata clarification: gesture/template/export contracts are defined in `packages/validation/src/schemas/featureMetadata.ts` with Convex tables (`gestureSettings`, `templateScopes`, `exportMetadata`) and fixtures under `tests/contracts/fixtures/*`; web fallback semantics are documented in `docs/architecture/web-object-fallback-matrix.md`.
 - Web decode clarification: fallback-safe runtime decoding now lives in `apps/web/src/contracts/decodeMetadata.ts` with tests in `apps/web/src/contracts/decodeMetadata.test.ts`; unknown page-object kinds are preserved as raw metadata while invalid known-kind entries are skipped.
 - Monorepo test-script clarification: package-level `test` scripts for packages without tests are now non-failing placeholders (`echo "No tests for this package yet"`), and vitest-based packages use `--passWithNoTests` to avoid false-negative pipeline failures when run from package-local cwd.
+- Compose flow-combine clarification: `kotlinx.coroutines.flow.combine` overloads above five flows can resolve to the vararg-array transform signature in this toolchain; for type-safe state composition prefer nested `combine` (or staged combine + copy) instead of a 6-argument lambda.
 
 ## Context7 Library IDs (Project Stack)
 

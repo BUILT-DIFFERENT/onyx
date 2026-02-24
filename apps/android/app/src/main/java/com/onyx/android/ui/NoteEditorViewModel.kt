@@ -456,6 +456,30 @@ internal class NoteEditorViewModel
             }
         }
 
+        fun clearCurrentPageContent() {
+            val page = _currentPage.value ?: return
+            val pageId = page.pageId
+            viewModelScope.launch {
+                runCatching {
+                    repository.clearPageContent(pageId)
+                    _strokes.value = emptyList()
+                    _pageObjects.value = emptyList()
+                    _selectedObjectId.value = null
+                    val updatedStrokeCache = _pageStrokesCache.value.toMutableMap()
+                    updatedStrokeCache[pageId] = emptyList()
+                    _pageStrokesCache.value = updatedStrokeCache
+                    val updatedObjectCache = _pageObjectsCache.value.toMutableMap()
+                    updatedObjectCache[pageId] = emptyList()
+                    _pageObjectsCache.value = updatedObjectCache
+                    if (pageId == _activeRecognitionPageId.value) {
+                        myScriptPageManager?.onStrokeErased(SPLIT_RECOGNITION_REFRESH_STROKE_ID, emptyList())
+                    }
+                }.onFailure { throwable ->
+                    reportError("Failed to clear page content.", throwable)
+                }
+            }
+        }
+
         fun updateCurrentPageTemplate(config: PageTemplateConfig) {
             val page = _currentPage.value ?: return
             val normalized = normalizeTemplateConfig(config)

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -29,6 +30,7 @@ import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.BrushPreset
 import com.onyx.android.ink.model.StrokeLineStyle
 import com.onyx.android.ink.model.Tool
+import com.onyx.android.ui.EraserFilter
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -38,9 +40,12 @@ internal fun ToolSettingsPanel(
     panelType: ToolPanelType,
     brush: Brush,
     isSegmentEraserEnabled: Boolean = false,
+    eraserFilter: EraserFilter = EraserFilter.ALL_STROKES,
     onDismiss: () -> Unit,
     onBrushChange: (Brush) -> Unit,
     onSegmentEraserEnabledChange: (Boolean) -> Unit = {},
+    onEraserFilterChange: (EraserFilter) -> Unit = {},
+    onClearPageRequested: () -> Unit = {},
 ) {
     val title =
         when (panelType) {
@@ -241,6 +246,31 @@ internal fun ToolSettingsPanel(
                             onCheckedChange = onSegmentEraserEnabledChange,
                         )
                     }
+                    Text(text = "Eraser target", style = MaterialTheme.typography.bodyMedium)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        EraserFilter.entries.forEach { filter ->
+                            TextButton(onClick = { onEraserFilterChange(filter) }) {
+                                Text(
+                                    text = filter.label(),
+                                    color =
+                                        if (filter == eraserFilter) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface
+                                        },
+                                )
+                            }
+                        }
+                    }
+                    Button(
+                        onClick = onClearPageRequested,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text("Clear page")
+                    }
                 }
 
                 ToolPanelType.LASSO -> {
@@ -262,6 +292,13 @@ internal fun ToolSettingsPanel(
         }
     }
 }
+
+private fun EraserFilter.label(): String =
+    when (this) {
+        EraserFilter.ALL_STROKES -> "All"
+        EraserFilter.PEN_ONLY -> "Pen"
+        EraserFilter.HIGHLIGHTER_ONLY -> "Highlighter"
+    }
 
 @Composable
 private fun LineStyleSelector(

@@ -587,6 +587,7 @@ private fun rememberNoteEditorUiState(
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
     var isSegmentEraserEnabled by rememberSaveable { mutableStateOf(false) }
+    var eraserFilter by rememberSaveable { mutableStateOf(EraserFilter.ALL_STROKES) }
     var activeInsertAction by rememberSaveable { mutableStateOf(InsertAction.NONE) }
     var pendingImageUri by rememberSaveable { mutableStateOf<String?>(null) }
     var pdfSearchQuery by rememberSaveable { mutableStateOf("") }
@@ -659,6 +660,7 @@ private fun rememberNoteEditorUiState(
         isStylusButtonEraserActive = false
         isTextSelectionMode = false
         lassoSelection = LassoSelection()
+        eraserFilter = EraserFilter.ALL_STROKES
         activeInsertAction = InsertAction.NONE
         pendingImageUri = null
         viewModel.selectObject(null)
@@ -798,12 +800,18 @@ private fun rememberNoteEditorUiState(
             brushState.lastNonEraserTool,
             isStylusButtonEraserActive,
             isSegmentEraserEnabled,
+            eraserFilter,
             activeInsertAction,
             brushState.inputSettings,
             templateState,
             brushState.onBrushChange,
             brushState.onInputSettingsChange,
             { isSegmentEraserEnabled = it },
+            { eraserFilter = it },
+            {
+                viewModel.clearCurrentPageContent()
+                lassoSelection = LassoSelection()
+            },
             { action ->
                 if (action == InsertAction.IMAGE) {
                     pickImageLauncher.launch("image/*")
@@ -939,6 +947,7 @@ private fun rememberNoteEditorUiState(
             brush = brushState.activeBrush,
             isStylusButtonEraserActive = isStylusButtonEraserActive,
             isSegmentEraserEnabled = isSegmentEraserEnabled,
+            eraserFilter = eraserFilter,
             activeInsertAction = activeInsertAction,
             interactionMode = if (isTextSelectionMode) InteractionMode.TEXT_SELECTION else InteractionMode.DRAW,
             allowCanvasFingerGestures = brushState.inputSettings.allowsAnyFingerGesture(),
@@ -980,6 +989,11 @@ private fun rememberNoteEditorUiState(
                 }
             },
             onSegmentEraserEnabledChange = { isSegmentEraserEnabled = it },
+            onEraserFilterChange = { eraserFilter = it },
+            onClearPageRequested = {
+                viewModel.clearCurrentPageContent()
+                lassoSelection = LassoSelection()
+            },
             onLassoMove = { deltaX, deltaY ->
                 val pageId = pageState.currentPage?.pageId
                 if (pageId != null) {
@@ -1195,6 +1209,7 @@ private fun rememberMultiPageUiState(
     val snackbarHostState = remember { SnackbarHostState() }
     var isStylusButtonEraserActive by remember { mutableStateOf(false) }
     var isSegmentEraserEnabled by rememberSaveable { mutableStateOf(false) }
+    var eraserFilter by rememberSaveable { mutableStateOf(EraserFilter.ALL_STROKES) }
     var activeInsertAction by rememberSaveable { mutableStateOf(InsertAction.NONE) }
     var isZoomLocked by rememberSaveable { mutableStateOf(false) }
     var pendingImageUri by rememberSaveable { mutableStateOf<String?>(null) }
@@ -1271,6 +1286,7 @@ private fun rememberMultiPageUiState(
     LaunchedEffect(pageState.currentPage?.pageId) {
         isStylusButtonEraserActive = false
         isTextSelectionMode = false
+        eraserFilter = EraserFilter.ALL_STROKES
         activeInsertAction = InsertAction.NONE
         pendingImageUri = null
         viewModel.selectObject(null)
@@ -1472,12 +1488,20 @@ private fun rememberMultiPageUiState(
             brushState.lastNonEraserTool,
             isStylusButtonEraserActive,
             isSegmentEraserEnabled,
+            eraserFilter,
             activeInsertAction,
             brushState.inputSettings,
             templateState,
             brushState.onBrushChange,
             brushState.onInputSettingsChange,
             { isSegmentEraserEnabled = it },
+            { eraserFilter = it },
+            {
+                viewModel.clearCurrentPageContent()
+                pageState.currentPage?.pageId?.let { pageId ->
+                    lassoSelectionsByPageId.remove(pageId)
+                }
+            },
             { action ->
                 if (action == InsertAction.IMAGE) {
                     pickImageLauncher.launch("image/*")
@@ -1532,6 +1556,7 @@ private fun rememberMultiPageUiState(
             brush = brushState.activeBrush,
             isStylusButtonEraserActive = isStylusButtonEraserActive,
             isSegmentEraserEnabled = isSegmentEraserEnabled,
+            eraserFilter = eraserFilter,
             activeInsertAction = activeInsertAction,
             selectedObjectId = selectedObjectId,
             interactionMode = if (isTextSelectionMode) InteractionMode.TEXT_SELECTION else InteractionMode.SCROLL,
@@ -1663,6 +1688,13 @@ private fun rememberMultiPageUiState(
                 undoController.onObjectRemoved(pageId, pageObject)
             },
             onSegmentEraserEnabledChange = { isSegmentEraserEnabled = it },
+            onEraserFilterChange = { eraserFilter = it },
+            onClearPageRequested = {
+                viewModel.clearCurrentPageContent()
+                pageState.currentPage?.pageId?.let { pageId ->
+                    lassoSelectionsByPageId.remove(pageId)
+                }
+            },
             onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
             onTransformGesture = { _, _, _, _, _ -> },
             onPanGestureEnd = { _, _ -> },
@@ -2144,12 +2176,15 @@ private fun buildToolbarState(
     lastNonEraserTool: Tool,
     isStylusButtonEraserActive: Boolean,
     isSegmentEraserEnabled: Boolean,
+    eraserFilter: EraserFilter,
     activeInsertAction: InsertAction,
     inputSettings: InputSettings,
     templateState: PageTemplateState,
     onBrushChange: (Brush) -> Unit,
     onInputSettingsChange: (InputSettings) -> Unit,
     onSegmentEraserEnabledChange: (Boolean) -> Unit,
+    onEraserFilterChange: (EraserFilter) -> Unit,
+    onClearPageRequested: () -> Unit,
     onInsertActionSelected: (InsertAction) -> Unit,
     onTemplateChange: (PageTemplateState) -> Unit,
 ): NoteEditorToolbarState =
@@ -2158,12 +2193,15 @@ private fun buildToolbarState(
         lastNonEraserTool = lastNonEraserTool,
         isStylusButtonEraserActive = isStylusButtonEraserActive,
         isSegmentEraserEnabled = isSegmentEraserEnabled,
+        eraserFilter = eraserFilter,
         activeInsertAction = activeInsertAction,
         inputSettings = inputSettings,
         templateState = templateState,
         onBrushChange = onBrushChange,
         onInputSettingsChange = onInputSettingsChange,
         onSegmentEraserEnabledChange = onSegmentEraserEnabledChange,
+        onEraserFilterChange = onEraserFilterChange,
+        onClearPageRequested = onClearPageRequested,
         onInsertActionSelected = onInsertActionSelected,
         onTemplateChange = onTemplateChange,
     )

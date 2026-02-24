@@ -70,6 +70,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.onyx.android.ink.model.Brush
+import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
 import com.onyx.android.ink.ui.InkCanvas
 import com.onyx.android.ink.ui.InkCanvasCallbacks
@@ -87,6 +88,7 @@ import com.onyx.android.pdf.ValidatingTile
 import com.onyx.android.recognition.ConvertedTextBlock
 import com.onyx.android.ui.EDGE_GLOW_ALPHA_MAX
 import com.onyx.android.ui.EDGE_GLOW_WIDTH_DP
+import com.onyx.android.ui.EraserFilter
 import com.onyx.android.ui.InteractionMode
 import com.onyx.android.ui.MultiPageContentState
 import com.onyx.android.ui.NoteEditorContentState
@@ -364,6 +366,7 @@ private fun MultiPageEditorContent(
                         brush = contentState.brush,
                         isStylusButtonEraserActive = contentState.isStylusButtonEraserActive,
                         isSegmentEraserEnabled = contentState.isSegmentEraserEnabled,
+                        eraserFilter = contentState.eraserFilter,
                         activeInsertAction = contentState.activeInsertAction,
                         selectedObjectId = contentState.selectedObjectId,
                         interactionMode = contentState.interactionMode,
@@ -448,6 +451,7 @@ private fun PageItem(
     brush: Brush,
     isStylusButtonEraserActive: Boolean,
     isSegmentEraserEnabled: Boolean,
+    eraserFilter: EraserFilter,
     activeInsertAction: InsertAction,
     selectedObjectId: String?,
     interactionMode: InteractionMode,
@@ -585,6 +589,7 @@ private fun PageItem(
                         brush = brush,
                         isStylusButtonEraserActive = isStylusButtonEraserActive,
                         isSegmentEraserEnabled = isSegmentEraserEnabled,
+                        eraserFilter = eraserFilter,
                         activeInsertAction = activeInsertAction,
                         interactionMode = interactionMode,
                         allowCanvasFingerGestures = false,
@@ -629,6 +634,7 @@ private fun PageItem(
                         brush = brush,
                         lassoSelection = pageState.lassoSelection,
                         isSegmentEraserEnabled = isSegmentEraserEnabled,
+                        eraseStrokePredicate = eraserFilterPredicate(eraserFilter),
                         pageWidth = pageState.pageWidth,
                         pageHeight = pageState.pageHeight,
                         allowEditing = !isReadOnly && activeInsertAction == InsertAction.NONE,
@@ -857,6 +863,7 @@ private fun NoteEditorContent(
                         brush = contentState.brush,
                         lassoSelection = contentState.lassoSelection,
                         isSegmentEraserEnabled = contentState.isSegmentEraserEnabled,
+                        eraseStrokePredicate = eraserFilterPredicate(contentState.eraserFilter),
                         pageWidth = contentState.pageWidth,
                         pageHeight = contentState.pageHeight,
                         allowEditing = !contentState.isReadOnly && contentState.activeInsertAction == InsertAction.NONE,
@@ -1375,3 +1382,18 @@ private fun calculateGlowAlpha(
 
 private fun InputSettings.allowsAnyFingerGesture(): Boolean =
     singleFingerMode != SingleFingerMode.IGNORE || doubleFingerMode != DoubleFingerMode.IGNORE
+
+private fun eraserFilterPredicate(filter: EraserFilter): (InkStroke) -> Boolean =
+    when (filter) {
+        EraserFilter.ALL_STROKES -> {
+            { true }
+        }
+
+        EraserFilter.PEN_ONLY -> {
+            { stroke -> stroke.style.tool == Tool.PEN }
+        }
+
+        EraserFilter.HIGHLIGHTER_ONLY -> {
+            { stroke -> stroke.style.tool == Tool.HIGHLIGHTER }
+        }
+    }
