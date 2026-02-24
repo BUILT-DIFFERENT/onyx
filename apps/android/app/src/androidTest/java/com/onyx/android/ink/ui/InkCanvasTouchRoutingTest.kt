@@ -709,6 +709,77 @@ class InkCanvasTouchRoutingTest {
     }
 
     @Test
+    fun doubleFingerPanOnly_disablesPinchZoomButKeepsTwoFingerPan() {
+        val view = GlInkSurfaceView(context)
+        val runtime = createRuntime()
+        val transformCalls = mutableListOf<TransformCall>()
+        val interaction =
+            createInteraction(
+                inputSettings =
+                    InputSettings(
+                        singleFingerMode = SingleFingerMode.PAN,
+                        doubleFingerMode = DoubleFingerMode.PAN_ONLY,
+                    ),
+                onTransformGesture = { zoom, panX, panY, centroidX, centroidY ->
+                    transformCalls += TransformCall(zoom, panX, panY, centroidX, centroidY)
+                },
+            )
+
+        val downTime = 700L
+        val firstDown =
+            singlePointerEvent(
+                downTime = downTime,
+                eventTime = downTime,
+                action = MotionEvent.ACTION_DOWN,
+                x = 30f,
+                y = 30f,
+                toolType = MotionEvent.TOOL_TYPE_FINGER,
+            )
+        val secondDown =
+            twoPointerEvent(
+                downTime = downTime,
+                eventTime = 716L,
+                action = MotionEvent.ACTION_POINTER_DOWN or (1 shl MotionEvent.ACTION_POINTER_INDEX_SHIFT),
+                firstPointerId = 0,
+                firstToolType = MotionEvent.TOOL_TYPE_FINGER,
+                firstX = 30f,
+                firstY = 30f,
+                secondPointerId = 1,
+                secondToolType = MotionEvent.TOOL_TYPE_FINGER,
+                secondX = 60f,
+                secondY = 30f,
+            )
+        val move =
+            twoPointerEvent(
+                downTime = downTime,
+                eventTime = 732L,
+                action = MotionEvent.ACTION_MOVE,
+                firstPointerId = 0,
+                firstToolType = MotionEvent.TOOL_TYPE_FINGER,
+                firstX = 36f,
+                firstY = 34f,
+                secondPointerId = 1,
+                secondToolType = MotionEvent.TOOL_TYPE_FINGER,
+                secondX = 72f,
+                secondY = 34f,
+            )
+
+        try {
+            assertTrue(handleTouchEvent(view, firstDown, interaction, runtime))
+            assertTrue(handleTouchEvent(view, secondDown, interaction, runtime))
+            assertTrue(handleTouchEvent(view, move, interaction, runtime))
+        } finally {
+            firstDown.recycle()
+            secondDown.recycle()
+            move.recycle()
+        }
+
+        assertTrue(transformCalls.isNotEmpty())
+        assertTrue(transformCalls.any { kotlin.math.abs(it.panChangeX) > DELTA || kotlin.math.abs(it.panChangeY) > DELTA })
+        assertTrue(transformCalls.all { kotlin.math.abs(it.zoomChange - 1f) <= DELTA })
+    }
+
+    @Test
     fun singleFingerIgnore_doesNotDrawOrPan() {
         val view = GlInkSurfaceView(context)
         val runtime = createRuntime()

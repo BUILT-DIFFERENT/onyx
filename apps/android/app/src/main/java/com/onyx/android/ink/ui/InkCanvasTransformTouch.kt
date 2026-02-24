@@ -52,7 +52,8 @@ internal fun shouldStartSingleFingerPanGesture(
         !eventHasStylusStream(event, runtime)
 
 internal fun canStartTransformGesture(interaction: InkCanvasInteraction): Boolean =
-    interaction.inputSettings.doubleFingerMode == DoubleFingerMode.ZOOM_PAN
+    interaction.inputSettings.doubleFingerMode == DoubleFingerMode.ZOOM_PAN ||
+        interaction.inputSettings.doubleFingerMode == DoubleFingerMode.PAN_ONLY
 
 internal fun canStartSingleFingerPanGesture(interaction: InkCanvasInteraction): Boolean =
     interaction.inputSettings.singleFingerMode == SingleFingerMode.PAN
@@ -262,8 +263,14 @@ private fun updateTransformGesture(
                     interaction.onLassoResize(zoomChange, pivot.first, pivot.second)
                 }
             } else {
+                val resolvedZoomChange =
+                    if (interaction.inputSettings.doubleFingerMode == DoubleFingerMode.PAN_ONLY) {
+                        1f
+                    } else {
+                        zoomChange
+                    }
                 interaction.onTransformGesture(
-                    zoomChange,
+                    resolvedZoomChange,
                     panChangeX,
                     panChangeY,
                     smoothedCentroidX,

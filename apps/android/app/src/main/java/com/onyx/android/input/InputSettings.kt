@@ -8,6 +8,7 @@ enum class SingleFingerMode {
 
 enum class DoubleFingerMode {
     ZOOM_PAN,
+    PAN_ONLY,
     IGNORE,
 }
 

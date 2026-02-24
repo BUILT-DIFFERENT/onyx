@@ -665,12 +665,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Validation gate: Input-mapping tests for each stylus action and persistence round-trip.
 
 - [ ] `GEST-07` Finger behavior matrix parity (single/double finger action profiles)
-  - Status: `Strong Partial (Wave K-InputSettingsRouting)`
+  - Status: `Strong Partial+ (Wave N-DoubleFingerPanOnly)`
   - Competitor behavior: Notewise lets users set single-finger and double-finger behavior independently.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTransformTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`
-  - What exists now: Configurable `singleFinger` (`DRAW|PAN|IGNORE`) and `doubleFinger` (`ZOOM_PAN|IGNORE`) profiles are persisted, surfaced in UI, and routed by the gesture engine with explicit second-finger ignore enforcement.
-  - What is missing: Additional parity modes (for example dedicated double-finger scroll profile) and exhaustive profile-matrix instrumentation coverage.
-  - Exact change needed: Add remaining profile variants and expand instrumented tests across stylus-present/stylus-absent combinations.
+  - What exists now: Configurable `singleFinger` (`DRAW|PAN|IGNORE`) and `doubleFinger` (`ZOOM_PAN|PAN_ONLY|IGNORE`) profiles are persisted, surfaced in UI, and routed by the gesture engine with dedicated pan-only handling plus explicit second-finger ignore enforcement.
+  - What is missing: Exhaustive profile-matrix instrumentation coverage across stylus-present/stylus-absent/read-only combinations.
+  - Exact change needed: Expand instrumented coverage to full profile matrix and add regression guards for profile interactions with lasso and zoom-lock states.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave Foundation`
   - Validation gate: Instrumented tests for each profile combination under stylus-present and stylus-absent scenarios.
