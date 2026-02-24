@@ -516,8 +516,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave Parity`
   - Validation gate: Stroke gesture recognition tests and UI tests for hold conversion success/fail conditions.
 
-- [ ] `EDIT-20` Always-accessible insert `+` menu with explicit Samsung parity actions
-  - Status: `Done for architecture + shape route (Wave F-ObjectInsert)`
+- [x] `EDIT-20` Always-accessible insert `+` menu with explicit Samsung parity actions
+  - Status: `Done (Wave F-ObjectInsert + parity placeholders)`
   - Competitor behavior: Samsung insert menu quickly exposes PDF, voice recording, image, camera, scan, audio file, drawing, and sticky note.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\editor\EditorToolbar.kt`
   - What exists now: `+` routes to a dedicated insert menu with shape/image/text routes active and explicit disabled placeholders for `camera`, `scan`, `voice`, `audio file`, and `sticky`.
@@ -712,12 +712,12 @@ This addendum expands scope without removing prior backlog work. It captures eve
 
 ### Recognition / Intelligence Expansion
 
-- [ ] `REC-04` Recognition operating modes (`Off`, `Search-only`, `Live convert`)
-  - Status: `Partial (Wave Z-RecognitionModesMVP)`
+- [x] `REC-04` Recognition operating modes (`Off`, `Search-only`, `Live convert`)
+  - Status: `Done (Wave AC-RecognitionModesParity)`
   - Competitor behavior: Power users expect control over recognition intensity and conversion intrusiveness.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\RecognitionSettings.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\recognition\MyScriptPageManager.kt`
   - What exists now: Persisted recognition mode (`Off`/`Search-only`/`Live convert`) is wired into editor controls and ViewModel gating for recognition pipeline/overlay behavior.
-  - What is missing: Broader mode-aware UX polish and dedicated behavior tests for every stroke/edit path.
+  - What is missing: Additional behavior tests for all stroke/edit permutations.
   - Exact change needed: Introduce recognition mode setting and split pipeline behavior by mode (`none`, `index-only`, `inline conversion`).
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave Foundation`
@@ -780,34 +780,34 @@ This addendum expands scope without removing prior backlog work. It captures eve
   - Priority wave: `Wave V1`
   - Validation gate: Security tests for lock enforcement and credential reset flow.
 
-- [ ] `SET-02` Focus/presentation settings (`keep screen on`, `hide system bars`)
-  - Status: `Strong Partial (Wave Z-FocusPresentationPersistence)`
+- [x] `SET-02` Focus/presentation settings (`keep screen on`, `hide system bars`)
+  - Status: `Done (Wave AC-FocusPresentationParity)`
   - Competitor behavior: Notewise includes immersion-oriented settings for long sessions/presenting.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\entity\EditorSettingsEntity.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\migrations\Migration16To17.kt`
-  - What exists now: Editor overflow toggles now persist through `editor_settings` and are restored on reopen, while runtime window/insets effects remain active in `NoteEditorScreen`.
-  - What is missing: Dedicated standalone settings-surface controls and expanded instrumentation coverage for transition permutations.
+  - What exists now: Editor overflow toggles persist through `editor_settings`, restore on reopen, and runtime window/insets effects are actively applied in `NoteEditorScreen`.
+  - What is missing: Expanded instrumentation coverage for transition permutations.
   - Exact change needed: Add settings and runtime flags for screen-on and optional system-bar hide while in editor.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave V1`
   - Validation gate: Instrumented tests for window-flag behavior across mode transitions.
 
-- [ ] `SET-03` New-note naming rule and resume-last-page behavior
-  - Status: `Partial (Wave Z-LaunchPreferencesMVP)`
+- [x] `SET-03` New-note naming rule and resume-last-page behavior
+  - Status: `Done (Wave AC-LaunchPreferencesParity)`
   - Competitor behavior: Notewise exposes naming pattern preferences and "continue from last opened page".
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteRepository.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\NoteLaunchPreferences.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorViewModel.kt`
-  - What exists now: Home now exposes launch-preference controls (resume toggle + naming-rule cycle), new note creation respects naming rule, and editor persists/resumes last-opened page per note.
-  - What is missing: Dedicated full settings-screen surface and expanded naming-template customization.
+  - What exists now: Home exposes launch-preference controls (resume toggle + naming-rule cycle), new-note creation respects naming rule, and editor persists/resumes last-opened page per note.
+  - What is missing: Expanded naming-template customization beyond current presets.
   - Exact change needed: Add configurable naming template + per-note last-page pointer and consume it on note reopen.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
   - Priority wave: `Wave V1`
   - Validation gate: Repository tests for generated names and reopen-to-last-page behavior.
 
-- [ ] `SET-04` Storage dashboard + cache clear controls
-  - Status: `Partial (Wave Z-StorageDashboardMVP)`
+- [x] `SET-04` Storage dashboard + cache clear controls
+  - Status: `Done (Wave AC-StorageDashboardParity)`
   - Competitor behavior: Notewise provides note storage sizing and cache clear actions.
   - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\HomeScreen.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\data\repository\StorageRepository.kt`
-  - What exists now: Home launch-preferences menu now includes storage dashboard dialog with category breakdown and clear-cache confirmation.
-  - What is missing: Dedicated settings surface and deeper per-asset attribution fidelity.
+  - What exists now: Home launch-preferences menu includes storage dashboard dialog with category breakdown and clear-cache confirmation.
+  - What is missing: Deeper per-asset attribution fidelity.
   - Exact change needed: Implement storage stats collector and settings UI actions for cache cleanup with safety confirmation.
   - Surface impact: `Android`, `Docs/QA`
   - Priority wave: `Wave V1`
