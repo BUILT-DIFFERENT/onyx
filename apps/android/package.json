@@ -3,11 +3,11 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "build": "node ../../scripts/gradlew.js :app:assembleDebug",
-    "test": "node ../../scripts/gradlew.js :app:test",
-    "lint": "node ../../scripts/gradlew.js :app:lint :app:ktlintCheck :app:detekt",
-    "ktlint": "node ../../scripts/gradlew.js :app:ktlintCheck",
-    "format": "node ../../scripts/gradlew.js :app:ktlintFormat",
-    "detekt": "node ../../scripts/gradlew.js :app:detekt"
+    "build": "bun ../../scripts/gradlew.js --no-problems-report :app:assembleDebug",
+    "test": "bun ../../scripts/gradlew.js --no-problems-report :app:test",
+    "lint": "bun ../../scripts/gradlew.js --no-problems-report :app:lint :app:ktlintCheck :app:detekt",
+    "ktlint": "bun ../../scripts/gradlew.js --no-problems-report :app:ktlintCheck",
+    "format": "bun ../../scripts/gradlew.js --no-problems-report :app:ktlintFormat",
+    "detekt": "bun ../../scripts/gradlew.js --no-problems-report :app:detekt"
   }
 }

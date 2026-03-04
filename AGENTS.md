@@ -55,6 +55,7 @@
 - Competitive backlog evidence-path clarification: some `Current Onyx evidence` paths in `docs/architecture/competitive-gap-backlog.md` are stale after refactors (for example `recognition/ConvertedTextBlock.kt`, `recognition/ShapeBeautifier.kt`, `ui/editor/EditorSettings.kt`, `data/repository/PageRepository.kt`); verify via current symbols (`RecognitionOverlayModels.kt`, `ShapeRecognitionCandidate.kt` + `NoteEditorViewModel`, `EditorSettingsRepository.kt`, `NoteRepository.kt`) before marking an item inaccurate.
 - Android naming lint clarification: `ktlint` `property-naming` can reject some newly added private backing fields with leading underscores in this module; for new helper/cache fields, prefer non-underscore names to avoid formatter/lint failures.
 - PDF text-engine path clarification: `PdfTextExtractor` is currently a typealias in `apps/android/app/src/main/java/com/onyx/android/pdf/TextSelectionModel.kt` backed by `PdfTextEngine.kt`; backlog/doc references to a standalone `pdf/PdfTextExtractor.kt` file can be stale.
+- Gradle problems-report clarification: with current Gradle/Kotlin plugin versions, Android Gradle tasks can emit third-party deprecation entries (for example `Configuration.fileCollection(Spec)` under `org.jetbrains.kotlin.android`) in the experimental HTML Problems report; Android package scripts pass `--no-problems-report` to keep lint/build output actionable.
 
 ## Context7 Library IDs (Project Stack)
 

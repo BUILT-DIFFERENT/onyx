@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsc -w -p tsconfig.json",
     "build": "tsc -p tsconfig.json --noEmit",
-    "start": "node -e \"console.log('TODO: wire TanStack Start server')\"",
+    "start": "bun -e \"console.log('TODO: wire TanStack Start server')\"",
     "lint": "eslint .",
     "lint:quick": "oxlint .",
     "lint:fix": "eslint . --fix",
