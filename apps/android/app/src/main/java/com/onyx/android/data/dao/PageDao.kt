@@ -15,6 +15,9 @@ interface PageDao {
     @Query("SELECT * FROM pages WHERE pageId = :pageId")
     suspend fun getById(pageId: String): PageEntity?
 
+    @Query("SELECT * FROM pages WHERE pageId IN (:pageIds)")
+    suspend fun getByIds(pageIds: List<String>): List<PageEntity>
+
     @Query("SELECT MAX(indexInNote) FROM pages WHERE noteId = :noteId")
     suspend fun getMaxIndexForNote(noteId: String): Int?
 

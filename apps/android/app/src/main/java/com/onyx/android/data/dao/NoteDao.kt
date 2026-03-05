@@ -15,6 +15,9 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE noteId = :noteId")
     suspend fun getById(noteId: String): NoteEntity?
 
+    @Query("SELECT * FROM notes WHERE noteId IN (:noteIds)")
+    suspend fun getByIds(noteIds: List<String>): List<NoteEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(note: NoteEntity)
 
