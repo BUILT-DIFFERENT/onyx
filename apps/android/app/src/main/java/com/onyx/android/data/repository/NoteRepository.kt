@@ -262,10 +262,20 @@ class NoteRepository(
 
     fun searchNotes(query: String): Flow<List<SearchResultItem>> {
         return recognitionDao.search(query).map { recognitionHits ->
+            if (recognitionHits.isEmpty()) return@map emptyList()
+
+            val pageIds = recognitionHits.map { it.pageId }.distinct()
+            val pages = pageDao.getByIds(pageIds)
+            val pageMap = pages.associateBy { it.pageId }
+
+            val noteIds = pages.map { it.noteId }.distinct()
+            val notes = noteDao.getByIds(noteIds)
+            val noteMap = notes.associateBy { it.noteId }
+
             recognitionHits
                 .mapNotNull { recognition ->
-                    val page = pageDao.getById(recognition.pageId) ?: return@mapNotNull null
-                    val note = noteDao.getById(page.noteId) ?: return@mapNotNull null
+                    val page = pageMap[recognition.pageId] ?: return@mapNotNull null
+                    val note = noteMap[page.noteId] ?: return@mapNotNull null
 
                     val snippet = recognition.recognizedText.orEmpty().take(SNIPPET_LENGTH)
 
