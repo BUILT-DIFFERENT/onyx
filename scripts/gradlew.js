@@ -146,43 +146,49 @@ function resolveWindowsAndroidSdk() {
   return sdkHome || null;
 }
 
-const env = { ...process.env };
-if (isWindows) {
-  const resolved = resolveWindowsJava();
-  if (!resolved) {
-    console.error(
-      "Unable to find Java. Set JAVA_HOME to a JDK directory (for example C:\\Program Files\\Microsoft\\jdk-17.0.16.8-hotspot).",
-    );
-    process.exit(1);
-  }
-  env.JAVA_HOME = resolved.javaHome;
-  const basePath = env.PATH || "C:\\Windows\\System32";
-  env.PATH = `${path.dirname(resolved.javaExe)};${basePath}`;
-  const sdkHome = resolveWindowsAndroidSdk();
-  if (sdkHome) {
-    env.ANDROID_HOME = sdkHome;
-    env.ANDROID_SDK_ROOT = sdkHome;
-  }
-} else {
-  const resolved = resolvePosixJava();
-  if (resolved) {
+if (require.main === module) {
+  const env = { ...process.env };
+  if (isWindows) {
+    const resolved = resolveWindowsJava();
+    if (!resolved) {
+      console.error(
+        "Unable to find Java. Set JAVA_HOME to a JDK directory (for example C:\\Program Files\\Microsoft\\jdk-17.0.16.8-hotspot).",
+      );
+      process.exit(1);
+    }
     env.JAVA_HOME = resolved.javaHome;
-    const basePath = env.PATH || "/usr/bin:/bin";
-    env.PATH = `${path.dirname(resolved.javaExe)}:${basePath}`;
+    const basePath = env.PATH || "C:\\Windows\\System32";
+    env.PATH = `${path.dirname(resolved.javaExe)};${basePath}`;
+    const sdkHome = resolveWindowsAndroidSdk();
+    if (sdkHome) {
+      env.ANDROID_HOME = sdkHome;
+      env.ANDROID_SDK_ROOT = sdkHome;
+    }
+  } else {
+    const resolved = resolvePosixJava();
+    if (resolved) {
+      env.JAVA_HOME = resolved.javaHome;
+      const basePath = env.PATH || "/usr/bin:/bin";
+      env.PATH = `${path.dirname(resolved.javaExe)}:${basePath}`;
+    }
+  }
+
+  if (isWindows) {
+    const cmdExe = process.env.ComSpec || "C:\\Windows\\System32\\cmd.exe";
+    const gradlewBat = path.join(cwd, "gradlew.bat");
+    const child = spawn(cmdExe, ["/c", gradlewBat, ...args], {
+      stdio: "inherit",
+      cwd,
+      env,
+    });
+    child.on("exit", (code) => process.exit(code ?? 1));
+  } else {
+    const gradlew = path.join(cwd, "gradlew");
+    const child = spawn(gradlew, args, { stdio: "inherit", cwd, env });
+    child.on("exit", (code) => process.exit(code ?? 1));
   }
 }
 
-if (isWindows) {
-  const cmdExe = process.env.ComSpec || "C:\\Windows\\System32\\cmd.exe";
-  const gradlewBat = path.join(cwd, "gradlew.bat");
-  const child = spawn(cmdExe, ["/c", gradlewBat, ...args], {
-    stdio: "inherit",
-    cwd,
-    env,
-  });
-  child.on("exit", (code) => process.exit(code ?? 1));
-} else {
-  const gradlew = path.join(cwd, "gradlew");
-  const child = spawn(gradlew, args, { stdio: "inherit", cwd, env });
-  child.on("exit", (code) => process.exit(code ?? 1));
-}
+module.exports = {
+  sanitizeJavaHome,
+};
