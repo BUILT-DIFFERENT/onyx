@@ -8,7 +8,6 @@ import com.onyx.android.ink.model.StrokeBounds
 import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.ViewTransform
 import kotlin.math.min
-import kotlin.math.sqrt
 
 private const val ERASE_HIT_RADIUS_PX = 10f
 
@@ -47,6 +46,7 @@ internal fun findStrokeToErase(
     val pageX = viewTransform.screenToPageX(screenX)
     val pageY = viewTransform.screenToPageY(screenY)
     val hitRadius = ERASE_HIT_RADIUS_PX / viewTransform.zoom
+    val hitRadiusSq = hitRadius * hitRadius
     for (stroke in strokes) {
         val expandedBounds = stroke.bounds.expandBy(hitRadius)
         if (isOutsideBounds(pageX, pageY, expandedBounds)) {
@@ -57,7 +57,7 @@ internal fun findStrokeToErase(
         if (points.size == 1) {
             val dx = pageX - points[0].x
             val dy = pageY - points[0].y
-            if (sqrt(dx * dx + dy * dy) <= hitRadius) {
+            if (dx * dx + dy * dy <= hitRadiusSq) {
                 return stroke
             }
             continue
@@ -65,8 +65,8 @@ internal fun findStrokeToErase(
         for (index in 0 until points.size - 1) {
             val p1 = Offset(points[index].x, points[index].y)
             val p2 = Offset(points[index + 1].x, points[index + 1].y)
-            val distance = pointToSegmentDistance(Offset(pageX, pageY), p1, p2)
-            if (distance <= hitRadius) {
+            val distanceSq = pointToSegmentDistanceSq(Offset(pageX, pageY), p1, p2)
+            if (distanceSq <= hitRadiusSq) {
                 return stroke
             }
         }
@@ -92,7 +92,7 @@ private fun isOutsideBounds(
     return outsideX || outsideY
 }
 
-private fun pointToSegmentDistance(
+private fun pointToSegmentDistanceSq(
     point: Offset,
     start: Offset,
     end: Offset,
@@ -103,7 +103,7 @@ private fun pointToSegmentDistance(
     if (lenSq == 0f) {
         val dxPoint = point.x - start.x
         val dyPoint = point.y - start.y
-        return sqrt(dxPoint * dxPoint + dyPoint * dyPoint)
+        return dxPoint * dxPoint + dyPoint * dyPoint
     }
     val t = ((point.x - start.x) * dx + (point.y - start.y) * dy) / lenSq
     val clampedT = t.coerceIn(0f, 1f)
@@ -111,5 +111,5 @@ private fun pointToSegmentDistance(
     val nearestY = start.y + clampedT * dy
     val dxPoint = point.x - nearestX
     val dyPoint = point.y - nearestY
-    return sqrt(dxPoint * dxPoint + dyPoint * dyPoint)
+    return dxPoint * dxPoint + dyPoint * dyPoint
 }
