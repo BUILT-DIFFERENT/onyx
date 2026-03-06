@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Onyx</string>
     <string name="pdf_selection_copy">Copy</string>
+    <string name="pdf_password_incorrect_message">Incorrect PDF password. Please try again.</string>
 </resources>

@@ -25,6 +25,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.IntSize
 import androidx.core.view.WindowCompat
@@ -39,6 +40,7 @@ import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfIncorrectPasswordException
 import com.onyx.android.pdf.PdfPasswordRequiredException
 import com.onyx.android.pdf.PdfPasswordStore
+import com.onyx.android.R
 import com.onyx.android.pdf.PdfiumRenderer
 import com.onyx.android.recognition.MyScriptPageManager
 import com.onyx.android.requireAppContainer
@@ -52,7 +54,6 @@ private const val NANOS_PER_SECOND = 1_000_000_000f
 private const val PAN_FLING_DECAY_RATE = -5f
 private const val NOTE_EDITOR_LOG_TAG = "NoteEditorScreen"
 private const val PDF_OPEN_FAILED_MESSAGE = "Unable to open this PDF."
-private const val PDF_PASSWORD_INCORRECT_MESSAGE = "Incorrect PDF password. Please try again."
 
 internal sealed interface PdfOpenFailureUiAction {
     data class PromptForPassword(
@@ -236,7 +237,7 @@ private fun NoteEditorPdfPasswordDialog(
         text = {
             androidx.compose.foundation.layout.Column {
                 if (showIncorrectMessage) {
-                    Text(PDF_PASSWORD_INCORRECT_MESSAGE)
+                    Text(stringResource(R.string.pdf_password_incorrect_message))
                 }
                 OutlinedTextField(
                     value = password,
