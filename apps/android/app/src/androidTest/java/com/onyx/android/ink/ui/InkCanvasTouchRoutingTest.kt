@@ -5,7 +5,6 @@ import android.view.InputDevice
 import android.view.MotionEvent
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.onyx.android.ink.gl.GlInkSurfaceView
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.LassoSelection
 import com.onyx.android.ink.model.Stroke
@@ -14,6 +13,7 @@ import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.StrokeStyle
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.ink.vk.VkInkSurfaceView
 import com.onyx.android.input.DoubleFingerMode
 import com.onyx.android.input.DoubleTapZoomAction
 import com.onyx.android.input.DoubleTapZoomPointerMode
@@ -36,7 +36,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun oneFingerTouch_pansInsteadOfDrawing() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         val transformCalls = mutableListOf<TransformCall>()
         var strokeFinishedCount = 0
@@ -104,7 +104,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun stylusTouch_stillDrawsStroke() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         var finishedStrokeId: String? = null
@@ -172,7 +172,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun stylusSourceUnknownToolType_routesToDrawingNotPan() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         val transformCalls = mutableListOf<TransformCall>()
@@ -233,7 +233,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun readOnlyMode_blocksStylusEditingButKeepsPanGestures() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         val transformCalls = mutableListOf<TransformCall>()
@@ -329,7 +329,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun cancelEvent_clearsFinishedStrokeBridgeState() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         val interaction =
             createInteraction(
@@ -383,7 +383,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun rapidPenUpDown_sequenceMaintainsConsistency() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         val renderFinishedStrokeIds = mutableListOf<Long>()
@@ -454,7 +454,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun rapidStrokeSequence_noActiveStrokesLeaked() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         val interaction =
@@ -524,7 +524,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun strokeAfterCancel_clearsStateAndStartsFresh() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         val interaction =
@@ -630,7 +630,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun fingerPan_transitionsToPinchZoom_whenSecondFingerAppears() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         val transformCalls = mutableListOf<TransformCall>()
         var strokeFinishedCount = 0
@@ -711,7 +711,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun doubleFingerPanOnly_disablesPinchZoomButKeepsTwoFingerPan() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         val transformCalls = mutableListOf<TransformCall>()
         val interaction =
@@ -782,7 +782,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun singleFingerIgnore_doesNotDrawOrPan() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         val transformCalls = mutableListOf<TransformCall>()
@@ -846,7 +846,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun doubleFingerIgnore_blocksPinchAndSecondFingerDrawing() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         val transformCalls = mutableListOf<TransformCall>()
         var strokeFinishedCount = 0
@@ -947,7 +947,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun stylusLongHoldEraser_activatesAfterDelay() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         val stylusStates = mutableListOf<Boolean>()
         val interaction =
@@ -1021,7 +1021,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun stylusButtonEraser_latchesForCurrentPointerUntilLift() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         val erased = mutableListOf<Stroke>()
         val stylusButtonStates = mutableListOf<Boolean>()
@@ -1088,7 +1088,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun stylusButtonToggle_togglesEraserModeAcrossStrokes() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         val stylusButtonStates = mutableListOf<Boolean>()
         val interaction =
@@ -1185,7 +1185,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun fingerDoubleTap_triggersConfiguredCallback() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         var doubleTapCount = 0
         val interaction =
@@ -1242,7 +1242,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun stylusDoubleTap_triggersCallbackWhenEnabled() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         var doubleTapCount = 0
         val interaction =
@@ -1302,7 +1302,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun stylusDoubleTap_doesNotTriggerCallbackWhenDisabled() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         var doubleTapCount = 0
         val interaction =
@@ -1362,7 +1362,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun twoFingerTap_triggersUndoShortcut() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         var undoCount = 0
         val interaction =
@@ -1441,7 +1441,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun threeFingerTap_triggersRedoShortcut() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         var redoCount = 0
         val interaction =
@@ -1554,7 +1554,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun eraserErasesOnDown() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         val erased = mutableListOf<Stroke>()
         val interaction =
@@ -1600,7 +1600,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun eraserTouch_showsAndUpdatesHoverCursor_untilPointerUp() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         val interaction =
             createInteraction(
@@ -1663,7 +1663,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun offPageStrokeStart_isIgnored() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         val interaction =
@@ -1722,7 +1722,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun nearEdgeStrokeStart_isAccepted() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         var strokeFinishedCount = 0
         val interaction =
@@ -1779,7 +1779,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun strokePoints_areClampedToPageBounds() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         val finishedStrokes = mutableListOf<Stroke>()
         val interaction =
@@ -1841,7 +1841,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun stylusHoverButton_updatesTransientEraserState() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         val stylusButtonStates = mutableListOf<Boolean>()
         val interaction =
@@ -1889,7 +1889,7 @@ class InkCanvasTouchRoutingTest {
 
     @Test
     fun predictedPoints_doNotLeakIntoCommittedStroke() {
-        val view = GlInkSurfaceView(context)
+        val view = VkInkSurfaceView(context)
         val runtime = createRuntime()
         val finishedStrokes = mutableListOf<Stroke>()
         val interaction =

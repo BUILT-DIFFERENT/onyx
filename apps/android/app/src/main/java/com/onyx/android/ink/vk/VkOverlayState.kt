@@ -1,6 +1,6 @@
-package com.onyx.android.ink.gl
+package com.onyx.android.ink.vk
 
-internal data class GlHoverOverlay(
+internal data class VkHoverOverlay(
     val isVisible: Boolean = false,
     val screenX: Float = 0f,
     val screenY: Float = 0f,
@@ -9,8 +9,8 @@ internal data class GlHoverOverlay(
     val alpha: Float = 0f,
 )
 
-internal data class GlOverlayState(
+internal data class VkOverlayState(
     val selectedStrokeIds: Set<String> = emptySet(),
     val lassoPath: List<Pair<Float, Float>> = emptyList(),
-    val hover: GlHoverOverlay = GlHoverOverlay(),
+    val hover: VkHoverOverlay = VkHoverOverlay(),
 )

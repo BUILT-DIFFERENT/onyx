@@ -37,16 +37,16 @@ echo ""
 
 # Run GL renderer compatibility smoke test
 echo "Step 4: Running GL renderer compatibility test..."
-echo "This test validates GlInkSurfaceView works on your device"
-./gradlew :app:connectedDebugAndroidTest --tests "*.GlInkRendererCompatTest" 2>&1 | tee ink-api-test-result.txt
+echo "This test validates VkInkSurfaceView works on your device"
+./gradlew :app:connectedDebugAndroidTest --tests "*.VkInkRendererCompatTest" 2>&1 | tee ink-api-test-result.txt
 
 if grep -q "PASSED" ink-api-test-result.txt; then
-    echo "✅ RESULT: GlInkRendererCompatTest PASSED"
-    echo "✅ Decision: Use GlInkSurfaceView renderer"
+    echo "✅ RESULT: VkInkRendererCompatTest PASSED"
+    echo "✅ Decision: Use VkInkSurfaceView renderer"
     echo ""
     echo "Action: Mark Task 3.2a checkbox 2 as PASS in plan file"
 else
-    echo "❌ RESULT: GlInkRendererCompatTest FAILED"
+    echo "❌ RESULT: VkInkRendererCompatTest FAILED"
     echo "⚠️  Decision: investigate GL renderer initialization/path issues"
     exit 1
 fi

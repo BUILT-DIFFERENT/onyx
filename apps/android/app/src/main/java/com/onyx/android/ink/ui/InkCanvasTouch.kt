@@ -14,16 +14,16 @@ import android.view.MotionEvent
 import com.onyx.android.config.FeatureFlag
 import com.onyx.android.config.FeatureFlagStore
 import com.onyx.android.ink.algorithm.computeStrokeSplitCandidates
-import com.onyx.android.ink.gl.GlHoverOverlay
-import com.onyx.android.ink.gl.GlInkSurfaceView
-import com.onyx.android.ink.gl.GlOverlayState
-import com.onyx.android.ink.gl.GlStrokeInput
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.LassoSelection
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.ink.vk.VkHoverOverlay
+import com.onyx.android.ink.vk.VkInkSurfaceView
+import com.onyx.android.ink.vk.VkOverlayState
+import com.onyx.android.ink.vk.VkStrokeInput
 import com.onyx.android.input.DoubleFingerMode
 import com.onyx.android.input.DoubleTapZoomPointerMode
 import com.onyx.android.input.InputSettings
@@ -90,7 +90,7 @@ internal data class InkCanvasInteraction(
 )
 
 internal fun handleTouchEvent(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -194,7 +194,7 @@ internal fun handleTouchEvent(
 }
 
 internal fun handleGenericMotionEvent(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -396,7 +396,7 @@ private fun isStylusButtonPressed(
         shouldTreatStylusSecondaryAsEraser(event, interaction)
 
 private fun handlePointerDown(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -477,7 +477,7 @@ private fun handlePointerDown(
     val strokeId =
         view.startStroke(
             strokeInput,
-            effectiveBrush.toGlBrush(alphaMultiplier = inProgressAlphaForBrush(effectiveBrush)),
+            effectiveBrush.toVkBrush(alphaMultiplier = inProgressAlphaForBrush(effectiveBrush)),
         )
     view.setStrokeRenderingActive(true)
     runtime.activeStrokeIds[pointerId] = strokeId
@@ -577,7 +577,7 @@ private fun resetTapTracking(runtime: InkCanvasRuntime) {
 }
 
 private fun handlePointerMove(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -734,7 +734,7 @@ private fun handleEraserAtPointer(
 }
 
 private fun handlePredictedStrokes(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -777,7 +777,7 @@ private fun handlePredictedStrokes(
             val predictedStrokeId =
                 view.startStroke(
                     startInput,
-                    effectiveBrush.toGlBrush(alphaMultiplier = predictedAlphaForBrush(effectiveBrush)),
+                    effectiveBrush.toVkBrush(alphaMultiplier = predictedAlphaForBrush(effectiveBrush)),
                 )
             val predictedInput =
                 createStrokeInput(
@@ -802,7 +802,7 @@ private fun handlePredictedStrokes(
 }
 
 private fun handlePointerUp(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -954,7 +954,7 @@ private fun addPointDeduped(
 }
 
 private fun handleHover(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -987,7 +987,7 @@ private fun handleHover(
 }
 
 private fun handleCancel(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -1054,13 +1054,13 @@ private fun createStrokeInput(
     pageWidth: Float,
     pageHeight: Float,
     resolvedToolType: Int = event.getToolType(pointerIndex),
-): GlStrokeInput {
+): VkStrokeInput {
     val pressure = applyPressureGamma(event.getPressure(pointerIndex))
     val tilt = event.getAxisValue(MotionEvent.AXIS_TILT, pointerIndex)
     val orientation = event.getOrientation(pointerIndex)
     val pageX = clampPageCoordinate(viewTransform.screenToPageX(event.getX(pointerIndex)), pageWidth)
     val pageY = clampPageCoordinate(viewTransform.screenToPageY(event.getY(pointerIndex)), pageHeight)
-    return GlStrokeInput(
+    return VkStrokeInput(
         x = pageX,
         y = pageY,
         eventTimeMillis = (event.eventTime - startTime).coerceAtLeast(0L),
@@ -1176,7 +1176,7 @@ private fun isPredictionEnabled(context: Context): Boolean =
         .get(FeatureFlag.INK_PREDICTION_ENABLED)
 
 private fun pushOverlayState(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
 ) {
@@ -1186,7 +1186,7 @@ private fun pushOverlayState(
             val isEraser = hover.tool == Tool.ERASER
             val color = if (isEraser) HOVER_ERASER_COLOR else ColorCache.resolve(interaction.brush.color)
             val alpha = if (isEraser) HOVER_ERASER_ALPHA else HOVER_PEN_ALPHA
-            GlHoverOverlay(
+            VkHoverOverlay(
                 isVisible = true,
                 screenX = hover.x,
                 screenY = hover.y,
@@ -1200,10 +1200,10 @@ private fun pushOverlayState(
                 alpha = alpha,
             )
         } else {
-            GlHoverOverlay()
+            VkHoverOverlay()
         }
     view.setOverlayState(
-        GlOverlayState(
+        VkOverlayState(
             selectedStrokeIds = interaction.lassoSelection.selectedStrokeIds,
             lassoPath = interaction.lassoSelection.lassoPath,
             hover = hoverOverlay,

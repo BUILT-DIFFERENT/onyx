@@ -1,12 +1,12 @@
 package com.onyx.android.ink.ui
 
 import android.view.MotionEvent
-import com.onyx.android.ink.gl.GlInkSurfaceView
+import com.onyx.android.ink.vk.VkInkSurfaceView
 
 internal fun MotionEvent.isCanceledEvent(): Boolean = (flags and MotionEvent.FLAG_CANCELED) != 0
 
 internal fun cancelActiveStroke(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     pointerId: Int,
     runtime: InkCanvasRuntime,
@@ -23,7 +23,7 @@ internal fun cancelActiveStroke(
 }
 
 internal fun cancelActiveStrokes(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     runtime: InkCanvasRuntime,
 ) {
@@ -40,7 +40,7 @@ internal fun cancelActiveStrokes(
 }
 
 internal fun cancelPredictedStroke(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     pointerId: Int,
     predictedStrokeIds: MutableMap<Int, Long>,
@@ -51,7 +51,7 @@ internal fun cancelPredictedStroke(
 }
 
 internal fun cancelPredictedStrokes(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     predictedStrokeIds: MutableMap<Int, Long>,
 ) {

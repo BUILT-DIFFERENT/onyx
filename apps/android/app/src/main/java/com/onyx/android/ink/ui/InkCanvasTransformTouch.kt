@@ -12,8 +12,8 @@ package com.onyx.android.ink.ui
 import android.os.Trace
 import android.view.MotionEvent
 import android.view.VelocityTracker
-import com.onyx.android.ink.gl.GlInkSurfaceView
 import com.onyx.android.ink.model.Tool
+import com.onyx.android.ink.vk.VkInkSurfaceView
 import com.onyx.android.input.DoubleFingerMode
 import com.onyx.android.input.SingleFingerMode
 import kotlin.math.abs
@@ -59,7 +59,7 @@ internal fun canStartSingleFingerPanGesture(interaction: InkCanvasInteraction): 
     interaction.inputSettings.singleFingerMode == SingleFingerMode.PAN
 
 internal fun handleSingleFingerPanGesture(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -121,7 +121,7 @@ internal fun handleSingleFingerPanGesture(
     }
 
 internal fun handleTransformGesture(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
@@ -177,7 +177,7 @@ internal fun handleTransformGesture(
     }
 
 private fun startTransformGesture(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     runtime: InkCanvasRuntime,
 ) {
@@ -331,7 +331,7 @@ private fun selectTransformPointerIds(
 }
 
 private fun startSingleFingerPanGesture(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     event: MotionEvent,
     runtime: InkCanvasRuntime,
 ) {
@@ -386,7 +386,7 @@ private fun updateSingleFingerPanGesture(
 }
 
 private fun endSingleFingerPanGesture(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     interaction: InkCanvasInteraction?,
     runtime: InkCanvasRuntime,
     fling: Boolean,
@@ -450,7 +450,7 @@ private fun endPanVelocityTracking(
 }
 
 private fun endTransformGesture(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     interaction: InkCanvasInteraction?,
     runtime: InkCanvasRuntime,
     fling: Boolean,

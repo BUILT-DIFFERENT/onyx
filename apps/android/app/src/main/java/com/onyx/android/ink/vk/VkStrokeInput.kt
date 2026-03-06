@@ -1,6 +1,6 @@
-package com.onyx.android.ink.gl
+package com.onyx.android.ink.vk
 
-data class GlStrokeInput(
+data class VkStrokeInput(
     val x: Float,
     val y: Float,
     val eventTimeMillis: Long,

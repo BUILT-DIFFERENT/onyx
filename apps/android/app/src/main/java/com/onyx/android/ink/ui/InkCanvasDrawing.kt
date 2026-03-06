@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.withTransform
-import com.onyx.android.ink.gl.GlBrush
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.StrokeLineStyle
@@ -20,6 +19,7 @@ import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.StrokeStyle
 import com.onyx.android.ink.model.Tool
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.ink.vk.VkBrush
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
@@ -732,9 +732,9 @@ internal fun pressureWidth(
     return baseWidth * factor
 }
 
-internal fun Brush.toGlBrush(alphaMultiplier: Float = 1f): GlBrush {
+internal fun Brush.toVkBrush(alphaMultiplier: Float = 1f): VkBrush {
     val baseColor = ColorCache.resolve(color)
-    return GlBrush(
+    return VkBrush(
         strokeStyle = toStrokeStyle(),
         argbColor = baseColor,
         alphaMultiplier = alphaMultiplier.coerceIn(0f, 1f),

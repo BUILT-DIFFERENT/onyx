@@ -8,25 +8,29 @@ import android.view.MotionEvent
 import android.view.VelocityTracker
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.onyx.android.config.FeatureFlag
 import com.onyx.android.config.FeatureFlagStore
-import com.onyx.android.ink.gl.GlHoverOverlay
-import com.onyx.android.ink.gl.GlInkSurfaceView
-import com.onyx.android.ink.gl.GlOverlayState
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.LassoSelection
 import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.ViewTransform
+import com.onyx.android.ink.vk.VkHoverOverlay
+import com.onyx.android.ink.vk.VkInkSurfaceView
+import com.onyx.android.ink.vk.VkOverlayState
 import com.onyx.android.input.InputSettings
 import com.onyx.android.input.LatencyOptimizationMode
 import android.graphics.Path as AndroidPath
@@ -37,11 +41,13 @@ internal enum class PointerMode {
 }
 
 private const val HANDOFF_FRAME_DELAY = 2
-private const val GL_HOVER_ERASER_COLOR = 0xFF6B6B6B.toInt()
-private const val GL_HOVER_ERASER_ALPHA = 0.6f
-private const val GL_HOVER_PEN_ALPHA = 0.35f
-private const val GL_MIN_HOVER_SCREEN_RADIUS = 0.1f
+private const val VK_HOVER_ERASER_COLOR = 0xFF6B6B6B.toInt()
+private const val VK_HOVER_ERASER_ALPHA = 0.6f
+private const val VK_HOVER_PEN_ALPHA = 0.35f
+private const val VK_MIN_HOVER_SCREEN_RADIUS = 0.1f
+private const val VK_HOVER_DIAMETER_TO_RADIUS_DIVISOR = 2f
 private const val FAST_MODE_SMOOTHING_MULTIPLIER = 0.6f
+private const val RENDERER_ERROR_TEXT_COLOR = 0xFFD32F2F
 
 @Suppress("LongParameterList")
 internal class InkCanvasRuntime(
@@ -166,6 +172,8 @@ fun InkCanvas(
     val runtimeBrush by rememberUpdatedState(adjustBrushForLatencyMode(currentBrush, currentLatencyMode))
     val predictionEnabledForMode by rememberUpdatedState(resolvePredictionEnabled(flagStore, currentLatencyMode))
     val hoverPreviewState = remember { HoverPreviewState() }
+    var rendererAvailable by remember { mutableStateOf(true) }
+    var rendererErrorMessage by remember { mutableStateOf<String?>(null) }
 
     val runtime =
         remember {
@@ -208,10 +216,14 @@ fun InkCanvas(
                     context = context,
                     enabled = predictionEnabledForMode,
                 )
-                GlInkSurfaceView(context).apply {
-                    // GL view handles all stroke rendering and touch input with low-latency updates.
+                VkInkSurfaceView(context).apply {
+                    // Vulkan surface handles stroke rendering while Compose owns input orchestration.
                     alpha = 1f
                     eagerInit()
+                    onRendererAvailabilityChanged = { isAvailable, errorMessage ->
+                        rendererAvailable = isAvailable
+                        rendererErrorMessage = errorMessage
+                    }
                     val onFinished = { stroke: Stroke ->
                         runtime.pendingCommittedStrokes[stroke.id] = stroke
                         currentCallbacks.onStrokeFinished(stroke)
@@ -249,7 +261,7 @@ fun InkCanvas(
                                     strokes = currentStrokes,
                                     pageWidth = currentPageWidth,
                                     pageHeight = currentPageHeight,
-                                    allowEditing = currentAllowEditing,
+                                    allowEditing = currentAllowEditing && rendererAvailable,
                                     allowFingerGestures = currentAllowFingerGestures,
                                     inputSettings = currentInputSettings,
                                     onStrokeFinished = onFinished,
@@ -296,7 +308,7 @@ fun InkCanvas(
                                     strokes = currentStrokes,
                                     pageWidth = currentPageWidth,
                                     pageHeight = currentPageHeight,
-                                    allowEditing = currentAllowEditing,
+                                    allowEditing = currentAllowEditing && rendererAvailable,
                                     allowFingerGestures = currentAllowFingerGestures,
                                     inputSettings = currentInputSettings,
                                     onStrokeFinished = onFinished,
@@ -336,6 +348,10 @@ fun InkCanvas(
                         context = inProgressView.context,
                         enabled = predictionEnabledForMode,
                     )
+                    inProgressView.onRendererAvailabilityChanged = { isAvailable, errorMessage ->
+                        rendererAvailable = isAvailable
+                        rendererErrorMessage = errorMessage
+                    }
                     val persistedIds = currentStrokes.asSequence().map { it.id }.toHashSet()
                     inProgressView.maskPath =
                         buildOutsidePageMaskPath(
@@ -352,11 +368,11 @@ fun InkCanvas(
                     )
                     inProgressView.setViewTransform(currentTransform)
                     inProgressView.setOverlayState(
-                        GlOverlayState(
+                        VkOverlayState(
                             selectedStrokeIds = currentLassoSelection.selectedStrokeIds,
                             lassoPath = currentLassoSelection.lassoPath,
                             hover =
-                                runtime.hoverPreviewState.toGlHoverOverlay(
+                                runtime.hoverPreviewState.toVkHoverOverlay(
                                     brush = currentBrush,
                                     transform = currentTransform,
                                 ),
@@ -385,6 +401,13 @@ fun InkCanvas(
             },
             modifier = Modifier.fillMaxSize(),
         )
+        if (!rendererAvailable) {
+            Text(
+                text = rendererErrorMessage ?: "Vulkan renderer unavailable. Inking is disabled on this device.",
+                modifier = Modifier.align(Alignment.Center),
+                color = Color(RENDERER_ERROR_TEXT_COLOR),
+            )
+        }
     }
 }
 
@@ -477,7 +500,7 @@ private fun syncMotionPredictionAdapter(
 }
 
 private fun scheduleFrameWaitedRemoval(
-    view: GlInkSurfaceView,
+    view: VkInkSurfaceView,
     strokeIds: Set<Long>,
     framesRemaining: Int,
     runtime: InkCanvasRuntime,
@@ -497,20 +520,20 @@ private fun scheduleFrameWaitedRemoval(
     }
 }
 
-private fun HoverPreviewState.toGlHoverOverlay(
+private fun HoverPreviewState.toVkHoverOverlay(
     brush: Brush,
     transform: ViewTransform,
-): GlHoverOverlay {
+): VkHoverOverlay {
     if (!isVisible) {
-        return GlHoverOverlay()
+        return VkHoverOverlay()
     }
     val isEraser = tool == com.onyx.android.ink.model.Tool.ERASER
-    val color = if (isEraser) GL_HOVER_ERASER_COLOR else ColorCache.resolve(brush.color)
-    val alpha = if (isEraser) GL_HOVER_ERASER_ALPHA else GL_HOVER_PEN_ALPHA
+    val color = if (isEraser) VK_HOVER_ERASER_COLOR else ColorCache.resolve(brush.color)
+    val alpha = if (isEraser) VK_HOVER_ERASER_ALPHA else VK_HOVER_PEN_ALPHA
     val radius =
-        (transform.pageWidthToScreen(brush.baseWidth).coerceAtLeast(GL_MIN_HOVER_SCREEN_RADIUS)) /
-            2f
-    return GlHoverOverlay(
+        (transform.pageWidthToScreen(brush.baseWidth).coerceAtLeast(VK_MIN_HOVER_SCREEN_RADIUS)) /
+            VK_HOVER_DIAMETER_TO_RADIUS_DIVISOR
+    return VkHoverOverlay(
         isVisible = true,
         screenX = x,
         screenY = y,

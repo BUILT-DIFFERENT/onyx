@@ -31,7 +31,7 @@ class InkLatencyBenchmark {
                 listOf(
                     FrameTimingMetric(),
                     TraceSectionMetric("InkCanvas#handleTouchEvent"),
-                    TraceSectionMetric("InkGlRenderer#onDrawFrame"),
+                    TraceSectionMetric("InkVkRenderer#onDrawFrame"),
                 ),
             compilationMode = CompilationMode.Partial(),
             iterations = 5,
