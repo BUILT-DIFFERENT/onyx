@@ -119,15 +119,15 @@ fun InkCanvas(
 
     val persistedStrokeIds = currentStrokes.asSequence().map { it.id }.toHashSet()
     val persistedStrokes = currentStrokes
-    val pendingStrokes =
-        runtime.pendingCommittedStrokes.values.filter { pending ->
-            pending.id !in persistedStrokeIds
-        }
     val mergedStrokes =
-        LinkedHashMap<String, Stroke>(persistedStrokes.size + pendingStrokes.size).apply {
-            persistedStrokes.forEach { stroke -> put(stroke.id, stroke) }
-            pendingStrokes.forEach { stroke -> put(stroke.id, stroke) }
-        }.values.toList()
+        ArrayList<Stroke>(persistedStrokes.size + runtime.pendingCommittedStrokes.size).apply {
+            addAll(persistedStrokes)
+            runtime.pendingCommittedStrokes.values.forEach { pending ->
+                if (pending.id !in persistedStrokeIds) {
+                    add(pending)
+                }
+            }
+        }
     val activeStrokeRenderVersion = runtime.activeStrokeRenderVersion
 
     Box(modifier = modifier) {
