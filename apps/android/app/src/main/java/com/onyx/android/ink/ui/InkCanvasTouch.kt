@@ -332,10 +332,7 @@ private fun handleEraserAtPointer(
     runtime: InkCanvasRuntime,
 ): Boolean {
     val allStrokes = interaction.strokes + runtime.pendingCommittedStrokes.values
-    val dedupedStrokes =
-        LinkedHashMap<String, Stroke>(allStrokes.size).apply {
-            allStrokes.forEach { stroke -> put(stroke.id, stroke) }
-        }.values.toList()
+    val dedupedStrokes = allStrokes.distinctBy { it.id }
     val erasedStroke =
         findStrokeToErase(
             screenX = event.getX(pointerIndex),
