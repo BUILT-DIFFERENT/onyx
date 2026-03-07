@@ -5,9 +5,6 @@ Use this file as the canonical entry point for `.sisyphus/notepads`.
 ## Active Tracking Files
 
 - `device-validation/TASK-6.3-STATUS.md` - active physical-device verification status.
-- `milestone-a-offline-ink-myscript/BLOCKED-TASKS.md` - active blocker ledger for Milestone A remaining verification work.
-- `milestone-a-offline-ink-myscript/task-3.2a-provisional-status.md` - active status for Ink API fallback decision.
-- `milestone-a-offline-ink-myscript/task-interpretation.md` - acceptance-criteria interpretation for blocked device tasks.
 
 ## Active Investigation/Reference Notes
 
@@ -18,7 +15,7 @@ Use this file as the canonical entry point for `.sisyphus/notepads`.
 - `ink-latency-investigation.md`
 - `pdf-test-corpus.md`
 - `pdfium-spike-report.md`
-- `milestone-canvas-rendering-overhaul/*` (ongoing/partial milestone notes)
+- `milestone-canvas-rendering-overhaul/*` (historical investigation notes; plan superseded by `android-foundation.md`)
 
 ## Archived Historical Snapshots
 

@@ -1,0 +1,549 @@
+SOURCE: com/myscript/iink/ItemIdHelper.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class ItemIdHelper
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.ItemIdHelper
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class ItemIdHelper
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+An ItemIdHelper allows working with item ids (example: strokes, glyphs, primitives, objects).
+It is associated with an offscreen editor.
+
+Since:
+
+2.1
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final void
+
+close [link: #close()]()
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][]
+
+combine [link: #combine(java.lang.String%5B%5D,java.lang.String%5B%5D,com.myscript.iink.ItemIdCombinationModifier)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds1,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds2,
+@NotNull ItemIdCombinationModifier [link: ItemIdCombinationModifier.html] mode)
+
+Combines two item ids lists.
+
+protected void
+
+finalize [link: #finalize()]()
+
+final @NotNull Rectangle [link: graphics/Rectangle.html]
+
+getBlockBox [link: #getBlockBox(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Returns the bounding box of a block.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][]
+
+getBlockChildrenIds [link: #getBlockChildrenIds(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Returns the children block ids of a block.
+
+final @NotNull Point [link: graphics/Point.html][]
+
+getBlockOrientedBox [link: #getBlockOrientedBox(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Returns the four points of the oriented box of a block.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getBlockParentId [link: #getBlockParentId(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Returns the parent block id of a block.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getBlockType [link: #getBlockType(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Returns the type of a block.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getFullItemId [link: #getFullItemId(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] partialItemId)
+
+Returns the full item id associated with a partial item id.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getItemParentId [link: #getItemParentId(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] itemId)
+
+Returns the parent block id of an item.
+
+final @NotNull Rectangle [link: graphics/Rectangle.html]
+
+getItemsBox [link: #getItemsBox(java.lang.String%5B%5D)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Returns the bounding box of an item ids list.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][]
+
+getItemsByBlockId [link: #getItemsByBlockId(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Returns the item ids associated with a given block id.
+
+final @NotNull PointerEvent [link: PointerEvent.html][]
+
+getPointsForItemId [link: #getPointsForItemId(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] itemId)
+
+Returns the pointer events of an item.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+final boolean
+
+isEmpty [link: #isEmpty(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Checks whether a block is empty.
+
+final boolean
+
+isPartialItem [link: #isPartialItem(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] itemId)
+
+Checks if an item is partial.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][]
+
+toCanonicalItemIds [link: #toCanonicalItemIds(java.lang.String%5B%5D)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Converts an item ids list to its canonical form.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+isEmpty
+
+public final boolean isEmpty (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Checks whether a block is empty.
+
+Parameters:
+
+blockId - the block id to check.
+
+Returns:
+
+true if block is empty or invalid or parent editor is not associated
+with a part, otherwise false .
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this item id helper is closed.
+
+getBlockType
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getBlockType (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Returns the type of a block.
+
+Parameters:
+
+blockId - the identifier of the block.
+
+Returns:
+
+the block type associated with blockId or empty if there is no
+such block in the current part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this item id helper is closed.
+
+Since:
+
+3.0
+
+getBlockBox
+
+@NotNull
+public final @NotNull Rectangle [link: graphics/Rectangle.html] getBlockBox (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Returns the bounding box of a block.
+
+Parameters:
+
+blockId - the identifier of the block.
+
+Returns:
+
+the bounding box (with coordinates in input units) associated with blockId
+or empty if there is no such block in the current part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this item id helper is closed.
+
+Since:
+
+3.0
+
+getBlockOrientedBox
+
+@NotNull
+public final @NotNull Point [link: graphics/Point.html][] getBlockOrientedBox (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Returns the four points of the oriented box of a block.
+
+Parameters:
+
+blockId - the identifier of the block.
+
+Returns:
+
+the original top-left, top-right, bottom-right, bottom-left points after rotation (with coordinates in input units)
+or four zeros points if there is no such block in the current part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this item id helper is closed.
+
+Since:
+
+4.2
+
+getItemsBox
+
+@NotNull
+public final @NotNull Rectangle [link: graphics/Rectangle.html] getItemsBox (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Returns the bounding box of an item ids list.
+
+Parameters:
+
+itemIds - the item ids list.
+
+Returns:
+
+the bounding box (with coordinates in input units) associated with itemIds .
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this item id helper is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemIds is null.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when itemIds contains a null item id.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when an item id is invalid.
+
+Since:
+
+3.0
+
+getBlockChildrenIds
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] getBlockChildrenIds (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Returns the children block ids of a block.
+
+Parameters:
+
+blockId - the identifier of the block.
+
+Returns:
+
+the children block ids associated with blockId or empty
+if there is no such block in the current part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this item id helper is closed.
+
+Since:
+
+3.0
+
+getBlockParentId
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getBlockParentId (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Returns the parent block id of a block.
+
+Parameters:
+
+blockId - the identifier of the block.
+
+Returns:
+
+the parent block id associated with blockId or empty if block is root
+or if there is no such block in the current part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this item id helper is closed.
+
+Since:
+
+3.0
+
+getItemParentId
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getItemParentId (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] itemId)
+
+Returns the parent block id of an item.
+
+Parameters:
+
+itemId - the identifier of the item.
+
+Returns:
+
+the parent block id associated with itemId .
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this item id helper is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemId is null.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when item id is invalid.
+
+Since:
+
+3.0
+
+getItemsByBlockId
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] getItemsByBlockId (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Returns the item ids associated with a given block id.
+
+Parameters:
+
+blockId - the identifier of the block.
+
+Returns:
+
+the item ids associated with blockId or empty if there is no
+such block in the current part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this item id helper is closed.
+
+combine
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] combine (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds1,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds2,
+@NotNull
+@NotNull ItemIdCombinationModifier [link: ItemIdCombinationModifier.html] mode)
+
+Combines two item ids lists.
+
+Parameters:
+
+itemIds1 - the first item ids list to combine.
+
+itemIds2 - the second item ids list to combine.
+
+mode - the modifier specifying the combination mode.
+
+Returns:
+
+the combined list of item ids.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this item id helper is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemIds1 is null.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemIds2 is null.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when itemIds1 contains a null item id.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when itemIds2 contains a null item id.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when mode is null.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when an item id is invalid.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when mode is not a valid ItemIdCombinationModifier value.
+
+isPartialItem
+
+public final boolean isPartialItem (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] itemId)
+
+Checks if an item is partial.
+
+Parameters:
+
+itemId - the item id to check.
+
+Returns:
+
+true if item is partial, false otherwise.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this item id helper is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemId is null.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when item id is invalid.
+
+getFullItemId
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getFullItemId (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] partialItemId)
+
+Returns the full item id associated with a partial item id.
+
+Parameters:
+
+partialItemId - the partial item id.
+
+Returns:
+
+the full item id.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this item id helper is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when partialItemId is null.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when partial item id is invalid.
+
+getPointsForItemId
+
+@NotNull
+public final @NotNull PointerEvent [link: PointerEvent.html][] getPointsForItemId (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] itemId)
+
+Returns the pointer events of an item.
+
+Parameters:
+
+itemId - the item id.
+
+Returns:
+
+the pointer events of the item (with coordinates in input units).
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this item id helper is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemId is null.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when item id is invalid.
+
+toCanonicalItemIds
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] toCanonicalItemIds (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Converts an item ids list to its canonical form.
+
+Parameters:
+
+itemIds - the item ids list.
+
+Returns:
+
+the canonical form of the item ids list.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this item id helper is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemIds is null.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when itemIds contains a null item id.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when an item id is invalid.

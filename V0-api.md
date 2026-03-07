@@ -1,69 +1,156 @@
-Below is a **V0 API contract** you can implement in Convex (TypeScript) + R2 that matches the clarified behavior: **Android authoring**, **web view-only**, **pen-up ops**, **snapshots 5s/20s**, **eraseLamport gating**, **first-page preview upload debounced (120s)**, **web does not download raw PDFs in v0** (renders from tiles/previews), **global search** over extracted PDF text + ink recognition text (extracted on Android).
+Below is the **V0 API contract** for Convex (TypeScript) + R2, aligned with the CRDT-based sync architecture in `PLAN.md`. **Android authoring**, **web view-only** (v1), **Y-Octo/Yjs CRDT sync**, **snapshot cadence debounced from last edit (5s shared / 20s private)**, **PDF.js + Canvas overlay on web**, **global search** over HWR + PDF text.
 
-I’m writing this as **Convex function signatures + shared types**, since that’s the cleanest “contract” for Android + web.
+Written as **Convex function signatures + shared types** — the canonical contract for Android + web clients.
 
 ---
 
-## 0) Contract basics
+## 0) Contract Basics
 
 ### Auth
 
 * All authenticated routes use Clerk → Convex auth integration.
-* Public link route is unauthenticated, uses `linkId` token.
+* Public link routes are unauthenticated, use `linkToken`.
 
 ### Storage
 
-* R2 stores large blobs: pdfs, snapshots, rasters (tiles/previews), exports.
-* Convex stores metadata + indexes + op headers + search text.
+* **Convex**: metadata, CRDT update deltas (<10 KB each), folder hierarchy, sharing, search indexes, presence, asset references.
+* **Cloudflare R2**: large blobs — PDFs (original, never auto-flattened), images, audio recordings, Yjs doc snapshots, exported PDFs, notebook thumbnails.
+* Convex never stores raw binary data. It holds R2 keys + size + hash.
 
-### Clock / ordering
+### Sync Model
 
-* Ops are totally ordered by `(lamport, deviceId, opId)`.
-* Devices maintain Lamport clock.
-* `StrokeAdd` defines `createdLamport` for that stroke.
-* `AreaErase` applies only to strokes where `stroke.createdLamport <= eraseLamport`.
+* **Y-Octo/Yjs CRDTs** — Android uses Y-Octo (Rust/JNI), web uses Yjs (JS). Both produce the same binary CRDT update format.
+* **Two-level CRDT docs**: notebook-level Yjs doc (page ordering + metadata) + per-page Yjs doc (strokes, objects, deletedStrokes, deletedObjects).
+* Conflict resolution is automatic via CRDT merge semantics — no Lamport clocks, no deterministic replay ordering.
+* Clients push Yjs update binaries to Convex; Convex stores them and notifies subscribers.
+
+### Coordinate System
+
+* All coordinates in **pixels (px)** — strokes, objects, page dimensions, PDF overlay.
+* Default page: 794 × 1123 px (A4 at 96 DPI). Infinite canvas: 794 px wide, infinite vertical.
+* Strokes stored in absolute page-space pixels (origin = top-left). Zoom is client-side viewport transform only.
 
 ---
 
-## 1) Shared types (contract)
+## 1) Shared Types (Contract)
 
 ```ts
 // IDs
-type IdStr = string; // Convex Id<"table"> is concrete in code, but V0 contract uses strings
+type IdStr = string;
 
 type UserId = IdStr;
-type NoteId = IdStr;
+type NotebookId = IdStr;
 type PageId = IdStr;
+type FolderId = IdStr;
 type AssetId = IdStr;
-type DeviceId = string; // UUID from client
-type OpId = string;     // UUID from client
-type CommitId = IdStr;
-type PublicLinkId = string; // high entropy token
+type DeviceId = string;   // UUID from client
+type PublicLinkToken = string; // high-entropy URL token
 
 type UnixMs = number;
 
 type Role = "viewer" | "editor";
 
-type NoteKind = "ink" | "pdf" | "mixed" | "infinite";
+type NotebookMode = "paged" | "infinite_canvas";
 
-type PageGeometry =
-  | { kind: "fixed"; width: number; height: number; unit: "pt" | "px" } // for PDF pages, recommend pt
-  | { kind: "infinite"; tileSize: number; unit: "px" }; // tileSize 2024 fixed
+type TemplateType = "blank" | "lined" | "dotted" | "grid";
 
-type PageRef = { noteId: NoteId; pageId: PageId };
+type PenType = "ballpoint" | "fountain" | "pencil";
+
+type ToolType = "pen" | "highlighter";
+
+type PageObjectType = "textBlock" | "image" | "stickyNote" | "table" | "audioAttachment" | "shape";
+
+type ShapeType = "line" | "rectangle" | "ellipse" | "triangle" | "circle" | "arrow";
+
+// --- Notebook & Page ---
+
+type NotebookMeta = {
+  notebookId: NotebookId;
+  ownerUserId: UserId;
+  folderId?: FolderId;
+  title: string;
+  coverColor: string;        // hex
+  isFavorite: boolean;
+  notebookMode: NotebookMode;
+  createdAt: UnixMs;
+  updatedAt: UnixMs;
+  deletedAt?: UnixMs;        // soft delete
+  snapshotUrl?: string;       // R2 URL of latest notebook-level Yjs snapshot
+  snapshotStateVector?: string; // base64-encoded Yjs state vector
+
+  // Preview (first page thumbnail)
+  previewThumbAssetId?: AssetId;
+  previewPageAssetId?: AssetId;
+  previewUpdatedAt?: UnixMs;
+
+  // Sharing metadata (for cadence decisions)
+  hasPublicLink?: boolean;
+  shareCount?: number;
+};
+
+type PageMeta = {
+  pageId: PageId;
+  notebookId: NotebookId;
+  order: number;
+  templateType: TemplateType;
+  templateDensity: number;
+  templateLineWidth: number;
+  backgroundColorHex: string;
+  widthPx: number;           // default 794
+  heightPx: number;          // default 1123; 0 = infinite canvas
+  pdfAssetId?: AssetId;
+  pdfPageNo?: number;        // 0-based
+  pageSnapshotUrl?: string;
+  pageSnapshotStateVector?: string; // base64-encoded
+  updatedAt: UnixMs;
+};
+
+type FolderMeta = {
+  folderId: FolderId;
+  ownerUserId: UserId;
+  parentFolderId?: FolderId;
+  name: string;
+  createdAt: UnixMs;
+  updatedAt: UnixMs;
+};
+
+// --- CRDT Sync ---
+
+type CrdtUpdate = {
+  updateId: IdStr;
+  notebookId: NotebookId;
+  pageId?: PageId;           // null = notebook-level doc; set = per-page doc
+  authorUserId: UserId;
+  deviceId: DeviceId;
+  updateBinary: string;      // base64-encoded Yjs update binary (<10 KB)
+  createdAt: UnixMs;
+};
+
+// --- Yjs Doc Internal Structure (not stored in Convex — lives inside Yjs binary) ---
+// Notebook-level Yjs doc:
+//   pages: Y.Array<{ pageId, order, templateType, ... }>
+//   metadata: Y.Map<string, any>  (title, coverColor, etc.)
+//
+// Per-page Yjs doc:
+//   strokes: Y.Map<strokeId, StrokeData>
+//   objects: Y.Map<objectId, PageObjectData>
+//   deletedStrokes: Y.Map<strokeId, { deletedAt: number }>
+//   deletedObjects: Y.Map<objectId, { deletedAt: number }>
+
+// --- Assets ---
 
 type AssetType =
   | "pdf"
+  | "image"
+  | "audio"
   | "snapshot"
-  | "tileRaster"
-  | "previewThumb"
-  | "previewPage"
   | "exportPdf"
-  | "jiix";
+  | "thumbnail";
 
 type AssetMeta = {
   assetId: AssetId;
   ownerUserId: UserId;
+  notebookId?: NotebookId;
   type: AssetType;
   r2Key: string;
   contentType: string;
@@ -72,42 +159,10 @@ type AssetMeta = {
   createdAt: UnixMs;
 };
 
-type NoteMeta = {
-  noteId: NoteId;
-  ownerUserId: UserId;
-  title: string;
-  createdAt: UnixMs;
-  updatedAt: UnixMs;
-  deletedAt?: UnixMs;
-
-  // Preview shown in lists (v0: first page only)
-  previewThumbAssetId?: AssetId; // small
-  previewPageAssetId?: AssetId;  // low-ish res first page
-  previewUpdatedAt?: UnixMs;
-
-  // Sharing flags for cadence decisions client-side
-  hasPublicLink?: boolean;
-  shareCount?: number;
-};
-
-type PageMeta = {
-  pageId: PageId;
-  noteId: NoteId;
-  kind: NoteKind;
-  pdfAssetId?: AssetId;  // for pdf/mixed
-  pdfPageNo?: number;    // 0-based
-  geometry: PageGeometry;
-  updatedAt: UnixMs;
-
-  // Deterministic content versioning
-  contentLamportMax: number;
-
-  // Optional: pointer to most recent snapshot/commit
-  latestCommitId?: CommitId;
-};
+// --- Sharing ---
 
 type ShareEntry = {
-  noteId: NoteId;
+  notebookId: NotebookId;
   granteeUserId: UserId;
   role: Role;
   grantedByUserId: UserId;
@@ -116,92 +171,42 @@ type ShareEntry = {
 };
 
 type PublicLinkEntry = {
-  noteId: NoteId;
-  linkId: PublicLinkId;
-  createdAt: UnixMs;
+  notebookId: NotebookId;
+  linkToken: PublicLinkToken;
   createdByUserId: UserId;
+  createdAt: UnixMs;
   revokedAt?: UnixMs;
 };
 
-// ---- Ops ----
-type StrokeStyle = {
-  tool: "pen";
-  color?: string;        // optional v0
-  baseWidth: number;     // in page units
-  minWidthFactor: number; // e.g. 0.85 (±15%)
-  maxWidthFactor: number; // e.g. 1.15
-  nibRotation: boolean;
-};
+// --- Presence ---
 
-type Point = {
-  x: number;
-  y: number;
-  t: number; // ms offset or absolute, your choice; contract just says number
-  p?: number; // pressure 0..1
-  tx?: number; // tilt x
-  ty?: number; // tilt y
-  r?: number;  // rotation / azimuth optional
-};
-
-type OpPayload =
-  | {
-      type: "StrokeAdd";
-      strokeId: string;
-      createdLamport: number;
-      points: Point[];     // raw points
-      style: StrokeStyle;
-      bounds: { x: number; y: number; w: number; h: number };
-    }
-  | {
-      type: "AreaErase";
-      eraseLamport: number; // equals op.lamport typically
-      geometry: { kind: "rect"; x: number; y: number; w: number; h: number } // v0: rect
-              | { kind: "lasso"; points: {x:number;y:number}[] };             // optional if you want
-      mode: "stroke" | "segment";
-      // v0 semantics: re-resolve at replay-time, but only strokes createdLamport <= eraseLamport
-    }
-  | {
-      type: "StrokeTombstone";
-      strokeIds: string[]; // used by undo/repair if needed
-    }
-  | {
-      type: "PreviewUpdate";
-      // first page preview assets, debounced (120s)
-      previewThumbAssetId?: AssetId;
-      previewPageAssetId?: AssetId;
-    }
-  | {
-      type: "PageMetadata";
-      patch: Partial<Pick<PageMeta, "updatedAt" | "contentLamportMax">>;
-    };
-
-type OpHeader = {
-  opId: OpId;
+type PresenceEntry = {
+  notebookId: NotebookId;
   pageId: PageId;
-  noteId: NoteId;
-  authorUserId: UserId;
-  deviceId: DeviceId;
-  lamport: number;
-  createdAt: UnixMs;
-  payloadInline?: OpPayload;     // v0: inline for most ops
-  payloadAssetId?: AssetId;      // optional future if large
+  userId: UserId;
+  cursorX: number;           // px, page-space
+  cursorY: number;           // px, page-space
+  activeTool: string;        // "pen" | "highlighter" | "eraser" | "lasso"
+  activeColor?: string;      // hex
+  updatedAt: UnixMs;
 };
 
-// ---- Commits/Snapshots ----
-type CommitEntry = {
-  commitId: CommitId;
+// --- Search ---
+
+type SearchHit = {
+  notebookId: NotebookId;
+  notebookTitle: string;
   pageId: PageId;
-  noteId: NoteId;
-  authorUserId: UserId;
-  createdAt: UnixMs;
-  baseLamport: number;           // latest op included in snapshot
-  snapshotAssetId: AssetId;      // required for v0 restore points
+  pageNo?: number;
+  highlight?: { x: number; y: number; w: number; h: number };
+  snippetText: string;
+  updatedAt: UnixMs;
 };
 ```
 
 ---
 
-## 2) R2 upload/download contract
+## 2) R2 Upload/Download Contract
 
 V0 uses Convex actions to mint **2-hour presigned URLs**.
 
@@ -211,21 +216,21 @@ type PresignRequest = {
   contentType: string;
   size?: number;
   sha256?: string;
-  noteId?: NoteId;
+  notebookId?: NotebookId;
   pageId?: PageId;
 };
 
 type PresignResponse = {
-  assetId: AssetId;     // reserved row in Convex
+  assetId: AssetId;
   r2Key: string;
-  uploadUrl: string;    // PUT
+  uploadUrl: string;      // PUT
   headers?: Record<string, string>;
   expiresAt: UnixMs;
 };
 
 type DownloadUrlResponse = {
   assetId: AssetId;
-  downloadUrl: string;  // GET
+  downloadUrl: string;    // GET
   expiresAt: UnixMs;
 };
 ```
@@ -233,228 +238,266 @@ type DownloadUrlResponse = {
 Rules:
 
 * Client calls `assets.presignUpload()` → PUT to R2 → calls `assets.confirmUpload()`.
-* Client calls `assets.getDownloadUrl(assetId)` to fetch GET URL (2h).
-* Public-link viewers never get direct permanent R2 URLs; they get short-lived URLs minted via backend.
+* Client calls `assets.getDownloadUrl(assetId)` to fetch GET URL (2h TTL).
+* Public-link viewers get short-lived URLs minted via `publicAssets.getDownloadUrl`.
 
 ---
 
-## 3) Convex functions (V0)
+## 3) Convex Functions (V0)
 
-### 3.1 Notes
+### 3.1 Users
+
+```ts
+// mutation (called after Clerk login)
+users.upsertMe(): { userId: UserId }
+
+// query
+users.me(): { userId: UserId; email: string; displayName: string; avatarUrl?: string }
+```
+
+### 3.2 Folders
+
+```ts
+// mutation
+folders.create({ name: string; parentFolderId?: FolderId }): { folderId: FolderId }
+
+// mutation
+folders.rename({ folderId: FolderId; name: string }): void
+
+// mutation
+folders.move({ folderId: FolderId; parentFolderId?: FolderId }): void
+
+// mutation
+folders.delete({ folderId: FolderId }): void
+// On delete: notebooks in folder get folderId set to null (moved to root)
+
+// query
+folders.listMine(): FolderMeta[]
+```
+
+### 3.3 Notebooks
 
 ```ts
 // query
-notes.listMine(): NoteMeta[]
+notebooks.listMine(): NotebookMeta[]
 
 // query
-notes.listSharedWithMe(): NoteMeta[]
+notebooks.listSharedWithMe(): NotebookMeta[]
 
 // mutation
-notes.create({ title: string }): { noteId: NoteId }
+notebooks.create({
+  title: string;
+  folderId?: FolderId;
+  notebookMode: NotebookMode;
+  coverColor?: string;
+}): { notebookId: NotebookId }
 
 // mutation
-notes.rename({ noteId, title }: { noteId: NoteId; title: string }): void
+notebooks.rename({ notebookId: NotebookId; title: string }): void
 
 // mutation
-notes.delete({ noteId }: { noteId: NoteId }): void // tombstone
+notebooks.move({ notebookId: NotebookId; folderId?: FolderId }): void
+
+// mutation
+notebooks.setFavorite({ notebookId: NotebookId; isFavorite: boolean }): void
+
+// mutation
+notebooks.delete({ notebookId: NotebookId }): void  // soft-delete (sets deletedAt)
+
+// mutation
+notebooks.restore({ notebookId: NotebookId }): void  // undelete from trash
 
 // query
-notes.get({ noteId }: { noteId: NoteId }): { note: NoteMeta; myRole: Role; pages: PageMeta[] }
+notebooks.get({ notebookId: NotebookId }): {
+  notebook: NotebookMeta;
+  myRole: Role;
+  pages: PageMeta[];
+}
 ```
 
 Authorization:
 
-* Must be owner/editor/viewer as appropriate.
-* `delete/rename` owner or editor (per your rule).
+* `delete/rename/move/setFavorite` — owner or editor.
+* `restore` — owner only.
+* `get` — owner, editor, or viewer (via share).
 
-### 3.2 Pages
+### 3.4 Pages
 
 ```ts
 // mutation
-pages.createInkPage({ noteId, geometry }: { noteId: NoteId; geometry: PageGeometry }): { pageId: PageId }
-
-// mutation
-pages.attachPdfPage({
-  noteId,
-  pdfAssetId,
-  pdfPageNo,
-  geometry,
-}: {
-  noteId: NoteId;
-  pdfAssetId: AssetId;
-  pdfPageNo: number;
-  geometry: PageGeometry; // fixed in pt recommended
+pages.create({
+  notebookId: NotebookId;
+  templateType?: TemplateType;
+  widthPx?: number;
+  heightPx?: number;
+  insertAfterPageId?: PageId;  // null = append at end
 }): { pageId: PageId }
 
+// mutation
+pages.attachPdf({
+  notebookId: NotebookId;
+  pdfAssetId: AssetId;
+  pdfPageNo: number;
+  widthPx: number;
+  heightPx: number;
+}): { pageId: PageId }
+
+// mutation
+pages.reorder({
+  notebookId: NotebookId;
+  pageIds: PageId[];  // new ordering
+}): void
+
+// mutation
+pages.delete({ pageId: PageId }): void
+
 // query
-pages.get({ pageId }: { pageId: PageId }): PageMeta
+pages.get({ pageId: PageId }): PageMeta
 ```
 
-### 3.3 Sharing
+### 3.5 CRDT Sync
+
+```ts
+// mutation (editor)
+sync.pushUpdates({
+  notebookId: NotebookId;
+  pageId?: PageId;              // null = notebook-level doc
+  deviceId: DeviceId;
+  updates: Array<{
+    updateBinary: string;       // base64-encoded Yjs update (<10 KB)
+  }>;
+}): { accepted: number }
+
+// query (viewer+)
+sync.pullUpdates({
+  notebookId: NotebookId;
+  pageId?: PageId;
+  stateVector: string;          // base64-encoded Yjs state vector from client
+  limit?: number;               // default 100
+  cursor?: string;              // opaque pagination cursor from previous response
+}): {
+  updates: Array<{
+    updateBinary: string;
+    createdAt: UnixMs;
+  }>;
+  hasMore: boolean;
+  nextCursor?: string;          // present when hasMore=true
+}
+
+// query (viewer+, reactive subscription)
+sync.watchHead({
+  notebookId: NotebookId;
+  pageId?: PageId;
+}): {
+  latestUpdateAt: UnixMs;
+  updateCount: number;
+}
+
+// mutation (editor) — write snapshot to R2, record URL in Convex
+sync.recordSnapshot({
+  notebookId: NotebookId;
+  pageId?: PageId;
+  snapshotAssetId: AssetId;     // R2 asset containing full Yjs doc state
+  stateVector: string;          // base64-encoded state vector of this snapshot
+}): void
+```
+
+Client sync flow:
+
+1. On notebook open: load local Yjs binary → fetch R2 snapshot if stale → loop `sync.pullUpdates(stateVector, cursor)` until `hasMore=false` → apply → subscribe to `sync.watchHead`.
+2. During editing: mutate local Yjs doc → queue update binary → `sync.pushUpdates` when online.
+3. Snapshot cadence (debounced from last edit): shared/public = 5s, private = 20s. Client uploads full Yjs state to R2 → `sync.recordSnapshot`.
+4. Conflict resolution: automatic via Yjs CRDT merge. No manual conflict handling.
+
+### 3.6 Sharing
 
 ```ts
 // mutation (owner/editor)
 shares.grantByEmail({
-  noteId,
-  emailLower,
-  role,
-}: {
-  noteId: NoteId;
+  notebookId: NotebookId;
   emailLower: string;
   role: Role;
 }): { granteeUserId: UserId }
 
 // mutation (owner/editor)
-shares.revoke({ noteId, granteeUserId }: { noteId: NoteId; granteeUserId: UserId }): void
+shares.revoke({
+  notebookId: NotebookId;
+  granteeUserId: UserId;
+}): void
 
 // query
-shares.list({ noteId }: { noteId: NoteId }): Array<{ emailLower: string; role: Role; createdAt: UnixMs }>
+shares.list({ notebookId: NotebookId }): Array<{
+  emailLower: string;
+  displayName: string;
+  role: Role;
+  createdAt: UnixMs;
+}>
 
 // mutation (owner/editor)
-publicLinks.create({ noteId }: { noteId: NoteId }): { linkId: PublicLinkId }
+publicLinks.create({ notebookId: NotebookId }): { linkToken: PublicLinkToken }
 
 // mutation (owner/editor)
-publicLinks.disable({ linkId }: { linkId: PublicLinkId }): void
+publicLinks.disable({ linkToken: PublicLinkToken }): void
 
-// query (public, unauth)
-publicLinks.resolve({ linkId }: { linkId: PublicLinkId }): { note: NoteMeta; pages: PageMeta[] } // view-only
+// query (public, unauthenticated)
+publicLinks.resolve({ linkToken: PublicLinkToken }): {
+  notebook: NotebookMeta;
+  pages: PageMeta[];
+}
 ```
 
-### 3.4 Ops stream (pen-up) + deterministic ordering
+### 3.7 Assets (R2 Presign + Confirm)
 
 ```ts
-// mutation (editor)
-ops.submitBatch({
-  noteId,
-  pageId,
-  deviceId,
-  ops,
-}: {
-  noteId: NoteId;
-  pageId: PageId;
-  deviceId: DeviceId;
-  ops: Array<{
-    opId: OpId;
-    lamport: number;
-    payload: OpPayload;
-    createdAt?: UnixMs; // server can set
-  }>;
-}): { accepted: number; newContentLamportMax: number }
-
-// query (viewer+)
-ops.listPageOps({
-  pageId,
-  afterLamport,
-  limit,
-}: {
-  pageId: PageId;
-  afterLamport?: number;
-  limit?: number;
-}): OpHeader[]
-
-// query (viewer+, reactive subscription)
-ops.watchPageHead({ pageId }: { pageId: PageId }): { contentLamportMax: number; latestOpLamport?: number }
-```
-
-V0 semantics you locked in:
-
-* `AreaErase` replay-time resolution, filter strokes by `createdLamport <= eraseLamport`.
-* Segment erase splits strokes (client-side model), but the op itself can stay as “erase geometry” in v0.
-
-### 3.5 Commits / snapshots (restore points)
-
-```ts
-// mutation (editor)
-commits.create({
-  noteId,
-  pageId,
-  baseLamport,
-  snapshotAssetId,
-}: {
-  noteId: NoteId;
-  pageId: PageId;
-  baseLamport: number;
-  snapshotAssetId: AssetId;
-}): { commitId: CommitId }
-
-// query (viewer+)
-commits.list({ pageId }: { pageId: PageId }): CommitEntry[]
-
-// query (viewer+)
-commits.get({ commitId }: { commitId: CommitId }): CommitEntry
-```
-
-Restore behavior is client-side:
-
-* Client can load an older commit (snapshot + ops up to lamport) as **personal view**.
-* “Restore version” creates a new commit at head (or sets new head by writing a new snapshot/commit).
-
-Optional helper:
-
-```ts
-// mutation (editor)
-commits.restore({
-  noteId,
-  pageId,
-  fromCommitId,
-  deviceId,
-}: {
-  noteId: NoteId;
-  pageId: PageId;
-  fromCommitId: CommitId;
-  deviceId: DeviceId;
-}): { newCommitId: CommitId }
-```
-
-(Implementation can simply upload a new snapshot equal to the restored state and append a restore commit.)
-
-### 3.6 Assets (R2 presign + confirm)
-
-```ts
-// action (auth required unless public link)
+// action (auth required)
 assets.presignUpload(req: PresignRequest): PresignResponse
 
 // mutation
 assets.confirmUpload({
-  assetId,
-  size,
-  sha256,
-}: {
   assetId: AssetId;
   size?: number;
   sha256?: string;
 }): void
 
 // action (auth or public-link token)
-assets.getDownloadUrl({ assetId }: { assetId: AssetId }): DownloadUrlResponse
-```
+assets.getDownloadUrl({ assetId: AssetId }): DownloadUrlResponse
 
-For public link, you can support:
-
-```ts
-// action (public)
+// action (public, unauthenticated)
 publicAssets.getDownloadUrl({
-  linkId,
-  assetId,
-}: {
-  linkId: PublicLinkId;
+  linkToken: PublicLinkToken;
   assetId: AssetId;
 }): DownloadUrlResponse
 ```
 
-### 3.7 Previews (first page preview + thumb)
+### 3.8 Presence
 
-Debounced to max once per 120s per note (your rule). Both Android and web may generate; web uploads.
+```ts
+// mutation (editor)
+presence.update({
+  notebookId: NotebookId;
+  pageId: PageId;
+  cursorX: number;
+  cursorY: number;
+  activeTool: string;
+  activeColor?: string;
+}): void
+// Called every 500ms while drawing; stops after 5s idle.
+
+// query (viewer+, reactive subscription)
+presence.watch({
+  notebookId: NotebookId;
+}): PresenceEntry[]
+// Returns all active cursors for the notebook. Entries auto-expire after 10s of no updates.
+```
+
+### 3.9 Previews
+
+Debounced to max once per 120s per notebook.
 
 ```ts
 // mutation (editor)
 previews.setFirstPagePreview({
-  noteId,
-  previewThumbAssetId,
-  previewPageAssetId,
-  generatedBy, // "android" | "web"
-}: {
-  noteId: NoteId;
+  notebookId: NotebookId;
   previewThumbAssetId?: AssetId;
   previewPageAssetId?: AssetId;
   generatedBy: "android" | "web";
@@ -463,122 +506,80 @@ previews.setFirstPagePreview({
 
 Server behavior:
 
-* Enforce debounce window (120s) per note.
-* If within debounce, `applied=false` and returns `nextAllowedAt`.
+* Enforce 120s debounce window per notebook.
+* If within debounce, `applied=false` with `nextAllowedAt`.
 
-### 3.8 Search (global)
+### 3.10 Search (Global)
 
-Web shows results; Android is responsible for producing:
-
-* handwriting recognized text
-* PDF embedded text extracted during import/indexing
-  and uploading to Convex.
+Android produces HWR text and PDF extracted text; pushes to Convex.
 
 ```ts
-type SearchHit = {
-  noteId: NoteId;
-  noteTitle: string;
-  pageId: PageId;
-  pageNo?: number;          // for PDF notes
-  kind: NoteKind;
-  // v0: approximate highlight
-  highlight?: { x: number; y: number; w: number; h: number; unit: "pt" | "px" };
-  snippetText: string;      // plain text
-  updatedAt: UnixMs;
-};
-
 // query (auth)
 search.global({
-  query,
-  limit,
-}: {
   query: string;
   limit?: number;
 }): SearchHit[]
 
 // mutation (editor/owner; typically Android)
 search.upsertPageText({
-  noteId,
-  pageId,
-  contentLamportMax,
-  recognizedText,   // handwriting
-  pdfText,          // embedded pdf text extracted elsewhere
-  source,
-  extractedAt,
-}: {
-  noteId: NoteId;
+  notebookId: NotebookId;
   pageId: PageId;
-  contentLamportMax: number;
-  recognizedText?: string;
-  pdfText?: string;
+  recognizedText?: string;   // HWR output
+  pdfText?: string;          // PDF extracted text
   source: "handwriting" | "pdfText" | "both";
   extractedAt: UnixMs;
 }): void
 ```
 
-Ranking rule (your preference): bias toward **recent notes** (e.g., combine text score with recency boost on `note.updatedAt`).
+Ranking: bias toward recent notebooks (text relevance + recency boost on `notebook.updatedAt`).
 
-### 3.9 Export (download annotated PDF)
+`search.global` queries both the `search_content` index (handwriting) and `search_pdf_content` index (PDF text) and merges results by relevance + recency.
 
-You want: public viewers can download an annotated PDF; flattened vs not is okay.
-
-V0 simplest contract: export is generated by Android (or later a worker), uploaded to R2.
+### 3.11 Exports (User-Initiated PDF)
 
 ```ts
 // mutation (editor)
 exports.register({
-  noteId,
-  pageId,
-  exportAssetId,
-  mode,
-}: {
-  noteId: NoteId;
-  pageId: PageId;
+  notebookId: NotebookId;
   exportAssetId: AssetId;
-  mode: "flattened" | "overlay"; // overlay = not flattened (v0 best-effort)
+  mode: "flattened";         // v0: flattened only (strokes baked into PDF)
 }): void
 
 // query (viewer+ or public link)
-exports.getLatest({ noteId }: { noteId: NoteId }): { exportAssetId?: AssetId; mode?: string; createdAt?: UnixMs }
+exports.getLatest({
+  notebookId: NotebookId;
+}): { exportAssetId?: AssetId; mode?: string; createdAt?: UnixMs }
 ```
 
-Public download uses `publicAssets.getDownloadUrl(linkId, exportAssetId)`.
+Public download uses `publicAssets.getDownloadUrl(linkToken, exportAssetId)`.
 
 ---
 
-## 4) Client obligations (V0 rules)
+## 4) Client Obligations (V0 Rules)
 
-### Android (authoring)
+### Android (Authoring)
 
-* Generates `StrokeAdd` on pen-up.
-* Generates `AreaErase` ops (stroke or segment).
-* Maintains a local page model that can:
+* All page content lives inside Yjs docs (strokes in `Y.Map`, objects in `Y.Map`).
+* On pen-up: stroke committed to local Yjs doc → Yjs update binary queued → flushed via `sync.pushUpdates`.
+* Object mutations (TextBlock, Image, StickyNote, Table, AudioAttachment, Shape): applied to Yjs `objects` map → update binary queued.
+* Undo/redo: 100 undo + 100 redo ops per page (FIFO eviction). Undo writes new Yjs updates.
+* Offline queue: pending Yjs updates stored in Room `OfflineQueueEntity`. WorkManager drains on connectivity.
+* Snapshots: debounced from last edit — 5s (shared/public), 20s (private). Upload full Yjs state to R2 → `sync.recordSnapshot`.
+* HWR/PDF text: pushed to Convex via `search.upsertPageText`.
+* Room is metadata/settings cache only. Yjs binary file is the authoritative page content store.
+* Yjs binary file format: 4-byte magic `ONYX` + 4-byte uint32 version (big-endian) + raw Yjs encoded state array.
 
-  * apply ops in deterministic order
-  * split strokes for segment erase
-  * support per-user undo by appending inverse ops
-* Creates snapshot blobs on cadence:
+### Web (View-Only, v1)
 
-  * shared/public notes: ~5s while actively drawing
-  * private notes: ~20s while actively drawing
-* Extracts PDF embedded text “eventually” for large PDFs and pushes via `search.upsertPageText`.
-* Uploads export PDFs.
-
-### Web (view-only)
-
-* Subscribes to ops and commits.
-* Renders page from:
-
-  * snapshots + ops replay, or
-  * pre-rendered tiles/previews (depending on what you implement first)
-* Generates and uploads **first-page preview tile + thumb** if changes happen, but server-enforced debounce (120s).
-* Does **not** download raw PDFs in v0.
+* Full Yjs replay engine: fetch R2 snapshot → `sync.pullUpdates(stateVector)` → reconstruct page content.
+* PDF rendering: PDF.js fetches original PDF from R2 presigned URL → renders to canvas layer.
+* Ink rendering: Canvas overlay tessellates strokes from Yjs doc raw point arrays.
+* Live updates: subscribe to `sync.watchHead` → pull new deltas → re-render.
+* No drawing, editing, or HWR in v1.
 
 ---
 
-## 5) Minimal error contract (V0)
-
-Use consistent error codes in Convex throws:
+## 5) Minimal Error Contract (V0)
 
 ```ts
 type ApiErrorCode =
@@ -588,8 +589,16 @@ type ApiErrorCode =
   | "VALIDATION_ERROR"
   | "EMAIL_NOT_FOUND"          // share-by-email to non-user
   | "PUBLIC_LINK_DISABLED"
-  | "DEBOUNCED"
-  | "CONFLICT";                // e.g., duplicate opId, invalid lamport ordering, etc.
+  | "DEBOUNCED"                // preview debounce window
+  | "PAYLOAD_TOO_LARGE";       // CRDT update > 10 KB
 ```
 
 ---
+
+## 6) Background Jobs (Convex Scheduled Functions)
+
+* **CRDT delta retention**: delete `crdtUpdates` entries covered by the latest recorded snapshot for that document scope (`notebookId` + optional `pageId`). Run periodically (e.g., every 10 minutes).
+  - Implementation contract: retention is conservative. The job only deletes updates older than the latest snapshot-record time for that scope and keeps a safety tail of recent updates.
+  - If snapshot metadata is missing or inconsistent, skip deletion for that scope.
+* **Trash cleanup**: permanently delete notebooks where `deletedAt` is older than 20 days. Delete associated R2 assets.
+* **Presence expiry**: remove `presence` entries older than 10s (can be handled inline by `presence.watch` query filtering).

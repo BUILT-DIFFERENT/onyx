@@ -1,0 +1,254 @@
+SOURCE: com/myscript/iink/graphics/IPath.html
+
+Package com.myscript.iink.graphics [link: package-summary.html]
+
+Interface IPath
+
+public interface IPath
+
+The path interface, for building a path as described in the SVG
+specifications.
+
+See Also:
+
+https://www.w3.org/TR/SVG/paths.html [https://www.w3.org/TR/SVG/paths.html]
+
+Nested Class Summary
+
+Nested Classes
+
+Modifier and Type
+
+Interface
+
+Description
+
+static enum
+
+IPath.OperationType [link: IPath.OperationType.html]
+
+Lists the path operation types.
+
+Method Summary
+
+All Methods Instance Methods Abstract Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+void
+
+arcTo [link: #arcTo(float,float,float,boolean,boolean,float,float)] (float rx,
+float ry,
+float phi,
+boolean fA,
+boolean fS,
+float x,
+float y)
+
+Draws an elliptical arc from the current point to (x, y).
+
+void
+
+closePath [link: #closePath()]()
+
+Close the current subpath by drawing a straight line from the current point
+to current subpath's initial point.
+
+void
+
+curveTo [link: #curveTo(float,float,float,float,float,float)] (float x1,
+float y1,
+float x2,
+float y2,
+float x,
+float y)
+
+Draws a cubic Bezier curve from the current point to (x,y) using (x1,y1) as
+the control point at the beginning of the curve and (x2,y2) as the control
+point at the end of the curve.
+
+void
+
+lineTo [link: #lineTo(float,float)] (float x,
+float y)
+
+Draws a line from the current point to the given (x,y) coordinate which
+becomes the new current point.
+
+void
+
+moveTo [link: #moveTo(float,float)] (float x,
+float y)
+
+Starts a new subpath at the given (x,y) coordinate.
+
+void
+
+quadTo [link: #quadTo(float,float,float,float)] (float x1,
+float y1,
+float x,
+float y)
+
+Draws a quadratic Bezier curve from the current point to (x,y) using
+(x1,y1) as the control point.
+
+@NotNull EnumSet [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/EnumSet.html]<IPath.OperationType [link: IPath.OperationType.html]>
+
+unsupportedOperations [link: #unsupportedOperations()]()
+
+Lists the operations not supported by the implementation of IPath.
+
+Method Details
+
+unsupportedOperations
+
+@NotNull
+@NotNull EnumSet [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/EnumSet.html]<IPath.OperationType [link: IPath.OperationType.html]> unsupportedOperations ()
+
+Lists the operations not supported by the implementation of IPath.
+
+Returns:
+
+a list of unsupported operations.
+
+moveTo
+
+void moveTo (float x,
+float y)
+
+Starts a new subpath at the given (x,y) coordinate.
+
+Parameters:
+
+x - the x coordinate to move to.
+
+y - the y coordinate to move to.
+
+See Also:
+
+https://www.w3.org/TR/SVG/paths.html#PathDataMovetoCommands [https://www.w3.org/TR/SVG/paths.html#PathDataMovetoCommands]
+
+lineTo
+
+void lineTo (float x,
+float y)
+
+Draws a line from the current point to the given (x,y) coordinate which
+becomes the new current point.
+
+Parameters:
+
+x - the x coordinate to draw a line to.
+
+y - the y coordinate to draw a line to.
+
+See Also:
+
+https://www.w3.org/TR/SVG/paths.html#PathDataLinetoCommands [https://www.w3.org/TR/SVG/paths.html#PathDataLinetoCommands]
+
+curveTo
+
+void curveTo (float x1,
+float y1,
+float x2,
+float y2,
+float x,
+float y)
+
+Draws a cubic Bezier curve from the current point to (x,y) using (x1,y1) as
+the control point at the beginning of the curve and (x2,y2) as the control
+point at the end of the curve.
+
+Parameters:
+
+x1 - the x coordinate of the control point at the beginning of the curve.
+
+y1 - the y coordinate of the control point at the beginning of the curve.
+
+x2 - the x coordinate of the control point at the end of the curve.
+
+y2 - the y coordinate of the control point at the end of the curve.
+
+x - the x coordinate of the final point of the curve.
+
+y - the y coordinate of the final point of the curve.
+
+See Also:
+
+https://www.w3.org/TR/SVG/paths.html#PathDataCurveCommands [https://www.w3.org/TR/SVG/paths.html#PathDataCurveCommands]
+
+quadTo
+
+void quadTo (float x1,
+float y1,
+float x,
+float y)
+
+Draws a quadratic Bezier curve from the current point to (x,y) using
+(x1,y1) as the control point.
+
+Parameters:
+
+x1 - the x coordinate of the control point.
+
+y1 - the y coordinate of the control point.
+
+x - the x coordinate of the final point of the curve.
+
+y - the y coordinate of the final point of the curve.
+
+See Also:
+
+https://www.w3.org/TR/SVG/paths.html#PathDataQuadraticBezierCommands [https://www.w3.org/TR/SVG/paths.html#PathDataQuadraticBezierCommands]
+
+arcTo
+
+void arcTo (float rx,
+float ry,
+float phi,
+boolean fA,
+boolean fS,
+float x,
+float y)
+
+Draws an elliptical arc from the current point to (x, y). The size and
+orientation of the ellipse are defined by two radii (rx, ry) and an
+x-axis-rotation, which indicates how the ellipse as a whole is rotated
+relative to the current coordinate system. The center (cx, cy) of the
+ellipse is calculated automatically to satisfy the constraints imposed by
+the other parameters.
+
+Parameters:
+
+rx - the x-axis radius (must be positive).
+
+ry - the y-axis radius (must be positive).
+
+phi - the x-axis rotation angle.
+
+fA - the large-arc flag.
+
+fS - the sweep-arc flag.
+
+x - the x coordinate of the last point.
+
+y - the y coordinate of the last point.
+
+See Also:
+
+https://www.w3.org/TR/SVG/paths.html#PathDataEllipticalArcCommands [https://www.w3.org/TR/SVG/paths.html#PathDataEllipticalArcCommands]
+
+closePath
+
+void closePath ()
+
+Close the current subpath by drawing a straight line from the current point
+to current subpath's initial point.
+
+See Also:
+
+https://www.w3.org/TR/SVG/paths.html#PathDataClosePathCommand [https://www.w3.org/TR/SVG/paths.html#PathDataClosePathCommand]

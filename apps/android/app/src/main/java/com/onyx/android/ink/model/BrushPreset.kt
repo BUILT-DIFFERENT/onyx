@@ -11,10 +11,10 @@ data class BrushPreset(
     val tool: Tool,
     val color: String,
     val baseWidth: Float,
-    val smoothingLevel: Float = 0.35f,
-    val endTaperStrength: Float = 0.35f,
-    val minWidthFactor: Float = 0.85f,
-    val maxWidthFactor: Float = 1.15f,
+    val smoothingLevel: Float = 0.5f,
+    val endTaperStrength: Float = 0.6f,
+    val minWidthFactor: Float = 0.15f,
+    val maxWidthFactor: Float = 2.5f,
     val nibRotation: Boolean = false,
 ) {
     init {
@@ -38,8 +38,10 @@ data class BrushPreset(
                 tool = Tool.PEN,
                 color = "#1F2937",
                 baseWidth = 1.5f,
-                smoothingLevel = 0.3f,
-                endTaperStrength = 0.4f,
+                smoothingLevel = 0.5f,
+                endTaperStrength = 0.6f,
+                minWidthFactor = 0.15f,
+                maxWidthFactor = 2.5f,
             )
 
         val FOUNTAIN =
@@ -49,10 +51,10 @@ data class BrushPreset(
                 tool = Tool.PEN,
                 color = "#0F172A",
                 baseWidth = 2.0f,
-                smoothingLevel = 0.4f,
-                endTaperStrength = 0.5f,
-                minWidthFactor = 0.75f,
-                maxWidthFactor = 1.3f,
+                smoothingLevel = 0.5f,
+                endTaperStrength = 0.6f,
+                minWidthFactor = 0.2f,
+                maxWidthFactor = 2.8f,
                 nibRotation = true,
             )
 
@@ -63,10 +65,10 @@ data class BrushPreset(
                 tool = Tool.PEN,
                 color = "#4B5563",
                 baseWidth = 1.0f,
-                smoothingLevel = 0.2f,
-                endTaperStrength = 0.3f,
-                minWidthFactor = 0.8f,
-                maxWidthFactor = 1.2f,
+                smoothingLevel = 0.45f,
+                endTaperStrength = 0.5f,
+                minWidthFactor = 0.25f,
+                maxWidthFactor = 1.8f,
             )
 
         val STANDARD_HIGHLIGHTER =
@@ -78,8 +80,8 @@ data class BrushPreset(
                 baseWidth = 8.0f,
                 smoothingLevel = 0.5f,
                 endTaperStrength = 0.0f,
-                minWidthFactor = 0.9f,
-                maxWidthFactor = 1.1f,
+                minWidthFactor = 0.7f,
+                maxWidthFactor = 1.3f,
             )
 
         val WIDE_HIGHLIGHTER =
@@ -91,8 +93,8 @@ data class BrushPreset(
                 baseWidth = 16.0f,
                 smoothingLevel = 0.5f,
                 endTaperStrength = 0.0f,
-                minWidthFactor = 0.9f,
-                maxWidthFactor = 1.1f,
+                minWidthFactor = 0.7f,
+                maxWidthFactor = 1.3f,
             )
 
         val DEFAULT_PRESETS =

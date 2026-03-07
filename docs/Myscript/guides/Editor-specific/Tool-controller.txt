@@ -1,0 +1,80 @@
+Tool controller
+
+This page focuses on the role of the ToolController object, that allows to manage multiple tools in iink SDK.
+
+The iink v1.x API used to consider that pen events were dedicated to write or edit content (text, math or shape content, edit gestures, etc.) and touch events to manipulate content (select, drag & drop, scroll, etc.).
+
+The introduction of the ToolController object enables to associate input sources with interaction tools, such as pen, eraser, highlighter and selector. For instance, a pen input can now be used to select content with the selector (lasso) tool.
+
+To do so, the ToolController links pointer types representing input mediums to intents, so that you can customize their interaction patterns.
+Pointer types and Pointer tools
+Pointer type
+
+The point of contact can be made on the screen by several input devices. The PointerType enum defines this source of input. The possible values are:
+
+    PEN : an active stylus.
+    TOUCH : a finger on a touchscreen (or a passive stylus).
+    ERASER: an eraser or inverted pen.
+    MOUSE : a mouse.
+
+In addition, we have planned some extra sources of input, in order to ease your integration of specific use cases or any new future pointer type. An example of usage would be a pen while holding a button. The available enum values for such specific cases are: CUSTOM_1, CUSTOM_2, CUSTOM_3, CUSTOM_4, CUSTOM_5.
+Pointer tool
+
+The intent of the event on the content is defined by the PointerTool enum. The possible values are:
+
+    PEN : corresponds to actions like writing or drawing some contents, performing ink gesture such as a scratch, or resizing a box by dragging its handle.
+    HAND : aims at interacting with already selected content, for instance for moving or resizing it, converting it.
+    ERASER : aims at erasing some content.
+    SELECTOR : aims at selecting some content by surrounding it with a lasso, so that further actions can be applied on the selection. The selector.shape property determines the geometrical shape drawn with the lasso selector: either a polygon (by default) or a rectangle. In Raw Content and Diagram, you can choose with the raw-content.selection.lasso-outline and diagram.selection.lasso-outline properties whether the lasso outline is as drawn or fitted. For more details, check the configuration page.
+    HIGHLIGHTER : aims at highlighting some content anywhere in a page, regardless of the type of paragraph or block or the presence of bold. It can also be used to color shapes or change text or ink color.
+
+Mapping Pointer types to tools
+
+Mapping pointer types to tools is necessary so that iink knows how it should interpret the captured events. For instance, it determines a selection by analysing the items within the lasso strokes when the PEN pointer type is linked to the SELECTOR pointer tool, whereas it performs text and gestures recognition when the PEN pointer type is linked to the PEN tool.
+Getting a Tool Controller
+
+The Engine object lets you create the ToolController:
+
+ToolController toolController = engine.createToolController();
+
+By default, this ToolController comes with a predefined cabling between pointer types and intents:
+  	PEN 	HAND 	ERASER
+PEN 	X 	  	 
+TOUCH 	  	X 	 
+ERASER 	  	  	X
+MOUSE 	X 	  	 
+CUSTOM 	X 	  	 
+  	  	  	 
+Customizing your Tool Controller
+
+But should you want to use your input for another intent, you can customize your tool controller. All you have to do is modify the link between the input medium and the given intent.
+
+For this purpose, you should call the ToolController setToolForType method. For instance, if you want to use your active pen to highlight:
+
+toolController.setToolForType(PointerType.PEN, PointerTool.HIGHLIGHTER);
+
+Integration tips
+
+If you want to add a toolbar in your application, the setToolForType method should be used when the user switches a tool mapped to the same input type: for instance from PEN to HIGHLIGHTER. You can draw on the Demo example that implements a toolbar and illustrates how to switch tool.
+
+In addition, this sample lets you choose whether you use an active pen mode or not: this mode relies on the principle of using the pen to write and the finger to manipulate content.
+If your user has an active stylus, we strongly recommended you to keep this rule.
+
+The following tables sums up the mapping choices of our Demo example, that can guide you in your integration:
+Pointer Type 	Pointer Tool in active pen mode 	Pointer Tool with active pen disabled
+PEN 	Current selected tool1 	Current selected tool2
+TOUCH 	HAND 	Current selected tool2
+ERASER 	ERASER 	ERASER
+MOUSE 	Current selected tool1 	Current selected tool2
+CUSTOM 	None 	None
+  	  	 
+Styling
+
+You can associate a style to a given tool. The setToolStyle method allows you to modify the predefined style coupled with tools that add content to the Content Part, like the PEN and HIGHLIGHTER. This method is useful when you want to let end users choose styling parameters like the color. For instance, they may want to write in blue and highlight in yellow.
+
+For further guidelines on how to set a style, jump to the styling page.
+
+    The current Pointer Tool can be PEN, ERASER, SELECTOR or HIGHLIGHTER. ↩ ↩2
+
+    The current Pointer Tool can be PEN, HAND,ERASER, SELECTOR or HIGHLIGHTER. ↩ ↩2 ↩3
+

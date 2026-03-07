@@ -1,0 +1,344 @@
+SOURCE: com/myscript/iink/ContentBlock.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class ContentBlock
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.ContentSelection [link: ContentSelection.html]
+
+com.myscript.iink.ContentBlock
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class ContentBlock
+extends ContentSelection [link: ContentSelection.html]
+
+Represents a block of content. The tree of content blocks provides the
+hierarchical structure of a content part into semantic units.
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final void
+
+close [link: #close()]()
+
+protected void
+
+finalize [link: #finalize()]()
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getAttributes [link: #getAttributes()]()
+
+Returns the block's attributes as a JSON string.
+
+@NotNull Rectangle [link: graphics/Rectangle.html]
+
+getBox [link: #getBox()]()
+
+Returns the box that represents the position of this block.
+
+final @NotNull ContentBlock [link: ContentBlock.html][]
+
+getChildren [link: #getChildren()]()
+
+Returns the children of this block.
+
+@NotNull EnumSet [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/EnumSet.html]<ConversionState [link: ConversionState.html]>
+
+getConversionState [link: #getConversionState()]()
+
+Returns the current conversion state of this block, as a set
+of ConversionState values.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getId [link: #getId()]()
+
+Returns the identifier of this block.
+
+@NotNull Point [link: graphics/Point.html][]
+
+getOrientedBox [link: #getOrientedBox()]()
+
+Returns the four points of the oriented box of this block.
+
+final @Nullable ContentBlock [link: ContentBlock.html]
+
+getParent [link: #getParent()]()
+
+Returns the parent of this block.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getRenderingId [link: #getRenderingId()]()
+
+Returns an identifier that can be used to match corresponding calls to
+ICanvas.startGroup(String, float, float, float, float, boolean) [link: graphics/ICanvas.html#startGroup(java.lang.String,float,float,float,float,boolean)].
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getType [link: #getType()]()
+
+Returns the type of this block.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Returns a String representation of the object.
+
+Methods inherited from class com.myscript.iink.ContentSelection [link: ContentSelection.html]
+
+getPart [link: ContentSelection.html#getPart()], isValid [link: ContentSelection.html#isValid()]
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [link: ContentSelection.html#finalize()] in class ContentSelection [link: ContentSelection.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+Overrides:
+
+close [link: ContentSelection.html#close()] in class ContentSelection [link: ContentSelection.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Overrides:
+
+isClosed [link: ContentSelection.html#isClosed()] in class ContentSelection [link: ContentSelection.html]
+
+Returns:
+
+true if this object is closed.
+
+getType
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getType ()
+
+Returns the type of this block.
+
+Returns:
+
+the type name.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this block is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when block is invalid.
+
+getId
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getId ()
+
+Returns the identifier of this block.
+
+Returns:
+
+the identifier.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this block is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when block is invalid.
+
+getRenderingId
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getRenderingId ()
+
+Returns an identifier that can be used to match corresponding calls to
+ICanvas.startGroup(String, float, float, float, float, boolean) [link: graphics/ICanvas.html#startGroup(java.lang.String,float,float,float,float,boolean)].
+
+Returns:
+
+the rendering identifier.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this block is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when block is invalid.
+
+getAttributes
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getAttributes ()
+
+Returns the block's attributes as a JSON string.
+
+Returns:
+
+the attributes.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this block is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when block is invalid.
+
+Since:
+
+1.1
+
+getChildren
+
+@NotNull
+public final @NotNull ContentBlock [link: ContentBlock.html][] getChildren ()
+
+Returns the children of this block. The returned array is a copy of the
+list of child blocks, which makes it safe against concurrent changes.
+
+Returns:
+
+an array of the child blocks.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this block is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when block is invalid.
+
+getParent
+
+@Nullable
+public final @Nullable ContentBlock [link: ContentBlock.html] getParent ()
+
+Returns the parent of this block.
+
+Returns:
+
+the parent of this block, or null if this block is the root block.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this block is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when block is invalid.
+
+Since:
+
+1.4
+
+getBox
+
+@NotNull
+public @NotNull Rectangle [link: graphics/Rectangle.html] getBox ()
+
+Returns the box that represents the position of this block.
+
+Returns:
+
+the box (document coordinates in mm).
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this block is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when block is invalid.
+
+getOrientedBox
+
+@NotNull
+public @NotNull Point [link: graphics/Point.html][] getOrientedBox ()
+
+Returns the four points of the oriented box of this block.
+
+Returns:
+
+the original top-left, top-right, bottom-right, bottom-left points after rotation (document coordinates in mm).
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this block is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when block is invalid.
+
+Since:
+
+4.2
+
+getConversionState
+
+@NotNull
+public @NotNull EnumSet [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/EnumSet.html]<ConversionState [link: ConversionState.html]> getConversionState ()
+
+Returns the current conversion state of this block, as a set
+of ConversionState values.
+
+Returns:
+
+the conversion state of this block.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this block is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when block is invalid.
+
+toString
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Returns a String representation of the object.
+
+Overrides:
+
+toString [link: ContentSelection.html#toString()] in class ContentSelection [link: ContentSelection.html]
+
+Returns:
+
+the representation of the object.
+
+Since:
+
+2.1

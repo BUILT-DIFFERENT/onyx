@@ -1,0 +1,412 @@
+SOURCE: com/myscript/iink/HandwritingGenerator.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class HandwritingGenerator
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.HandwritingGenerator
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class HandwritingGenerator
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+Represents a handwriting generator that provides a way to generate
+handwritten content from source parameters (label, writing profile and formatting).
+
+Since:
+
+4.1
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final void
+
+add [link: #add(java.lang.String,com.myscript.iink.MimeType)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] label,
+@NotNull MimeType [link: MimeType.html] type)
+
+Adds text in the current handwriting generation.
+
+final void
+
+cancel [link: #cancel()]()
+
+Cancels the ongoing handwriting generation if any.
+
+final void
+
+close [link: #close()]()
+
+final @NotNull HandwritingProfileBuilder [link: HandwritingProfileBuilder.html]
+
+createHandwritingProfileBuilder [link: #createHandwritingProfileBuilder()]()
+
+Create a new handwriting profile builder.
+
+final void
+
+end [link: #end()]()
+
+Tells the handwriting generation to not wait for more text to add.
+
+protected void
+
+finalize [link: #finalize()]()
+
+final @NotNull HandwritingResult [link: HandwritingResult.html]
+
+getResult [link: #getResult()]()
+
+Returns the cumulative result of the latest handwriting generation.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][]
+
+getSupportedContentTypes [link: #getSupportedContentTypes()]()
+
+Returns the types of content that can be generated.
+
+final @NotNull MimeType [link: MimeType.html][]
+
+getSupportedMimeTypes [link: #getSupportedMimeTypes(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] type)
+
+Returns the input formats supported by the handwriting generation for the given content type.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+final boolean
+
+isIdle [link: #isIdle()]()
+
+Checks whether a generation is ongoing.
+
+final void
+
+loadResource [link: #loadResource()]()
+
+Loads the resource synchronously.
+
+final String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+normalize [link: #normalize(java.lang.String,java.lang.String,com.myscript.iink.MimeType,com.myscript.iink.ParameterSet)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] contentType,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] label,
+@NotNull MimeType [link: MimeType.html] mimeType,
+@Nullable ParameterSet [link: ParameterSet.html] overrideConfiguration)
+
+Normalizes a handwriting generation input.
+
+final void
+
+setListener [link: #setListener(com.myscript.iink.IHandwritingGeneratorListener)] (@Nullable IHandwritingGeneratorListener [link: IHandwritingGeneratorListener.html] listener)
+
+Sets the specified listener to this handwriting generator.
+
+final void
+
+start [link: #start(java.lang.String,com.myscript.iink.HandwritingProfile,com.myscript.iink.ParameterSet)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] type,
+@NotNull HandwritingProfile [link: HandwritingProfile.html] profile,
+@Nullable ParameterSet [link: ParameterSet.html] overrideConfiguration)
+
+Starts a handwriting generation using the specified writing profile.
+
+final void
+
+waitForIdle [link: #waitForIdle()]()
+
+Waits until ongoing generation is over.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+setListener
+
+public final void setListener (@Nullable
+@Nullable IHandwritingGeneratorListener [link: IHandwritingGeneratorListener.html] listener)
+
+Sets the specified listener to this handwriting generator.
+
+Parameters:
+
+listener - the listener to be added, or null to unset
+the previous one.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting generator is closed.
+
+createHandwritingProfileBuilder
+
+@NotNull
+public final @NotNull HandwritingProfileBuilder [link: HandwritingProfileBuilder.html] createHandwritingProfileBuilder ()
+
+Create a new handwriting profile builder.
+
+Returns:
+
+the newly created handwriting profile builder.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting generator is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when the handwriting profile builder cannot be created.
+
+getSupportedContentTypes
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] getSupportedContentTypes ()
+
+Returns the types of content that can be generated.
+
+Returns:
+
+an array of the supported content types.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting generator is closed.
+
+start
+
+public final void start (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] type,
+@NotNull
+@NotNull HandwritingProfile [link: HandwritingProfile.html] profile,
+@Nullable
+@Nullable ParameterSet [link: ParameterSet.html] overrideConfiguration)
+
+Starts a handwriting generation using the specified writing profile.
+
+Parameters:
+
+type - the type of the generated handwritten content.
+
+profile - the handwriting profile used to generate the handwritten content.
+
+overrideConfiguration - the extra configuration used for this handwriting generation.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting generator is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - if the type is not a supported content type.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting generator is not idle (see isIdle() ).
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when the handwriting generator resource is not found in the search path of the configuration manager (\"configuration-manager.search-path\").
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when overrideConfiguration is invalid.
+
+getSupportedMimeTypes
+
+@NotNull
+public final @NotNull MimeType [link: MimeType.html][] getSupportedMimeTypes (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] type)
+
+Returns the input formats supported by the handwriting generation for the given content type.
+
+Parameters:
+
+type - the type of the generated handwritten content.
+
+Returns:
+
+an array of the supported mime types.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting generator is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when type is not a supported content type.
+
+add
+
+public final void add (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] label,
+@NotNull
+@NotNull MimeType [link: MimeType.html] type)
+
+Adds text in the current handwriting generation.
+
+Parameters:
+
+label - the input label that the generated handwritten content must match.
+
+type - the mime type describing the format of the label .
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting generator is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when type is not supported by this handwriting generator.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when a handwriting generation has not been started (see start() ).
+
+end
+
+public final void end ()
+
+Tells the handwriting generation to not wait for more text to add.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting generator is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when a handwriting generation has not been started (see start() and add() ).
+
+cancel
+
+public final void cancel ()
+
+Cancels the ongoing handwriting generation if any.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting generator is closed.
+
+isIdle
+
+public final boolean isIdle ()
+
+Checks whether a generation is ongoing.
+
+Returns:
+
+true if there are no pending operations.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting generator is closed.
+
+waitForIdle
+
+public final void waitForIdle ()
+
+Waits until ongoing generation is over.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting generator is closed.
+
+getResult
+
+@NotNull
+public final @NotNull HandwritingResult [link: HandwritingResult.html] getResult ()
+
+Returns the cumulative result of the latest handwriting generation.
+
+Returns:
+
+the latest generated handwriting result.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting generator is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when a handwriting generation is not idle (see isIdle() ).
+
+loadResource
+
+public final void loadResource ()
+
+Loads the resource synchronously.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when the resource file cannot be loaded.
+
+Since:
+
+4.2
+
+normalize
+
+public final String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] normalize (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] contentType,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] label,
+@NotNull
+@NotNull MimeType [link: MimeType.html] mimeType,
+@Nullable
+@Nullable ParameterSet [link: ParameterSet.html] overrideConfiguration)
+
+Normalizes a handwriting generation input.
+
+Parameters:
+
+contentType - the type of the generated handwritten content.
+
+label - the input label to normalize.
+
+mimeType - the mime type describing the format of the label .
+
+overrideConfiguration - the extra configuration used for this normalization.
+
+Returns:
+
+the normalized label described in the same mime type as the label.
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when contentType is not a supported content type.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when mimeType is not supported by this handwriting generator.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when overrideConfiguration is invalid.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when the handwriting generator resource is not found in the search path of the configuration manager (\"configuration-manager.search-path\").
+
+Since:
+
+4.3

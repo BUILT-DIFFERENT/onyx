@@ -1,0 +1,132 @@
+Handwriting generation
+
+With iink SDK 4.3, it is possible to generate handwriting for English text or for Chinese text (GB2312 character set).
+Handwriting generation main principle
+
+Handwriting generation is the process of converting digital text to digital ink by creating the basic strokes that form the letters, words, and sentences of the input text. This feature is supported by these main objects:
+
+    a HandwritingProfileBuilder to create a HandwritingProfile that describes the handwriting style.
+
+    a HandwritingGenerator to generate a list of PointerEvent corresponding to the strokes from a text input String and a HandwritingProfile.
+
+    a resource file depending on the language text you want to generate: en-hw-gen.res for English text or zh-hw-gen.res for Chinese text (GB2312 character set).
+
+When using the zh-hw-gen.res, it is possible to input a mix of Chinese and English text.
+HandwritingGenerator setup
+To use the handwriting generation, you must contact our sales team.
+
+    Deploy the handwriting generation resource file corresponding to your language text in your application. The .res files are contained in the myscript-iink-handwriting-generation.zip package.
+
+    Configure an Engine object to use this resource:
+
+Configuration conf = engine.getConfiguration();
+// Set the value of the configuration-manager.search-path key to the folder(s) containing your resource.
+String hwResDir = "zip://" + getPackageCodePath() + "!/assets/resources/handwriting_generation";
+conf.setStringArray("configuration-manager.search-path", new String[]{hwResDir});
+// Choose the handwriting generation resource: `en-hw-gen.res` or `zh-hw-gen.res`
+conf.setString("handwriting-generation.init.resource","en-hw-gen.res");
+
+    Create your HandwritingGenerator object:
+
+HandwritingGenerator generator = engine.createHandwritingGenerator();
+
+HandwritingProfile creation
+
+Before using your HandwritingGenerator, you must create a HandwritingProfile, which can be either a predefined handwriting style selected from a dataset of handwriting styles or the user’s handwriting style, which is learned from user’s handwriting samples.
+Predefined handwriting profile
+
+The iink SDK comes with a set of predefined handwriting styles that can be retrieved by their ids.
+
+HandwritingProfileBuilder builder = generator.createHandwritingProfileBuilder();
+
+// get the number of predefined handwriting styles for current resource
+int numberOfPredefinedProfiles=builder.getPredefinedProfileCount()
+
+// retrieve the 1st one
+HandwritingProfile profile = builder.getPredefinedProfileAt(0);
+
+The list of predefined handwriting styles depends on the handwriting generation resource. So, the getPredefinedProfileCount requires the resource to be loaded, otherwise, it will load it synchronously.
+To avoid the extra cost of loading when getting the number of predefined profiles, you can preload the resource using HandwritingGenerator loadResource.
+User’s handwriting style
+
+The HandwritingProfileBuilder can also learn the user’s handwriting style from the user’s text strokes that it has recognized in the past with an Editor or an OffscreenEditor.
+
+    It can rely either on the ContentSelection of an Editor, either a whole block or a lasso selection:
+
+// get a selection from an Editor, for instance your Root block assuming it contains recognized Text blocks
+ContentBlock root = editor.getRootBlock();
+// generate a profile from a content selection
+HandwritingProfile profile = builder.createFromSelection(root);
+
+    Or use the ContentPackage file of an Editor or an OffscreenEditor, that contains recognized text:
+
+HandwritingProfile profile = builder.createFromFile("recognized-text.iink");
+
+    You can use the store method to save the generated profile to a file and easily use it again with the load method.
+
+Handwriting generation example
+
+Once you have your HandwritingProfile, you are ready to generate the handwriting:
+
+// starts the handwriting generation process in a background thread with the start method
+generator.start("Text", profile, null);
+
+ // requests generation, which will be performed in a background thread
+generator.add("First words", MimeType.TEXT);
+generator.add("More words", MimeType.TEXT);
+
+// indicates that no more generation requests will be done
+generator.end();
+
+ // waits until all generation requests are processed
+generator.waitForIdle();
+
+ // get the generation results
+HandwritingResult result = generator.getResult();
+
+If you enter an unexpected code point, a question mark ? will replace it.
+Customizing handwriting generation parameters
+
+You can provide a ParameterSet to the HandwritingGenerator to customize the handwriting generation configuration. It allows you to tune parameter such as strokes location or size, as illustrated by this example:
+
+// Create an empty parameter set
+ParameterSet generationParams = engine.createParameterSet();
+
+// Example of custom configuration
+generationParams.setNumber("handwriting-generation.session.width-mm", widthMM.x - offsetMM.x);
+generationParams.setNumber("handwriting-generation.session.left-x-mm", offsetMM.x);
+generationParams.setNumber("handwriting-generation.session.origin-x-mm", offsetFirstLineMM.x);
+generationParams.setNumber("handwriting-generation.session.origin-y-mm", offsetMM.y);
+generationParams.setNumber("handwriting-generation.session.line-gap-mm", textSize * LINE_GAP_RATIO);
+generationParams.setNumber("handwriting-generation.session.x-height-mm", textSize);
+
+// starts the handwriting generation with this custom configuration ParameterSet
+generator.start("Text", profile, generationParams);
+
+This section of the configuration guide describes the main handwriting generation configuration parameters.
+Handwriting generation feedback
+
+We strongly recommend that you implement the IHandwritingGeneratorListener interface and register it with the HandwritingGenerator, as it is useful that your application is informed about both situations:
+
+    onError when an error occurs.
+
+    onUnsupportedCharacter when HandwritingGenerator is requested to generate an unsupported character.
+
+The listener also implements onPartialResult for each call to HandwritingGenerator add method, when generation results are available from the HandwritingGenerator, and onEnd when generation is over.
+Handwriting result
+
+The HandwritingResult contains the result of the handwriting generation as a list of PointerEvent with the stroke points coordinates expressed in millimeters.
+
+To retrieve the PointerEvents, you can provide a view transform so that the stroke coordinates in millimeters are converted to view coordinates in pixels, making them directly usable with an Editor.
+
+// retrieve your Editor view transform ( pixels -> mm coordinates changes)
+Transform transform = editor.getRenderer().getViewTransform();
+
+// invert the transform ( mm -> pixels coordinates changes)
+transform.invert();
+
+// get the handwriting generation pointer events result with this transform to have the coordinates in pixels
+PointerEvents resultEventsInPixels= result.toPointerEvents(transform);
+
+// resultEventsInPixels are ready to use with your Editor
+

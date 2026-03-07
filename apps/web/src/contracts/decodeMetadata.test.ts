@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { decodeWebMetadata } from './decodeMetadata';
 
 const basePayload = {
-  note: {
-    noteId: '550e8400-e29b-41d4-a716-446655440000',
-    ownerUserId: 'user_123',
+  notebook: {
+    notebookId: '550e8400-e29b-41d4-a716-446655440000',
+    ownerUserId: 'user_2abc123def456',
     title: 'Web decode sample',
+    coverColor: '#6366F1',
+    isFavorite: false,
+    notebookMode: 'paged',
     createdAt: 1708300800000,
     updatedAt: 1708300800000,
   },
@@ -19,7 +22,7 @@ describe('decodeWebMetadata', () => {
         {
           objectId: '880e8400-e29b-41d4-a716-446655440008',
           pageId: '660e8400-e29b-41d4-a716-446655440001',
-          noteId: '550e8400-e29b-41d4-a716-446655440000',
+          notebookId: '550e8400-e29b-41d4-a716-446655440000',
           kind: 'shape',
           zIndex: 2,
           x: 10,
@@ -34,7 +37,7 @@ describe('decodeWebMetadata', () => {
         {
           objectId: '980e8400-e29b-41d4-a716-446655440009',
           pageId: '660e8400-e29b-41d4-a716-446655440001',
-          noteId: '550e8400-e29b-41d4-a716-446655440000',
+          notebookId: '550e8400-e29b-41d4-a716-446655440000',
           kind: 'diagramWidget',
           arbitrary: true,
         },
@@ -56,7 +59,7 @@ describe('decodeWebMetadata', () => {
         {
           objectId: 'a80e8400-e29b-41d4-a716-446655440010',
           pageId: '660e8400-e29b-41d4-a716-446655440001',
-          noteId: '550e8400-e29b-41d4-a716-446655440000',
+          notebookId: '550e8400-e29b-41d4-a716-446655440000',
           kind: 'shape',
           zIndex: 1,
           x: 0,
@@ -71,93 +74,47 @@ describe('decodeWebMetadata', () => {
       ],
     });
 
-    expect(result.note.title).toBe('Web decode sample');
+    expect(result.notebook.title).toBe('Web decode sample');
     expect(result.pageObjects).toHaveLength(0);
     expect(result.reports.pageObjects.skippedInvalidCount).toBe(1);
   });
 
-  it('decodes feature metadata arrays and skips invalid entries', () => {
+  it('decodes search texts and exports, skipping invalid entries', () => {
     const result = decodeWebMetadata({
       ...basePayload,
-      gestureSettings: [
+      searchTexts: [
         {
-          profileId: '191e8400-e29b-41d4-a716-446655440018',
-          ownerUserId: 'user_123',
-          singleFingerMode: 'PAN',
-          doubleFingerMode: 'ZOOM_PAN',
-          stylusPrimaryAction: 'ERASER_HOLD',
-          stylusSecondaryAction: 'ERASER_TOGGLE',
-          stylusLongHoldAction: 'NO_ACTION',
-          doubleTapZoomAction: 'CYCLE_PRESET',
-          doubleTapZoomPointerMode: 'FINGER_ONLY',
-          twoFingerTapAction: 'UNDO',
-          threeFingerTapAction: 'REDO',
-          latencyOptimizationMode: 'NORMAL',
-          updatedAt: 1708300817000,
-        },
-        { profileId: 'bad-id' },
-      ],
-      templateScopes: [
-        {
-          scopeId: '291e8400-e29b-41d4-a716-446655440019',
-          noteId: '550e8400-e29b-41d4-a716-446655440000',
-          backgroundKind: 'grid',
-          spacing: 24,
-          colorHex: '#E0E0E0',
-          applyScope: 'allPages',
-          updatedAt: 1708300819000,
-        },
-      ],
-      exportMetadata: [
-        {
-          exportId: '391e8400-e29b-41d4-a716-446655440020',
-          noteId: '550e8400-e29b-41d4-a716-446655440000',
-          ownerUserId: 'user_123',
-          format: 'pdf',
-          mode: 'flattened',
-          status: 'queued',
-          requestedAt: 1708300820000,
-        },
-      ],
-      searchIndexTokens: [
-        {
-          tokenId: 'f80e8400-e29b-41d4-a716-446655440015',
-          noteId: '550e8400-e29b-41d4-a716-446655440000',
+          notebookId: '550e8400-e29b-41d4-a716-446655440000',
           pageId: '660e8400-e29b-41d4-a716-446655440001',
-          token: 'meeting',
+          recognizedText: 'meeting notes',
           source: 'handwriting',
-          bounds: {
-            x: 10,
-            y: 10,
-            width: 20,
-            height: 10,
-          },
-          indexVersion: 1,
-          mergeKey: 'k1',
-          sourceRevision: 0,
-          sourceUpdatedAt: 1708300821000,
-          indexedAt: 1708300822000,
-          payload: {},
+          extractedAt: 1708387200000,
         },
         {
-          source: 'pdfOcr',
+          source: 'invalid',
+        },
+      ],
+      exports: [
+        {
+          notebookId: '550e8400-e29b-41d4-a716-446655440000',
+          exportAssetId: 'c30e8400-e29b-41d4-a716-446655440400',
+          mode: 'flattened',
+          createdByUserId: 'user_2abc123def456',
+          createdAt: 1708387200000,
         },
       ],
     });
 
-    expect(result.gestureSettings).toHaveLength(1);
-    expect(result.reports.gestureSettings.skippedInvalidCount).toBe(1);
-    expect(result.templateScopes).toHaveLength(1);
-    expect(result.exportMetadata).toHaveLength(1);
-    expect(result.searchIndexTokens).toHaveLength(1);
-    expect(result.reports.searchIndexTokens.skippedInvalidCount).toBe(1);
+    expect(result.searchTexts).toHaveLength(1);
+    expect(result.reports.searchTexts.skippedInvalidCount).toBe(1);
+    expect(result.exports).toHaveLength(1);
   });
 
-  it('throws on invalid note payload', () => {
+  it('throws on invalid notebook payload', () => {
     expect(() =>
       decodeWebMetadata({
-        note: { noteId: 'not-a-uuid' },
+        notebook: { notebookId: 'not-a-uuid' },
       }),
-    ).toThrow('Invalid note payload');
+    ).toThrow('Invalid notebook payload');
   });
 });

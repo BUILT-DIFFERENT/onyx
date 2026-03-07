@@ -1,0 +1,38 @@
+SOURCE: com/myscript/iink/IRendererListener.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Interface IRendererListener
+
+public interface IRendererListener
+
+The listener interface for receiving renderer events.
+
+Method Summary
+
+All Methods Instance Methods Abstract Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+void
+
+viewTransformChanged [link: #viewTransformChanged(com.myscript.iink.Renderer)] (@NotNull Renderer [link: Renderer.html] renderer)
+
+Invoked when the view transform has changed.
+
+Method Details
+
+viewTransformChanged
+
+void viewTransformChanged (@NotNull
+@NotNull Renderer [link: Renderer.html] renderer)
+
+Invoked when the view transform has changed.
+
+Parameters:
+
+renderer - the renderer.

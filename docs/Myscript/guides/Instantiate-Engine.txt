@@ -1,0 +1,115 @@
+Instantiate Engine
+
+This page shows you how to instantiate the iink runtime and configure it to fit your needs.
+Engine creation
+
+The iink SDK runtime is represented by an Engine object.
+
+This object will let you create other key objects, configure the recognition and fine-tune the SDK behavior.
+
+It is instantiated via the create() static method of the Engine class:
+
+In java, we strongly recommend to wrap the engine creation into a singleton.
+
+import com.myscript.certificate.MyCertificate;
+import com.myscript.iink.Engine;
+
+public class IInkApplication extends Application
+{
+  private static Engine engine;
+
+  public static synchronized Engine getEngine()
+  {
+    if (engine == null)
+    {
+      engine = Engine.create(MyCertificate.getBytes());
+    }
+
+    return engine;
+  }
+}
+
+Data provided in parameter corresponds to your activation certificate. If engine creation fails, please make sure that it was generated for your application identifier.
+Configuration
+
+A new engine must be configured to let iink SDK know which kind of content is to be recognized.
+
+Being a flexible toolkit, iink SDK also comes with many configuration parameters. While the default values make sense in most cases, it may sometimes be required to configure them to suit your needs.
+Accessing the configuration
+
+MyScript iink SDK configuration is a ParameterSet object that can be obtained by calling getConfiguration() on the engine object. It can be seen as a set of key/value pairs, where values themselves can be other ParameterSet objects.
+
+You can read the value attached to an existing key, add new (key, value) pairs or remove existing ones. Supported value types are strings, numbers, booleans, arrays of strings, as well as other ParameterSet objects.
+
+It is possible to attach a listener implementing the IConfigurationListener interface to a given configuration object to get notified when configuration changes are made.
+Configuring the recognition
+
+To recognize math, shapes or text in any language, the engine needs to be created and pointed to the required assets.
+
+Assets packages consist in a set of configuration files (*.conf) that specify required recognition parameters combined to binary files called resources files (*.res). The resources files host everything that the engine requires for the recognition.
+
+MyScript iink SDK default configurations should be suitable for most needs. So in most cases, you don’t have to care for them. If you need to go further, you can learn how to modify or write your own configuration files (advanced).
+Make sure to properly deploy these files along your application as well. A good practice is to implement error management at editor level to be notified of recognition configuration error.
+Language recognition configuration
+
+Default language for text recognition is en_US english. So one of the first recognition tuning you might want to do is modifying the language.
+
+MyScript delivers some ready to use language packs so that updating language is an easy task. Depending on your content type, you can either use:
+
+    a specific language resource: MyScript language names start with a two-letter language code (using the ISO-639 standard), followed by an underscore and a two-letter country code (using the ISO-3166 standard). For example *en_US for US English.
+
+    the mul_Latn multi-language resource: it is contained in the myscript-iink-handwriting-recognition.zip package and its lang value is mul_Latn.
+
+Once you have chosen your language, you can update it in a few steps:
+
+Step 1 Download the corresponding language pack, so in our example, select the italian language: Packs for additional languages or content types are available on MyScript Developer Portal.
+
+Step 2 Install the pack in your application project: The language pack consists in a *.zip archive containing a configuration file (*.conf), and associated resources files (*.res) to be extracted in your project path.
+Make sure to properly deploy these files as the .conf file refers to the .res files with relative paths. So take care to keep the archive folder structure when extracting the files
+
+Step 3 Modify the engine configuration language in you application code:
+
+    Set the value of the configuration-manager.search-path key to the folder(s) containing your language configuration file(s) (*.conf).
+    Set the value of the lang key to match your language
+
+For instance, set it_IT for the Italian language, as corresponding resources are described in it_IT.conf:
+
+import com.myscript.iink.Configuration;
+import com.myscript.iink.Engine;
+import java.io.File;
+
+...
+Engine engine = IInkApplication.getEngine();
+
+// configure recognition
+Configuration conf = engine.getConfiguration();
+conf.setStringArray("configuration-manager.search-path", new String[] { "zip://" + getPackageCodePath() + "!/assets/conf" });
+conf.setString("lang", "it_IT");
+
+When using Recognizers, the language configuration key should be prefixed by recognizer.
+Content-specific configuration
+
+MyScript iink SDK comes with many configuration options. Some are general, like the ability to choose the location of the temporary folder to store work data on the file system, and some depend on the type of content you manipulate. For instance, it is possible to activate or deactivate the solver for math equations.
+
+The full list of supported configuration options can be found in the dedicated section.
+Editor-level configuration
+
+Engine-level configuration corresponds to the default, global configuration. It is possible to override configuration values at editor-level which is useful if you manage several parts or recognizers with different configurations.
+
+Injecting configuration at the editor level is also very convenient when working with a “Raw Content” content type, because this content type is flexible and allows specific behaviors according to its editor configuration:
+
+    The multiple_languages.json is configured with the mul_Latn lang to recognize a mix of languages with our latest analyzer and engine.
+    This text_math_shape.json is intended to take advantage of interactivity with our latest analyzer and engine.
+    This interactivity.json can be used to have interactivity with our legacy analyzer and engine.
+    While this drawing.json configuration illustrates how to do some drawing without any classification or recognition.
+
+To avoid any side effects when injecting a configuration JSON, it is recommended that you first reset the configuration to its defaults:
+
+// retrieve Editor current configuration
+Configuration conf = editor.getConfiguration();
+// Resets this configuration to its default values.
+conf.reset()
+// Injects the content of a JSON into this configuration.
+conf.inject(myconfigurationJSON)
+
+To restore your part configuration after reopening its package, you can save it in its metadata.

@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.myscript.iink"},{"l":"com.myscript.iink.graphics"},{"l":"com.myscript.iink.text"},{"l":"com.myscript.util"}];updateSearchResults();

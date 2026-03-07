@@ -13,13 +13,13 @@ Date: 2026-02-24
   - `C:/onyx/apps/android/app/src/main/java/com/onyx/android/ink/ui/InkCanvasTouch.kt`
   - motion prediction adapter is enabled by feature flag and latency mode.
 - Frame telemetry:
-  - `C:/onyx/apps/android/app/src/main/java/com/onyx/android/ink/gl/InkGlRenderer.kt`
+  - `C:/onyx/apps/android/app/src/main/java/com/onyx/android/ink/vk/VkInkSurfaceView.kt`
   - renderer logs p50/p95 frame duration and transform-to-frame latency.
 
 ## Budget targets (scaffold)
 
 - `InkCanvas#handleTouchEvent` trace-section median: <= 4ms on target hardware.
-- `InkGlRenderer#onDrawFrame` trace-section p95: <= 16.7ms.
+- `VkInkSurfaceView#onDrawFrame` trace-section p95: <= 16.7ms.
 - Worst jank burst should not exceed 100ms in active inking scenarios.
 
 ## Measurement
@@ -29,7 +29,7 @@ Date: 2026-02-24
 - Metrics captured:
   - `FrameTimingMetric`
   - `TraceSectionMetric("InkCanvas#handleTouchEvent")`
-  - `TraceSectionMetric("InkGlRenderer#onDrawFrame")`
+  - `TraceSectionMetric("VkInkSurfaceView#onDrawFrame")`
 
 ## Follow-up
 

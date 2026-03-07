@@ -1,0 +1,156 @@
+SOURCE: com/myscript/iink/MathEvaluationVariables.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class MathEvaluationVariables
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.MathEvaluationVariables
+
+public class MathEvaluationVariables
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Represents a pair of input/output math variables used for evaluation.
+Example: for "y = x^2 - 3x + 2" , getEvaluables() returns { inputName = "x"; outputName = "y" } .
+
+Since:
+
+4.1
+
+Field Summary
+
+Fields
+
+Modifier and Type
+
+Field
+
+Description
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+inputName [link: #inputName]
+
+The name of the varying variable, empty for a constant expression.
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+outputName [link: #outputName]
+
+The name of the result variable, empty for a single-variable expression without equal sign.
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+MathEvaluationVariables [link: #%3Cinit%3E(com.myscript.iink.MathEvaluationVariables)] (@NotNull MathEvaluationVariables [link: MathEvaluationVariables.html] other)
+
+Copy constructor.
+
+MathEvaluationVariables [link: #%3Cinit%3E(java.lang.String,java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] inputName,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] outputName)
+
+Constructs a MathEvaluationVariables
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+boolean
+
+equals [link: #equals(java.lang.Object)] (@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+final int
+
+hashCode [link: #hashCode()]()
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Field Details
+
+inputName
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] inputName
+
+The name of the varying variable, empty for a constant expression.
+
+outputName
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] outputName
+
+The name of the result variable, empty for a single-variable expression without equal sign.
+
+Constructor Details
+
+MathEvaluationVariables
+
+public MathEvaluationVariables (@NotNull
+@NotNull MathEvaluationVariables [link: MathEvaluationVariables.html] other)
+
+Copy constructor.
+
+Parameters:
+
+other - the evaluation variables to copy.
+
+MathEvaluationVariables
+
+public MathEvaluationVariables (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] inputName,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] outputName)
+
+Constructs a MathEvaluationVariables
+
+Parameters:
+
+inputName - the input variable name.
+
+outputName - the output variable name.
+
+Method Details
+
+equals
+
+public boolean equals (@Nullable
+@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+Overrides:
+
+equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+hashCode
+
+public final int hashCode ()
+
+Overrides:
+
+hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+toString
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]

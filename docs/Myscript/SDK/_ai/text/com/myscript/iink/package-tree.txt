@@ -1,0 +1,145 @@
+SOURCE: com/myscript/iink/package-tree.html
+
+Hierarchy For Package com.myscript.iink
+
+Package Hierarchies:
+
+All Packages [link: ../../../overview-tree.html]
+
+Class Hierarchy
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.ChangesetOperation [link: ChangesetOperation.html]
+
+com.myscript.iink.ContentPackage [link: ContentPackage.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.ContentPart [link: ContentPart.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.ContentSelection [link: ContentSelection.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.ContentBlock [link: ContentBlock.html]
+
+com.myscript.iink.Editor [link: Editor.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.Engine [link: Engine.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.HandwritingGenerator [link: HandwritingGenerator.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.HandwritingProfile [link: HandwritingProfile.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.HandwritingProfileBuilder [link: HandwritingProfileBuilder.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.HandwritingResult [link: HandwritingResult.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.HistoryManager [link: HistoryManager.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.IndentationLevels [link: IndentationLevels.html]
+
+com.myscript.iink.ItemIdHelper [link: ItemIdHelper.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.MathEvaluationVariables [link: MathEvaluationVariables.html]
+
+com.myscript.iink.MathExternalExpression [link: MathExternalExpression.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.MathSolverController [link: MathSolverController.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.MathVariableDefinition [link: MathVariableDefinition.html]
+
+com.myscript.iink.MathVariableDefinitionInfo [link: MathVariableDefinitionInfo.html]
+
+com.myscript.iink.MathVariableDefinitions [link: MathVariableDefinitions.html]
+
+com.myscript.iink.MathVariableInfo [link: MathVariableInfo.html]
+
+com.myscript.iink.NativeLibrary [link: NativeLibrary.html]
+
+com.myscript.iink.NativeObjectHandle [link: NativeObjectHandle.html]<T>
+
+com.myscript.iink.OffscreenEditor [link: OffscreenEditor.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.ParameterSet [link: ParameterSet.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.Configuration [link: Configuration.html]
+
+com.myscript.iink.PlaceholderController [link: PlaceholderController.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.PlaceholderController.PlaceholderInteractivityOptions [link: PlaceholderController.PlaceholderInteractivityOptions.html]
+
+com.myscript.iink.PointerEvent [link: PointerEvent.html]
+
+com.myscript.iink.RecognitionAssetsBuilder [link: RecognitionAssetsBuilder.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.Recognizer [link: Recognizer.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.Renderer [link: Renderer.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+com.myscript.iink.ToolController [link: ToolController.html] (implements java.lang.AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html])
+
+Interface Hierarchy
+
+com.myscript.iink.IConfigurationListener [link: IConfigurationListener.html]
+
+com.myscript.iink.IEditorListener [link: IEditorListener.html]
+
+com.myscript.iink.IGestureHandler [link: IGestureHandler.html]
+
+com.myscript.iink.IHandwritingGeneratorListener [link: IHandwritingGeneratorListener.html]
+
+com.myscript.iink.IImagePainter [link: IImagePainter.html]
+
+com.myscript.iink.IOffscreenEditorListener [link: IOffscreenEditorListener.html]
+
+com.myscript.iink.IOffscreenGestureHandler [link: IOffscreenGestureHandler.html]
+
+com.myscript.iink.IRecognizerListener [link: IRecognizerListener.html]
+
+com.myscript.iink.IRendererListener [link: IRendererListener.html]
+
+com.myscript.iink.IRenderTarget [link: IRenderTarget.html]
+
+Enum Class Hierarchy
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<E> (implements java.lang.Comparable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Comparable.html]<T>, java.lang.constant.Constable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/constant/Constable.html], java.io.Serializable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Serializable.html])
+
+com.myscript.iink.ChangesetOperationType [link: ChangesetOperationType.html]
+
+com.myscript.iink.ContentSelectionMode [link: ContentSelectionMode.html]
+
+com.myscript.iink.ConversionState [link: ConversionState.html]
+
+com.myscript.iink.EditorError [link: EditorError.html]
+
+com.myscript.iink.GestureAction [link: GestureAction.html]
+
+com.myscript.iink.HandwritingGeneratorError [link: HandwritingGeneratorError.html]
+
+com.myscript.iink.IRenderTarget.LayerType [link: IRenderTarget.LayerType.html]
+
+com.myscript.iink.ItemIdCombinationModifier [link: ItemIdCombinationModifier.html]
+
+com.myscript.iink.MathDiagnostic [link: MathDiagnostic.html]
+
+com.myscript.iink.MathVariableSourceType [link: MathVariableSourceType.html]
+
+com.myscript.iink.MimeType [link: MimeType.html]
+
+com.myscript.iink.OffscreenGestureAction [link: OffscreenGestureAction.html]
+
+com.myscript.iink.PackageOpenOption [link: PackageOpenOption.html]
+
+com.myscript.iink.PointerEventType [link: PointerEventType.html]
+
+com.myscript.iink.PointerTool [link: PointerTool.html]
+
+com.myscript.iink.PointerType [link: PointerType.html]
+
+com.myscript.iink.RecognizerError [link: RecognizerError.html]
+
+com.myscript.iink.ShapeOnHoldAction [link: ShapeOnHoldAction.html]
+
+com.myscript.iink.TextFormat [link: TextFormat.html]
+
+com.myscript.iink.TransformError [link: TransformError.html]

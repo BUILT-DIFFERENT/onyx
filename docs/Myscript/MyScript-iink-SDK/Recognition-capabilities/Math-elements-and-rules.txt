@@ -1,0 +1,78 @@
+Math elements and rules
+
+MyScript iink SDK can recognize the following math elements and rules.
+Elements
+Type   	Items
+Letters (Latin alphabet) 	a b c d e f g h i j k l m n o p q r s t u v w x y z
+A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+Digits 	0 1 2 3 4 5 6 7 8 9
+Mathematical symbols (including operators) 	€ $ £ ¥ ₩ ¢ ( ) [ ] { } ! # % ‰ & ? @ / \ | ∥ ∦ © ∂ ∅ ∇ ∞ + - ± × ÷ * √ ¬ ∘ · ‘ , . : ; _ ← ↑ → ↓ ↔ ↕︎ ↖︎ ↗︎ ↘︎ ↙︎ ↼ ⇀ ↽ ⇁ ⇋ ⇌ ⇐ ⇑ ⇒ ⇓ ⇔ ⇕ ∀ ∃ ∄ ∈ ∉ ∋ ∌ ∪ ∩ ⊂ ⊃ ⊄ ⊅ ⊆ ⊈ ⊇ ⊉ ∝ ∏ ∐︎ ∑ ∫ ∬ ∭ ∮ ∯ ∰ ℂ ℕ ℚ ℝ ℤ 𝔻 ℑ︎ ℜ︎ = ≠ ≒ ≡ ≢ ∼ ≃ ≄ ≅ ≆ ≇ ≈ ≉ < > ∧ ∨ ≤ ≥ ≮︎ ≯︎ ≰︎ ≱︎ ≪ ≫ ⋉ ⋊ ⋮ … ⋱ ⋰ ⌈ ⌉ ⌊ ⌋ □ △ ⟦ ⟧ ⟨ ⟩ ∠ ⦞ ℏ ⊥ ⫻ ⊕ ⊗ ⊖ ⊙ ∓ ∵ ∴ ≦ ≧ ℱ ℒ ⌒
+Greek symbols frequently used in mathematics 	Γ Δ Θ Λ Ξ Π Σ Υ Φ Ψ Ω
+α β γ δ ε ζ η θ ι κ λ µ ν ξ π ρ σ τ υ φ ϕ χ ψ ω
+Mathematical terms 	dx dy dz dt sin cos tan cot asin acos atan acot arcsin arccos arctan arccot cosh sinh tanh coth acosh asinh atanh acoth arcosh arsinh artanh arcoth min max arg argmin argmax inf sup lim liminf limsup ln log exp lg card Im Re det dim deg sec Pr csc ker gcd mod
+International convention units (weight, length, frequency, luminosity, dosage, pressure, etc.) 	km hm dam dm cm mm µm ha hl dal dl cl ml µl kg hg dag dg cg mg µg ms µs GHz MHz kHz Hz µA µC µF µHz µJ µN µPa µS µT µV µW µWb µWh µbar µcd µeV µlm µlx
+Rules
+Rule 	Structure 	Written example 	LaTeX result
+Horizontal pair 	
+	
+	
+Fence 	
+{ } [ ] ( )
+	
+	
+Fence 	
+	
+	
+Square root 	
+	
+	
+Fraction 	
+	
+	
+Subscript 	
+	
+	
+Superscript 	
+	
+	
+Subsuperscript 	
+	
+	
+Presuperscript 	
+	
+	
+Overscript 	
+	
+	
+Underscript 	
+	
+	
+Underoverscript 	
+	
+	
+Vertical pair 	
+	
+	
+Vertical list 	
+…
+	
+	
+Matrix 	
+……
+	
+	
+Partial fraction (numerator) 	
+	
+	
+Partial fraction (denominator) 	
+	
+	
+Slanted fraction 	
+	
+	
+Vertical operation1 	
+	
+	
+
+    Vertical operations with a single operator per line [+-*×/:÷] and decimal numbers can be recognized by Raw Content Editor and OffscreenEditor configured with advanced analyzer, as well as Raw Content Recognizer. ↩
+

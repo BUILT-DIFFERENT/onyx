@@ -1,0 +1,227 @@
+SOURCE: com/myscript/iink/MathDiagnostic.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Enum Class MathDiagnostic
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<MathDiagnostic [link: MathDiagnostic.html]>
+
+com.myscript.iink.MathDiagnostic
+
+All Implemented Interfaces:
+
+Serializable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Serializable.html] , Comparable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Comparable.html]<MathDiagnostic [link: MathDiagnostic.html]> , Constable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/constant/Constable.html]
+
+public enum MathDiagnostic
+extends Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<MathDiagnostic [link: MathDiagnostic.html]>
+
+Error code returned by MathSolverController::getDiagnostic.
+
+Since:
+
+4.1
+
+Nested Class Summary
+
+Nested classes/interfaces inherited from class java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]
+
+Enum.EnumDesc [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html]<E [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html] extends Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<E [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html]>>
+
+Enum Constant Summary
+
+Enum Constants
+
+Enum Constant
+
+Description
+
+ALLOWED [link: #ALLOWED]
+
+The task is allowed.
+
+ALLOWED_BUT_PREVIOUSLY_DISCARDED [link: #ALLOWED_BUT_PREVIOUSLY_DISCARDED]
+
+The task is allowed but the user previously discarded the result.
+
+DIVISION_BY_ZERO [link: #DIVISION_BY_ZERO]
+
+Computation leads to a division by zero.
+
+INCOMPLETE_EXPRESSION [link: #INCOMPLETE_EXPRESSION]
+
+The expression is incomplete.
+
+INVALID_OPERATION [link: #INVALID_OPERATION]
+
+Computation leads to an invalid operation.
+
+NO_VARIABLE [link: #NO_VARIABLE]
+
+There is no undefined variable to evaluate.
+
+NON_EVALUABLE [link: #NON_EVALUABLE]
+
+The expression form is not evaluable.
+
+NOT_APPLICABLE [link: #NOT_APPLICABLE]
+
+Task does not apply or nothing to do, in respect to the current configuration.
+
+NUMBER_OVERFLOW [link: #NUMBER_OVERFLOW]
+
+Computation leads to a number overflow.
+
+NUMBER_UNDERFLOW [link: #NUMBER_UNDERFLOW]
+
+Computation leads to a number underflow.
+
+TOO_MANY_VARIABLES [link: #TOO_MANY_VARIABLES]
+
+There are too many undefined variables.
+
+UNSUPPORTED [link: #UNSUPPORTED]
+
+The task is unsupported (internal error).
+
+Method Summary
+
+All Methods Static Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+static MathDiagnostic [link: MathDiagnostic.html]
+
+valueOf [link: #valueOf(java.lang.String)] (String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Returns the enum constant of this class with the specified name.
+
+static MathDiagnostic [link: MathDiagnostic.html][]
+
+values [link: #values()]()
+
+Returns an array containing the constants of this enum class, in
+the order they are declared.
+
+Methods inherited from class java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#clone()], compareTo [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#compareTo(E)], describeConstable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#describeConstable()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#equals(java.lang.Object)], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#finalize()], getDeclaringClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#getDeclaringClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#hashCode()], name [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#name()], ordinal [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#ordinal()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#toString()], valueOf [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#valueOf(java.lang.Class,java.lang.String)]
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Enum Constant Details
+
+ALLOWED
+
+public static final MathDiagnostic [link: MathDiagnostic.html] ALLOWED
+
+The task is allowed.
+
+ALLOWED_BUT_PREVIOUSLY_DISCARDED
+
+public static final MathDiagnostic [link: MathDiagnostic.html] ALLOWED_BUT_PREVIOUSLY_DISCARDED
+
+The task is allowed but the user previously discarded the result.
+
+UNSUPPORTED
+
+public static final MathDiagnostic [link: MathDiagnostic.html] UNSUPPORTED
+
+The task is unsupported (internal error).
+
+NON_EVALUABLE
+
+public static final MathDiagnostic [link: MathDiagnostic.html] NON_EVALUABLE
+
+The expression form is not evaluable.
+
+INCOMPLETE_EXPRESSION
+
+public static final MathDiagnostic [link: MathDiagnostic.html] INCOMPLETE_EXPRESSION
+
+The expression is incomplete.
+
+NO_VARIABLE
+
+public static final MathDiagnostic [link: MathDiagnostic.html] NO_VARIABLE
+
+There is no undefined variable to evaluate.
+
+TOO_MANY_VARIABLES
+
+public static final MathDiagnostic [link: MathDiagnostic.html] TOO_MANY_VARIABLES
+
+There are too many undefined variables.
+
+NOT_APPLICABLE
+
+public static final MathDiagnostic [link: MathDiagnostic.html] NOT_APPLICABLE
+
+Task does not apply or nothing to do, in respect to the current configuration.
+
+DIVISION_BY_ZERO
+
+public static final MathDiagnostic [link: MathDiagnostic.html] DIVISION_BY_ZERO
+
+Computation leads to a division by zero.
+
+NUMBER_OVERFLOW
+
+public static final MathDiagnostic [link: MathDiagnostic.html] NUMBER_OVERFLOW
+
+Computation leads to a number overflow.
+
+NUMBER_UNDERFLOW
+
+public static final MathDiagnostic [link: MathDiagnostic.html] NUMBER_UNDERFLOW
+
+Computation leads to a number underflow.
+
+INVALID_OPERATION
+
+public static final MathDiagnostic [link: MathDiagnostic.html] INVALID_OPERATION
+
+Computation leads to an invalid operation.
+
+Method Details
+
+values
+
+public static MathDiagnostic [link: MathDiagnostic.html][] values ()
+
+Returns an array containing the constants of this enum class, in
+the order they are declared.
+
+Returns:
+
+an array containing the constants of this enum class, in the order they are declared
+
+valueOf
+
+public static MathDiagnostic [link: MathDiagnostic.html] valueOf (String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Returns the enum constant of this class with the specified name.
+The string must match exactly an identifier used to declare an
+enum constant in this class. (Extraneous whitespace characters are
+not permitted.)
+
+Parameters:
+
+name - the name of the enum constant to be returned.
+
+Returns:
+
+the enum constant with the specified name
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - if this enum class has no constant with the specified name
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - if the argument is null

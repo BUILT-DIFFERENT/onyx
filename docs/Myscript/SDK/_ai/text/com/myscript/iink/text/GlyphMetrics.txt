@@ -1,0 +1,176 @@
+SOURCE: com/myscript/iink/text/GlyphMetrics.html
+
+Package com.myscript.iink.text [link: package-summary.html]
+
+Class GlyphMetrics
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.text.GlyphMetrics
+
+public final class GlyphMetrics
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Describes the position of a converted glyph.
+
+Since:
+
+1.2
+
+Field Summary
+
+Fields
+
+Modifier and Type
+
+Field
+
+Description
+
+Rectangle [link: ../graphics/Rectangle.html]
+
+boundingBox [link: #boundingBox]
+
+The glyph bounding box.
+
+float
+
+leftSideBearing [link: #leftSideBearing]
+
+The glyph left side bearing.
+
+float
+
+rightSideBearing [link: #rightSideBearing]
+
+The glyph right side bearing.
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+GlyphMetrics [link: #%3Cinit%3E()]()
+
+Default constructor.
+
+GlyphMetrics [link: #%3Cinit%3E(float,float,float,float,float,float)] (float x,
+float y,
+float width,
+float height,
+float leftSideBearing,
+float rightSideBearing)
+
+Constructs a glyph metrics object.
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+boolean
+
+equals [link: #equals(java.lang.Object)] (@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+int
+
+hashCode [link: #hashCode()]()
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Field Details
+
+boundingBox
+
+public Rectangle [link: ../graphics/Rectangle.html] boundingBox
+
+The glyph bounding box.
+
+leftSideBearing
+
+public float leftSideBearing
+
+The glyph left side bearing.
+
+rightSideBearing
+
+public float rightSideBearing
+
+The glyph right side bearing.
+
+Constructor Details
+
+GlyphMetrics
+
+public GlyphMetrics ()
+
+Default constructor.
+
+Construct a glyph metrics object.
+
+GlyphMetrics
+
+public GlyphMetrics (float x,
+float y,
+float width,
+float height,
+float leftSideBearing,
+float rightSideBearing)
+
+Constructs a glyph metrics object.
+
+Parameters:
+
+x - the glyph x coordinate.
+
+y - the glyph y coordinate.
+
+width - the glyph width.
+
+height - the glyph height.
+
+leftSideBearing - the left side bearing associated with this glyph.
+
+rightSideBearing - the right side bearing associated with this glyph.
+
+Method Details
+
+equals
+
+public boolean equals (@Nullable
+@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+Overrides:
+
+equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+hashCode
+
+public int hashCode ()
+
+Overrides:
+
+hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+toString
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]

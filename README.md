@@ -12,9 +12,9 @@ v0 focuses on an offline-first Android authoring client and a view-only web clie
 - `tests` Contract fixtures and cross-cutting tests
 
 ## v0 architecture (summary)
-- Identity: Clerk only. Clients call `users.upsertMe` after login. Device identity is explicit (`deviceId`) and used in Lamport ordering.
-- System of record: Convex stores all canonical state (notes, pages, ops, commits, shares, public links, assets metadata, exports metadata, tiles/previews).
-- Realtime & sync: Convex queries/mutations/actions only. Offline queue on Android with deterministic replay.
+- Identity: Clerk only. Clients call `users.upsertMe` after login.
+- System of record: Convex stores all canonical metadata (notebooks, pages, folders, shares, public links, assets metadata, exports, search texts). Page content lives in Yjs CRDT docs (R2 snapshots + Convex delta updates).
+- Realtime & sync: Y-Octo/Yjs CRDTs. Conflict resolution is automatic via CRDT merge semantics — no Lamport clocks or manual conflict handling. Offline queue on Android drains via WorkManager.
 - Storage: S3-compatible object storage for raw blobs; Convex issues presigned URLs and tracks metadata.
 - Background jobs: Convex scheduled functions for snapshots, previews, exports, retention cleanup.
 - Observability: BetterStack; correlation IDs passed from clients to Convex logs.

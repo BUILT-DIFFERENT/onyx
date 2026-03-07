@@ -1,0 +1,44 @@
+What is interactivity
+
+MyScript interactive ink technology (often abbreviated as iink) is a technology from MyScript to develop UI applications holding digital content.
+
+This technology enables a full digital experience as it can combine inputs. Many devices already support pen or finger inputs. They capture digital ink as the result of users writing on their surfaces. The pen brings a productive advantage in many situations. But the difficulty to re-use the ink prevents it from delivering its full potential.
+
+With MyScript iink technology, the pen is powerful for writing, while the finger manipulates content and triggers global actions. Besides, users actually interact with the ink: they can update, correct or decorate their ink on the flow. They can also access the semantics at any time.
+Key principles
+
+MyScript iink engine interprets the digital ink as soon as the user writes. This process is incremental as interactive ink handles new strokes without user action and refines previous result.
+
+MyScript iink technology also provides features that come handy in digital content editors. Gestures allow either edition, action or decoration. It is thus easy to get and share right away a formatted content.
+Main benefits
+
+    Editable: With MyScript iink technology, handwriting becomes your very own digital font and ink edition is natural. You enjoy intelligent tools that operate on characters, words or shape primitives. It thus makes ink a digital content that can mix with other contents like text, images, diagrams, etc.
+
+    Productive: The structure of MyScript iink SDK enables it to transform the ink to/from many formats. Productivity tools used in personal and professional lives can reference, annotate and/or integrate it in a document. So, the ink content is consumable by digital applications, as there is no need for the user to export or retype it.
+
+    Responsive: Various form factors can display interactive ink with different device orientations. A note can be taken on a tablet, displayed on a smart phone, searched on a personal computer, etc. Digital ink cannot easily mix with other contents as it needs resize or scrolling to accommodate different screen sizes. But MyScript iink technology reflows to adapt any geometry.
+
+To sum up
+
+MyScript iink technology lets users switch between different types of contents at any time while operating on the same stream of content. It thus makes it as simple as writing on paper, but with all the benefits of editing a digital content. Its main difference with digital ink is that it transforms the input ink to an interpreted ink ready for use in your digital workflow.
+
+MyScript iink technology is thus opening the door to future applications involving multimodal experiences. Users could choose the input that makes them the most productive in each situation. For instance, keyboard for long text, voice for on-the-go input or pen for non-linear editing, note-taking, review or graphics.
+Implementation
+Programmatic interactivity
+
+MyScript technology offers ability to maintain an interactive context, thanks to APIs allowing you to edit the content and get the updated result dynamically. This programmatic interactivity, also known as off-screen interactivity, is typically useful when you want to integrate an editable content into an existing application. All these features are provided through APIs, and your application controls all the implemented behaviors. They will allow you to:
+
+    Add, remove, or replace ink strokes
+    Receive gesture detection notifications and make corresponding ink edits
+    Manage ink strokes using IDs, which can be mapped to strokes in the application’s data model
+    Serialize and export to various data formats.
+
+ApplicationiinkSDKStrokesResultexportsIncrementalprocessingData modeliink modelGestureanalyseGesturenotificationCapture
+Rendering driven interactivity
+
+Even if your application relies on MyScript SDK for advanced processing of user handwriting, it’s essential to handle the capture and display of ink context and facilitate user interactions. If your application doesn’t already offer these capabilities, integrating them can lead to delays in time-to-market. MyScript SDK can efficiently manage these aspects, offering:
+
+    Advanced inking, supporting colors, pressure sensitivity, multiple brushes, and ink prediction for improved capture speed.
+    Content rendering, with zoom, scroll features, text reflow, and user assistance such as alignment guides and connector snapping.
+    Content management, including Undo/Redo functionality, precise content selection, with the ability to cut/copy/paste, and ink-to-text conversion.
+    Gesture detection for both stylization and content editing.

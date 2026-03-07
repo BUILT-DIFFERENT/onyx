@@ -1,0 +1,283 @@
+SOURCE: com/myscript/iink/TransformError.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Enum Class TransformError
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<TransformError [link: TransformError.html]>
+
+com.myscript.iink.TransformError
+
+All Implemented Interfaces:
+
+Serializable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Serializable.html] , Comparable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Comparable.html]<TransformError [link: TransformError.html]> , Constable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/constant/Constable.html]
+
+public enum TransformError
+extends Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<TransformError [link: TransformError.html]>
+
+Error code returned by Editor getTransformStatus
+
+Nested Class Summary
+
+Nested classes/interfaces inherited from class java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]
+
+Enum.EnumDesc [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html]<E [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html] extends Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<E [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html]>>
+
+Enum Constant Summary
+
+Enum Constants
+
+Enum Constant
+
+Description
+
+ALLOWED [link: #ALLOWED]
+
+The transform is allowed.
+
+BAD_NUMERIC [link: #BAD_NUMERIC]
+
+The transform has a bad numeric value (infinite or NaN).
+
+BEAUTIFIED_BLOCKS [link: #BEAUTIFIED_BLOCKS]
+
+The content selection contains beautified blocks.
+
+DRAWING_BLOCKS [link: #DRAWING_BLOCKS]
+
+The content selection contains drawing blocks.
+
+GUIDES [link: #GUIDES]
+
+The content selection has guides.
+
+HAS_NEGATIVE_SCALE [link: #HAS_NEGATIVE_SCALE]
+
+The transform has a negative scale component.
+
+HAS_ROTATION [link: #HAS_ROTATION]
+
+The transform has a rotation component.
+
+HAS_SCALE [link: #HAS_SCALE]
+
+The transform has a scale component.
+
+HAS_SHEAR [link: #HAS_SHEAR]
+
+The transform has a shear component.
+
+HAS_TRANSLATION [link: #HAS_TRANSLATION]
+
+The transform has a translation component.
+
+INVALID [link: #INVALID]
+
+The transform is invalid (cannot be decomposed).
+
+MATH_BLOCKS [link: #MATH_BLOCKS]
+
+The content selection contains math blocks.
+
+MULTIPLE_BLOCKS [link: #MULTIPLE_BLOCKS]
+
+The content selection contains multiple blocks.
+
+NON_INVERTIBLE [link: #NON_INVERTIBLE]
+
+The transform is non invertible.
+
+NULL_SELECTION [link: #NULL_SELECTION]
+
+The content selection is null .
+
+PARTIAL_BLOCKS [link: #PARTIAL_BLOCKS]
+
+The content selection contains blocks partially selected.
+
+TEXT_BLOCKS [link: #TEXT_BLOCKS]
+
+The content selection contains text blocks.
+
+UNSUPPORTED [link: #UNSUPPORTED]
+
+The transform is not supported on this content selection (internal error).
+
+Method Summary
+
+All Methods Static Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+static TransformError [link: TransformError.html]
+
+valueOf [link: #valueOf(java.lang.String)] (String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Returns the enum constant of this class with the specified name.
+
+static TransformError [link: TransformError.html][]
+
+values [link: #values()]()
+
+Returns an array containing the constants of this enum class, in
+the order they are declared.
+
+Methods inherited from class java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#clone()], compareTo [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#compareTo(E)], describeConstable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#describeConstable()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#equals(java.lang.Object)], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#finalize()], getDeclaringClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#getDeclaringClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#hashCode()], name [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#name()], ordinal [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#ordinal()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#toString()], valueOf [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#valueOf(java.lang.Class,java.lang.String)]
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Enum Constant Details
+
+ALLOWED
+
+public static final TransformError [link: TransformError.html] ALLOWED
+
+The transform is allowed.
+
+UNSUPPORTED
+
+public static final TransformError [link: TransformError.html] UNSUPPORTED
+
+The transform is not supported on this content selection (internal error).
+
+NULL_SELECTION
+
+public static final TransformError [link: TransformError.html] NULL_SELECTION
+
+The content selection is null .
+
+PARTIAL_BLOCKS
+
+public static final TransformError [link: TransformError.html] PARTIAL_BLOCKS
+
+The content selection contains blocks partially selected.
+
+MULTIPLE_BLOCKS
+
+public static final TransformError [link: TransformError.html] MULTIPLE_BLOCKS
+
+The content selection contains multiple blocks.
+
+BEAUTIFIED_BLOCKS
+
+public static final TransformError [link: TransformError.html] BEAUTIFIED_BLOCKS
+
+The content selection contains beautified blocks.
+
+TEXT_BLOCKS
+
+public static final TransformError [link: TransformError.html] TEXT_BLOCKS
+
+The content selection contains text blocks.
+
+MATH_BLOCKS
+
+public static final TransformError [link: TransformError.html] MATH_BLOCKS
+
+The content selection contains math blocks.
+
+DRAWING_BLOCKS
+
+public static final TransformError [link: TransformError.html] DRAWING_BLOCKS
+
+The content selection contains drawing blocks.
+
+GUIDES
+
+public static final TransformError [link: TransformError.html] GUIDES
+
+The content selection has guides.
+
+INVALID
+
+public static final TransformError [link: TransformError.html] INVALID
+
+The transform is invalid (cannot be decomposed).
+
+NON_INVERTIBLE
+
+public static final TransformError [link: TransformError.html] NON_INVERTIBLE
+
+The transform is non invertible.
+
+BAD_NUMERIC
+
+public static final TransformError [link: TransformError.html] BAD_NUMERIC
+
+The transform has a bad numeric value (infinite or NaN).
+
+HAS_ROTATION
+
+public static final TransformError [link: TransformError.html] HAS_ROTATION
+
+The transform has a rotation component.
+
+HAS_SCALE
+
+public static final TransformError [link: TransformError.html] HAS_SCALE
+
+The transform has a scale component.
+
+HAS_NEGATIVE_SCALE
+
+public static final TransformError [link: TransformError.html] HAS_NEGATIVE_SCALE
+
+The transform has a negative scale component.
+
+HAS_SHEAR
+
+public static final TransformError [link: TransformError.html] HAS_SHEAR
+
+The transform has a shear component.
+
+HAS_TRANSLATION
+
+public static final TransformError [link: TransformError.html] HAS_TRANSLATION
+
+The transform has a translation component.
+
+Method Details
+
+values
+
+public static TransformError [link: TransformError.html][] values ()
+
+Returns an array containing the constants of this enum class, in
+the order they are declared.
+
+Returns:
+
+an array containing the constants of this enum class, in the order they are declared
+
+valueOf
+
+public static TransformError [link: TransformError.html] valueOf (String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Returns the enum constant of this class with the specified name.
+The string must match exactly an identifier used to declare an
+enum constant in this class. (Extraneous whitespace characters are
+not permitted.)
+
+Parameters:
+
+name - the name of the enum constant to be returned.
+
+Returns:
+
+the enum constant with the specified name
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - if this enum class has no constant with the specified name
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - if the argument is null

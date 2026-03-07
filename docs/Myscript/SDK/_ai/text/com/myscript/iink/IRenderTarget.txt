@@ -1,0 +1,220 @@
+SOURCE: com/myscript/iink/IRenderTarget.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Interface IRenderTarget
+
+public interface IRenderTarget
+
+Represents a render target for the iink renderer.
+
+Nested Class Summary
+
+Nested Classes
+
+Modifier and Type
+
+Interface
+
+Description
+
+static enum
+
+IRenderTarget.LayerType [link: IRenderTarget.LayerType.html]
+
+Represents the type of a layer
+
+Method Summary
+
+All Methods Instance Methods Abstract Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+@Nullable ICanvas [link: graphics/ICanvas.html]
+
+createOffscreenRenderCanvas [link: #createOffscreenRenderCanvas(int)] (int surfaceId)
+
+Creates a Canvas that draws onto the offscreen render surface associated with a given identifier.
+
+int
+
+createOffscreenRenderSurface [link: #createOffscreenRenderSurface(int,int,boolean)] (int width,
+int height,
+boolean alphaMask)
+
+Requests the creation of an offscreen render surface (example: a bitmap), and returns a unique identifier for that surface.
+
+float
+
+getPixelDensity [link: #getPixelDensity()]()
+
+Returns the render target pixel density.
+
+void
+
+invalidate [link: #invalidate(com.myscript.iink.Renderer,int,int,int,int,java.util.EnumSet)] (@NotNull Renderer [link: Renderer.html] renderer,
+int x,
+int y,
+int width,
+int height,
+@NotNull EnumSet [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/EnumSet.html]<IRenderTarget.LayerType [link: IRenderTarget.LayerType.html]> layers)
+
+Invalidates a specified rectangle area on the given set of layers.
+
+void
+
+invalidate [link: #invalidate(com.myscript.iink.Renderer,java.util.EnumSet)] (@NotNull Renderer [link: Renderer.html] renderer,
+@NotNull EnumSet [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/EnumSet.html]<IRenderTarget.LayerType [link: IRenderTarget.LayerType.html]> layers)
+
+Invalidates the given set of layers.
+
+void
+
+releaseOffscreenRenderSurface [link: #releaseOffscreenRenderSurface(int)] (int surfaceId)
+
+Requests the release of the offscreen render surface associated with a given identifier.
+
+boolean
+
+supportsOffscreenRendering [link: #supportsOffscreenRendering()]()
+
+Indicates whether this render target supports offscreen rendering.
+
+Method Details
+
+invalidate
+
+void invalidate (@NotNull
+@NotNull Renderer [link: Renderer.html] renderer,
+@NotNull
+@NotNull EnumSet [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/EnumSet.html]<IRenderTarget.LayerType [link: IRenderTarget.LayerType.html]> layers)
+
+Invalidates the given set of layers.
+
+Parameters:
+
+renderer - the renderer to which this render target has been bound.
+
+layers - the set of layers to invalidate.
+
+invalidate
+
+void invalidate (@NotNull
+@NotNull Renderer [link: Renderer.html] renderer,
+int x,
+int y,
+int width,
+int height,
+@NotNull
+@NotNull EnumSet [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/EnumSet.html]<IRenderTarget.LayerType [link: IRenderTarget.LayerType.html]> layers)
+
+Invalidates a specified rectangle area on the given set of layers. The
+rectangle area is specified in pixel coordinates.
+
+Parameters:
+
+renderer - the renderer to which this render target has been bound.
+
+x - the x position of the rectangle area (view coordinates in pixel).
+
+y - the y position of the rectangle area (view coordinates in pixel).
+
+width - the width of the rectangle area (view coordinates in pixel).
+
+height - the height of the rectangle area (view coordinates in pixel).
+
+layers - the set of layers to invalidate.
+
+supportsOffscreenRendering
+
+boolean supportsOffscreenRendering ()
+
+Indicates whether this render target supports offscreen rendering.
+
+Returns:
+
+true if offscreen rendering is supported, otherwise false .
+
+Since:
+
+2.0
+
+getPixelDensity
+
+float getPixelDensity ()
+
+Returns the render target pixel density.
+
+Returns:
+
+the render target pixel density.
+
+Since:
+
+2.0
+
+createOffscreenRenderSurface
+
+int createOffscreenRenderSurface (int width,
+int height,
+boolean alphaMask)
+
+Requests the creation of an offscreen render surface (example: a bitmap), and returns a unique identifier for that surface.
+
+Parameters:
+
+width - the width of the surface to create (view coordinates in pixel).
+
+height - the height of the surface to create (view coordinates in pixel).
+
+alphaMask - request creation of an alpha mask. Only the alpha channel
+is relevant. The actual red, green and blue channel values are given by
+the blend color.
+
+Returns:
+
+a unique identifier associated with the created surface.
+
+Note: createOffscreenRenderCanvas() will be called with this identifier,
+to request drawing of the associated surface.
+
+Since:
+
+2.0
+
+releaseOffscreenRenderSurface
+
+void releaseOffscreenRenderSurface (int surfaceId)
+
+Requests the release of the offscreen render surface associated with a given identifier.
+
+Parameters:
+
+surfaceId - the identifier of the surface to release.
+
+Since:
+
+2.0
+
+createOffscreenRenderCanvas
+
+@Nullable
+@Nullable ICanvas [link: graphics/ICanvas.html] createOffscreenRenderCanvas (int surfaceId)
+
+Creates a Canvas that draws onto the offscreen render surface associated with a given identifier.
+
+Parameters:
+
+surfaceId - the identifier of the surface to be drawn.
+
+Returns:
+
+a Canvas to draw on the requested surface.
+
+Since:
+
+2.0

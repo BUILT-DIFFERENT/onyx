@@ -1,0 +1,712 @@
+SOURCE: com/myscript/iink/graphics/ICanvas.html
+
+Package com.myscript.iink.graphics [link: package-summary.html]
+
+Interface ICanvas
+
+public interface ICanvas
+
+The ICanvas interface receives drawing commands.
+
+Method Summary
+
+All Methods Instance Methods Abstract Methods Default Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+void
+
+blendOffscreen [link: #blendOffscreen(int,float,float,float,float,float,float,float,float,com.myscript.iink.graphics.Color)] (int id,
+float src_x,
+float src_y,
+float src_width,
+float src_height,
+float dest_x,
+float dest_y,
+float dest_width,
+float dest_height,
+@NotNull Color [link: Color.html] blend_color)
+
+Requests drawing of an offscreen surface (usually a bitmap).
+
+@NotNull IPath [link: IPath.html]
+
+createPath [link: #createPath()]()
+
+Creates a new general path.
+
+void
+
+drawLine [link: #drawLine(float,float,float,float)] (float x1,
+float y1,
+float x2,
+float y2)
+
+Requests drawing of a line segment.
+
+void
+
+drawObject [link: #drawObject(java.lang.String,java.lang.String,float,float,float,float)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] url,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] mimeType,
+float x,
+float y,
+float width,
+float height)
+
+Requests drawing of an object.
+
+void
+
+drawPath [link: #drawPath(com.myscript.iink.graphics.IPath)] (@NotNull IPath [link: IPath.html] path)
+
+Requests drawing of a path.
+
+void
+
+drawRectangle [link: #drawRectangle(float,float,float,float)] (float x,
+float y,
+float width,
+float height)
+
+Requests drawing of a rectangle.
+
+default void
+
+drawStrokeWithExtraBrush [link: #drawStrokeWithExtraBrush(com.myscript.iink.graphics.InkPoints%5B%5D,int,com.myscript.iink.graphics.ExtraBrushStyle,boolean,long)] (@NotNull InkPoints [link: InkPoints.html][] vInkPoints,
+int temporaryPoints,
+@NotNull ExtraBrushStyle [link: ExtraBrushStyle.html] style,
+boolean fullStroke,
+long id)
+
+Requests drawing of a stroke with an extra brush.
+
+void
+
+drawText [link: #drawText(java.lang.String,float,float,float,float,float,float)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] label,
+float x,
+float y,
+float xmin,
+float ymin,
+float xmax,
+float ymax)
+
+Requests drawing of text.
+
+void
+
+endDraw [link: #endDraw()]()
+
+Indicates that a drawing session ends.
+
+void
+
+endGroup [link: #endGroup(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] id)
+
+Indicates that the drawing of a group of items ends.
+
+void
+
+endItem [link: #endItem(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] id)
+
+Indicates that the drawing of an item ends.
+
+@NotNull Transform [link: Transform.html]
+
+getTransform [link: #getTransform()]()
+
+Retrieves the current transform.
+
+default boolean
+
+isExtraBrushSupported [link: #isExtraBrushSupported(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] brushName)
+
+Checks if an extra brush is supported.
+
+void
+
+setDropShadow [link: #setDropShadow(float,float,float,com.myscript.iink.graphics.Color)] (float xOffset,
+float yOffset,
+float radius,
+@NotNull Color [link: Color.html] color)
+
+Configures the drop shadow display.
+
+void
+
+setFillColor [link: #setFillColor(com.myscript.iink.graphics.Color)] (@NotNull Color [link: Color.html] fillColor)
+
+Sets the fill color.
+
+void
+
+setFillRule [link: #setFillRule(com.myscript.iink.graphics.FillRule)] (@NotNull FillRule [link: FillRule.html] fillRule)
+
+Sets the fill rule.
+
+void
+
+setFontProperties [link: #setFontProperties(java.lang.String,float,float,java.lang.String,java.lang.String,int)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] family,
+float lineHeight,
+float size,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] style,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] variant,
+int weight)
+
+Sets the font properties.
+
+void
+
+setStrokeColor [link: #setStrokeColor(com.myscript.iink.graphics.Color)] (@NotNull Color [link: Color.html] strokeColor)
+
+Sets the stroke color.
+
+void
+
+setStrokeDashArray [link: #setStrokeDashArray(float%5B%5D)] (@org.jetbrains.annotations.Nullable float[] strokeDashArray)
+
+Sets the pattern of dashes and gaps used to stroke paths.
+
+void
+
+setStrokeDashOffset [link: #setStrokeDashOffset(float)] (float strokeDashOffset)
+
+Sets the distance into the dash pattern to start the dash.
+
+void
+
+setStrokeLineCap [link: #setStrokeLineCap(com.myscript.iink.graphics.LineCap)] (@NotNull LineCap [link: LineCap.html] strokeLineCap)
+
+Sets the stroke line cap.
+
+void
+
+setStrokeLineJoin [link: #setStrokeLineJoin(com.myscript.iink.graphics.LineJoin)] (@NotNull LineJoin [link: LineJoin.html] strokeLineJoin)
+
+Sets the stroke line join.
+
+void
+
+setStrokeMiterLimit [link: #setStrokeMiterLimit(float)] (float strokeMiterLimit)
+
+Sets the stroke miter limit.
+
+void
+
+setStrokeWidth [link: #setStrokeWidth(float)] (float strokeWith)
+
+Sets the stroke width.
+
+void
+
+setTransform [link: #setTransform(com.myscript.iink.graphics.Transform)] (@NotNull Transform [link: Transform.html] transform)
+
+Sets the transform.
+
+void
+
+startDraw [link: #startDraw(int,int,int,int)] (int x,
+int y,
+int width,
+int height)
+
+Indicates that a drawing session starts, on a given area.
+
+void
+
+startGroup [link: #startGroup(java.lang.String,float,float,float,float,boolean)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] id,
+float x,
+float y,
+float width,
+float height,
+boolean clipContent)
+
+Indicates that the drawing of a group of items starts.
+
+void
+
+startItem [link: #startItem(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] id)
+
+Indicates that the drawing of an item starts.
+
+Method Details
+
+setTransform
+
+void setTransform (@NotNull
+@NotNull Transform [link: Transform.html] transform)
+
+Sets the transform.
+
+Parameters:
+
+transform - the transform.
+
+getTransform
+
+@NotNull
+@NotNull Transform [link: Transform.html] getTransform ()
+
+Retrieves the current transform.
+
+Returns:
+
+the transform.
+
+setStrokeColor
+
+void setStrokeColor (@NotNull
+@NotNull Color [link: Color.html] strokeColor)
+
+Sets the stroke color.
+
+Parameters:
+
+strokeColor - the stroke color.
+
+setStrokeWidth
+
+void setStrokeWidth (float strokeWith)
+
+Sets the stroke width.
+
+Parameters:
+
+strokeWith - the stroke width (document coordinates in mm).
+
+setStrokeLineCap
+
+void setStrokeLineCap (@NotNull
+@NotNull LineCap [link: LineCap.html] strokeLineCap)
+
+Sets the stroke line cap.
+
+Parameters:
+
+strokeLineCap - the stroke line cap.
+
+setStrokeLineJoin
+
+void setStrokeLineJoin (@NotNull
+@NotNull LineJoin [link: LineJoin.html] strokeLineJoin)
+
+Sets the stroke line join.
+
+Parameters:
+
+strokeLineJoin - the stroke line join.
+
+setStrokeMiterLimit
+
+void setStrokeMiterLimit (float strokeMiterLimit)
+
+Sets the stroke miter limit.
+
+Parameters:
+
+strokeMiterLimit - the stroke miter limit (document coordinates in mm).
+
+setStrokeDashArray
+
+void setStrokeDashArray (@Nullable
+@org.jetbrains.annotations.Nullable float[] strokeDashArray)
+
+Sets the pattern of dashes and gaps used to stroke paths.
+
+Parameters:
+
+strokeDashArray - the vector describing the dashes pattern (document coordinates in mm).
+
+setStrokeDashOffset
+
+void setStrokeDashOffset (float strokeDashOffset)
+
+Sets the distance into the dash pattern to start the dash.
+
+Parameters:
+
+strokeDashOffset - the dash offset (document coordinates in mm).
+
+setFillColor
+
+void setFillColor (@NotNull
+@NotNull Color [link: Color.html] fillColor)
+
+Sets the fill color.
+
+Parameters:
+
+fillColor - the fill color.
+
+setFillRule
+
+void setFillRule (@NotNull
+@NotNull FillRule [link: FillRule.html] fillRule)
+
+Sets the fill rule.
+
+Parameters:
+
+fillRule - the fill rule.
+
+setDropShadow
+
+void setDropShadow (float xOffset,
+float yOffset,
+float radius,
+@NotNull
+@NotNull Color [link: Color.html] color)
+
+Configures the drop shadow display.
+
+Parameters:
+
+xOffset - the drop shadow horizontal offset.
+
+yOffset - the drop shadow vertical offset.
+
+radius - the blur radius of the drop shadow.
+
+color - the color of the drop shadow.
+
+setFontProperties
+
+void setFontProperties (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] family,
+float lineHeight,
+float size,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] style,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] variant,
+int weight)
+
+Sets the font properties.
+
+Parameters:
+
+family - the font family.
+
+lineHeight - the font line height.
+
+size - the font size (document coordinates in mm).
+
+style - the font style.
+
+variant - the font variant.
+
+weight - the font weight.
+
+startGroup
+
+void startGroup (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] id,
+float x,
+float y,
+float width,
+float height,
+boolean clipContent)
+
+Indicates that the drawing of a group of items starts.
+
+Parameters:
+
+id - the identifier of the group.
+
+x - the x coordinate of the top left point of the group box (document coordinates in mm).
+
+y - the y coordinate of the top left point of the group box (document coordinates in mm).
+
+width - the width of the group box (document coordinates in mm).
+
+height - the height of the group box (document coordinates in mm).
+
+clipContent - true if the canvas should use the group box as the
+clipping region until corresponding endGroup(String) [link: #endGroup(java.lang.String)],
+otherwise false .
+
+endGroup
+
+void endGroup (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] id)
+
+Indicates that the drawing of a group of items ends.
+
+Parameters:
+
+id - the identifier of the group.
+
+startItem
+
+void startItem (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] id)
+
+Indicates that the drawing of an item starts.
+
+Parameters:
+
+id - the identifier of the group.
+
+endItem
+
+void endItem (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] id)
+
+Indicates that the drawing of an item ends.
+
+Parameters:
+
+id - the identifier of the group.
+
+createPath
+
+@NotNull
+@NotNull IPath [link: IPath.html] createPath ()
+
+Creates a new general path. The renderer will then send commands to this
+path, and it will be used in the call to drawPath(IPath) [link: #drawPath(com.myscript.iink.graphics.IPath)].
+
+Note: the drawPath(IPath) [link: #drawPath(com.myscript.iink.graphics.IPath)] method may be called with a path that
+was created by another instance of canvas, because the renderer maintains a
+cache of the paths that hold the visual representation of ink strokes.
+
+Returns:
+
+the newly created general path.
+
+drawPath
+
+void drawPath (@NotNull
+@NotNull IPath [link: IPath.html] path)
+
+Requests drawing of a path.
+
+Parameters:
+
+path - the path to draw (document coordinates in mm).
+
+isExtraBrushSupported
+
+default boolean isExtraBrushSupported (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] brushName)
+
+Checks if an extra brush is supported.
+
+Parameters:
+
+brushName - the name of the brush.
+
+Returns:
+
+true if extra brush is supported, otherwise false .
+
+Since:
+
+3.1
+
+drawStrokeWithExtraBrush
+
+default void drawStrokeWithExtraBrush (@NotNull
+@NotNull InkPoints [link: InkPoints.html][] vInkPoints,
+int temporaryPoints,
+@NotNull
+@NotNull ExtraBrushStyle [link: ExtraBrushStyle.html] style,
+boolean fullStroke,
+long id)
+
+Requests drawing of a stroke with an extra brush.
+
+Parameters:
+
+vInkPoints - the stroke parts as array of ink points (document coordinates in mm).
+
+temporaryPoints - the temporary points count included at the end of inkPoints .
+
+style - the stroke style.
+
+fullStroke - true if the stroke is complete, otherwise false .
+
+id - the stroke id, or -1 .
+
+Since:
+
+4.0
+
+drawRectangle
+
+void drawRectangle (float x,
+float y,
+float width,
+float height)
+
+Requests drawing of a rectangle.
+
+Parameters:
+
+x - the x coordinate of the top left point (document coordinates in mm).
+
+y - the y coordinate of the top left point (document coordinates in mm).
+
+width - the width (document coordinates in mm).
+
+height - the height (document coordinates in mm).
+
+drawLine
+
+void drawLine (float x1,
+float y1,
+float x2,
+float y2)
+
+Requests drawing of a line segment.
+
+Parameters:
+
+x1 - the x coordinate of the first point (document coordinates in mm).
+
+y1 - the y coordinate of the first point (document coordinates in mm).
+
+x2 - the x coordinate of the last point (document coordinates in mm).
+
+y2 - the y coordinate of the last point (document coordinates in mm).
+
+drawObject
+
+void drawObject (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] url,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] mimeType,
+float x,
+float y,
+float width,
+float height)
+
+Requests drawing of an object.
+
+Note: the object should be transformed (translation and uniform scale) so
+that it fits centered in the specified viewport rectangle.
+
+Parameters:
+
+url - the URL of the object.
+
+mimeType - the Mime type associated with the object.
+
+x - the x coordinate of the top left point of the viewport rectangle (document coordinates in mm).
+
+y - the y coordinate of the top left point of the viewport rectangle (document coordinates in mm).
+
+width - the width of the viewport rectangle (document coordinates in mm).
+
+height - the height of the viewport rectangle (document coordinates in mm).
+
+drawText
+
+void drawText (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] label,
+float x,
+float y,
+float xmin,
+float ymin,
+float xmax,
+float ymax)
+
+Requests drawing of text.
+
+Note: the extent of the rendered text as given by xmin, ymin, xmax, and
+ymax is informative and should not be used for the actual rendering.
+
+Parameters:
+
+label - the label of the text to draw.
+
+x - the x coordinate of the position from where to draw the text (document coordinates in mm).
+
+y - the y coordinate of the position from where to draw the text (document coordinates in mm).
+
+xmin - minimal x coordinate of the rendered text (document coordinates in mm).
+
+ymin - minimal y coordinate of the rendered text (document coordinates in mm).
+
+xmax - maximal x coordinate of the rendered text (document coordinates in mm).
+
+ymax - maximal y coordinate of the rendered text (document coordinates in mm).
+
+startDraw
+
+void startDraw (int x,
+int y,
+int width,
+int height)
+
+Indicates that a drawing session starts, on a given area.
+Provided area must be cleared within this call.
+
+Parameters:
+
+x - the x coordinate of the top left point of the drawing area.
+
+y - the y coordinate of the top left point of the drawing area.
+
+width - the width of the drawing area.
+
+height - the height of the drawing area.
+
+Since:
+
+1.4
+
+endDraw
+
+void endDraw ()
+
+Indicates that a drawing session ends.
+
+Since:
+
+1.4
+
+blendOffscreen
+
+void blendOffscreen (int id,
+float src_x,
+float src_y,
+float src_width,
+float src_height,
+float dest_x,
+float dest_y,
+float dest_width,
+float dest_height,
+@NotNull
+@NotNull Color [link: Color.html] blend_color)
+
+Requests drawing of an offscreen surface (usually a bitmap).
+
+Parameters:
+
+id - the identifier of the surface.
+
+src_x - minimal x coordinate of the offscreen surface.
+
+src_y - minimal y coordinate of the offscreen surface.
+
+src_width - maximal x coordinate of the offscreen surface.
+
+src_height - maximal y coordinate of the offscreen surface.
+
+dest_x - minimal x coordinate where to draw this offscreen surface.
+
+dest_y - minimal y coordinate where to draw this offscreen surface.
+
+dest_width - maximal x coordinate where to draw this offscreen surface.
+
+dest_height - maximal y coordinate where to draw this offscreen surface.
+
+blend_color - The color used for the blending operation
+
+Since:
+
+1.4

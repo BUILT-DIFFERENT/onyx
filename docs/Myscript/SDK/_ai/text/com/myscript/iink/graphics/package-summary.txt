@@ -1,0 +1,96 @@
+SOURCE: com/myscript/iink/graphics/package-summary.html
+
+Package com.myscript.iink.graphics
+
+package com.myscript.iink.graphics
+
+Related Packages
+
+Package
+
+Description
+
+com.myscript.iink [link: ../package-summary.html]
+
+com.myscript.iink.text [link: ../text/package-summary.html]
+
+All Classes and Interfaces Interfaces Classes Enum Classes
+
+Class
+
+Description
+
+Color [link: Color.html]
+
+Red green blue alpha color representation.
+
+ExtraBrushStyle [link: ExtraBrushStyle.html]
+
+Extra brush style information for the rendering of strokes.
+
+FillRule [link: FillRule.html]
+
+Defines the methods used to fill paths and polygons.
+
+ICanvas [link: ICanvas.html]
+
+The ICanvas interface receives drawing commands.
+
+InkPoint [link: InkPoint.html]
+
+Represents an ink point.
+
+InkPoints [link: InkPoints.html]
+
+Represents ink points.
+
+IPath [link: IPath.html]
+
+The path interface, for building a path as described in the SVG
+specifications.
+
+IPath.OperationType [link: IPath.OperationType.html]
+
+Lists the path operation types.
+
+IStroker [link: IStroker.html]
+
+The `IStroker` converts input points (touch, digital pen, etc) into a
+renderable stroke representation.
+
+IStrokerFactory [link: IStrokerFactory.html]
+
+The `IStrokerFactory` is responsible to create `IStroker` instances.
+
+LineCap [link: LineCap.html]
+
+Defines how the ends of segments are drawn.
+
+LineJoin [link: LineJoin.html]
+
+Defines how the joins between connected segments are drawn.
+
+Point [link: Point.html]
+
+Represents a point on the 2D plane.
+
+PointD [link: PointD.html]
+
+Represents a high-precision point on the 2D plane.
+
+Rectangle [link: Rectangle.html]
+
+Represents an axis aligned rectangle on the 2D plane.
+
+Style [link: Style.html]
+
+Style information for the rendering of strokes and text.
+
+StyleFlag [link: StyleFlag.html]
+
+Style information flags.
+
+Transform [link: Transform.html]
+
+Represents a 2D affine transform, defined as a 3x3 matrix with an implicit
+third raw of [ 0 0 1 ] :

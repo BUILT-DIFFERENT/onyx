@@ -1,0 +1,584 @@
+SOURCE: com/myscript/iink/Renderer.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class Renderer
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.Renderer
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class Renderer
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+The Renderer implements content rendering of parts.
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final void
+
+addListener [link: #addListener(com.myscript.iink.IRendererListener)] (@NotNull IRendererListener [link: IRendererListener.html] listener)
+
+Adds the specified listener to this renderer.
+
+final void
+
+close [link: #close()]()
+
+final void
+
+commitModelDraw [link: #commitModelDraw(long)] (long id)
+
+Indicates that an asynchronous drawing of the Model Layer is over.
+
+final void
+
+drawCaptureStrokes [link: #drawCaptureStrokes(int,int,int,int,com.myscript.iink.graphics.ICanvas)] (int x,
+int y,
+int width,
+int height,
+@NotNull ICanvas [link: graphics/ICanvas.html] canvas)
+
+Requests drawing of a region of the Capture layer.
+
+final void
+
+drawModel [link: #drawModel(int,int,int,int,com.myscript.iink.graphics.ICanvas)] (int x,
+int y,
+int width,
+int height,
+@NotNull ICanvas [link: graphics/ICanvas.html] canvas)
+
+Requests drawing of a region of the Model layer.
+
+final long
+
+drawModelAsync [link: #drawModelAsync(int,int,int,int,com.myscript.iink.graphics.ICanvas)] (int x,
+int y,
+int width,
+int height,
+@NotNull ICanvas [link: graphics/ICanvas.html] canvas)
+
+Requests asynchronous drawing of a region of the Model layer.
+
+protected void
+
+finalize [link: #finalize()]()
+
+float
+
+getDpiX [link: #getDpiX()]()
+
+Returns the horizontal DPI resolution of the renderer.
+
+float
+
+getDpiY [link: #getDpiY()]()
+
+Returns the vertical DPI resolution of the renderer.
+
+float
+
+getPixelSize [link: #getPixelSize()]()
+
+Returns the size of a pixel, in millimeters.
+
+@Nullable IRenderTarget [link: IRenderTarget.html]
+
+getRenderTarget [link: #getRenderTarget()]()
+
+Returns the target to which this renderer draws.
+
+final @Nullable Point [link: graphics/Point.html]
+
+getViewOffset [link: #getViewOffset()]()
+
+Returns the view offset.
+
+final float
+
+getViewScale [link: #getViewScale()]()
+
+Returns the current zoom view scale.
+
+@Nullable Transform [link: graphics/Transform.html]
+
+getViewTransform [link: #getViewTransform()]()
+
+Returns the transform that is used to map model coordinates into view
+coordinates.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+final void
+
+registerStroker [link: #registerStroker(java.lang.String,com.myscript.iink.graphics.IStrokerFactory)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name,
+@NotNull IStrokerFactory [link: graphics/IStrokerFactory.html] factory)
+
+Registers a custom stroker factory.
+
+final void
+
+removeListener [link: #removeListener(com.myscript.iink.IRendererListener)] (@NotNull IRendererListener [link: IRendererListener.html] listener)
+
+Removes the specified listener from this renderer.
+
+final void
+
+setViewOffset [link: #setViewOffset(float,float)] (float x,
+float y)
+
+Sets the view offset.
+
+final void
+
+setViewScale [link: #setViewScale(float)] (float scale)
+
+Sets the current zoom view scale.
+
+final void
+
+unregisterStroker [link: #unregisterStroker(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Unregister custom stroker factory.
+
+final void
+
+zoom [link: #zoom(float)] (float factor)
+
+Increases zoom by a factor.
+
+final void
+
+zoomAt [link: #zoomAt(com.myscript.iink.graphics.Point,float)] (@NotNull Point [link: graphics/Point.html] p,
+float factor)
+
+Increases zoom by a factor around a given point.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+addListener
+
+public final void addListener (@NotNull
+@NotNull IRendererListener [link: IRendererListener.html] listener)
+
+Adds the specified listener to this renderer.
+
+Parameters:
+
+listener - the listener to be added.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when listener is null.
+
+removeListener
+
+public final void removeListener (@NotNull
+@NotNull IRendererListener [link: IRendererListener.html] listener)
+
+Removes the specified listener from this renderer.
+
+Parameters:
+
+listener - the listener to be removed.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when listener is null.
+
+getDpiX
+
+public float getDpiX ()
+
+Returns the horizontal DPI resolution of the renderer.
+
+Returns:
+
+the horizontal DPI.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+getDpiY
+
+public float getDpiY ()
+
+Returns the vertical DPI resolution of the renderer.
+
+Returns:
+
+the vertical DPI.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+getPixelSize
+
+public float getPixelSize ()
+
+Returns the size of a pixel, in millimeters.
+
+Returns:
+
+the size of a pixel.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+getViewScale
+
+public final float getViewScale ()
+
+Returns the current zoom view scale.
+
+Returns:
+
+the view scale.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+setViewScale
+
+public final void setViewScale (float scale)
+throws IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html]
+
+Sets the current zoom view scale.
+
+Parameters:
+
+scale - the view scale.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when scale is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when scale is negative.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when scale is zero.
+
+zoom
+
+public final void zoom (float factor)
+throws IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html]
+
+Increases zoom by a factor.
+
+Parameters:
+
+factor - the zoom modification factor.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when factor is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when factor is negative.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when factor is zero.
+
+zoomAt
+
+public final void zoomAt (@NotNull
+@NotNull Point [link: graphics/Point.html] p,
+float factor)
+throws IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html]
+
+Increases zoom by a factor around a given point.
+
+Parameters:
+
+p - point around which to adjust the view (view coordinates in pixel).
+
+factor - the zoom modification factor.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when factor is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when factor is negative.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when factor is zero.
+
+getViewOffset
+
+@Nullable
+public final @Nullable Point [link: graphics/Point.html] getViewOffset ()
+
+Returns the view offset.
+
+Returns:
+
+the view offset (view coordinates in pixel).
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+setViewOffset
+
+public final void setViewOffset (float x,
+float y)
+
+Sets the view offset.
+
+Parameters:
+
+x - the x coordinate of the view offset (view coordinates in pixel).
+
+y - the y coordinate of the view offset (view coordinates in pixel).
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when x is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when x is negative.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when x is zero.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when y is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when y is negative.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when y is zero.
+
+getViewTransform
+
+@Nullable
+public @Nullable Transform [link: graphics/Transform.html] getViewTransform ()
+
+Returns the transform that is used to map model coordinates into view
+coordinates.
+
+Returns:
+
+the view transform.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+getRenderTarget
+
+@Nullable
+public @Nullable IRenderTarget [link: IRenderTarget.html] getRenderTarget ()
+
+Returns the target to which this renderer draws.
+
+Returns:
+
+the render target.
+
+registerStroker
+
+public final void registerStroker (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name,
+@NotNull
+@NotNull IStrokerFactory [link: graphics/IStrokerFactory.html] factory)
+
+Registers a custom stroker factory.
+
+Parameters:
+
+name - the value of the -myscript-pen-brush css property that selects
+this stroker.
+
+factory - the user provided stroker factory.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when factory is null.
+
+unregisterStroker
+
+public final void unregisterStroker (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Unregister custom stroker factory.
+
+Parameters:
+
+name - the stroker factory.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+drawModelAsync
+
+public final long drawModelAsync (int x,
+int y,
+int width,
+int height,
+@NotNull
+@NotNull ICanvas [link: graphics/ICanvas.html] canvas)
+
+Requests asynchronous drawing of a region of the Model layer.
+Completion of the drawing operation must be indicated by a call to
+commitModelDraw() .
+
+Parameters:
+
+x - top left x coordinate of the region to draw (view coordinates in pixel).
+
+y - top left y coordinate of the region to draw (view coordinates in pixel).
+
+width - width of the region to draw (view coordinates in pixel).
+
+height - height of the region to draw (view coordinates in pixel).
+
+canvas - target canvas.
+
+Returns:
+
+the identifier of the drawing request.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when canvas is null.
+
+commitModelDraw
+
+public final void commitModelDraw (long id)
+
+Indicates that an asynchronous drawing of the Model Layer is over.
+
+Parameters:
+
+id - the identifier of the drawing request, as returned by
+drawModelAsync() .
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+drawModel
+
+public final void drawModel (int x,
+int y,
+int width,
+int height,
+@NotNull
+@NotNull ICanvas [link: graphics/ICanvas.html] canvas)
+
+Requests drawing of a region of the Model layer.
+
+Parameters:
+
+x - top left x coordinate of the region to draw (view coordinates in pixel).
+
+y - top left y coordinate of the region to draw (view coordinates in pixel).
+
+width - width of the region to draw (view coordinates in pixel).
+
+height - height of the region to draw (view coordinates in pixel).
+
+canvas - target canvas.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when canvas is null.
+
+drawCaptureStrokes
+
+public final void drawCaptureStrokes (int x,
+int y,
+int width,
+int height,
+@NotNull
+@NotNull ICanvas [link: graphics/ICanvas.html] canvas)
+
+Requests drawing of a region of the Capture layer.
+
+Parameters:
+
+x - top left x coordinate of the region to draw (view coordinates in pixel).
+
+y - top left y coordinate of the region to draw (view coordinates in pixel).
+
+width - width of the region to draw (view coordinates in pixel).
+
+height - height of the region to draw (view coordinates in pixel).
+
+canvas - target canvas.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this renderer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when canvas is null.

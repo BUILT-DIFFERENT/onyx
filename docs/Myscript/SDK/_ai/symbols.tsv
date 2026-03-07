@@ -1,0 +1,1241 @@
+name	context	href	summary
+a()	Method in class com.myscript.iink.graphics. Color	com/myscript/iink/graphics/Color.html#a()	Returns the alpha channel value.
+a_f()	Method in class com.myscript.iink.graphics. Color	com/myscript/iink/graphics/Color.html#a_f()	Returns the normalised aslpha channel value.
+activeBlockChanged(Editor, String)	Method in interface com.myscript.iink. IEditorListener	com/myscript/iink/IEditorListener.html#activeBlockChanged(com.myscript.iink.Editor,java.lang.String)	Invoked when the active block has changed.
+add(Rectangle, String, MimeType, String, boolean, PlaceholderController.PlaceholderInteractivityOptions)	Method in class com.myscript.iink. PlaceholderController	com/myscript/iink/PlaceholderController.html#add(com.myscript.iink.graphics.Rectangle,java.lang.String,com.myscript.iink.MimeType,java.lang.String,boolean,com.myscript.iink.PlaceholderController.PlaceholderInteractivityOptions)	Adds a new placeholder image to the part.
+add(String, MimeType)	Method in class com.myscript.iink. HandwritingGenerator	com/myscript/iink/HandwritingGenerator.html#add(java.lang.String,com.myscript.iink.MimeType)	Adds text in the current handwriting generation.
+ADD	Enum constant in enum class com.myscript.iink. ChangesetOperationType	com/myscript/iink/ChangesetOperationType.html#ADD	Add items operation.
+ADD_STROKE	Enum constant in enum class com.myscript.iink. GestureAction	com/myscript/iink/GestureAction.html#ADD_STROKE	Do not apply the gesture behavior and add gesture stroke as a regular stroke (if relevant).
+ADD_STROKE	Enum constant in enum class com.myscript.iink. OffscreenGestureAction	com/myscript/iink/OffscreenGestureAction.html#ADD_STROKE	Add the gesture stroke as a regular stroke.
+addBlock(float, float, String)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#addBlock(float,float,java.lang.String)	Adds a new block to the part.
+addBlock(float, float, String, MimeType, String)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#addBlock(float,float,java.lang.String,com.myscript.iink.MimeType,java.lang.String)	Adds a new block to the part and fills it with data.
+addImage(float, float, File, MimeType)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#addImage(float,float,java.io.File,com.myscript.iink.MimeType)	Adds a new image to the part.
+addListener(IConfigurationListener)	Method in class com.myscript.iink. Configuration	com/myscript/iink/Configuration.html#addListener(com.myscript.iink.IConfigurationListener)	Adds the specified listener to this configuration.
+addListener(IEditorListener)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#addListener(com.myscript.iink.IEditorListener)	Adds the specified listener to this editor.
+addListener(IOffscreenEditorListener)	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#addListener(com.myscript.iink.IOffscreenEditorListener)	Adds the specified listener to this offscreen editor.
+addListener(IRecognizerListener)	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#addListener(com.myscript.iink.IRecognizerListener)	Adds the specified listener to this recognizer.
+addListener(IRendererListener)	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#addListener(com.myscript.iink.IRendererListener)	Adds the specified listener to this renderer.
+addStrokes(PointerEvent[], boolean)	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#addStrokes(com.myscript.iink.PointerEvent%5B%5D,boolean)	Adds strokes.
+ALLOWED	Enum constant in enum class com.myscript.iink. MathDiagnostic	com/myscript/iink/MathDiagnostic.html#ALLOWED	The task is allowed.
+ALLOWED	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#ALLOWED	The transform is allowed.
+ALLOWED_BUT_PREVIOUSLY_DISCARDED	Enum constant in enum class com.myscript.iink. MathDiagnostic	com/myscript/iink/MathDiagnostic.html#ALLOWED_BUT_PREVIOUSLY_DISCARDED	The task is allowed but the user previously discarded the result.
+API	Enum constant in enum class com.myscript.iink. MathVariableSourceType	com/myscript/iink/MathVariableSourceType.html#API	The local variable was defined through MathSolverController.setVariableValue(blockId, ...) .
+API_GLOBAL	Enum constant in enum class com.myscript.iink. MathVariableSourceType	com/myscript/iink/MathVariableSourceType.html#API_GLOBAL	The global variable was defined through MathSolverController.setVariableValue("", ...) .
+APPLIED	Enum constant in enum class com.myscript.iink. ShapeOnHoldAction	com/myscript/iink/ShapeOnHoldAction.html#APPLIED	Discard the gesture stroke, do not apply the gesture behavior.
+apply(float, float)	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#apply(float,float)	Applies this transform to 2D point (x,y).
+apply(Point)	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#apply(com.myscript.iink.graphics.Point)	Applies this transform to 2D point (x,y).
+apply(Point[])	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#apply(com.myscript.iink.graphics.Point%5B%5D)	Applies this transform to 2D points (x,y).
+apply(Point[], int, int)	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#apply(com.myscript.iink.graphics.Point%5B%5D,int,int)	Applies this transform to 2D points (x,y).
+apply(Rectangle)	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#apply(com.myscript.iink.graphics.Rectangle)	Applies this transform to a rectangle.
+APPLY_GESTURE	Enum constant in enum class com.myscript.iink. GestureAction	com/myscript/iink/GestureAction.html#APPLY_GESTURE	Apply the gesture behavior, as configured in the editor.
+applyAction(String, String)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#applyAction(java.lang.String,java.lang.String)	Applies the solved action of the specified block to the rendering.
+applyAction(String, String, ParameterSet)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#applyAction(java.lang.String,java.lang.String,com.myscript.iink.ParameterSet)	Applies the solved action of the specified block to the rendering.
+applyStyle(ContentSelection, String)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#applyStyle(com.myscript.iink.ContentSelection,java.lang.String)	Applies CSS style properties to a content selection.
+applyTo(ICanvas)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#applyTo(com.myscript.iink.graphics.ICanvas)	Apply changed style attributes to the specified target canvas.
+ARC_OPS	Enum constant in enum class com.myscript.iink.graphics. IPath.OperationType	com/myscript/iink/graphics/IPath.OperationType.html#ARC_OPS	Elliptic arc operations (@see IPath::arcTo).
+arcTo(float, float, float, boolean, boolean, float, float)	Method in interface com.myscript.iink.graphics. IPath	com/myscript/iink/graphics/IPath.html#arcTo(float,float,float,boolean,boolean,float,float)	Draws an elliptical arc from the current point to (x, y).
+asVariableDefinition()	Method in class com.myscript.iink. MathExternalExpression	com/myscript/iink/MathExternalExpression.html#asVariableDefinition()	Checks if expression represents a variable definition and returns the associated information.
+asVariableDefinition(String)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#asVariableDefinition(java.lang.String)	Checks if the specified block represents a variable definition and returns
+the associated information.
+b()	Method in class com.myscript.iink.graphics. Color	com/myscript/iink/graphics/Color.html#b()	Returns the blue channel value.
+b_f()	Method in class com.myscript.iink.graphics. Color	com/myscript/iink/graphics/Color.html#b_f()	Returns the normalised blue channel value.
+BAD_NUMERIC	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#BAD_NUMERIC	The transform has a bad numeric value (infinite or NaN).
+BEAUTIFIED_BLOCKS	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#BEAUTIFIED_BLOCKS	The content selection contains beautified blocks.
+beginPosition	Variable in class com.myscript.iink.text. TextSpan	com/myscript/iink/text/TextSpan.html#beginPosition	The begin position in a label of this span, in glyph (i.e.
+BEVEL	Enum constant in enum class com.myscript.iink.graphics. LineJoin	com/myscript/iink/graphics/LineJoin.html#BEVEL	Bevel join style.
+BLACK	Static variable in class com.myscript.iink.graphics. Color
+ 
+blendOffscreen(int, float, float, float, float, float, float, float, float, Color) - Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/Color.html#BLACK	Requests drawing of an offscreen surface (usually a bitmap).
+BLOCK	Enum constant in enum class com.myscript.iink. MathVariableSourceType	com/myscript/iink/MathVariableSourceType.html#BLOCK	The variable was defined through a block expression.
+blockId	Variable in class com.myscript.iink. MathVariableDefinitionInfo	com/myscript/iink/MathVariableDefinitionInfo.html#blockId	The block id the variable is: used by (for API ), defined by (for BLOCK ) or empty (for API_GLOBAL ).
+boundingBox	Variable in class com.myscript.iink.text. GlyphMetrics	com/myscript/iink/text/GlyphMetrics.html#boundingBox	The glyph bounding box.
+brushName	Variable in class com.myscript.iink.graphics. ExtraBrushStyle	com/myscript/iink/graphics/ExtraBrushStyle.html#brushName	The extra brush name.
+BUTT	Enum constant in enum class com.myscript.iink.graphics. LineCap	com/myscript/iink/graphics/LineCap.html#BUTT	Butt end style.
+cancel()	Method in class com.myscript.iink. HandwritingGenerator	com/myscript/iink/HandwritingGenerator.html#cancel()	Cancels the ongoing handwriting generation if any.
+CANCEL	Enum constant in enum class com.myscript.iink. PointerEventType	com/myscript/iink/PointerEventType.html#CANCEL	Cancels an ongoing trace.
+CANCELED	Enum constant in enum class com.myscript.iink. ShapeOnHoldAction	com/myscript/iink/ShapeOnHoldAction.html#CANCELED	Do not apply the gesture behavior and add gesture stroke as a regular stroke (if relevant).
+canRedo()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#canRedo()	Tells whether redo can be performed on the part or not
+canUndo()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#canUndo()	Tells whether undo can be performed on the part or not
+CAPTURE	Enum constant in enum class com.myscript.iink. IRenderTarget.LayerType	com/myscript/iink/IRenderTarget.LayerType.html#CAPTURE	The layer that renders capture strokes.
+ChangesetOperation	Class in com.myscript.iink	com/myscript/iink/ChangesetOperation.html	Represents a changeset operation.
+ChangesetOperation(ChangesetOperationType, String[])	Constructor for class com.myscript.iink. ChangesetOperation	com/myscript/iink/ChangesetOperation.html#%3Cinit%3E(com.myscript.iink.ChangesetOperationType,java.lang.String%5B%5D)	Constructor.
+ChangesetOperationType	Enum Class in com.myscript.iink	com/myscript/iink/ChangesetOperationType.html	Changeset operation types.
+checkNotClosed()	Method in class com.myscript.iink. ParameterSet
+ 
+checkNotClosed() - Method in class com.myscript.iink. RecognitionAssetsBuilder
+ 
+clampViewOffset(Point) - Method in class com.myscript.iink. Editor	com/myscript/iink/ParameterSet.html#checkNotClosed()	Clamps the supplied view offset to the area that ensures standard scrolling
+behavior.
+clear()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#clear()	Removes all content from the part.
+clear()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#clear()	Resets all style attributes to their default values and clear the change flags.
+clear()	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#clear()	Removes all content from the part.
+clear()	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#clear()	Removes all content from the recognizer.
+clearChangeFlags()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#clearChangeFlags()	Clears the change flags.
+clonePart(ContentPart)	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#clonePart(com.myscript.iink.ContentPart)	Adds an existing part to this package.
+close()	Method in class com.myscript.iink. ContentBlock
+ 
+close() - Method in class com.myscript.iink. ContentPackage
+ 
+close() - Method in class com.myscript.iink. ContentPart
+ 
+close() - Method in class com.myscript.iink. ContentSelection
+ 
+close() - Method in class com.myscript.iink. Editor
+ 
+close() - Method in class com.myscript.iink. Engine
+ 
+close() - Method in class com.myscript.iink. HandwritingGenerator
+ 
+close() - Method in class com.myscript.iink. HandwritingProfile
+ 
+close() - Method in class com.myscript.iink. HandwritingProfileBuilder
+ 
+close() - Method in class com.myscript.iink. HandwritingResult
+ 
+close() - Method in class com.myscript.iink. HistoryManager
+ 
+close() - Method in class com.myscript.iink. ItemIdHelper
+ 
+close() - Method in class com.myscript.iink. MathExternalExpression
+ 
+close() - Method in class com.myscript.iink. MathSolverController
+ 
+close() - Method in class com.myscript.iink. OffscreenEditor
+ 
+close() - Method in class com.myscript.iink. ParameterSet
+ 
+close() - Method in class com.myscript.iink. PlaceholderController
+ 
+close() - Method in class com.myscript.iink. RecognitionAssetsBuilder
+ 
+close() - Method in class com.myscript.iink. Recognizer
+ 
+close() - Method in class com.myscript.iink. Renderer
+ 
+close() - Method in class com.myscript.iink. ToolController
+ 
+closePath() - Method in interface com.myscript.iink.graphics. IPath	com/myscript/iink/ContentBlock.html#close()	Close the current subpath by drawing a straight line from the current point
+to current subpath's initial point.
+Color	Class in com.myscript.iink.graphics	com/myscript/iink/graphics/Color.html	Red green blue alpha color representation.
+Color(int)	Constructor for class com.myscript.iink.graphics. Color	com/myscript/iink/graphics/Color.html#%3Cinit%3E(int)	Constructor.
+Color(int, int, int, float)	Constructor for class com.myscript.iink.graphics. Color	com/myscript/iink/graphics/Color.html#%3Cinit%3E(int,int,int,float)	Constructor.
+Color(int, int, int, int)	Constructor for class com.myscript.iink.graphics. Color	com/myscript/iink/graphics/Color.html#%3Cinit%3E(int,int,int,int)	Constructor.
+Color(Color)	Constructor for class com.myscript.iink.graphics. Color	com/myscript/iink/graphics/Color.html#%3Cinit%3E(com.myscript.iink.graphics.Color)	Copy constructor.
+com.myscript.iink	package com.myscript.iink
+ 
+com.myscript.iink.graphics - package com.myscript.iink.graphics
+ 
+com.myscript.iink.text - package com.myscript.iink.text
+ 
+com.myscript.util - package com.myscript.util
+ 
+combine(String[], String[], ItemIdCombinationModifier) - Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/package-summary.html	Combines two item ids lists.
+commitModelDraw(long)	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#commitModelDraw(long)	Indicates that an asynchronous drawing of the Model Layer is over.
+compile(String, String)	Method in class com.myscript.iink. RecognitionAssetsBuilder	com/myscript/iink/RecognitionAssetsBuilder.html#compile(java.lang.String,java.lang.String)	Compile data into a recognition asset.
+Configuration	Class in com.myscript.iink	com/myscript/iink/Configuration.html	Represents the configuration values of the iink runtime environment.
+CONFIGURATION_BUNDLE_NOT_FOUND	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#CONFIGURATION_BUNDLE_NOT_FOUND	The configuration bundle (*.conf file) cannot be found.
+CONFIGURATION_BUNDLE_NOT_FOUND	Enum constant in enum class com.myscript.iink. RecognizerError	com/myscript/iink/RecognizerError.html#CONFIGURATION_BUNDLE_NOT_FOUND	The configuration bundle (*.conf file) cannot be found.
+CONFIGURATION_NAME_NOT_FOUND	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#CONFIGURATION_NAME_NOT_FOUND	The configuration name cannot be found in the bundle (*.conf file).
+CONFIGURATION_NAME_NOT_FOUND	Enum constant in enum class com.myscript.iink. RecognizerError	com/myscript/iink/RecognizerError.html#CONFIGURATION_NAME_NOT_FOUND	The configuration name cannot be found in the bundle (*.conf file).
+configurationChanged(Configuration)	Method in interface com.myscript.iink. IConfigurationListener	com/myscript/iink/IConfigurationListener.html#configurationChanged(com.myscript.iink.Configuration)	Invoked when the configuration has changed.
+ContentBlock	Class in com.myscript.iink	com/myscript/iink/ContentBlock.html	Represents a block of content.
+contentChanged(Editor, String[])	Method in interface com.myscript.iink. IEditorListener	com/myscript/iink/IEditorListener.html#contentChanged(com.myscript.iink.Editor,java.lang.String%5B%5D)	Invoked when the content has changed.
+contentChanged(OffscreenEditor, String[])	Method in interface com.myscript.iink. IOffscreenEditorListener	com/myscript/iink/IOffscreenEditorListener.html#contentChanged(com.myscript.iink.OffscreenEditor,java.lang.String%5B%5D)	Invoked when the content has changed.
+contentChanged2(Editor, String[], String[], String[])	Method in interface com.myscript.iink. IEditorListener	com/myscript/iink/IEditorListener.html#contentChanged2(com.myscript.iink.Editor,java.lang.String%5B%5D,java.lang.String%5B%5D,java.lang.String%5B%5D)	Invoked when the content has changed, with detailed information.
+contentChanged2(OffscreenEditor, String[], String[], String[])	Method in interface com.myscript.iink. IOffscreenEditorListener	com/myscript/iink/IOffscreenEditorListener.html#contentChanged2(com.myscript.iink.OffscreenEditor,java.lang.String%5B%5D,java.lang.String%5B%5D,java.lang.String%5B%5D)	Invoked when the content has changed, with detailed information.
+ContentPackage	Class in com.myscript.iink	com/myscript/iink/ContentPackage.html	A package stores the user content as a sorted collection of parts.
+ContentPart	Class in com.myscript.iink	com/myscript/iink/ContentPart.html	A part stores one content item.
+ContentSelection	Class in com.myscript.iink	com/myscript/iink/ContentSelection.html	Represents a selection of content.
+ContentSelectionMode	Enum Class in com.myscript.iink	com/myscript/iink/ContentSelectionMode.html	Predefined Content Selection modes.
+ConversionState	Enum Class in com.myscript.iink	com/myscript/iink/ConversionState.html	Describes the state of the content for a given block.
+convert(ContentSelection, ConversionState)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#convert(com.myscript.iink.ContentSelection,com.myscript.iink.ConversionState)	Converts the specified content to digital form.
+copy(ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#copy(com.myscript.iink.ContentSelection)	Copies a selection to the internal clipboard.
+create(byte[])	Static method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#create(byte%5B%5D)	Creates a new engine.
+CREATE	Enum constant in enum class com.myscript.iink. PackageOpenOption	com/myscript/iink/PackageOpenOption.html#CREATE	Create a new package if it does not exist.
+CREATE_NEW	Enum constant in enum class com.myscript.iink. PackageOpenOption	com/myscript/iink/PackageOpenOption.html#CREATE_NEW	Create a new package, failing if it already exists.
+createCanvas()	Method in interface com.myscript.iink. IImagePainter	com/myscript/iink/IImagePainter.html#createCanvas()	Creates a canvas to draw the image.
+createEditor(Renderer)	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#createEditor(com.myscript.iink.Renderer)	Creates a new editor.
+createEditor(Renderer, ToolController)	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#createEditor(com.myscript.iink.Renderer,com.myscript.iink.ToolController)	Creates a new editor.
+createFromFile(String)	Method in class com.myscript.iink. HandwritingProfileBuilder	com/myscript/iink/HandwritingProfileBuilder.html#createFromFile(java.lang.String)	Creates a writing profile from a ContentPackage file name.
+createFromSelection(ContentSelection)	Method in class com.myscript.iink. HandwritingProfileBuilder	com/myscript/iink/HandwritingProfileBuilder.html#createFromSelection(com.myscript.iink.ContentSelection)	Creates a writing profile from a ContentSelection.
+createHandwritingGenerator()	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#createHandwritingGenerator()	Create a new handwriting generator.
+createHandwritingProfileBuilder()	Method in class com.myscript.iink. HandwritingGenerator	com/myscript/iink/HandwritingGenerator.html#createHandwritingProfileBuilder()	Create a new handwriting profile builder.
+createItemIdHelper(OffscreenEditor)	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#createItemIdHelper(com.myscript.iink.OffscreenEditor)	Creates a new item id helper associated with an offscreen editor.
+createOffscreenEditor(float, float)	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#createOffscreenEditor(float,float)	Creates a new offscreen editor.
+createOffscreenRenderCanvas(int)	Method in interface com.myscript.iink. IRenderTarget	com/myscript/iink/IRenderTarget.html#createOffscreenRenderCanvas(int)	Creates a Canvas that draws onto the offscreen render surface associated with a given identifier.
+createOffscreenRenderSurface(int, int, boolean)	Method in interface com.myscript.iink. IRenderTarget	com/myscript/iink/IRenderTarget.html#createOffscreenRenderSurface(int,int,boolean)	Requests the creation of an offscreen render surface (example: a bitmap), and returns a unique identifier for that surface.
+createPackage(File)	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#createPackage(java.io.File)	Creates a new package.
+createPackage(String)	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#createPackage(java.lang.String)	Creates a new package.
+createParameterSet()	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#createParameterSet()	Creates a new empty parameter set.
+createPart(String)	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#createPart(java.lang.String)	Appends a new part to this package.
+createPart(String, float, float)	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#createPart(java.lang.String,float,float)	Warning: This is a Beta API.
+createPath()	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#createPath()	Creates a new general path.
+createRecognitionAssetsBuilder()	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#createRecognitionAssetsBuilder()	Creates a new RecognitionAssetsBuilder.
+createRecognizer(float, float, String)	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#createRecognizer(float,float,java.lang.String)	Creates a new recognizer.
+createRenderer(float, float, IRenderTarget)	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#createRenderer(float,float,com.myscript.iink.IRenderTarget)	Creates a new renderer.
+createStroker()	Method in interface com.myscript.iink.graphics. IStrokerFactory	com/myscript/iink/graphics/IStrokerFactory.html#createStroker()	Creates a new stroker instance.
+createToolController()	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#createToolController()	Creates a new tool controller.
+CURVE_OPS	Enum constant in enum class com.myscript.iink.graphics. IPath.OperationType	com/myscript/iink/graphics/IPath.OperationType.html#CURVE_OPS	Cubic Bezier curve operations (@see IPath::curveTo).
+curveTo(float, float, float, float, float, float)	Method in interface com.myscript.iink.graphics. IPath	com/myscript/iink/graphics/IPath.html#curveTo(float,float,float,float,float,float)	Draws a cubic Bezier curve from the current point to (x,y) using (x1,y1) as
+the control point at the beginning of the curve and (x2,y2) as the control
+point at the end of the curve.
+CUSTOM_1	Enum constant in enum class com.myscript.iink. PointerType	com/myscript/iink/PointerType.html#CUSTOM_1	A custom pointer.
+CUSTOM_2	Enum constant in enum class com.myscript.iink. PointerType	com/myscript/iink/PointerType.html#CUSTOM_2	A custom pointer.
+CUSTOM_3	Enum constant in enum class com.myscript.iink. PointerType	com/myscript/iink/PointerType.html#CUSTOM_3	A custom pointer.
+CUSTOM_4	Enum constant in enum class com.myscript.iink. PointerType	com/myscript/iink/PointerType.html#CUSTOM_4	A custom pointer.
+CUSTOM_5	Enum constant in enum class com.myscript.iink. PointerType	com/myscript/iink/PointerType.html#CUSTOM_5	A custom pointer.
+DBL_EPSILON	Static variable in class com.myscript.util. Numbers
+ 
+definitions - Variable in class com.myscript.iink. MathVariableDefinitions	com/myscript/util/Numbers.html#DBL_EPSILON	The info associated with the definitions.
+deletePackage(File)	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#deletePackage(java.io.File)	Deletes the specified package.
+deletePackage(String)	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#deletePackage(java.lang.String)	Deletes the specified package.
+DIFFERENCE	Enum constant in enum class com.myscript.iink. ItemIdCombinationModifier	com/myscript/iink/ItemIdCombinationModifier.html#DIFFERENCE	Combines the difference.
+DIGITAL_EDIT	Enum constant in enum class com.myscript.iink. ConversionState	com/myscript/iink/ConversionState.html#DIGITAL_EDIT	Digital content, suitable for edition (normalized font size, expanded graphics).
+DIGITAL_PUBLISH	Enum constant in enum class com.myscript.iink. ConversionState	com/myscript/iink/ConversionState.html#DIGITAL_PUBLISH	Digital content, suitable for publication (adaptive font size, fitted graphics).
+DISPLAYED	Enum constant in enum class com.myscript.iink. ShapeOnHoldAction	com/myscript/iink/ShapeOnHoldAction.html#DISPLAYED	Apply the gesture behavior, as configured in the editor.
+DIVISION_BY_ZERO	Enum constant in enum class com.myscript.iink. MathDiagnostic	com/myscript/iink/MathDiagnostic.html#DIVISION_BY_ZERO	Computation leads to a division by zero.
+DOCX	Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#DOCX	Open XML word processing document (application/vnd.openxmlformats-officedocument.wordprocessingml.document).
+down(float, float)	Method in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#down(float,float)	Update this event to a "down" event.
+DOWN	Enum constant in enum class com.myscript.iink. PointerEventType	com/myscript/iink/PointerEventType.html#DOWN	Starts a new trace.
+drawCaptureStrokes(int, int, int, int, ICanvas)	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#drawCaptureStrokes(int,int,int,int,com.myscript.iink.graphics.ICanvas)	Requests drawing of a region of the Capture layer.
+DRAWING_BLOCKS	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#DRAWING_BLOCKS	The content selection contains drawing blocks.
+drawLine(float, float, float, float)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#drawLine(float,float,float,float)	Requests drawing of a line segment.
+drawModel(int, int, int, int, ICanvas)	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#drawModel(int,int,int,int,com.myscript.iink.graphics.ICanvas)	Requests drawing of a region of the Model layer.
+drawModelAsync(int, int, int, int, ICanvas)	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#drawModelAsync(int,int,int,int,com.myscript.iink.graphics.ICanvas)	Requests asynchronous drawing of a region of the Model layer.
+drawObject(String, String, float, float, float, float)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#drawObject(java.lang.String,java.lang.String,float,float,float,float)	Requests drawing of an object.
+drawPath(IPath)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#drawPath(com.myscript.iink.graphics.IPath)	Requests drawing of a path.
+drawRectangle(float, float, float, float)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#drawRectangle(float,float,float,float)	Requests drawing of a rectangle.
+drawStroke(PointerEvent[], ICanvas)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#drawStroke(com.myscript.iink.PointerEvent%5B%5D,com.myscript.iink.graphics.ICanvas)	Draws pointer events with current editor style settings on the given canvas.
+drawStrokeWithExtraBrush(InkPoints[], int, ExtraBrushStyle, boolean, long)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#drawStrokeWithExtraBrush(com.myscript.iink.graphics.InkPoints%5B%5D,int,com.myscript.iink.graphics.ExtraBrushStyle,boolean,long)	Requests drawing of a stroke with an extra brush.
+drawText(String, float, float, float, float, float, float)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#drawText(java.lang.String,float,float,float,float,float,float)	Requests drawing of text.
+DROPSHADOW_COLOR	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#DROPSHADOW_COLOR	Drop shadow color property.
+DROPSHADOW_RADIUS	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#DROPSHADOW_RADIUS	Drop shadow blur radius property.
+DROPSHADOW_XOFFSET	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#DROPSHADOW_XOFFSET	Drop shadow horizontal property.
+DROPSHADOW_YOFFSET	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#DROPSHADOW_YOFFSET	Drop shadow vertical property.
+Editor	Class in com.myscript.iink	com/myscript/iink/Editor.html	The Editor is the entry point to modify a part.
+EditorError	Enum Class in com.myscript.iink	com/myscript/iink/EditorError.html	Represents an Editor error code.
+end()	Method in class com.myscript.iink. HandwritingGenerator	com/myscript/iink/HandwritingGenerator.html#end()	Tells the handwriting generation to not wait for more text to add.
+endDraw()	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#endDraw()	Indicates that a drawing session ends.
+endGroup(String)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#endGroup(java.lang.String)	Indicates that the drawing of a group of items ends.
+endItem(String)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#endItem(java.lang.String)	Indicates that the drawing of an item ends.
+endPosition	Variable in class com.myscript.iink.text. TextSpan	com/myscript/iink/text/TextSpan.html#endPosition	The end position in a label of this span, in glyph (i.e.
+Engine	Class in com.myscript.iink	com/myscript/iink/Engine.html	Represents the iink runtime environment.
+equals(Object)	Method in class com.myscript.iink. ChangesetOperation
+ 
+equals(Object) - Method in class com.myscript.iink.graphics. Color
+ 
+equals(Object) - Method in class com.myscript.iink.graphics. ExtraBrushStyle
+ 
+equals(Object) - Method in class com.myscript.iink.graphics. InkPoint
+ 
+equals(Object) - Method in class com.myscript.iink.graphics. Point
+ 
+equals(Object) - Method in class com.myscript.iink.graphics. PointD
+ 
+equals(Object) - Method in class com.myscript.iink.graphics. Rectangle
+ 
+equals(Object) - Method in class com.myscript.iink.graphics. Style
+ 
+equals(Object) - Method in class com.myscript.iink.graphics. Transform
+ 
+equals(Object) - Method in class com.myscript.iink. IndentationLevels
+ 
+equals(Object) - Method in class com.myscript.iink. MathEvaluationVariables
+ 
+equals(Object) - Method in class com.myscript.iink. MathVariableDefinition
+ 
+equals(Object) - Method in class com.myscript.iink. MathVariableDefinitionInfo
+ 
+equals(Object) - Method in class com.myscript.iink. MathVariableDefinitions
+ 
+equals(Object) - Method in class com.myscript.iink. MathVariableInfo
+ 
+equals(Object) - Method in class com.myscript.iink. PointerEvent
+ 
+equals(Object) - Method in class com.myscript.iink.text. GlyphMetrics
+ 
+equals(Object) - Method in class com.myscript.iink.text. TextSpan
+ 
+erase(ContentSelection) - Method in class com.myscript.iink. Editor	com/myscript/iink/ChangesetOperation.html#equals(java.lang.Object)	Erases a content selection from the part.
+erase(String[])	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#erase(java.lang.String%5B%5D)	Erases the specified items.
+ERASE	Enum constant in enum class com.myscript.iink. ChangesetOperationType	com/myscript/iink/ChangesetOperationType.html#ERASE	Erase items operation.
+ERASER	Enum constant in enum class com.myscript.iink. PointerTool	com/myscript/iink/PointerTool.html#ERASER	A tool used for erasing some content.
+ERASER	Enum constant in enum class com.myscript.iink. PointerType	com/myscript/iink/PointerType.html#ERASER	An eraser or inverted pen.
+evaluate(MathEvaluationVariables, double, double, int)	Method in class com.myscript.iink. MathExternalExpression	com/myscript/iink/MathExternalExpression.html#evaluate(com.myscript.iink.MathEvaluationVariables,double,double,int)	Returns the list of points resulting from evaluating the given variables.
+evaluate(MathEvaluationVariables, double, double, int, ParameterSet)	Method in class com.myscript.iink. MathExternalExpression	com/myscript/iink/MathExternalExpression.html#evaluate(com.myscript.iink.MathEvaluationVariables,double,double,int,com.myscript.iink.ParameterSet)	Returns the list of points resulting from evaluating the given variables.
+evaluate(String, MathEvaluationVariables, double, double, int)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#evaluate(java.lang.String,com.myscript.iink.MathEvaluationVariables,double,double,int)	Returns the list of points resulting from evaluating the given variables
+in the specified block.
+evaluate(String, MathEvaluationVariables, double, double, int, ParameterSet)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#evaluate(java.lang.String,com.myscript.iink.MathEvaluationVariables,double,double,int,com.myscript.iink.ParameterSet)	Returns the list of points resulting from evaluating the given variables
+in the specified block.
+EVENODD	Enum constant in enum class com.myscript.iink.graphics. FillRule	com/myscript/iink/graphics/FillRule.html#EVENODD	Even-odd fill rule.
+eventType	Variable in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#eventType	The event type.
+EXISTING	Enum constant in enum class com.myscript.iink. PackageOpenOption	com/myscript/iink/PackageOpenOption.html#EXISTING	Open an existing package.
+export_(String[], MimeType)	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#export_(java.lang.String%5B%5D,com.myscript.iink.MimeType)	Exports the specified items.
+export_(String[], MimeType, ParameterSet)	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#export_(java.lang.String%5B%5D,com.myscript.iink.MimeType,com.myscript.iink.ParameterSet)	Exports the specified items.
+export_(ContentSelection, MimeType)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#export_(com.myscript.iink.ContentSelection,com.myscript.iink.MimeType)	Exports the specified content.
+export_(ContentSelection, MimeType, ParameterSet)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#export_(com.myscript.iink.ContentSelection,com.myscript.iink.MimeType,com.myscript.iink.ParameterSet)	Exports the specified content.
+export_(ContentSelection, OutputStream, MimeType, IImagePainter)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#export_(com.myscript.iink.ContentSelection,java.io.OutputStream,com.myscript.iink.MimeType,com.myscript.iink.IImagePainter)	Exports the specified content.
+export_(ContentSelection, OutputStream, MimeType, IImagePainter, ParameterSet)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#export_(com.myscript.iink.ContentSelection,java.io.OutputStream,com.myscript.iink.MimeType,com.myscript.iink.IImagePainter,com.myscript.iink.ParameterSet)	Exports the specified content.
+export_(ContentSelection, String, MimeType, IImagePainter)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#export_(com.myscript.iink.ContentSelection,java.lang.String,com.myscript.iink.MimeType,com.myscript.iink.IImagePainter)	Exports the specified content.
+export_(ContentSelection, String, MimeType, IImagePainter, ParameterSet)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#export_(com.myscript.iink.ContentSelection,java.lang.String,com.myscript.iink.MimeType,com.myscript.iink.IImagePainter,com.myscript.iink.ParameterSet)	Exports the specified content.
+export_(ContentSelection, String, IImagePainter)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#export_(com.myscript.iink.ContentSelection,java.lang.String,com.myscript.iink.IImagePainter)	Exports the specified content.
+export_(ContentSelection, String, IImagePainter, ParameterSet)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#export_(com.myscript.iink.ContentSelection,java.lang.String,com.myscript.iink.IImagePainter,com.myscript.iink.ParameterSet)	Exports the specified content.
+ExtraBrushStyle	Class in com.myscript.iink.graphics	com/myscript/iink/graphics/ExtraBrushStyle.html	Extra brush style information for the rendering of strokes.
+ExtraBrushStyle()	Constructor for class com.myscript.iink.graphics. ExtraBrushStyle	com/myscript/iink/graphics/ExtraBrushStyle.html#%3Cinit%3E()	Default constructor.
+ExtraBrushStyle(String, float, float, float, boolean)	Constructor for class com.myscript.iink.graphics. ExtraBrushStyle	com/myscript/iink/graphics/ExtraBrushStyle.html#%3Cinit%3E(java.lang.String,float,float,float,boolean)	Constructs an ExtraBrushStyle
+extractObject(String, File)	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#extractObject(java.lang.String,java.io.File)	Extracts an object from this package to a given file.
+f	Variable in class com.myscript.iink.graphics. InkPoint	com/myscript/iink/graphics/InkPoint.html#f	The point normalized pressure, in [0,1].
+f	Variable in class com.myscript.iink.graphics. InkPoints	com/myscript/iink/graphics/InkPoints.html#f	The points normalized pressures, in [0,1].
+f	Variable in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#f	The event normalized pressure, in [0,1].
+FILL_COLOR	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#FILL_COLOR	Fill color property.
+FILL_RULE	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#FILL_RULE	Fill rule property.
+FillRule	Enum Class in com.myscript.iink.graphics	com/myscript/iink/graphics/FillRule.html	Defines the methods used to fill paths and polygons.
+finalize()	Method in class com.myscript.iink. ContentBlock
+ 
+finalize() - Method in class com.myscript.iink. ContentPackage
+ 
+finalize() - Method in class com.myscript.iink. ContentPart
+ 
+finalize() - Method in class com.myscript.iink. ContentSelection
+ 
+finalize() - Method in class com.myscript.iink. Editor
+ 
+finalize() - Method in class com.myscript.iink. Engine
+ 
+finalize() - Method in class com.myscript.iink. HandwritingGenerator
+ 
+finalize() - Method in class com.myscript.iink. HandwritingProfile
+ 
+finalize() - Method in class com.myscript.iink. HandwritingProfileBuilder
+ 
+finalize() - Method in class com.myscript.iink. HandwritingResult
+ 
+finalize() - Method in class com.myscript.iink. HistoryManager
+ 
+finalize() - Method in class com.myscript.iink. ItemIdHelper
+ 
+finalize() - Method in class com.myscript.iink. MathExternalExpression
+ 
+finalize() - Method in class com.myscript.iink. MathSolverController
+ 
+finalize() - Method in class com.myscript.iink. OffscreenEditor
+ 
+finalize() - Method in class com.myscript.iink. ParameterSet
+ 
+finalize() - Method in class com.myscript.iink. PlaceholderController
+ 
+finalize() - Method in class com.myscript.iink. RecognitionAssetsBuilder
+ 
+finalize() - Method in class com.myscript.iink. Recognizer
+ 
+finalize() - Method in class com.myscript.iink. Renderer
+ 
+finalize() - Method in class com.myscript.iink. ToolController
+ 
+FLT_EPSILON - Static variable in class com.myscript.util. Numbers
+ 
+FONT_FAMILY - Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/ContentBlock.html#finalize()	Font family property.
+FONT_LINE_HEIGHT	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#FONT_LINE_HEIGHT	Font line height property.
+FONT_SIZE	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#FONT_SIZE	Font size property.
+FONT_STYLE	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#FONT_STYLE	Font style property.
+FONT_VARIANT	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#FONT_VARIANT	Font variant property.
+FONT_WEIGHT	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#FONT_WEIGHT	Font weight property.
+force(float)	Method in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#force(float)	Update the event pressure.
+forValue(int)	Static method in enum class com.myscript.iink. MimeType
+ 
+fromTypeName(String) - Static method in enum class com.myscript.iink. MimeType
+ 
+
+G
+
+g() - Method in class com.myscript.iink.graphics. Color	com/myscript/iink/MimeType.html#forValue(int)	Returns the green channel value.
+g_f()	Method in class com.myscript.iink.graphics. Color	com/myscript/iink/graphics/Color.html#g_f()	Returns the normalised green channel value.
+GENERATION_FAILED	Enum constant in enum class com.myscript.iink. HandwritingGeneratorError	com/myscript/iink/HandwritingGeneratorError.html#GENERATION_FAILED	The generation has failed.
+GENERIC	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#GENERIC	Generic error, refer to the `message` parameter for more information.
+GENERIC	Enum constant in enum class com.myscript.iink. HandwritingGeneratorError	com/myscript/iink/HandwritingGeneratorError.html#GENERIC	Generic error, refer to the message parameter for more information.
+GENERIC	Enum constant in enum class com.myscript.iink. RecognizerError	com/myscript/iink/RecognizerError.html#GENERIC	Generic error, refer to the `message` parameter for more information.
+GESTURE_NOTIFICATION_CANNOT_MOVE_ABOVE_FIRSTLINE	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#GESTURE_NOTIFICATION_CANNOT_MOVE_ABOVE_FIRSTLINE	Gesture notification, cannot move above first line.
+GESTURE_NOTIFICATION_NO_WORDS_TO_JOIN	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#GESTURE_NOTIFICATION_NO_WORDS_TO_JOIN	Gesture notification, no words to join.
+GESTURE_NOTIFICATION_UNABLE_TO_APPLY	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#GESTURE_NOTIFICATION_UNABLE_TO_APPLY	Gesture notification, unable to apply.
+GestureAction	Enum Class in com.myscript.iink	com/myscript/iink/GestureAction.html	Represents the action to be performed upon gesture detection.
+get()	Method in class com.myscript.iink. NativeObjectHandle	com/myscript/iink/NativeObjectHandle.html#get()	Requests ownership of a native object object.
+getActionOutput(String, String, MimeType)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#getActionOutput(java.lang.String,java.lang.String,com.myscript.iink.MimeType)	Returns the output for the given action and the specified block.
+getActionOutput(String, String, MimeType, ParameterSet)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#getActionOutput(java.lang.String,java.lang.String,com.myscript.iink.MimeType,com.myscript.iink.ParameterSet)	Returns the output for the given action and the specified block.
+getAttributes()	Method in class com.myscript.iink. ContentBlock	com/myscript/iink/ContentBlock.html#getAttributes()	Returns the block's attributes as a JSON string.
+getAvailableActions(String)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#getAvailableActions(java.lang.String)	Returns the available actions for the specified block.
+getAvailableActions(String, ParameterSet)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#getAvailableActions(java.lang.String,com.myscript.iink.ParameterSet)	Returns the available actions for the specified block.
+getAvailableItemsTypes(String[])	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#getAvailableItemsTypes(java.lang.String%5B%5D)	Returns the available types for the specified items.
+getAvailableSelectionModes()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getAvailableSelectionModes()	Returns the available selection modes for the active content selection associated with this editor.
+getAvailableSelectionTypes(ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getAvailableSelectionTypes(com.myscript.iink.ContentSelection)	Returns the available types for a selection.
+getBlockBox(String)	Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/ItemIdHelper.html#getBlockBox(java.lang.String)	Returns the bounding box of a block.
+getBlockById(String)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getBlockById(java.lang.String)	Returns the content block associated with a given id .
+getBlockChildrenIds(String)	Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/ItemIdHelper.html#getBlockChildrenIds(java.lang.String)	Returns the children block ids of a block.
+getBlockOrientedBox(String)	Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/ItemIdHelper.html#getBlockOrientedBox(java.lang.String)	Returns the four points of the oriented box of a block.
+getBlockParentId(String)	Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/ItemIdHelper.html#getBlockParentId(java.lang.String)	Returns the parent block id of a block.
+getBlockType(String)	Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/ItemIdHelper.html#getBlockType(java.lang.String)	Returns the type of a block.
+getBoolean(String)	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#getBoolean(java.lang.String)	Returns the boolean value associated with key .
+getBoolean(String, boolean)	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#getBoolean(java.lang.String,boolean)	Returns the boolean value associated with key .
+getBox()	Method in class com.myscript.iink. ContentBlock	com/myscript/iink/ContentBlock.html#getBox()	Returns the box that represents the position of this block.
+getBox(ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getBox(com.myscript.iink.ContentSelection)	Returns the box that represents the position of a selection.
+getChangeFlags()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getChangeFlags()	Returns the set of style attributes changed since construction or last call
+to Style.clearChangeFlags() .
+getCharacterBoundingBoxes(Text, TextSpan[])	Method in interface com.myscript.iink.text. IFontMetricsProvider	com/myscript/iink/text/IFontMetricsProvider.html#getCharacterBoundingBoxes(com.myscript.iink.text.Text,com.myscript.iink.text.TextSpan%5B%5D)	Returns the bounding box of each glyph of the specified text if it were
+displayed at 0,0 using the specified styles.
+getChildren()	Method in class com.myscript.iink. ContentBlock	com/myscript/iink/ContentBlock.html#getChildren()	Returns the children of this block.
+getCompilationErrors()	Method in class com.myscript.iink. RecognitionAssetsBuilder	com/myscript/iink/RecognitionAssetsBuilder.html#getCompilationErrors()	Get the last compilation errors.
+getConfiguration()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getConfiguration()	Returns the Configuration associated with this editor.
+getConfiguration()	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#getConfiguration()	Returns the configuration associated with this engine.
+getConfiguration()	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#getConfiguration()	Returns the Configuration associated with this offscreen editor.
+getConfiguration()	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#getConfiguration()	Returns the Configuration associated with this recognizer.
+getConversionState()	Method in class com.myscript.iink. ContentBlock	com/myscript/iink/ContentBlock.html#getConversionState()	Returns the current conversion state of this block, as a set
+of ConversionState values.
+getConversionState(ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getConversionState(com.myscript.iink.ContentSelection)	Returns the current conversion state of a selection, as a set
+of ConversionState values.
+getDiagnostic(String)	Method in class com.myscript.iink. MathExternalExpression	com/myscript/iink/MathExternalExpression.html#getDiagnostic(java.lang.String)	Returns the diagnostic info for the given task.
+getDiagnostic(String, String)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#getDiagnostic(java.lang.String,java.lang.String)	Returns the diagnostic info for the given action and the specified block.
+getDiagnostic(String, String, ParameterSet)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#getDiagnostic(java.lang.String,java.lang.String,com.myscript.iink.ParameterSet)	Returns the diagnostic info for the given task and the specified block.
+getDiagnostic(String, ParameterSet)	Method in class com.myscript.iink. MathExternalExpression	com/myscript/iink/MathExternalExpression.html#getDiagnostic(java.lang.String,com.myscript.iink.ParameterSet)	Returns the diagnostic info for the given task.
+getDpiX()	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#getDpiX()	Returns the horizontal DPI resolution of the renderer.
+getDpiY()	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#getDpiY()	Returns the vertical DPI resolution of the renderer.
+getDropShadowColor()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getDropShadowColor()	Retrieves the drop shadow color.
+getDropShadowRadius()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getDropShadowRadius()	Retrieves the drop shadow blur radius.
+getDropShadowXOffset()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getDropShadowXOffset()	Retrieves the drop shadow horizontal offset.
+getDropShadowYOffset()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getDropShadowYOffset()	Retrieves the drop shadow vertical offset.
+getEngine()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getEngine()	Returns the Engine to which this editor is attached.
+getEngine()	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#getEngine()	Returns the Engine to which this offscreen editor is attached.
+getEngine()	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#getEngine()	Returns the Engine to which this recognizer is attached.
+getEvaluables()	Method in class com.myscript.iink. MathExternalExpression	com/myscript/iink/MathExternalExpression.html#getEvaluables()	Returns the list of variable names that can be evaluated.
+getEvaluables(String)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#getEvaluables(java.lang.String)	Returns the list of variable names that can be evaluated in the specified block.
+getFileExtensions()	Method in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#getFileExtensions()	Returns a comma separated list of file extensions.
+getFillColor()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getFillColor()	Retrieves the stroke fill color.
+getFillRule()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getFillRule()	Retrieves the stroke fill rule.
+getFixedSize()	Method in class com.myscript.iink. ContentPart	com/myscript/iink/ContentPart.html#getFixedSize()	Warning: This is a Beta API.
+getFontFamily()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getFontFamily()	Retrieves the font family.
+getFontLineHeight()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getFontLineHeight()	Retrieves the font line height.
+getFontSize()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getFontSize()	Retrieves the font size.
+getFontSizePx(Style)	Method in interface com.myscript.iink.text. IFontMetricsProvider	com/myscript/iink/text/IFontMetricsProvider.html#getFontSizePx(com.myscript.iink.graphics.Style)	Returns the size of the specified font in pixels.
+getFontStyle()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getFontStyle()	Retrieves the font style.
+getFontVariant()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getFontVariant()	Retrieves the font variant.
+getFontWeight()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getFontWeight()	Retrieves the font weight.
+getFullItemId(String)	Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/ItemIdHelper.html#getFullItemId(java.lang.String)	Returns the full item id associated with a partial item id.
+getGlyphBeginAt(int)	Method in class com.myscript.iink.text. Text	com/myscript/iink/text/Text.html#getGlyphBeginAt(int)	Returns the starting position in the label, in bytes, of a given glyph.
+getGlyphCount()	Method in class com.myscript.iink.text. Text	com/myscript/iink/text/Text.html#getGlyphCount()	Returns the number of glyphs associated with this text.
+getGlyphCount(int, int)	Method in class com.myscript.iink.text. Text	com/myscript/iink/text/Text.html#getGlyphCount(int,int)	Returns the number of glyphs included in span of two index of bytes in this text
+getGlyphEndAt(int)	Method in class com.myscript.iink.text. Text	com/myscript/iink/text/Text.html#getGlyphEndAt(int)	Returns the end position in the label, in bytes, of a given glyph.
+getGlyphLabelAt(int)	Method in class com.myscript.iink.text. Text	com/myscript/iink/text/Text.html#getGlyphLabelAt(int)	Returns the label of the glyph at a given index.
+getGlyphMetrics(Text, TextSpan[])	Method in interface com.myscript.iink.text. IFontMetricsProvider	com/myscript/iink/text/IFontMetricsProvider.html#getGlyphMetrics(com.myscript.iink.text.Text,com.myscript.iink.text.TextSpan%5B%5D)	Returns the bounding box and left side bearing of each glyph of the specified text if it were
+displayed at 0,0 using the specified styles.
+getHistoryManager()	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#getHistoryManager()	Returns the HistoryManager to which this offscreen editor is attached if any.
+getId()	Method in class com.myscript.iink. ContentBlock	com/myscript/iink/ContentBlock.html#getId()	Returns the identifier of this block.
+getId()	Method in class com.myscript.iink. ContentPart	com/myscript/iink/ContentPart.html#getId()	Returns the identifier of this part.
+getIncludedBlocks(ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getIncludedBlocks(com.myscript.iink.ContentSelection)	Returns the content block ids included in the specified content selection.
+getIndentationLevels(ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getIndentationLevels(com.myscript.iink.ContentSelection)	Warning: This is a Beta API.
+getIntersectingBlocks(ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getIntersectingBlocks(com.myscript.iink.ContentSelection)	Returns the content block ids intersecting with the specified content selection.
+getItemParentId(String)	Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/ItemIdHelper.html#getItemParentId(java.lang.String)	Returns the parent block id of an item.
+getItemsBox(String[])	Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/ItemIdHelper.html#getItemsBox(java.lang.String%5B%5D)	Returns the bounding box of an item ids list.
+getItemsByBlockId(String)	Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/ItemIdHelper.html#getItemsByBlockId(java.lang.String)	Returns the item ids associated with a given block id.
+getLabel()	Method in class com.myscript.iink.text. Text	com/myscript/iink/text/Text.html#getLabel()	Returns the label of this text.
+getLanguage()	Method in class com.myscript.iink. ContentPart	com/myscript/iink/ContentPart.html#getLanguage()	Returns the language of this part.
+getMathSolverController()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getMathSolverController()	Returns the MathSolverController associated with this editor.
+getMathSolverController()	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#getMathSolverController()	Returns the MathSolverController associated with this offscreen editor.
+getMetadata()	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#getMetadata()	Returns this package's metadata as a parameter set.
+getMetadata()	Method in class com.myscript.iink. ContentPart	com/myscript/iink/ContentPart.html#getMetadata()	Returns the part's metadata as a parameter set.
+getName()	Method in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#getName()	Returns a descriptive name in English.
+getNumber(String)	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#getNumber(java.lang.String)	Returns the numeric value associated with key .
+getNumber(String, Number)	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#getNumber(java.lang.String,java.lang.Number)	Returns the numeric value associated with key .
+getNumberArray(String)	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#getNumberArray(java.lang.String)	Returns the numeric array value associated with key .
+getNumberArray(String, Number[])	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#getNumberArray(java.lang.String,java.lang.Number%5B%5D)	Returns the numeric array associated with key .
+getOrientedBox()	Method in class com.myscript.iink. ContentBlock	com/myscript/iink/ContentBlock.html#getOrientedBox()	Returns the four points of the oriented box of this block.
+getPackage()	Method in class com.myscript.iink. ContentPart	com/myscript/iink/ContentPart.html#getPackage()	Returns the package that contains this part.
+getParent()	Method in class com.myscript.iink. ContentBlock	com/myscript/iink/ContentBlock.html#getParent()	Returns the parent of this block.
+getPart()	Method in class com.myscript.iink. ContentSelection	com/myscript/iink/ContentSelection.html#getPart()	Returns the part that contains this selection.
+getPart()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getPart()	Returns the part managed by this editor.
+getPart()	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#getPart()	Returns the part managed by this offscreen editor.
+getPart(int)	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#getPart(int)	Returns the part at the specified index.
+getPart(String)	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#getPart(java.lang.String)	Returns the specified part.
+getPartCount()	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#getPartCount()	Returns the number of parts in this package.
+getPath()	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#getPath()	Returns the path of this package.
+getPixelDensity()	Method in interface com.myscript.iink. IRenderTarget	com/myscript/iink/IRenderTarget.html#getPixelDensity()	Returns the render target pixel density.
+getPixelSize()	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#getPixelSize()	Returns the size of a pixel, in millimeters.
+getPlaceholderController()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getPlaceholderController()	Returns the PlaceholderController associated with this editor.
+getPointsForItemId(String)	Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/ItemIdHelper.html#getPointsForItemId(java.lang.String)	Returns the pointer events of an item.
+getPossibleRedoCount()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getPossibleRedoCount()	The number of operations that can be redone.
+getPossibleRedoCount()	Method in class com.myscript.iink. HistoryManager	com/myscript/iink/HistoryManager.html#getPossibleRedoCount()	Returns the number of changesets that can be redone.
+getPossibleUndoCount()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getPossibleUndoCount()	The number of operations that can be undone.
+getPossibleUndoCount()	Method in class com.myscript.iink. HistoryManager	com/myscript/iink/HistoryManager.html#getPossibleUndoCount()	Returns the number of changesets that can be undone
+(less than or equal getUndoStackIndex() ).
+getPredefinedProfileAt(int)	Method in class com.myscript.iink. HandwritingProfileBuilder	com/myscript/iink/HandwritingProfileBuilder.html#getPredefinedProfileAt(int)	Returns the predefined writing profile at the given index.
+getPredefinedProfileCount()	Method in class com.myscript.iink. HandwritingProfileBuilder	com/myscript/iink/HandwritingProfileBuilder.html#getPredefinedProfileCount()	Retrieves the number of predefined writing profiles.
+getRedoChangesetFrom(String)	Method in class com.myscript.iink. HistoryManager	com/myscript/iink/HistoryManager.html#getRedoChangesetFrom(java.lang.String)	Returns the changeset corresponding to a redo from the given id.
+getRenderer()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getRenderer()	Returns the Renderer associated with this editor.
+getRenderingId()	Method in class com.myscript.iink. ContentBlock	com/myscript/iink/ContentBlock.html#getRenderingId()	Returns an identifier that can be used to match corresponding calls to
+ICanvas.startGroup(String, float, float, float, float, boolean) .
+getRenderTarget()	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#getRenderTarget()	Returns the target to which this renderer draws.
+getResult()	Method in class com.myscript.iink. HandwritingGenerator	com/myscript/iink/HandwritingGenerator.html#getResult()	Returns the cumulative result of the latest handwriting generation.
+getResult(MimeType)	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#getResult(com.myscript.iink.MimeType)	Returns the result of the recognition since the last call to Recognizer.clear() .
+getRootBlock()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getRootBlock()	Returns the content block at the root of the current part.
+getRootBlockId()	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#getRootBlockId()	Returns the block id at the root of the current part.
+getScaleX()	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#getScaleX()	Returns the scale to convert input horizontal coordinates unit into mm,
+such that (X coordinate unit * scaleX = mm).
+getScaleX()	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#getScaleX()	Returns the scale to convert input horizontal coordinates unit into mm,
+such that (X coordinate unit * scaleX = mm).
+getScaleY()	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#getScaleY()	Returns the scale to convert input vertical coordinates unit into mm,
+such that (Y coordinate unit * scaleY = mm).
+getScaleY()	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#getScaleY()	Returns the scale to convert input vertical coordinates unit into mm,
+such that (Y coordinate unit * scaleY = mm).
+getSection(String)	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#getSection(java.lang.String)	Returns a parameter set object representing the section associated with
+key .
+getSelection()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getSelection()	Returns the content selection associated with this editor.
+getSelectionMode()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getSelectionMode()	Returns the selection mode of the active content selection associated with this editor.
+getString()	Method in class com.myscript.iink. MathExternalExpression	com/myscript/iink/MathExternalExpression.html#getString()	Returns the expression original string.
+getString(String)	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#getString(java.lang.String)	Returns the string value associated with key .
+getString(String, String)	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#getString(java.lang.String,java.lang.String)	Returns the string value associated with key .
+getStringArray(String)	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#getStringArray(java.lang.String)	Returns the string array value associated with key .
+getStringArray(String, String[])	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#getStringArray(java.lang.String,java.lang.String%5B%5D)	Returns the string array associated with key .
+getStrokeColor()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getStrokeColor()	Retrieves the stroke color.
+getStrokeDashArray()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getStrokeDashArray()	Retrieves the stroke dash pattern.
+getStrokeDashOffset()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getStrokeDashOffset()	Retrieves the stroke dash offset.
+getStrokeLineCap()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getStrokeLineCap()	Retrieves the stroke line cap.
+getStrokeLineJoin()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getStrokeLineJoin()	Retrieves the stroke line join.
+getStrokeMiterLimit()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getStrokeMiterLimit()	Retrieves the stroke miter limit.
+getStrokeWidth()	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#getStrokeWidth()	Retrieves the stroke width.
+getSupportedAddBlockDataMimeTypes(String)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getSupportedAddBlockDataMimeTypes(java.lang.String)	Returns the supported formats for adding a new block with data.
+getSupportedAddBlockTypes()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getSupportedAddBlockTypes()	Returns the types of blocks that can be added to the part.
+getSupportedContentTypes()	Method in class com.myscript.iink. HandwritingGenerator	com/myscript/iink/HandwritingGenerator.html#getSupportedContentTypes()	Returns the types of content that can be generated.
+getSupportedExportMimeTypes(String[])	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#getSupportedExportMimeTypes(java.lang.String%5B%5D)	Returns the supported export formats for specified items.
+getSupportedExportMimeTypes(ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getSupportedExportMimeTypes(com.myscript.iink.ContentSelection)	Returns the supported export formats for specified content.
+getSupportedImportMimeTypes(ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getSupportedImportMimeTypes(com.myscript.iink.ContentSelection)	Returns the supported import formats for specified content.
+getSupportedMimeTypes(String)	Method in class com.myscript.iink. HandwritingGenerator	com/myscript/iink/HandwritingGenerator.html#getSupportedMimeTypes(java.lang.String)	Returns the input formats supported by the handwriting generation for the given content type.
+getSupportedPartTypes()	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#getSupportedPartTypes()	Returns the set of content part types that this engine can handle.
+getSupportedRecognitionAssetsTypes()	Method in class com.myscript.iink. RecognitionAssetsBuilder	com/myscript/iink/RecognitionAssetsBuilder.html#getSupportedRecognitionAssetsTypes()	Returns the set of recognition assets types that this recognition assets builder can handle.
+getSupportedRecognizerTypes()	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#getSupportedRecognizerTypes()	Lists the recognizer types supported by this engine.
+getSupportedResultMimeTypes()	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#getSupportedResultMimeTypes()	Returns the supported result formats.
+getSupportedSymbols(String)	Method in class com.myscript.iink. RecognitionAssetsBuilder	com/myscript/iink/RecognitionAssetsBuilder.html#getSupportedSymbols(java.lang.String)	Get the list of symbols supported by a resource.
+getSupportedTargetConversionStates(ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getSupportedTargetConversionStates(com.myscript.iink.ContentSelection)	Returns the supported target conversion states for the specified content.
+getSupportedTextFormats(ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getSupportedTextFormats(com.myscript.iink.ContentSelection)	Returns the supported text formats for specified content selection.
+getTheme()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getTheme()	Returns the rendering theme style sheet, in CSS format.
+getToolController()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getToolController()	Returns the ToolController associated with this editor.
+getToolForType(PointerType)	Method in class com.myscript.iink. ToolController	com/myscript/iink/ToolController.html#getToolForType(com.myscript.iink.PointerType)	Returns the tool associated with a pointer type.
+getToolStyle(PointerTool)	Method in class com.myscript.iink. ToolController	com/myscript/iink/ToolController.html#getToolStyle(com.myscript.iink.PointerTool)	Returns the CSS style properties associated with a pointer tool.
+getToolStyleClasses(PointerTool)	Method in class com.myscript.iink. ToolController	com/myscript/iink/ToolController.html#getToolStyleClasses(com.myscript.iink.PointerTool)	Returns the style classes associated with a pointer tool.
+getTransform()	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#getTransform()	Retrieves the current transform.
+getTransform(Rectangle, Rectangle)	Static method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#getTransform(com.myscript.iink.graphics.Rectangle,com.myscript.iink.graphics.Rectangle)	Gets the transform to transform a rectangle into another.
+getTransformStatus(String[], Transform)	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#getTransformStatus(java.lang.String%5B%5D,com.myscript.iink.graphics.Transform)	Checks if a transformation is allowed on the specified items.
+getTransformStatus(ContentSelection, Transform)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getTransformStatus(com.myscript.iink.ContentSelection,com.myscript.iink.graphics.Transform)	Checks if a transformation is allowed on a content selection.
+getTtfFontName(InputStream)	Static method in class com.myscript.util. TTFAnalyzer	com/myscript/util/TTFAnalyzer.html#getTtfFontName(java.io.InputStream)	This function parses the TTF file and returns the font name specified in the file.
+getType()	Method in class com.myscript.iink. ContentBlock	com/myscript/iink/ContentBlock.html#getType()	Returns the type of this block.
+getType()	Method in class com.myscript.iink. ContentPart	com/myscript/iink/ContentPart.html#getType()	Returns the type of this part.
+getTypeName()	Method in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#getTypeName()	Returns the name of the media type, in the form "type/subtype".
+getUndoChangesetTo(String)	Method in class com.myscript.iink. HistoryManager	com/myscript/iink/HistoryManager.html#getUndoChangesetTo(java.lang.String)	Returns the changeset corresponding to an undo to the given id.
+getUndoRedoIdAt(int)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getUndoRedoIdAt(int)	Returns the id of an undo or redo action, based on its position in the stack index.
+getUndoRedoIdAt(int)	Method in class com.myscript.iink. HistoryManager	com/myscript/iink/HistoryManager.html#getUndoRedoIdAt(int)	Returns the id associated with an undo/redo stack index.
+getUndoRedoStackIndex()	Method in class com.myscript.iink. HistoryManager	com/myscript/iink/HistoryManager.html#getUndoRedoStackIndex()	Returns the number of changesets performed on the part, since content part
+was opened.
+getUndoStackIndex()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getUndoStackIndex()	Returns the number of operations performed on the part, since content part
+was opened.
+getUserData(ContentSelection)	Method in class com.myscript.iink. PlaceholderController	com/myscript/iink/PlaceholderController.html#getUserData(com.myscript.iink.ContentSelection)	Returns the user data corresponding to a placeholder image.
+getVariableDefinitions()	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#getVariableDefinitions()	Returns the list of all variable definitions.
+getVariables()	Method in class com.myscript.iink. MathExternalExpression	com/myscript/iink/MathExternalExpression.html#getVariables()	Retrieves information about all variables associated with the expression.
+getVariables(String)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#getVariables(java.lang.String)	Returns information about defined variables, associated with the specified block or from global variables.
+getVariableValue(String)	Method in class com.myscript.iink. MathExternalExpression	com/myscript/iink/MathExternalExpression.html#getVariableValue(java.lang.String)	Returns the value associated with the given variable name.
+getVariableValue(String, String)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#getVariableValue(java.lang.String,java.lang.String)	Returns the value associated with the given variable name, for the specified block or as global variable.
+getVersion()	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#getVersion()	Returns the version of iink SDK.
+getViewBox()	Method in class com.myscript.iink. ContentPart	com/myscript/iink/ContentPart.html#getViewBox()	Returns the view box, the rectangle that represents the viewable area of
+this part's content.
+getViewHeight()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getViewHeight()	The height of the view.
+getViewOffset()	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#getViewOffset()	Returns the view offset.
+getViewScale()	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#getViewScale()	Returns the current zoom view scale.
+getViewTransform()	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#getViewTransform()	Returns the transform that is used to map model coordinates into view
+coordinates.
+getViewWidth()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#getViewWidth()	The width of the view.
+GIF	Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#GIF	GIF Image (image/gif).
+GlyphMetrics	Class in com.myscript.iink.text	com/myscript/iink/text/GlyphMetrics.html	Describes the position of a converted glyph.
+GlyphMetrics()	Constructor for class com.myscript.iink.text. GlyphMetrics	com/myscript/iink/text/GlyphMetrics.html#%3Cinit%3E()	Default constructor.
+GlyphMetrics(float, float, float, float, float, float)	Constructor for class com.myscript.iink.text. GlyphMetrics	com/myscript/iink/text/GlyphMetrics.html#%3Cinit%3E(float,float,float,float,float,float)	Constructs a glyph metrics object.
+GRAPHML	Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#GRAPHML	Graph Markup Language (application/graphml+xml).
+GUIDES	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#GUIDES	The content selection has guides.
+H1	Enum constant in enum class com.myscript.iink. TextFormat	com/myscript/iink/TextFormat.html#H1	Header 1 format.
+H2	Enum constant in enum class com.myscript.iink. TextFormat	com/myscript/iink/TextFormat.html#H2	Header 2 format.
+HAND	Enum constant in enum class com.myscript.iink. PointerTool	com/myscript/iink/PointerTool.html#HAND	A tool used for interacting with already selected content.
+HANDWRITING	Enum constant in enum class com.myscript.iink. ConversionState	com/myscript/iink/ConversionState.html#HANDWRITING	Handwritten content (ink).
+HandwritingGenerator	Class in com.myscript.iink	com/myscript/iink/HandwritingGenerator.html	Represents a handwriting generator that provides a way to generate
+handwritten content from source parameters (label, writing profile and formatting).
+HandwritingGeneratorError	Enum Class in com.myscript.iink	com/myscript/iink/HandwritingGeneratorError.html	Error code used in IHandwritingGeneratorListener::onError
+HandwritingProfile	Class in com.myscript.iink	com/myscript/iink/HandwritingProfile.html	Represents a handwriting profile used to generate content with a handwriting generator.
+HandwritingProfileBuilder	Class in com.myscript.iink	com/myscript/iink/HandwritingProfileBuilder.html	A builder for handwriting profiles.
+HandwritingResult	Class in com.myscript.iink	com/myscript/iink/HandwritingResult.html	Represents a handwritten content generated by a handwriting generator.
+HAS_NEGATIVE_SCALE	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#HAS_NEGATIVE_SCALE	The transform has a negative scale component.
+HAS_ROTATION	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#HAS_ROTATION	The transform has a rotation component.
+HAS_SCALE	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#HAS_SCALE	The transform has a scale component.
+HAS_SHEAR	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#HAS_SHEAR	The transform has a shear component.
+HAS_TRANSLATION	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#HAS_TRANSLATION	The transform has a translation component.
+hashCode()	Method in class com.myscript.iink.graphics. Color
+ 
+hashCode() - Method in class com.myscript.iink.graphics. ExtraBrushStyle
+ 
+hashCode() - Method in class com.myscript.iink.graphics. InkPoint
+ 
+hashCode() - Method in class com.myscript.iink.graphics. Point
+ 
+hashCode() - Method in class com.myscript.iink.graphics. PointD
+ 
+hashCode() - Method in class com.myscript.iink.graphics. Rectangle
+ 
+hashCode() - Method in class com.myscript.iink.graphics. Style
+ 
+hashCode() - Method in class com.myscript.iink.graphics. Transform
+ 
+hashCode() - Method in class com.myscript.iink. IndentationLevels
+ 
+hashCode() - Method in class com.myscript.iink. MathEvaluationVariables
+ 
+hashCode() - Method in class com.myscript.iink. MathVariableDefinition
+ 
+hashCode() - Method in class com.myscript.iink. MathVariableDefinitionInfo
+ 
+hashCode() - Method in class com.myscript.iink. MathVariableDefinitions
+ 
+hashCode() - Method in class com.myscript.iink. MathVariableInfo
+ 
+hashCode() - Method in class com.myscript.iink. PointerEvent
+ 
+hashCode() - Method in class com.myscript.iink.text. GlyphMetrics
+ 
+hashCode() - Method in class com.myscript.iink.text. TextSpan
+ 
+hashCode(double) - Static method in class com.myscript.util. Numbers	com/myscript/iink/graphics/Color.html#hashCode()	Returns a hash code for this Double object.
+hashCode(float)	Static method in class com.myscript.util. Numbers	com/myscript/util/Numbers.html#hashCode(float)	Returns a hash code for a Float object.
+hasSelection()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#hasSelection()	Tells if this editor has an active content selection.
+hasTiltInfo()	Method in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#hasTiltInfo()	Check whether the event has tilt and orientation information.
+height	Variable in class com.myscript.iink.graphics. Rectangle	com/myscript/iink/graphics/Rectangle.html#height	The height of the rectangle.
+high	Variable in class com.myscript.iink. IndentationLevels	com/myscript/iink/IndentationLevels.html#high	The highest indentation level.
+HIGHLIGHTER	Enum constant in enum class com.myscript.iink. PointerTool	com/myscript/iink/PointerTool.html#HIGHLIGHTER	A tool used for highlighting some content.
+HistoryManager	Class in com.myscript.iink	com/myscript/iink/HistoryManager.html	A HistoryManager allows managing changesets for undo/redo.
+hitBlock(float, float)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#hitBlock(float,float)	Return the block at the given position, or null if there is no
+block at that position.
+hitSelection(float, float)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#hitSelection(float,float)	Returns the active content selection at the given position, or null if there is
+no active content selection at that position.
+hitSubBlock(float, float)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#hitSubBlock(float,float)	Returns the lowest sub block at the given position, or null if there is
+no block at that position.
+HTML	Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#HTML	HyperText Markup Language (text/html)
+ICanvas	Interface in com.myscript.iink.graphics	com/myscript/iink/graphics/ICanvas.html	The ICanvas interface receives drawing commands.
+IConfigurationListener	Interface in com.myscript.iink	com/myscript/iink/IConfigurationListener.html	The listener interface for receiving configuration change events.
+id(int)	Method in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#id(int)	Update the event pointer id.
+IEditorListener	Interface in com.myscript.iink	com/myscript/iink/IEditorListener.html	The listener interface for receiving editor events.
+IFontMetricsProvider	Interface in com.myscript.iink.text	com/myscript/iink/text/IFontMetricsProvider.html	Interface providing fontified text typesetting operations.
+IGestureHandler	Interface in com.myscript.iink	com/myscript/iink/IGestureHandler.html	The listener interface for handling gesture events.
+IGNORE	Enum constant in enum class com.myscript.iink. GestureAction	com/myscript/iink/GestureAction.html#IGNORE	Discard the gesture stroke, do not apply the gesture behavior.
+IGNORE	Enum constant in enum class com.myscript.iink. OffscreenGestureAction	com/myscript/iink/OffscreenGestureAction.html#IGNORE	Discard the gesture stroke.
+IHandwritingGeneratorListener	Interface in com.myscript.iink	com/myscript/iink/IHandwritingGeneratorListener.html	The listener interface for receiving handwriting generator events.
+IImagePainter	Interface in com.myscript.iink	com/myscript/iink/IImagePainter.html	The ImagePainter converts rendering data into images in view
+for example for integration into docx exports.
+import_(MimeType, String, ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#import_(com.myscript.iink.MimeType,java.lang.String,com.myscript.iink.ContentSelection)	Imports data into the part or a selection.
+import_(MimeType, String, ContentSelection, ParameterSet)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#import_(com.myscript.iink.MimeType,java.lang.String,com.myscript.iink.ContentSelection,com.myscript.iink.ParameterSet)	Imports data into the part or a selection.
+INCOMPLETE_EXPRESSION	Enum constant in enum class com.myscript.iink. MathDiagnostic	com/myscript/iink/MathDiagnostic.html#INCOMPLETE_EXPRESSION	The expression is incomplete.
+indent(ContentSelection, int)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#indent(com.myscript.iink.ContentSelection,int)	Warning: This is a Beta API.
+IndentationLevels	Class in com.myscript.iink	com/myscript/iink/IndentationLevels.html	Represents a selection indentation levels.
+IndentationLevels(long, long, long)	Constructor for class com.myscript.iink. IndentationLevels	com/myscript/iink/IndentationLevels.html#%3Cinit%3E(long,long,long)	Constructor.
+indexOfPart(ContentPart)	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#indexOfPart(com.myscript.iink.ContentPart)	Returns the index of a given part.
+init()	Static method in class com.myscript.iink. NativeLibrary	com/myscript/iink/NativeLibrary.html#init()	Ensures the native library is loaded.
+inject(String)	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#inject(java.lang.String)	Injects the content of a JSON values into this parameter set.
+INK_REJECTED_ABOVE_FIRST_LINE	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#INK_REJECTED_ABOVE_FIRST_LINE	Ink was rejected, the stroke is too far above the first line.
+INK_REJECTED_BEFORE_FIRST_COLUMN	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#INK_REJECTED_BEFORE_FIRST_COLUMN	Ink was rejected, the stroke is too far left.
+INK_REJECTED_OUT_OF_PAGE	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#INK_REJECTED_OUT_OF_PAGE	Ink was rejected, the stroke is out of the page bounds.
+INK_REJECTED_SEVERAL_BLOCKS	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#INK_REJECTED_SEVERAL_BLOCKS	Ink was rejected, the stroke is spread over several blocks.
+INK_REJECTED_SMALL_TYPESET	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#INK_REJECTED_SMALL_TYPESET	Ink was rejected, cannot write on DIGITAL_PUBLISH blocks (convert to DIGITAL_EDIT).
+INK_REJECTED_TOO_BIG	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#INK_REJECTED_TOO_BIG	Ink was rejected, the stroke is too big.
+INK_REJECTED_TOO_LONG	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#INK_REJECTED_TOO_LONG	Ink was rejected, the stroke is too long.
+INK_REJECTED_TOO_SMALL	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#INK_REJECTED_TOO_SMALL	Ink was rejected, the stroke is too small.
+InkPoint	Class in com.myscript.iink.graphics	com/myscript/iink/graphics/InkPoint.html	Represents an ink point.
+InkPoint()	Constructor for class com.myscript.iink.graphics. InkPoint	com/myscript/iink/graphics/InkPoint.html#%3Cinit%3E()	Default constructor.
+InkPoint(float, float, long, float)	Constructor for class com.myscript.iink.graphics. InkPoint	com/myscript/iink/graphics/InkPoint.html#%3Cinit%3E(float,float,long,float)	Constructs an InkPoint
+InkPoint(float, float, long, float, float, float)	Constructor for class com.myscript.iink.graphics. InkPoint	com/myscript/iink/graphics/InkPoint.html#%3Cinit%3E(float,float,long,float,float,float)	Constructs an InkPoint
+InkPoints	Class in com.myscript.iink.graphics	com/myscript/iink/graphics/InkPoints.html	Represents ink points.
+InkPoints(float[], float[], long[], float[], float[], float[])	Constructor for class com.myscript.iink.graphics. InkPoints	com/myscript/iink/graphics/InkPoints.html#%3Cinit%3E(float%5B%5D,float%5B%5D,long%5B%5D,float%5B%5D,float%5B%5D,float%5B%5D)	Constructs an InkPoints
+inputName	Variable in class com.myscript.iink. MathEvaluationVariables	com/myscript/iink/MathEvaluationVariables.html#inputName	The name of the varying variable, empty for a constant expression.
+INTERSECTION	Enum constant in enum class com.myscript.iink. ItemIdCombinationModifier	com/myscript/iink/ItemIdCombinationModifier.html#INTERSECTION	Combines the intersection.
+INVALID	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#INVALID	The transform is invalid (cannot be decomposed).
+INVALID_CONFIGURATION	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#INVALID_CONFIGURATION	There was an error when parsing the *.conf files.
+INVALID_CONFIGURATION	Enum constant in enum class com.myscript.iink. RecognizerError	com/myscript/iink/RecognizerError.html#INVALID_CONFIGURATION	There was an error when parsing the *.conf files.
+INVALID_OPERATION	Enum constant in enum class com.myscript.iink. MathDiagnostic	com/myscript/iink/MathDiagnostic.html#INVALID_OPERATION	Computation leads to an invalid operation.
+invalidate(Renderer, int, int, int, int, EnumSet<IRenderTarget.LayerType>)	Method in interface com.myscript.iink. IRenderTarget	com/myscript/iink/IRenderTarget.html#invalidate(com.myscript.iink.Renderer,int,int,int,int,java.util.EnumSet)	Invalidates a specified rectangle area on the given set of layers.
+invalidate(Renderer, EnumSet<IRenderTarget.LayerType>)	Method in interface com.myscript.iink. IRenderTarget	com/myscript/iink/IRenderTarget.html#invalidate(com.myscript.iink.Renderer,java.util.EnumSet)	Invalidates the given set of layers.
+invert()	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#invert()	Inverts this transform.
+IOffscreenEditorListener	Interface in com.myscript.iink	com/myscript/iink/IOffscreenEditorListener.html	The listener interface for receiving offscreen editor events.
+IOffscreenGestureHandler	Interface in com.myscript.iink	com/myscript/iink/IOffscreenGestureHandler.html	The listener interface for handling offscreen gesture events.
+IPath	Interface in com.myscript.iink.graphics	com/myscript/iink/graphics/IPath.html	The path interface, for building a path as described in the SVG
+specifications.
+IPath.OperationType	Enum Class in com.myscript.iink.graphics	com/myscript/iink/graphics/IPath.OperationType.html	Lists the path operation types.
+IRecognizerListener	Interface in com.myscript.iink	com/myscript/iink/IRecognizerListener.html	The listener interface for receiving recognizer events.
+IRendererListener	Interface in com.myscript.iink	com/myscript/iink/IRendererListener.html	The listener interface for receiving renderer events.
+IRenderTarget	Interface in com.myscript.iink	com/myscript/iink/IRenderTarget.html	Represents a render target for the iink renderer.
+IRenderTarget.LayerType	Enum Class in com.myscript.iink	com/myscript/iink/IRenderTarget.LayerType.html	Represents the type of a layer
+isClosed()	Method in class com.myscript.iink. ContentBlock	com/myscript/iink/ContentBlock.html#isClosed()	Tells whether the ContentBlock.close() method has been called.
+isClosed()	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#isClosed()	Tells whether the ContentPackage.close() method has been called.
+isClosed()	Method in class com.myscript.iink. ContentPart	com/myscript/iink/ContentPart.html#isClosed()	Tells whether the ContentPart.close() method has been called.
+isClosed()	Method in class com.myscript.iink. ContentSelection	com/myscript/iink/ContentSelection.html#isClosed()	Tells whether the ContentSelection.close() method has been called.
+isClosed()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#isClosed()	Tells whether the Editor.close() method has been called.
+isClosed()	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#isClosed()	Tells whether the Engine.close() method has been called.
+isClosed()	Method in class com.myscript.iink. HandwritingGenerator	com/myscript/iink/HandwritingGenerator.html#isClosed()	Tells whether the HandwritingGenerator.close() method has been called.
+isClosed()	Method in class com.myscript.iink. HandwritingProfile	com/myscript/iink/HandwritingProfile.html#isClosed()	Tells whether the HandwritingProfile.close() method has been called.
+isClosed()	Method in class com.myscript.iink. HandwritingProfileBuilder	com/myscript/iink/HandwritingProfileBuilder.html#isClosed()	Tells whether the HandwritingProfileBuilder.close() method has been called.
+isClosed()	Method in class com.myscript.iink. HandwritingResult	com/myscript/iink/HandwritingResult.html#isClosed()	Tells whether the HandwritingResult.close() method has been called.
+isClosed()	Method in class com.myscript.iink. HistoryManager	com/myscript/iink/HistoryManager.html#isClosed()	Tells whether the HistoryManager.close() method has been called.
+isClosed()	Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/ItemIdHelper.html#isClosed()	Tells whether the ItemIdHelper.close() method has been called.
+isClosed()	Method in class com.myscript.iink. MathExternalExpression	com/myscript/iink/MathExternalExpression.html#isClosed()	Tells whether the MathExternalExpression.close() method has been called.
+isClosed()	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#isClosed()	Tells whether the MathSolverController.close() method has been called.
+isClosed()	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#isClosed()	Tells whether the OffscreenEditor.close() method has been called.
+isClosed()	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#isClosed()	Tells whether the ParameterSet.close() method has been called.
+isClosed()	Method in class com.myscript.iink. PlaceholderController	com/myscript/iink/PlaceholderController.html#isClosed()	Tells whether the PlaceholderController.close() method has been called.
+isClosed()	Method in class com.myscript.iink. RecognitionAssetsBuilder	com/myscript/iink/RecognitionAssetsBuilder.html#isClosed()	Tells whether the RecognitionAssetsBuilder.close() method has been called.
+isClosed()	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#isClosed()	Tells whether the Recognizer.close() method has been called.
+isClosed()	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#isClosed()	Tells whether the Renderer.close() method has been called.
+isClosed()	Method in class com.myscript.iink. ToolController	com/myscript/iink/ToolController.html#isClosed()	Tells whether the ToolController.close() method has been called.
+isEmpty(String)	Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/ItemIdHelper.html#isEmpty(java.lang.String)	Checks whether a block is empty.
+isEmpty(ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#isEmpty(com.myscript.iink.ContentSelection)	Checks whether a block is empty.
+isExtraBrushSupported(String)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#isExtraBrushSupported(java.lang.String)	Checks if an extra brush is supported.
+isFill()	Method in interface com.myscript.iink.graphics. IStroker	com/myscript/iink/graphics/IStroker.html#isFill()	Tells whether stroked input should be drawn as a filled shaped or not.
+isFinite()	Method in class com.myscript.iink.graphics. Point	com/myscript/iink/graphics/Point.html#isFinite()	Checks if point values are finite.
+isFinite()	Method in class com.myscript.iink.graphics. PointD	com/myscript/iink/graphics/PointD.html#isFinite()	Checks if point values are finite.
+isIdle()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#isIdle()	Checks whether part modification operations are over.
+isIdle()	Method in class com.myscript.iink. HandwritingGenerator	com/myscript/iink/HandwritingGenerator.html#isIdle()	Checks whether a generation is ongoing.
+isIdle()	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#isIdle()	Checks whether part modification operations are over.
+isIdle()	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#isIdle()	Checks whether part modification operations are over.
+isImage()	Method in enum class com.myscript.iink. MimeType
+ 
+isNear(double, double) - Static method in class com.myscript.util. Numbers	com/myscript/iink/MimeType.html#isImage()	Compares two values and returns `true` if they are near each other.
+isNear(double, double, double, double)	Static method in class com.myscript.util. Numbers	com/myscript/util/Numbers.html#isNear(double,double,double,double)	Compares two values and returns `true` if they are near each other.
+isNear(float, float)	Static method in class com.myscript.util. Numbers	com/myscript/util/Numbers.html#isNear(float,float)	Compares two values and returns `true` if they are near each other.
+isNear(float, float, float, float)	Static method in class com.myscript.util. Numbers	com/myscript/util/Numbers.html#isNear(float,float,float,float)	Compares two values and returns `true` if they are near each other.
+isNear(Transform)	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#isNear(com.myscript.iink.graphics.Transform)	Floating point comparison with tolerance.
+isPartialItem(String)	Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/ItemIdHelper.html#isPartialItem(java.lang.String)	Checks if an item is partial.
+isPlaceholder(ContentSelection)	Method in class com.myscript.iink. PlaceholderController	com/myscript/iink/PlaceholderController.html#isPlaceholder(com.myscript.iink.ContentSelection)	Indicates whether a content block is a placeholder.
+isScrollAllowed()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#isScrollAllowed()	Checks whether scrolling on the part is allowed at this time.
+isTextual()	Method in enum class com.myscript.iink. MimeType
+ 
+IStroker - Interface in com.myscript.iink.graphics	com/myscript/iink/MimeType.html#isTextual()	The `IStroker` converts input points (touch, digital pen, etc) into a
+renderable stroke representation.
+IStrokerFactory	Interface in com.myscript.iink.graphics	com/myscript/iink/graphics/IStrokerFactory.html	The `IStrokerFactory` is responsible to create `IStroker` instances.
+isValid()	Method in class com.myscript.iink. ContentSelection	com/myscript/iink/ContentSelection.html#isValid()	Tells whether this selection is still valid.
+isVisible(ContentSelection)	Method in class com.myscript.iink. PlaceholderController	com/myscript/iink/PlaceholderController.html#isVisible(com.myscript.iink.ContentSelection)	Returns the visiblity of a placeholder image.
+ITEM	Enum constant in enum class com.myscript.iink. ContentSelectionMode	com/myscript/iink/ContentSelectionMode.html#ITEM	Active selection's mode is Item.
+ItemIdCombinationModifier	Enum Class in com.myscript.iink	com/myscript/iink/ItemIdCombinationModifier.html	Describes the combination modifiers.
+ItemIdHelper	Class in com.myscript.iink	com/myscript/iink/ItemIdHelper.html	An ItemIdHelper allows working with item ids (example: strokes, glyphs, primitives, objects).
+JIIX	Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#JIIX	Json Interactive Ink eXchange format (application/vnd.myscript.jiix).
+JPEG	Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#JPEG	JPEG Image (image/jpeg).
+keepAspectRatio	Variable in class com.myscript.iink. PlaceholderController.PlaceholderInteractivityOptions	com/myscript/iink/PlaceholderController.PlaceholderInteractivityOptions.html#keepAspectRatio	true to keep the aspect ratio after transforms, otherwise false
+LASSO	Enum constant in enum class com.myscript.iink. ContentSelectionMode	com/myscript/iink/ContentSelectionMode.html#LASSO	Active selection's mode is Lasso.
+LATEX	Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#LATEX	LaTeX (application/x-latex).
+leftSideBearing	Variable in class com.myscript.iink.text. GlyphMetrics	com/myscript/iink/text/GlyphMetrics.html#leftSideBearing	The glyph left side bearing.
+LineCap	Enum Class in com.myscript.iink.graphics	com/myscript/iink/graphics/LineCap.html	Defines how the ends of segments are drawn.
+LineJoin	Enum Class in com.myscript.iink.graphics	com/myscript/iink/graphics/LineJoin.html	Defines how the joins between connected segments are drawn.
+lineTo(float, float)	Method in interface com.myscript.iink.graphics. IPath	com/myscript/iink/graphics/IPath.html#lineTo(float,float)	Draws a line from the current point to the given (x,y) coordinate which
+becomes the new current point.
+LIST_BULLET	Enum constant in enum class com.myscript.iink. TextFormat	com/myscript/iink/TextFormat.html#LIST_BULLET	Bullet list format.
+LIST_CHECKBOX	Enum constant in enum class com.myscript.iink. TextFormat	com/myscript/iink/TextFormat.html#LIST_CHECKBOX	Checkbox list format.
+LIST_NUMBERED	Enum constant in enum class com.myscript.iink. TextFormat	com/myscript/iink/TextFormat.html#LIST_NUMBERED	Numbered list format.
+load(String)	Method in class com.myscript.iink. HandwritingProfileBuilder	com/myscript/iink/HandwritingProfileBuilder.html#load(java.lang.String)	Loads a writing profile from file.
+loadResource()	Method in class com.myscript.iink. HandwritingGenerator	com/myscript/iink/HandwritingGenerator.html#loadResource()	Loads the resource synchronously.
+low	Variable in class com.myscript.iink. IndentationLevels	com/myscript/iink/IndentationLevels.html#low	The lowest indentation level.
+MATH_BLOCKS	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#MATH_BLOCKS	The content selection contains math blocks.
+MathDiagnostic	Enum Class in com.myscript.iink	com/myscript/iink/MathDiagnostic.html	Error code returned by MathSolverController::getDiagnostic.
+MathEvaluationVariables	Class in com.myscript.iink	com/myscript/iink/MathEvaluationVariables.html	Represents a pair of input/output math variables used for evaluation.
+MathEvaluationVariables(MathEvaluationVariables)	Constructor for class com.myscript.iink. MathEvaluationVariables	com/myscript/iink/MathEvaluationVariables.html#%3Cinit%3E(com.myscript.iink.MathEvaluationVariables)	Copy constructor.
+MathEvaluationVariables(String, String)	Constructor for class com.myscript.iink. MathEvaluationVariables	com/myscript/iink/MathEvaluationVariables.html#%3Cinit%3E(java.lang.String,java.lang.String)	Constructs a MathEvaluationVariables
+MathExternalExpression	Class in com.myscript.iink	com/myscript/iink/MathExternalExpression.html	The MathExternalExpression allows to manage an external math expression.
+MATHML	Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#MATHML	Mathematical Markup Language (application/mathml+xml).
+MathSolverController	Class in com.myscript.iink	com/myscript/iink/MathSolverController.html	A MathSolverController allows to configure and run math operations on an editor.
+MathVariableDefinition	Class in com.myscript.iink	com/myscript/iink/MathVariableDefinition.html	Represents a math variable definition.
+MathVariableDefinition(MathVariableDefinition)	Constructor for class com.myscript.iink. MathVariableDefinition	com/myscript/iink/MathVariableDefinition.html#%3Cinit%3E(com.myscript.iink.MathVariableDefinition)	Copy constructor.
+MathVariableDefinition(String, double)	Constructor for class com.myscript.iink. MathVariableDefinition	com/myscript/iink/MathVariableDefinition.html#%3Cinit%3E(java.lang.String,double)	Constructs a MathVariableDefinition
+MathVariableDefinitionInfo	Class in com.myscript.iink	com/myscript/iink/MathVariableDefinitionInfo.html	Represents a math variable definition info.
+MathVariableDefinitionInfo(double, MathVariableSourceType, String)	Constructor for class com.myscript.iink. MathVariableDefinitionInfo	com/myscript/iink/MathVariableDefinitionInfo.html#%3Cinit%3E(double,com.myscript.iink.MathVariableSourceType,java.lang.String)	Constructs a MathVariableDefinitionInfo
+MathVariableDefinitionInfo(MathVariableDefinitionInfo)	Constructor for class com.myscript.iink. MathVariableDefinitionInfo	com/myscript/iink/MathVariableDefinitionInfo.html#%3Cinit%3E(com.myscript.iink.MathVariableDefinitionInfo)	Copy constructor.
+MathVariableDefinitions	Class in com.myscript.iink	com/myscript/iink/MathVariableDefinitions.html	Represents a math variable definitions.
+MathVariableDefinitions(MathVariableDefinitions)	Constructor for class com.myscript.iink. MathVariableDefinitions	com/myscript/iink/MathVariableDefinitions.html#%3Cinit%3E(com.myscript.iink.MathVariableDefinitions)	Copy constructor.
+MathVariableDefinitions(String, MathVariableDefinitionInfo[])	Constructor for class com.myscript.iink. MathVariableDefinitions	com/myscript/iink/MathVariableDefinitions.html#%3Cinit%3E(java.lang.String,com.myscript.iink.MathVariableDefinitionInfo%5B%5D)	Constructs a MathVariableDefinitions
+MathVariableInfo	Class in com.myscript.iink	com/myscript/iink/MathVariableInfo.html	Represents a math variable information, relative to a block or global.
+MathVariableInfo(MathVariableInfo)	Constructor for class com.myscript.iink. MathVariableInfo	com/myscript/iink/MathVariableInfo.html#%3Cinit%3E(com.myscript.iink.MathVariableInfo)	Copy constructor.
+MathVariableInfo(String, MathVariableSourceType, String, int)	Constructor for class com.myscript.iink. MathVariableInfo	com/myscript/iink/MathVariableInfo.html#%3Cinit%3E(java.lang.String,com.myscript.iink.MathVariableSourceType,java.lang.String,int)	Constructs a MathVariableInfo
+MathVariableSourceType	Enum Class in com.myscript.iink	com/myscript/iink/MathVariableSourceType.html	Enumerates the possible sources from which a variable can be defined.
+max	Variable in class com.myscript.iink. IndentationLevels	com/myscript/iink/IndentationLevels.html#max	The maximum indentation level.
+MimeType	Enum Class in com.myscript.iink	com/myscript/iink/MimeType.html	Represents a MIME type.
+MITER	Enum constant in enum class com.myscript.iink.graphics. LineJoin	com/myscript/iink/graphics/LineJoin.html#MITER	Miter join style.
+MODEL	Enum constant in enum class com.myscript.iink. IRenderTarget.LayerType	com/myscript/iink/IRenderTarget.LayerType.html#MODEL	The layer that renders the model.
+MOUSE	Enum constant in enum class com.myscript.iink. PointerType	com/myscript/iink/PointerType.html#MOUSE	A mouse.
+move(float, float)	Method in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#move(float,float)	Update this event to a "move" event.
+MOVE	Enum constant in enum class com.myscript.iink. PointerEventType	com/myscript/iink/PointerEventType.html#MOVE	Moves the pointer in a trace.
+movePart(int, int)	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#movePart(int,int)	Moves the specified part to another index.
+moveTo(float, float)	Method in interface com.myscript.iink.graphics. IPath	com/myscript/iink/graphics/IPath.html#moveTo(float,float)	Starts a new subpath at the given (x,y) coordinate.
+MULTIPLE_BLOCKS	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#MULTIPLE_BLOCKS	The content selection contains multiple blocks.
+multiply(double, double, double, double, double, double)	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#multiply(double,double,double,double,double,double)	Multiply this transform.
+multiply(Transform)	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#multiply(com.myscript.iink.graphics.Transform)	Multiplies this transform by the second transform.
+MUSICXML	Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#MUSICXML	Music Extensible Markup Language (application/vnd.recordare.musicxml+xml).
+name	Variable in class com.myscript.iink. MathVariableDefinition	com/myscript/iink/MathVariableDefinition.html#name	The name of the variable, empty if not valid.
+name	Variable in class com.myscript.iink. MathVariableDefinitions	com/myscript/iink/MathVariableDefinitions.html#name	The name of the variable.
+name	Variable in class com.myscript.iink. MathVariableInfo	com/myscript/iink/MathVariableInfo.html#name	The name of the variable.
+NativeLibrary	Class in com.myscript.iink	com/myscript/iink/NativeLibrary.html	Represents the iink native library.
+NativeObjectHandle < T extends AutoCloseable > - Class in com.myscript.iink
+
+Allows requesting ownership of a native object.
+
+nativeResources()	Static method in class com.myscript.iink. Engine	com/myscript/iink/NativeObjectHandle.html	Lists the number of native objects that are not closed yet.
+NO_VARIABLE	Enum constant in enum class com.myscript.iink. MathDiagnostic	com/myscript/iink/MathDiagnostic.html#NO_VARIABLE	There is no undefined variable to evaluate.
+NON_EVALUABLE	Enum constant in enum class com.myscript.iink. MathDiagnostic	com/myscript/iink/MathDiagnostic.html#NON_EVALUABLE	The expression form is not evaluable.
+NON_INVERTIBLE	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#NON_INVERTIBLE	The transform is non invertible.
+NONE	Enum constant in enum class com.myscript.iink. ContentSelectionMode	com/myscript/iink/ContentSelectionMode.html#NONE	No active selection.
+NONE	Static variable in class com.myscript.iink.graphics. Color
+ 
+NONZERO - Enum constant in enum class com.myscript.iink.graphics. FillRule	com/myscript/iink/graphics/Color.html#NONE	Non-zero fill rule.
+normalize(String, String, MimeType, ParameterSet)	Method in class com.myscript.iink. HandwritingGenerator	com/myscript/iink/HandwritingGenerator.html#normalize(java.lang.String,java.lang.String,com.myscript.iink.MimeType,com.myscript.iink.ParameterSet)	Normalizes a handwriting generation input.
+NOT_APPLICABLE	Enum constant in enum class com.myscript.iink. MathDiagnostic	com/myscript/iink/MathDiagnostic.html#NOT_APPLICABLE	Task does not apply or nothing to do, in respect to the current configuration.
+NULL_SELECTION	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#NULL_SELECTION	The content selection is null .
+NUMBER_OVERFLOW	Enum constant in enum class com.myscript.iink. MathDiagnostic	com/myscript/iink/MathDiagnostic.html#NUMBER_OVERFLOW	Computation leads to a number overflow.
+NUMBER_UNDERFLOW	Enum constant in enum class com.myscript.iink. MathDiagnostic	com/myscript/iink/MathDiagnostic.html#NUMBER_UNDERFLOW	Computation leads to a number underflow.
+Numbers	Class in com.myscript.util	com/myscript/util/Numbers.html	Set of utility functions to compare floating point values.
+occurrenceCount	Variable in class com.myscript.iink. MathVariableInfo	com/myscript/iink/MathVariableInfo.html#occurrenceCount	The number of times the variable appears in the block expression.
+OFFICE_CLIPBOARD	Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#OFFICE_CLIPBOARD	Microsoft Office Clipboard format (Art::GVML ClipFormat).
+OffscreenEditor	Class in com.myscript.iink	com/myscript/iink/OffscreenEditor.html	The OffscreenEditor is a service allowing offscreen interactivity.
+OffscreenGestureAction	Enum Class in com.myscript.iink	com/myscript/iink/OffscreenGestureAction.html	Represents the action to be performed upon offscreen gesture detection.
+onDoubleTap(Editor, PointerTool, String[], float, float)	Method in interface com.myscript.iink. IGestureHandler	com/myscript/iink/IGestureHandler.html#onDoubleTap(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String%5B%5D,float,float)	Invoked when a double tap has been detected.
+onEnd(HandwritingGenerator)	Method in interface com.myscript.iink. IHandwritingGeneratorListener	com/myscript/iink/IHandwritingGeneratorListener.html#onEnd(com.myscript.iink.HandwritingGenerator)	Invoked when a handwriting generation has ended.
+onError(Editor, String, EditorError, String)	Method in interface com.myscript.iink. IEditorListener	com/myscript/iink/IEditorListener.html#onError(com.myscript.iink.Editor,java.lang.String,com.myscript.iink.EditorError,java.lang.String)	Invoked when an error has occurred.
+onError(HandwritingGenerator, HandwritingGeneratorError, String)	Method in interface com.myscript.iink. IHandwritingGeneratorListener	com/myscript/iink/IHandwritingGeneratorListener.html#onError(com.myscript.iink.HandwritingGenerator,com.myscript.iink.HandwritingGeneratorError,java.lang.String)	Invoked when an error has occurred.
+onError(OffscreenEditor, String, EditorError, String)	Method in interface com.myscript.iink. IOffscreenEditorListener	com/myscript/iink/IOffscreenEditorListener.html#onError(com.myscript.iink.OffscreenEditor,java.lang.String,com.myscript.iink.EditorError,java.lang.String)	Invoked when an error has occurred.
+onError(Recognizer, RecognizerError, String)	Method in interface com.myscript.iink. IRecognizerListener	com/myscript/iink/IRecognizerListener.html#onError(com.myscript.iink.Recognizer,com.myscript.iink.RecognizerError,java.lang.String)	Invoked when an error has occurred.
+onInsert(Editor, PointerTool, String, NativeObjectHandle<ContentSelection>, NativeObjectHandle<ContentSelection>)	Method in interface com.myscript.iink. IGestureHandler	com/myscript/iink/IGestureHandler.html#onInsert(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,com.myscript.iink.NativeObjectHandle,com.myscript.iink.NativeObjectHandle)	Invoked when an insert gesture has been drawn between two portions of a text line,
+or at the beginning or end of a line.
+onInsert(OffscreenEditor, String, String[], String[])	Method in interface com.myscript.iink. IOffscreenGestureHandler	com/myscript/iink/IOffscreenGestureHandler.html#onInsert(com.myscript.iink.OffscreenEditor,java.lang.String,java.lang.String%5B%5D,java.lang.String%5B%5D)	Invoked when an insert gesture has been drawn between two portions of a text line,
+or at the beginning or end of a line.
+onJoin(Editor, PointerTool, String, NativeObjectHandle<ContentSelection>, NativeObjectHandle<ContentSelection>)	Method in interface com.myscript.iink. IGestureHandler	com/myscript/iink/IGestureHandler.html#onJoin(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,com.myscript.iink.NativeObjectHandle,com.myscript.iink.NativeObjectHandle)	Invoked when a join gesture has been drawn between two portions of a text line,
+or at the beginning or end of a line.
+onJoin(OffscreenEditor, String, String[], String[])	Method in interface com.myscript.iink. IOffscreenGestureHandler	com/myscript/iink/IOffscreenGestureHandler.html#onJoin(com.myscript.iink.OffscreenEditor,java.lang.String,java.lang.String%5B%5D,java.lang.String%5B%5D)	Invoked when a join gesture has been drawn between two portions of a text line,
+or at the beginning or end of a line.
+onLongPress(Editor, PointerTool, String, float, float)	Method in interface com.myscript.iink. IGestureHandler	com/myscript/iink/IGestureHandler.html#onLongPress(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,float,float)	Invoked when a long press has been detected.
+onPartialResult(HandwritingGenerator, HandwritingResult)	Method in interface com.myscript.iink. IHandwritingGeneratorListener	com/myscript/iink/IHandwritingGeneratorListener.html#onPartialResult(com.myscript.iink.HandwritingGenerator,com.myscript.iink.HandwritingResult)	Invoked when a partial result has been generated by the given handwriting generator.
+onScratch(Editor, PointerTool, String, NativeObjectHandle<ContentSelection>)	Method in interface com.myscript.iink. IGestureHandler	com/myscript/iink/IGestureHandler.html#onScratch(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,com.myscript.iink.NativeObjectHandle)	Invoked when a portion of text has been scratched.
+onScratch(OffscreenEditor, String, String[])	Method in interface com.myscript.iink. IOffscreenGestureHandler	com/myscript/iink/IOffscreenGestureHandler.html#onScratch(com.myscript.iink.OffscreenEditor,java.lang.String,java.lang.String%5B%5D)	Invoked when a portion of text has been scratched.
+onShapeOnHold(Editor, PointerTool, String, ShapeOnHoldAction, String)	Method in interface com.myscript.iink. IGestureHandler	com/myscript/iink/IGestureHandler.html#onShapeOnHold(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,com.myscript.iink.ShapeOnHoldAction,java.lang.String)	Invoked when a shape on hold action has been triggered.
+onStrikethrough(Editor, PointerTool, String, NativeObjectHandle<ContentSelection>)	Method in interface com.myscript.iink. IGestureHandler	com/myscript/iink/IGestureHandler.html#onStrikethrough(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,com.myscript.iink.NativeObjectHandle)	Invoked when a portion of text has been striked through.
+onStrikethrough(OffscreenEditor, String, String[])	Method in interface com.myscript.iink. IOffscreenGestureHandler	com/myscript/iink/IOffscreenGestureHandler.html#onStrikethrough(com.myscript.iink.OffscreenEditor,java.lang.String,java.lang.String%5B%5D)	Invoked when a portion of text has been striked through.
+onSurround(Editor, PointerTool, String, NativeObjectHandle<ContentSelection>)	Method in interface com.myscript.iink. IGestureHandler	com/myscript/iink/IGestureHandler.html#onSurround(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,com.myscript.iink.NativeObjectHandle)	Invoked when a portion of text has been surrounded.
+onSurround(OffscreenEditor, String, String[])	Method in interface com.myscript.iink. IOffscreenGestureHandler	com/myscript/iink/IOffscreenGestureHandler.html#onSurround(com.myscript.iink.OffscreenEditor,java.lang.String,java.lang.String%5B%5D)	Invoked when a portion of text has been surrounded.
+onTap(Editor, PointerTool, String, float, float)	Method in interface com.myscript.iink. IGestureHandler	com/myscript/iink/IGestureHandler.html#onTap(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,float,float)	Invoked when a tap has been detected.
+onUnderline(Editor, PointerTool, String, NativeObjectHandle<ContentSelection>)	Method in interface com.myscript.iink. IGestureHandler	com/myscript/iink/IGestureHandler.html#onUnderline(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,com.myscript.iink.NativeObjectHandle)	Invoked when a portion of text has been underlined.
+onUnderline(OffscreenEditor, String, String[])	Method in interface com.myscript.iink. IOffscreenGestureHandler	com/myscript/iink/IOffscreenGestureHandler.html#onUnderline(com.myscript.iink.OffscreenEditor,java.lang.String,java.lang.String%5B%5D)	Invoked when a portion of text has been underlined.
+onUnsupportedCharacter(HandwritingGenerator, String, String, int)	Method in interface com.myscript.iink. IHandwritingGeneratorListener	com/myscript/iink/IHandwritingGeneratorListener.html#onUnsupportedCharacter(com.myscript.iink.HandwritingGenerator,java.lang.String,java.lang.String,int)	Invoked when a label contains an unsupported character for a handwriting generation.
+openPackage(File)	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#openPackage(java.io.File)	Opens the specified package using the EXISTING package open option.
+openPackage(File, PackageOpenOption)	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#openPackage(java.io.File,com.myscript.iink.PackageOpenOption)	Opens the specified package.
+openPackage(String)	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#openPackage(java.lang.String)	Opens the specified package using the EXISTING package open option.
+openPackage(String, PackageOpenOption)	Method in class com.myscript.iink. Engine	com/myscript/iink/Engine.html#openPackage(java.lang.String,com.myscript.iink.PackageOpenOption)	Opens the specified package.
+orientation	Variable in class com.myscript.iink.graphics. InkPoint	com/myscript/iink/graphics/InkPoint.html#orientation	The point orientation in radians.
+orientation	Variable in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#orientation	The event orientation in radians.
+orientationAngle(float)	Method in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#orientationAngle(float)	Update the event orientation angle.
+orientationEnabled	Variable in class com.myscript.iink.graphics. ExtraBrushStyle	com/myscript/iink/graphics/ExtraBrushStyle.html#orientationEnabled	Enable use of orientation data.
+orientations	Variable in class com.myscript.iink.graphics. InkPoints	com/myscript/iink/graphics/InkPoints.html#orientations	The points orientations in radians, or empty if none.
+outputName	Variable in class com.myscript.iink. MathEvaluationVariables	com/myscript/iink/MathEvaluationVariables.html#outputName	The name of the result variable, empty for a single-variable expression without equal sign.
+PackageOpenOption	Enum Class in com.myscript.iink	com/myscript/iink/PackageOpenOption.html	Describes the different options given when opening a package.
+PARAGRAPH	Enum constant in enum class com.myscript.iink. TextFormat	com/myscript/iink/TextFormat.html#PARAGRAPH	Paragraph format.
+ParameterSet	Class in com.myscript.iink	com/myscript/iink/ParameterSet.html	Represents a set of iink parameters.
+parseExternalExpression(String, MimeType)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#parseExternalExpression(java.lang.String,com.myscript.iink.MimeType)	Creates a math external expression from a string, using a copy of Editor current configuration.
+partChanged(Editor)	Method in interface com.myscript.iink. IEditorListener	com/myscript/iink/IEditorListener.html#partChanged(com.myscript.iink.Editor)	Invoked when the part associated with the listened editor has changed.
+partChanged(OffscreenEditor)	Method in interface com.myscript.iink. IOffscreenEditorListener	com/myscript/iink/IOffscreenEditorListener.html#partChanged(com.myscript.iink.OffscreenEditor)	Invoked when the part associated with the listened offscreen editor has changed.
+partChanging(Editor, ContentPart, ContentPart)	Method in interface com.myscript.iink. IEditorListener	com/myscript/iink/IEditorListener.html#partChanging(com.myscript.iink.Editor,com.myscript.iink.ContentPart,com.myscript.iink.ContentPart)	Invoked when the part associated with the listened editor is about to change.
+PARTIAL_BLOCKS	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#PARTIAL_BLOCKS	The content selection contains blocks partially selected.
+paste(float, float)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#paste(float,float)	Pastes the content of the internal clipboard at a given position.
+PDF	Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#PDF	Portable Document Format (application/pdf).
+PEN	Enum constant in enum class com.myscript.iink. PointerTool	com/myscript/iink/PointerTool.html#PEN	A tool used for used for writing, drawing, performing ink gesture, or resizing a box.
+PEN	Enum constant in enum class com.myscript.iink. PointerType	com/myscript/iink/PointerType.html#PEN	An active stylus.
+PlaceholderController	Class in com.myscript.iink	com/myscript/iink/PlaceholderController.html	A PlaceholderController allows to add and update placeholders in an editor.
+PlaceholderController.PlaceholderInteractivityOptions	Class in com.myscript.iink	com/myscript/iink/PlaceholderController.PlaceholderInteractivityOptions.html	Defines how a placeholder shall behave regarding user interactions.
+PlaceholderInteractivityOptions()	Constructor for class com.myscript.iink. PlaceholderController.PlaceholderInteractivityOptions
+ 
+PNG - Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/PlaceholderController.PlaceholderInteractivityOptions.html#%3Cinit%3E()	PNG Image (image/png).
+Point	Class in com.myscript.iink.graphics	com/myscript/iink/graphics/Point.html	Represents a point on the 2D plane.
+Point()	Constructor for class com.myscript.iink.graphics. Point	com/myscript/iink/graphics/Point.html#%3Cinit%3E()	Default constructor.
+Point(float, float)	Constructor for class com.myscript.iink.graphics. Point	com/myscript/iink/graphics/Point.html#%3Cinit%3E(float,float)	Constructor.
+Point(Point)	Constructor for class com.myscript.iink.graphics. Point	com/myscript/iink/graphics/Point.html#%3Cinit%3E(com.myscript.iink.graphics.Point)	Copy constructor.
+PointD	Class in com.myscript.iink.graphics	com/myscript/iink/graphics/PointD.html	Represents a high-precision point on the 2D plane.
+PointD()	Constructor for class com.myscript.iink.graphics. PointD	com/myscript/iink/graphics/PointD.html#%3Cinit%3E()	Default constructor.
+PointD(double, double)	Constructor for class com.myscript.iink.graphics. PointD	com/myscript/iink/graphics/PointD.html#%3Cinit%3E(double,double)	Constructor.
+PointD(PointD)	Constructor for class com.myscript.iink.graphics. PointD	com/myscript/iink/graphics/PointD.html#%3Cinit%3E(com.myscript.iink.graphics.PointD)	Copy constructor.
+pointerCancel()	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#pointerCancel()	Cancels an ongoing pointer trace.
+pointerCancel(int)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#pointerCancel(int)	Cancels an ongoing pointer trace.
+pointerDown(float, float, long, float)	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#pointerDown(float,float,long,float)	Registers a pointer down event.
+pointerDown(float, float, long, float, float, float, PointerType, int)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#pointerDown(float,float,long,float,float,float,com.myscript.iink.PointerType,int)	Registers a pointer down event.
+pointerDown(float, float, long, float, PointerType, int)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#pointerDown(float,float,long,float,com.myscript.iink.PointerType,int)	Registers a pointer down event.
+PointerEvent	Class in com.myscript.iink	com/myscript/iink/PointerEvent.html	Represents a pointer event.
+PointerEvent()	Constructor for class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#%3Cinit%3E()	Default constructor.
+PointerEvent(PointerEvent)	Constructor for class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#%3Cinit%3E(com.myscript.iink.PointerEvent)	Copy constructor.
+PointerEvent(PointerEventType, float, float, long, float, float, float, PointerType, int)	Constructor for class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#%3Cinit%3E(com.myscript.iink.PointerEventType,float,float,long,float,float,float,com.myscript.iink.PointerType,int)	Constructs a PointerEvent
+PointerEvent(PointerEventType, float, float, long, float, PointerType, int)	Constructor for class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#%3Cinit%3E(com.myscript.iink.PointerEventType,float,float,long,float,com.myscript.iink.PointerType,int)	Constructs a PointerEvent
+pointerEvents(PointerEvent[])	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#pointerEvents(com.myscript.iink.PointerEvent%5B%5D)	Registers a list of pointer events.
+pointerEvents(PointerEvent[], boolean)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#pointerEvents(com.myscript.iink.PointerEvent%5B%5D,boolean)	Registers a list of pointer events.
+PointerEventType	Enum Class in com.myscript.iink	com/myscript/iink/PointerEventType.html	Describes the types of pointer event that can be provided to the editor.
+pointerId	Variable in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#pointerId	The id of the pointer.
+pointerMove(float, float, long, float)	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#pointerMove(float,float,long,float)	Registers a pointer move event.
+pointerMove(float, float, long, float, float, float, PointerType, int)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#pointerMove(float,float,long,float,float,float,com.myscript.iink.PointerType,int)	Registers a pointer move event.
+pointerMove(float, float, long, float, PointerType, int)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#pointerMove(float,float,long,float,com.myscript.iink.PointerType,int)	Registers a pointer move event.
+PointerTool	Enum Class in com.myscript.iink	com/myscript/iink/PointerTool.html	Describes the tools that the pointer types can be associated with.
+pointerType	Variable in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#pointerType	The type of input pointer.
+PointerType	Enum Class in com.myscript.iink	com/myscript/iink/PointerType.html	Describes the types of pointer that can be used for input.
+pointerUp(float, float, long, float)	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#pointerUp(float,float,long,float)	Registers a pointer up event.
+pointerUp(float, float, long, float, float, float, PointerType, int)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#pointerUp(float,float,long,float,float,float,com.myscript.iink.PointerType,int)	Registers a pointer up event.
+pointerUp(float, float, long, float, PointerType, int)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#pointerUp(float,float,long,float,com.myscript.iink.PointerType,int)	Registers a pointer up event.
+PPTX	Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#PPTX	Open XML presentation (application/vnd.openxmlformats-officedocument.presentationml.presentation).
+PREDEFINED	Enum constant in enum class com.myscript.iink. MathVariableSourceType	com/myscript/iink/MathVariableSourceType.html#PREDEFINED	The variable is a predefined constant (example: Pi ).
+prepareImage(int, int, float)	Method in interface com.myscript.iink. IImagePainter	com/myscript/iink/IImagePainter.html#prepareImage(int,int,float)	Invoked before starting to draw an image.
+pressureSensitivity	Variable in class com.myscript.iink.graphics. ExtraBrushStyle	com/myscript/iink/graphics/ExtraBrushStyle.html#pressureSensitivity	The pressure sensitivity, in [0,1].
+PROFILE_NOT_SELECTED	Enum constant in enum class com.myscript.iink. HandwritingGeneratorError	com/myscript/iink/HandwritingGeneratorError.html#PROFILE_NOT_SELECTED	The profile cannot be selected.
+QUAD_OPS	Enum constant in enum class com.myscript.iink.graphics. IPath.OperationType	com/myscript/iink/graphics/IPath.OperationType.html#QUAD_OPS	Quadratic Bezier curve operations (@see IPath::quadTo).
+quadTo(float, float, float, float)	Method in interface com.myscript.iink.graphics. IPath	com/myscript/iink/graphics/IPath.html#quadTo(float,float,float,float)	Draws a quadratic Bezier curve from the current point to (x,y) using
+(x1,y1) as the control point.
+r()	Method in class com.myscript.iink.graphics. Color	com/myscript/iink/graphics/Color.html#r()	Returns the red channel value.
+r_f()	Method in class com.myscript.iink.graphics. Color	com/myscript/iink/graphics/Color.html#r_f()	Returns the normalised red channel value.
+RecognitionAssetsBuilder	Class in com.myscript.iink	com/myscript/iink/RecognitionAssetsBuilder.html	The RecognitionAssetsBuilder implements the tools to generate and save recognition assets.
+Recognizer	Class in com.myscript.iink	com/myscript/iink/Recognizer.html	The Recognizer runs background handwriting recognition on ink.
+RecognizerError	Enum Class in com.myscript.iink	com/myscript/iink/RecognizerError.html	Represents a Recognizer error code.
+Rectangle	Class in com.myscript.iink.graphics	com/myscript/iink/graphics/Rectangle.html	Represents an axis aligned rectangle on the 2D plane.
+Rectangle()	Constructor for class com.myscript.iink.graphics. Rectangle	com/myscript/iink/graphics/Rectangle.html#%3Cinit%3E()	Default constructor.
+Rectangle(float, float, float, float)	Constructor for class com.myscript.iink.graphics. Rectangle	com/myscript/iink/graphics/Rectangle.html#%3Cinit%3E(float,float,float,float)	Constructor.
+Rectangle(Rectangle)	Constructor for class com.myscript.iink.graphics. Rectangle	com/myscript/iink/graphics/Rectangle.html#%3Cinit%3E(com.myscript.iink.graphics.Rectangle)	Copy constructor.
+redo()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#redo()	Redo the last action reverted by undo on part.
+redo()	Method in class com.myscript.iink. HistoryManager	com/myscript/iink/HistoryManager.html#redo()	Redo the last changeset reverted by undo on part.
+REFLOW	Enum constant in enum class com.myscript.iink. ContentSelectionMode	com/myscript/iink/ContentSelectionMode.html#REFLOW	Active selection's mode is Reflow.
+registerStroker(String, IStrokerFactory)	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#registerStroker(java.lang.String,com.myscript.iink.graphics.IStrokerFactory)	Registers a custom stroker factory.
+releaseOffscreenRenderSurface(int)	Method in interface com.myscript.iink. IRenderTarget	com/myscript/iink/IRenderTarget.html#releaseOffscreenRenderSurface(int)	Requests the release of the offscreen render surface associated with a given identifier.
+removeGestureHandler()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#removeGestureHandler()	Removes the gesture handler from this editor, if any.
+removeGestureHandler()	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#removeGestureHandler()	Removes the gesture handler from this offscreen editor, if any.
+removeListener(IConfigurationListener)	Method in class com.myscript.iink. Configuration	com/myscript/iink/Configuration.html#removeListener(com.myscript.iink.IConfigurationListener)	Removes the specified listener from this configuration.
+removeListener(IEditorListener)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#removeListener(com.myscript.iink.IEditorListener)	Removes the specified listener from this editor.
+removeListener(IOffscreenEditorListener)	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#removeListener(com.myscript.iink.IOffscreenEditorListener)	Removes the specified listener from this offscreen editor.
+removeListener(IRecognizerListener)	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#removeListener(com.myscript.iink.IRecognizerListener)	Removes the specified listener from this recognizer.
+removeListener(IRendererListener)	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#removeListener(com.myscript.iink.IRendererListener)	Removes the specified listener from this renderer.
+removePart(ContentPart)	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#removePart(com.myscript.iink.ContentPart)	Removes the specified part.
+removeVariableValue(String)	Method in class com.myscript.iink. MathExternalExpression	com/myscript/iink/MathExternalExpression.html#removeVariableValue(java.lang.String)	Removes the definition of the given variable name.
+removeVariableValue(String, String)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#removeVariableValue(java.lang.String,java.lang.String)	Removes the definition of the given variable name, for the specified block or as global variable.
+Renderer	Class in com.myscript.iink	com/myscript/iink/Renderer.html	The Renderer implements content rendering of parts.
+replaceStrokes(String[], PointerEvent[])	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#replaceStrokes(java.lang.String%5B%5D,com.myscript.iink.PointerEvent%5B%5D)	Replaces strokes.
+reset()	Method in class com.myscript.iink. Configuration	com/myscript/iink/Configuration.html#reset()	Resets this configuration to its default values.
+RESIZE	Enum constant in enum class com.myscript.iink. ContentSelectionMode	com/myscript/iink/ContentSelectionMode.html#RESIZE	Active selection's mode is Resize.
+resizeAllowed	Variable in class com.myscript.iink. PlaceholderController.PlaceholderInteractivityOptions	com/myscript/iink/PlaceholderController.PlaceholderInteractivityOptions.html#resizeAllowed	true to allow resizing, otherwise false .
+RESOURCE_NOT_FOUND	Enum constant in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#RESOURCE_NOT_FOUND	The configuration refers to a resource file that cannot be found.
+RESOURCE_NOT_FOUND	Enum constant in enum class com.myscript.iink. RecognizerError	com/myscript/iink/RecognizerError.html#RESOURCE_NOT_FOUND	The configuration refers to a resource file that cannot be found.
+RESOURCE_NOT_LOADED	Enum constant in enum class com.myscript.iink. HandwritingGeneratorError	com/myscript/iink/HandwritingGeneratorError.html#RESOURCE_NOT_LOADED	The resource file cannot be loaded.
+resultChanged(Recognizer, String)	Method in interface com.myscript.iink. IRecognizerListener	com/myscript/iink/IRecognizerListener.html#resultChanged(com.myscript.iink.Recognizer,java.lang.String)	Invoked when the content has changed.
+rgba	Variable in class com.myscript.iink.graphics. Color
+ 
+rightSideBearing - Variable in class com.myscript.iink.text. GlyphMetrics	com/myscript/iink/graphics/Color.html#rgba	The glyph right side bearing.
+rotate(double)	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#rotate(double)	Multiplies the transform with a rotation transformation.
+rotate(double, double)	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#rotate(double,double)	Multiplies the transform with a rotation transformation.
+rotate(double, double, double)	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#rotate(double,double,double)	Multiplies the transform with a rotation transformation.
+rotate(double, double, double, double)	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#rotate(double,double,double,double)	Multiplies the transform with a rotation transformation.
+rotationAllowed	Variable in class com.myscript.iink. PlaceholderController.PlaceholderInteractivityOptions	com/myscript/iink/PlaceholderController.PlaceholderInteractivityOptions.html#rotationAllowed	true to allow rotations, otherwise false .
+ROUND	Enum constant in enum class com.myscript.iink.graphics. LineCap	com/myscript/iink/graphics/LineCap.html#ROUND	Round end style.
+ROUND	Enum constant in enum class com.myscript.iink.graphics. LineJoin	com/myscript/iink/graphics/LineJoin.html#ROUND	Round join style.
+save()	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#save()	Saves all ongoing modifications made to this package.
+saveAs(File)	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#saveAs(java.io.File)	Saves all ongoing modifications made to this package, to a new file.
+saveImage(String)	Method in interface com.myscript.iink. IImagePainter	com/myscript/iink/IImagePainter.html#saveImage(java.lang.String)	Invoked once image drawing is over.
+saveToTemp()	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#saveToTemp()	Saves all ongoing modifications made to this package to a temporary folder.
+scale(double)	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#scale(double)	Multiplies this transform with a scaling transformation.
+scale(double, double)	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#scale(double,double)	Multiplies this transform with a scaling transformation.
+selectionChanged(Editor)	Method in interface com.myscript.iink. IEditorListener	com/myscript/iink/IEditorListener.html#selectionChanged(com.myscript.iink.Editor)	Invoked when the selection has changed.
+selectOnLassoAllowed	Variable in class com.myscript.iink. PlaceholderController.PlaceholderInteractivityOptions	com/myscript/iink/PlaceholderController.PlaceholderInteractivityOptions.html#selectOnLassoAllowed	true to allow selection on lasso, otherwise false .
+selectOnTapAllowed	Variable in class com.myscript.iink. PlaceholderController.PlaceholderInteractivityOptions	com/myscript/iink/PlaceholderController.PlaceholderInteractivityOptions.html#selectOnTapAllowed	true to allow selection on tap, otherwise false .
+SELECTOR	Enum constant in enum class com.myscript.iink. PointerTool	com/myscript/iink/PointerTool.html#SELECTOR	A tool used for selecting some content.
+SET_TYPE	Enum constant in enum class com.myscript.iink. ChangesetOperationType	com/myscript/iink/ChangesetOperationType.html#SET_TYPE	Set items type operation.
+setBoolean(String, Boolean)	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#setBoolean(java.lang.String,java.lang.Boolean)	Sets the boolean value associated with key .
+setDropShadow(float, float, float, Color)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#setDropShadow(float,float,float,com.myscript.iink.graphics.Color)	Configures the drop shadow display.
+setDropShadowColor(Color)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setDropShadowColor(com.myscript.iink.graphics.Color)	Sets the drop shadow color.
+setDropShadowRadius(float)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setDropShadowRadius(float)	Sets the drop shadow blur radius.
+setDropShadowXOffset(float)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setDropShadowXOffset(float)	Sets the drop shadow horizontal offset.
+setDropShadowYOffset(float)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setDropShadowYOffset(float)	Sets the drop shadow vertical offset.
+setFillColor(Color)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#setFillColor(com.myscript.iink.graphics.Color)	Sets the fill color.
+setFillColor(Color)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setFillColor(com.myscript.iink.graphics.Color)	Sets the fill color.
+setFillRule(FillRule)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#setFillRule(com.myscript.iink.graphics.FillRule)	Sets the fill rule.
+setFillRule(FillRule)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setFillRule(com.myscript.iink.graphics.FillRule)	Sets the fill rule.
+setFontFamily(String)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setFontFamily(java.lang.String)	Sets the font family.
+setFontLineHeight(float)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setFontLineHeight(float)	Sets the font line height.
+setFontMetricsProvider(IFontMetricsProvider)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#setFontMetricsProvider(com.myscript.iink.text.IFontMetricsProvider)	Sets a font metrics provider to this editor.
+setFontProperties(String, float, float, String, String, int)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#setFontProperties(java.lang.String,float,float,java.lang.String,java.lang.String,int)	Sets the font properties.
+setFontSize(float)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setFontSize(float)	Sets the font size.
+setFontStyle(String)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setFontStyle(java.lang.String)	Sets the font style.
+setFontVariant(String)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setFontVariant(java.lang.String)	Sets the font variant.
+setFontWeight(int)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setFontWeight(int)	Sets the font weight.
+setGestureHandler(IGestureHandler)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#setGestureHandler(com.myscript.iink.IGestureHandler)	Registers the specified gesture handler to this editor.
+setGestureHandler(IOffscreenGestureHandler)	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#setGestureHandler(com.myscript.iink.IOffscreenGestureHandler)	Registers the specified gesture handler to this offscreen editor.
+setItemsType(String[], String, boolean)	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#setItemsType(java.lang.String%5B%5D,java.lang.String,boolean)	Sets the classification of the specified items to a given type.
+setListener(IHandwritingGeneratorListener)	Method in class com.myscript.iink. HandwritingGenerator	com/myscript/iink/HandwritingGenerator.html#setListener(com.myscript.iink.IHandwritingGeneratorListener)	Sets the specified listener to this handwriting generator.
+setMetadata(ParameterSet)	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#setMetadata(com.myscript.iink.ParameterSet)	Set this package's metadata with the given parameter set.
+setMetadata(ParameterSet)	Method in class com.myscript.iink. ContentPart	com/myscript/iink/ContentPart.html#setMetadata(com.myscript.iink.ParameterSet)	Set the part's metadata with the given parameter set.
+setNumber(String, Number)	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#setNumber(java.lang.String,java.lang.Number)	Sets the numeric value associated with key .
+setNumberArray(String, Number[])	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#setNumberArray(java.lang.String,java.lang.Number%5B%5D)	Sets the numeric array value associated with key .
+setPart(ContentPart)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#setPart(com.myscript.iink.ContentPart)	Sets the part managed by this editor.
+setPart(ContentPart)	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#setPart(com.myscript.iink.ContentPart)	Sets the part managed by this offscreen editor.
+setSelection(ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#setSelection(com.myscript.iink.ContentSelection)	Sets the specified content selection as the active content selection in this editor.
+setSelectionMode(ContentSelectionMode)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#setSelectionMode(com.myscript.iink.ContentSelectionMode)	Sets the specified selection mode to the active content selection associated with this editor.
+setSelectionType(ContentSelection, String, boolean)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#setSelectionType(com.myscript.iink.ContentSelection,java.lang.String,boolean)	Sets a selection to the specified type.
+setString(String, String)	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#setString(java.lang.String,java.lang.String)	Sets the string value associated with key .
+setStringArray(String, String[])	Method in class com.myscript.iink. ParameterSet	com/myscript/iink/ParameterSet.html#setStringArray(java.lang.String,java.lang.String%5B%5D)	Sets the string array value associated with key .
+setStrokeColor(Color)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#setStrokeColor(com.myscript.iink.graphics.Color)	Sets the stroke color.
+setStrokeColor(Color)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setStrokeColor(com.myscript.iink.graphics.Color)	Sets the stroke color.
+setStrokeDashArray(float[])	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#setStrokeDashArray(float%5B%5D)	Sets the pattern of dashes and gaps used to stroke paths.
+setStrokeDashArray(float[])	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setStrokeDashArray(float%5B%5D)	Sets the pattern of dashes and gaps used to stroke paths.
+setStrokeDashOffset(float)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#setStrokeDashOffset(float)	Sets the distance into the dash pattern to start the dash.
+setStrokeDashOffset(float)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setStrokeDashOffset(float)	Sets the distance into the dash pattern to start the dash.
+setStrokeLineCap(LineCap)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#setStrokeLineCap(com.myscript.iink.graphics.LineCap)	Sets the stroke line cap.
+setStrokeLineCap(LineCap)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setStrokeLineCap(com.myscript.iink.graphics.LineCap)	Sets the stroke line cap.
+setStrokeLineJoin(LineJoin)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#setStrokeLineJoin(com.myscript.iink.graphics.LineJoin)	Sets the stroke line join.
+setStrokeLineJoin(LineJoin)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setStrokeLineJoin(com.myscript.iink.graphics.LineJoin)	Sets the stroke line join.
+setStrokeMiterLimit(float)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#setStrokeMiterLimit(float)	Sets the stroke miter limit.
+setStrokeMiterLimit(float)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setStrokeMiterLimit(float)	Sets the stroke miter limit.
+setStrokeWidth(float)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#setStrokeWidth(float)	Sets the stroke width.
+setStrokeWidth(float)	Method in class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#setStrokeWidth(float)	Sets the stroke width.
+setTextFormat(ContentSelection, TextFormat)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#setTextFormat(com.myscript.iink.ContentSelection,com.myscript.iink.TextFormat)	Applies Format to all text blocks in selection.
+setTheme(String)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#setTheme(java.lang.String)	Changes the rendering theme style sheet, from a buffer containing
+CSS styling information.
+setToolForType(PointerType, PointerTool)	Method in class com.myscript.iink. ToolController	com/myscript/iink/ToolController.html#setToolForType(com.myscript.iink.PointerType,com.myscript.iink.PointerTool)	Sets the tool associated with a pointer type.
+setToolStyle(PointerTool, String)	Method in class com.myscript.iink. ToolController	com/myscript/iink/ToolController.html#setToolStyle(com.myscript.iink.PointerTool,java.lang.String)	Sets the CSS style properties associated with a pointer tool.
+setToolStyleClasses(PointerTool, String)	Method in class com.myscript.iink. ToolController	com/myscript/iink/ToolController.html#setToolStyleClasses(com.myscript.iink.PointerTool,java.lang.String)	Sets the style classes associated with a pointer tool.
+setTransform(Transform)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#setTransform(com.myscript.iink.graphics.Transform)	Sets the transform.
+SETUP_FAILED	Enum constant in enum class com.myscript.iink. HandwritingGeneratorError	com/myscript/iink/HandwritingGeneratorError.html#SETUP_FAILED	The generator setup has failed.
+setUserData(ContentSelection, String)	Method in class com.myscript.iink. PlaceholderController	com/myscript/iink/PlaceholderController.html#setUserData(com.myscript.iink.ContentSelection,java.lang.String)	Sets the custom user data of a placeholder image.
+setVariableValue(String, double)	Method in class com.myscript.iink. MathExternalExpression	com/myscript/iink/MathExternalExpression.html#setVariableValue(java.lang.String,double)	Sets the value associated with the given variable name.
+setVariableValue(String, String, double)	Method in class com.myscript.iink. MathSolverController	com/myscript/iink/MathSolverController.html#setVariableValue(java.lang.String,java.lang.String,double)	Sets the value associated with the given variable name, for the specified block or as global variable.
+setViewOffset(float, float)	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#setViewOffset(float,float)	Sets the view offset.
+setViewScale(float)	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#setViewScale(float)	Sets the current zoom view scale.
+setViewSize(int, int)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#setViewSize(int,int)	Sets the size of the view.
+setVisible(ContentSelection, boolean)	Method in class com.myscript.iink. PlaceholderController	com/myscript/iink/PlaceholderController.html#setVisible(com.myscript.iink.ContentSelection,boolean)	Set a placeholder image visibility.
+ShapeOnHoldAction	Enum Class in com.myscript.iink	com/myscript/iink/ShapeOnHoldAction.html	Action type associated with a shape on hold event.
+sourceId	Variable in class com.myscript.iink. MathVariableInfo	com/myscript/iink/MathVariableInfo.html#sourceId	The identifier of the block where the variable was defined, or an empty string if not applicable.
+sourceType	Variable in class com.myscript.iink. MathVariableDefinitionInfo	com/myscript/iink/MathVariableDefinitionInfo.html#sourceType	The source type associated with the definition.
+sourceType	Variable in class com.myscript.iink. MathVariableInfo	com/myscript/iink/MathVariableInfo.html#sourceType	The source from which the variable was defined, or MathVariableSourceType.UNDEFINED .
+SQUARE	Enum constant in enum class com.myscript.iink.graphics. LineCap	com/myscript/iink/graphics/LineCap.html#SQUARE	Square end style.
+start(String, HandwritingProfile, ParameterSet)	Method in class com.myscript.iink. HandwritingGenerator	com/myscript/iink/HandwritingGenerator.html#start(java.lang.String,com.myscript.iink.HandwritingProfile,com.myscript.iink.ParameterSet)	Starts a handwriting generation using the specified writing profile.
+startDraw(int, int, int, int)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#startDraw(int,int,int,int)	Indicates that a drawing session starts, on a given area.
+startGroup(String, float, float, float, float, boolean)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#startGroup(java.lang.String,float,float,float,float,boolean)	Indicates that the drawing of a group of items starts.
+startItem(String)	Method in interface com.myscript.iink.graphics. ICanvas	com/myscript/iink/graphics/ICanvas.html#startItem(java.lang.String)	Indicates that the drawing of an item starts.
+store(HandwritingProfile, String)	Method in class com.myscript.iink. HandwritingProfileBuilder	com/myscript/iink/HandwritingProfileBuilder.html#store(com.myscript.iink.HandwritingProfile,java.lang.String)	Stores a writing profile to file.
+store(String)	Method in class com.myscript.iink. RecognitionAssetsBuilder	com/myscript/iink/RecognitionAssetsBuilder.html#store(java.lang.String)	Save the previously compiled recognition asset.
+stroke(InkPoint[], float, float, IPath)	Method in interface com.myscript.iink.graphics. IStroker	com/myscript/iink/graphics/IStroker.html#stroke(com.myscript.iink.graphics.InkPoint%5B%5D,float,float,com.myscript.iink.graphics.IPath)	Constructs a visual stroke from input points.
+STROKE_COLOR	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#STROKE_COLOR	Stroke color property.
+STROKE_DASH_ARRAY	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#STROKE_DASH_ARRAY	Stroke dash array property.
+STROKE_DASH_OFFSET	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#STROKE_DASH_OFFSET	Stroke dash offset property.
+STROKE_LINE_CAP	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#STROKE_LINE_CAP	Stroke line cap property.
+STROKE_LINE_JOIN	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#STROKE_LINE_JOIN	Stroke line join property.
+STROKE_MITER_LIMIT	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#STROKE_MITER_LIMIT	Stroke miter limit property.
+STROKE_WIDTH	Enum constant in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#STROKE_WIDTH	Stroke width property.
+strokeIds	Variable in class com.myscript.iink. ChangesetOperation	com/myscript/iink/ChangesetOperation.html#strokeIds	The list of changed items.
+strokeWidth	Variable in class com.myscript.iink.graphics. ExtraBrushStyle	com/myscript/iink/graphics/ExtraBrushStyle.html#strokeWidth	The stroke width (document coordinates in mm).
+style	Variable in class com.myscript.iink.text. TextSpan	com/myscript/iink/text/TextSpan.html#style	The style associated with this span.
+Style	Class in com.myscript.iink.graphics	com/myscript/iink/graphics/Style.html	Style information for the rendering of strokes and text.
+Style()	Constructor for class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#%3Cinit%3E()	Default constructor.
+Style(Style)	Constructor for class com.myscript.iink.graphics. Style	com/myscript/iink/graphics/Style.html#%3Cinit%3E(com.myscript.iink.graphics.Style)	Copy constructor.
+StyleFlag	Enum Class in com.myscript.iink.graphics	com/myscript/iink/graphics/StyleFlag.html	Style information flags.
+supportsGlyphMetrics()	Method in interface com.myscript.iink.text. IFontMetricsProvider	com/myscript/iink/text/IFontMetricsProvider.html#supportsGlyphMetrics()	Determine whether implementation supports `getGlyphMetrics()`.
+supportsOffscreenRendering()	Method in interface com.myscript.iink. IRenderTarget	com/myscript/iink/IRenderTarget.html#supportsOffscreenRendering()	Indicates whether this render target supports offscreen rendering.
+SVG	Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#SVG	Scalable Vector Graphics (image/svg+xml).
+t	Variable in class com.myscript.iink.graphics. InkPoint	com/myscript/iink/graphics/InkPoint.html#t	The point timestamp in ms since Unix EPOCH.
+t	Variable in class com.myscript.iink.graphics. InkPoints	com/myscript/iink/graphics/InkPoints.html#t	The points timestamps in ms since Unix EPOCH.
+t	Variable in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#t	The event timestamp in ms since Unix EPOCH, or -1 .
+Text	Class in com.myscript.iink.text	com/myscript/iink/text/Text.html	Allows to access the glyphs (i.e.
+TEXT	Enum constant in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#TEXT	Plain text (text/plain).
+TEXT_BLOCKS	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#TEXT_BLOCKS	The content selection contains text blocks.
+TextFormat	Enum Class in com.myscript.iink	com/myscript/iink/TextFormat.html	Predefined Text Box formats.
+TextSpan	Class in com.myscript.iink.text	com/myscript/iink/text/TextSpan.html	Describes glyphs spans in a label.
+TextSpan(int, int, Style)	Constructor for class com.myscript.iink.text. TextSpan	com/myscript/iink/text/TextSpan.html#%3Cinit%3E(int,int,com.myscript.iink.graphics.Style)	Constructor.
+tilt	Variable in class com.myscript.iink.graphics. InkPoint	com/myscript/iink/graphics/InkPoint.html#tilt	The point tilt in radians.
+tilt	Variable in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#tilt	The event tilt in radians.
+tiltAngle(float)	Method in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#tiltAngle(float)	Update the event tilt angle.
+tilts	Variable in class com.myscript.iink.graphics. InkPoints	com/myscript/iink/graphics/InkPoints.html#tilts	The points tilts in radians, or empty if none.
+tiltSensitivity	Variable in class com.myscript.iink.graphics. ExtraBrushStyle	com/myscript/iink/graphics/ExtraBrushStyle.html#tiltSensitivity	The tilt sensitivity, in [0,1].
+timestamp(long)	Method in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#timestamp(long)	Update the event timestamp.
+toCanonicalItemIds(String[])	Method in class com.myscript.iink. ItemIdHelper	com/myscript/iink/ItemIdHelper.html#toCanonicalItemIds(java.lang.String%5B%5D)	Converts an item ids list to its canonical form.
+TOO_MANY_VARIABLES	Enum constant in enum class com.myscript.iink. MathDiagnostic	com/myscript/iink/MathDiagnostic.html#TOO_MANY_VARIABLES	There are too many undefined variables.
+ToolController	Class in com.myscript.iink	com/myscript/iink/ToolController.html	The ToolController manages pointer tools configuration.
+toPointerEvents(Transform)	Method in class com.myscript.iink. HandwritingResult	com/myscript/iink/HandwritingResult.html#toPointerEvents(com.myscript.iink.graphics.Transform)	Returns a vector of pointer events representing this handwriting result.
+toString()	Method in class com.myscript.iink. ChangesetOperation
+ 
+toString() - Method in class com.myscript.iink. ContentBlock	com/myscript/iink/ChangesetOperation.html#toString()	Returns a String representation of the object.
+toString()	Method in class com.myscript.iink. ContentPackage	com/myscript/iink/ContentPackage.html#toString()	Returns a String representation of the object.
+toString()	Method in class com.myscript.iink. ContentPart	com/myscript/iink/ContentPart.html#toString()	Returns a String representation of the object.
+toString()	Method in class com.myscript.iink. ContentSelection	com/myscript/iink/ContentSelection.html#toString()	Returns a String representation of the object, with its part type.
+toString()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#toString()	Returns a String representation of the object, with its active part and package.
+toString()	Method in class com.myscript.iink.graphics. Color
+ 
+toString() - Method in class com.myscript.iink.graphics. ExtraBrushStyle
+ 
+toString() - Method in class com.myscript.iink.graphics. InkPoint
+ 
+toString() - Method in class com.myscript.iink.graphics. Point
+ 
+toString() - Method in class com.myscript.iink.graphics. PointD
+ 
+toString() - Method in class com.myscript.iink.graphics. Rectangle
+ 
+toString() - Method in class com.myscript.iink.graphics. Style
+ 
+toString() - Method in class com.myscript.iink.graphics. Transform
+ 
+toString() - Method in class com.myscript.iink. IndentationLevels
+ 
+toString() - Method in class com.myscript.iink. MathEvaluationVariables
+ 
+toString() - Method in class com.myscript.iink. MathVariableDefinition
+ 
+toString() - Method in class com.myscript.iink. MathVariableDefinitionInfo
+ 
+toString() - Method in class com.myscript.iink. MathVariableDefinitions
+ 
+toString() - Method in class com.myscript.iink. MathVariableInfo
+ 
+toString() - Method in class com.myscript.iink. PointerEvent
+ 
+toString() - Method in class com.myscript.iink. Recognizer	com/myscript/iink/graphics/Color.html#toString()	Returns a String representation of the object, with its active part and package.
+toString()	Method in class com.myscript.iink.text. GlyphMetrics
+ 
+toString() - Method in class com.myscript.iink.text. TextSpan
+ 
+toString() - Method in class com.myscript.iink. ToolController	com/myscript/iink/text/GlyphMetrics.html#toString()	Returns a String representation of the object, with the current mapping of pointer tools and types.
+toString(ContentSelection)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#toString(com.myscript.iink.ContentSelection)	Returns a String representation of a selection, with its part type and box.
+TOUCH	Enum constant in enum class com.myscript.iink. PointerType	com/myscript/iink/PointerType.html#TOUCH	A finger on a touchscreen (or a passive stylus).
+transform(ContentSelection, Transform)	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#transform(com.myscript.iink.ContentSelection,com.myscript.iink.graphics.Transform)	Transforms a selection.
+transform(String[], Transform)	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#transform(java.lang.String%5B%5D,com.myscript.iink.graphics.Transform)	Transforms the specified items.
+Transform	Class in com.myscript.iink.graphics	com/myscript/iink/graphics/Transform.html	Represents a 2D affine transform, defined as a 3x3 matrix with an implicit
+third raw of [ 0 0 1 ] :
+Transform()	Constructor for class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#%3Cinit%3E()	Default constructor.
+Transform(double, double, double, double, double, double)	Constructor for class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#%3Cinit%3E(double,double,double,double,double,double)	Constructor.
+Transform(Transform)	Constructor for class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#%3Cinit%3E(com.myscript.iink.graphics.Transform)	Copy constructor.
+TRANSFORM	Enum constant in enum class com.myscript.iink. ChangesetOperationType	com/myscript/iink/ChangesetOperationType.html#TRANSFORM	Transform items operation.
+TransformError	Enum Class in com.myscript.iink	com/myscript/iink/TransformError.html	Error code returned by Editor getTransformStatus
+translate(double, double)	Method in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#translate(double,double)	Multiplies the transform with a translation transformation.
+TRUNCATE_EXISTING	Enum constant in enum class com.myscript.iink. PackageOpenOption	com/myscript/iink/PackageOpenOption.html#TRUNCATE_EXISTING	If the package already exists then its content is discarded.
+TTFAnalyzer	Class in com.myscript.util	com/myscript/util/TTFAnalyzer.html	The class which loads the TTF file, parses it and returns the TTF font name.
+TTFAnalyzer()	Constructor for class com.myscript.util. TTFAnalyzer
+ 
+tx - Variable in class com.myscript.iink.graphics. Transform	com/myscript/util/TTFAnalyzer.html#%3Cinit%3E()	The X coordinate translation element M 1,3 of the
+transform matrix.
+ty	Variable in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#ty	The Y coordinate translation element M 2,3 of the
+transform matrix.
+type	Variable in class com.myscript.iink. ChangesetOperation	com/myscript/iink/ChangesetOperation.html#type	The operation type.
+type(PointerType)	Method in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#type(com.myscript.iink.PointerType)	Update the event pointer type.
+UNDEFINED	Enum constant in enum class com.myscript.iink. MathVariableSourceType	com/myscript/iink/MathVariableSourceType.html#UNDEFINED	The variable has not been defined.
+undo()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#undo()	Undo the last action on part.
+undo()	Method in class com.myscript.iink. HistoryManager	com/myscript/iink/HistoryManager.html#undo()	Undo the last changeset on part.
+UNION	Enum constant in enum class com.myscript.iink. ItemIdCombinationModifier	com/myscript/iink/ItemIdCombinationModifier.html#UNION	Combines the union.
+unregisterStroker(String)	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#unregisterStroker(java.lang.String)	Unregister custom stroker factory.
+UNSUPPORTED	Enum constant in enum class com.myscript.iink. MathDiagnostic	com/myscript/iink/MathDiagnostic.html#UNSUPPORTED	The task is unsupported (internal error).
+UNSUPPORTED	Enum constant in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#UNSUPPORTED	The transform is not supported on this content selection (internal error).
+unsupportedOperations()	Method in interface com.myscript.iink.graphics. IPath	com/myscript/iink/graphics/IPath.html#unsupportedOperations()	Lists the operations not supported by the implementation of IPath.
+up(float, float)	Method in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#up(float,float)	Update this event to a "up" event.
+UP	Enum constant in enum class com.myscript.iink. PointerEventType	com/myscript/iink/PointerEventType.html#UP	Ends a trace.
+update(ContentSelection, Rectangle, String, MimeType, String)	Method in class com.myscript.iink. PlaceholderController	com/myscript/iink/PlaceholderController.html#update(com.myscript.iink.ContentSelection,com.myscript.iink.graphics.Rectangle,java.lang.String,com.myscript.iink.MimeType,java.lang.String)	Updates the specified placeholder image and moves it to the front.
+valid()	Method in class com.myscript.iink. MathVariableDefinition	com/myscript/iink/MathVariableDefinition.html#valid()	Checks if the definition is valid.
+value	Variable in class com.myscript.iink. MathVariableDefinition	com/myscript/iink/MathVariableDefinition.html#value	The value of the variable.
+value	Variable in class com.myscript.iink. MathVariableDefinitionInfo	com/myscript/iink/MathVariableDefinitionInfo.html#value	The value associated with the definition.
+value()	Method in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#value()	Returns the mime type unique integer value.
+valueOf(String)	Static method in enum class com.myscript.iink. ChangesetOperationType	com/myscript/iink/ChangesetOperationType.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. ContentSelectionMode	com/myscript/iink/ContentSelectionMode.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. ConversionState	com/myscript/iink/ConversionState.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. GestureAction	com/myscript/iink/GestureAction.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink.graphics. FillRule	com/myscript/iink/graphics/FillRule.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink.graphics. IPath.OperationType	com/myscript/iink/graphics/IPath.OperationType.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink.graphics. LineCap	com/myscript/iink/graphics/LineCap.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink.graphics. LineJoin	com/myscript/iink/graphics/LineJoin.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. HandwritingGeneratorError	com/myscript/iink/HandwritingGeneratorError.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. IRenderTarget.LayerType	com/myscript/iink/IRenderTarget.LayerType.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. ItemIdCombinationModifier	com/myscript/iink/ItemIdCombinationModifier.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. MathDiagnostic	com/myscript/iink/MathDiagnostic.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. MathVariableSourceType	com/myscript/iink/MathVariableSourceType.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. OffscreenGestureAction	com/myscript/iink/OffscreenGestureAction.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. PackageOpenOption	com/myscript/iink/PackageOpenOption.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. PointerEventType	com/myscript/iink/PointerEventType.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. PointerTool	com/myscript/iink/PointerTool.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. PointerType	com/myscript/iink/PointerType.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. RecognizerError	com/myscript/iink/RecognizerError.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. ShapeOnHoldAction	com/myscript/iink/ShapeOnHoldAction.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. TextFormat	com/myscript/iink/TextFormat.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+valueOf(String)	Static method in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#valueOf(java.lang.String)	Returns the enum constant of this class with the specified name.
+values()	Static method in enum class com.myscript.iink. ChangesetOperationType	com/myscript/iink/ChangesetOperationType.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. ContentSelectionMode	com/myscript/iink/ContentSelectionMode.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. ConversionState	com/myscript/iink/ConversionState.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. EditorError	com/myscript/iink/EditorError.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. GestureAction	com/myscript/iink/GestureAction.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink.graphics. FillRule	com/myscript/iink/graphics/FillRule.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink.graphics. IPath.OperationType	com/myscript/iink/graphics/IPath.OperationType.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink.graphics. LineCap	com/myscript/iink/graphics/LineCap.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink.graphics. LineJoin	com/myscript/iink/graphics/LineJoin.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink.graphics. StyleFlag	com/myscript/iink/graphics/StyleFlag.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. HandwritingGeneratorError	com/myscript/iink/HandwritingGeneratorError.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. IRenderTarget.LayerType	com/myscript/iink/IRenderTarget.LayerType.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. ItemIdCombinationModifier	com/myscript/iink/ItemIdCombinationModifier.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. MathDiagnostic	com/myscript/iink/MathDiagnostic.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. MathVariableSourceType	com/myscript/iink/MathVariableSourceType.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. MimeType	com/myscript/iink/MimeType.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. OffscreenGestureAction	com/myscript/iink/OffscreenGestureAction.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. PackageOpenOption	com/myscript/iink/PackageOpenOption.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. PointerEventType	com/myscript/iink/PointerEventType.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. PointerTool	com/myscript/iink/PointerTool.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. PointerType	com/myscript/iink/PointerType.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. RecognizerError	com/myscript/iink/RecognizerError.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. ShapeOnHoldAction	com/myscript/iink/ShapeOnHoldAction.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. TextFormat	com/myscript/iink/TextFormat.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+values()	Static method in enum class com.myscript.iink. TransformError	com/myscript/iink/TransformError.html#values()	Returns an array containing the constants of this enum class, in
+the order they are declared.
+viewTransformChanged(Renderer)	Method in interface com.myscript.iink. IRendererListener	com/myscript/iink/IRendererListener.html#viewTransformChanged(com.myscript.iink.Renderer)	Invoked when the view transform has changed.
+waitForIdle()	Method in class com.myscript.iink. Editor	com/myscript/iink/Editor.html#waitForIdle()	Waits until part modification operations are over.
+waitForIdle()	Method in class com.myscript.iink. HandwritingGenerator	com/myscript/iink/HandwritingGenerator.html#waitForIdle()	Waits until ongoing generation is over.
+waitForIdle()	Method in class com.myscript.iink. OffscreenEditor	com/myscript/iink/OffscreenEditor.html#waitForIdle()	Waits until part modification operations are over.
+waitForIdle()	Method in class com.myscript.iink. Recognizer	com/myscript/iink/Recognizer.html#waitForIdle()	Waits until part modification operations are over.
+WHITE	Static variable in class com.myscript.iink.graphics. Color
+ 
+width - Variable in class com.myscript.iink.graphics. Rectangle	com/myscript/iink/graphics/Color.html#WHITE	The width of the rectangle.
+x	Variable in class com.myscript.iink.graphics. InkPoint	com/myscript/iink/graphics/InkPoint.html#x	The point x coordinate.
+x	Variable in class com.myscript.iink.graphics. InkPoints	com/myscript/iink/graphics/InkPoints.html#x	The points x coordinates.
+x	Variable in class com.myscript.iink.graphics. Point	com/myscript/iink/graphics/Point.html#x	The x position of the point.
+x	Variable in class com.myscript.iink.graphics. PointD	com/myscript/iink/graphics/PointD.html#x	The x position of the point.
+x	Variable in class com.myscript.iink.graphics. Rectangle	com/myscript/iink/graphics/Rectangle.html#x	The x position of the left edge of the rectangle.
+x	Variable in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#x	The event x coordinate.
+xx	Variable in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#xx	The X coordinate scaling element M 1,1 of the transform
+matrix.
+xy	Variable in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#xy	The Y coordinate shearing element M 2,1 of the transform
+matrix.
+y	Variable in class com.myscript.iink.graphics. InkPoint	com/myscript/iink/graphics/InkPoint.html#y	The point y coordinate.
+y	Variable in class com.myscript.iink.graphics. InkPoints	com/myscript/iink/graphics/InkPoints.html#y	The points y coordinates.
+y	Variable in class com.myscript.iink.graphics. Point	com/myscript/iink/graphics/Point.html#y	The y position of the point.
+y	Variable in class com.myscript.iink.graphics. PointD	com/myscript/iink/graphics/PointD.html#y	The y position of the point.
+y	Variable in class com.myscript.iink.graphics. Rectangle	com/myscript/iink/graphics/Rectangle.html#y	The y position of the top edge of the rectangle.
+y	Variable in class com.myscript.iink. PointerEvent	com/myscript/iink/PointerEvent.html#y	The event y coordinate.
+yx	Variable in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#yx	The X coordinate shearing element M 1,2 of the transform
+matrix.
+yy	Variable in class com.myscript.iink.graphics. Transform	com/myscript/iink/graphics/Transform.html#yy	The Y coordinate scaling element M 2,2 of the transform
+matrix.
+zoom(float)	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#zoom(float)	Increases zoom by a factor.
+zoomAt(Point, float)	Method in class com.myscript.iink. Renderer	com/myscript/iink/Renderer.html#zoomAt(com.myscript.iink.graphics.Point,float)	Increases zoom by a factor around a given point.

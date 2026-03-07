@@ -1,53 +1,49 @@
 # Web Object Fallback Matrix
 
-Date: 2026-02-23
-Scope: Decode and fallback expectations for Android-authored `pageObjects` contracts before full web runtime rendering lands.
+Date: 2026-03-07 (updated)
+Scope: Decode and fallback expectations for Android-authored page objects before full web rendering lands.
 
 ## Purpose
 
-Web currently acts as a view-only surface for note metadata. This matrix defines deterministic behavior when notes include object metadata introduced by Android object insert flows.
+Web acts as a view-only surface. This matrix defines deterministic behavior when notebooks include object types that the web viewer does not yet render.
 
 ## Decode Policy
 
-1. Web clients must parse `pageObjects` as a discriminated union by `kind`.
-2. Unknown `kind` values must be preserved in raw metadata and ignored by rendering.
-3. Unknown payload fields on known `kind` values must be ignored (forward-compatible decode).
-4. Known required fields that fail validation should drop only that object, not the entire note payload.
+1. Web clients receive page content via Yjs replay engine (Yjs snapshot + Convex deltas).
+2. Objects are parsed from the per-page Yjs doc `objects: Y.Map`.
+3. Unknown object `type` values must be preserved in the local model and ignored by rendering.
+4. Unknown fields on known `type` values must be ignored (forward-compatible decode).
+5. Objects that fail validation should be dropped individually, not crash the page render.
 
 ## Rendering / UX Fallback
 
-| Kind | Contract status | Web runtime behavior (current wave) | User-visible affordance |
-| --- | --- | --- | --- |
-| `shape` | Supported contract | Decode and keep in local model; no canvas rendering yet | Optional non-blocking “Object unsupported on web yet” hint at note level |
-| `image` | Supported contract | Decode and keep metadata only (no render) | Same note-level unsupported hint |
-| `text` | Supported contract | Decode and keep metadata only (no render) | Same note-level unsupported hint |
-| `audio` | Supported contract | Decode and keep metadata only (no playback UI) | Same note-level unsupported hint |
-| `sticky` | Supported contract | Decode and keep metadata only (no render) | Same note-level unsupported hint |
-| `scan` | Supported contract | Decode and keep metadata only (no render) | Same note-level unsupported hint |
-| `file` | Supported contract | Decode and keep metadata only (no render/open) | Same note-level unsupported hint |
-| Unknown future kind | Forward-compatible | Preserve raw metadata, skip rendering | No hard error; optional debug telemetry |
+| Type | Web runtime behavior (Milestone B) | User-visible affordance |
+|---|---|---|
+| `textBlock` | Render text; KaTeX for `isLatex=true` | Full render |
+| `image` | Render from R2 asset | Full render |
+| `stickyNote` | Render colored card with text | Full render |
+| `table` | Render grid with text cells | Full render |
+| `audioAttachment` | Metadata only (no playback UI) | "Audio — open in app" hint |
+| `shape` | Render geometric primitive on Canvas | Full render |
+| Unknown future type | Preserve in model, skip rendering | No hard error |
 
 ## Error Handling
 
-1. Validation failures should be logged with object ID and kind where available.
-2. Rendering fallback must not block note open.
-3. Partial object decode success should still return successfully parsed objects.
+1. Validation failures logged with object ID and type.
+2. Fallback must not block notebook open.
+3. Partial decode success returns all successfully parsed objects.
 
-## Non-Object Metadata Fallback (Current Wave Expansion)
+## Non-Object Metadata Fallback
 
-Web decode should also tolerate new metadata contracts that are not yet rendered in web runtime:
-
-| Contract | Decode behavior | Runtime behavior | User-visible affordance |
-| --- | --- | --- | --- |
-| `gestureSettings` | Parse if available; ignore unknown enum values by dropping invalid profile only | Not consumed in web editor (view-only) | None |
-| `templateScopes` | Parse and keep metadata for future template fidelity | No direct rendering changes in this wave | None |
-| `exportMetadata` | Parse and keep status/mode metadata | No export management UI in this wave | Optional informational badge in future |
-| `searchIndexTokens` | Parse and preserve where available | Search UI not wired yet; do not fail note open | None |
+| Contract | Decode behavior | Notes |
+|---|---|---|
+| Template fields | Per-page Yjs doc metadata | Consumed for background rendering |
+| Search text | Convex `searchTexts` table | Not visible in web UI directly |
+| Export records | Convex `exports` table | Optional download badge |
 
 ## Test Expectations
 
-1. Contract tests validate `shape`, `image`, `text`, `audio`, `sticky`, `scan`, and `file` fixtures.
-2. Contract tests include negative cases for payload-kind mismatch.
-3. Web decode tests assert “skip invalid object, keep note payload alive” semantics in `C:/onyx/apps/web/src/contracts/decodeMetadata.test.ts`.
-4. Web decode tests assert unknown page-object kinds are preserved in raw metadata and omitted from renderable object sets.
-5. Web decode tests assert feature-metadata arrays (`gestureSettings`, `templateScopes`, `exportMetadata`, `searchIndexTokens`) decode valid entries and skip invalid entries without aborting note decode.
+1. Contract tests validate all 7 object type fixtures.
+2. Contract tests include negative cases for type mismatch.
+3. Web decode tests assert "skip invalid object, keep page alive" semantics.
+4. Web decode tests assert unknown types are preserved in raw model.

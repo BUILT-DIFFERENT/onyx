@@ -1,0 +1,563 @@
+SOURCE: com/myscript/iink/ContentPackage.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class ContentPackage
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.ContentPackage
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class ContentPackage
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+A package stores the user content as a sorted collection of parts.
+
+See Also:
+
+ContentPart [link: ContentPart.html]
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final @NotNull ContentPart [link: ContentPart.html]
+
+clonePart [link: #clonePart(com.myscript.iink.ContentPart)] (@NotNull ContentPart [link: ContentPart.html] part)
+
+Adds an existing part to this package.
+
+final void
+
+close [link: #close()]()
+
+final @NotNull ContentPart [link: ContentPart.html]
+
+createPart [link: #createPart(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] type)
+
+Appends a new part to this package.
+
+final @NotNull ContentPart [link: ContentPart.html]
+
+createPart [link: #createPart(java.lang.String,float,float)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] type,
+float width,
+float height)
+
+Warning: This is a Beta API.
+
+final void
+
+extractObject [link: #extractObject(java.lang.String,java.io.File)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] url,
+@NotNull File [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/File.html] file)
+
+Extracts an object from this package to a given file.
+
+protected void
+
+finalize [link: #finalize()]()
+
+final @NotNull ParameterSet [link: ParameterSet.html]
+
+getMetadata [link: #getMetadata()]()
+
+Returns this package's metadata as a parameter set.
+
+final @NotNull ContentPart [link: ContentPart.html]
+
+getPart [link: #getPart(int)] (int index)
+
+Returns the part at the specified index.
+
+final @NotNull ContentPart [link: ContentPart.html]
+
+getPart [link: #getPart(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] id)
+
+Returns the specified part.
+
+final int
+
+getPartCount [link: #getPartCount()]()
+
+Returns the number of parts in this package.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getPath [link: #getPath()]()
+
+Returns the path of this package.
+
+final int
+
+indexOfPart [link: #indexOfPart(com.myscript.iink.ContentPart)] (@NotNull ContentPart [link: ContentPart.html] part)
+
+Returns the index of a given part.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+final void
+
+movePart [link: #movePart(int,int)] (int fromIndex,
+int toIndex)
+
+Moves the specified part to another index.
+
+final void
+
+removePart [link: #removePart(com.myscript.iink.ContentPart)] (@NotNull ContentPart [link: ContentPart.html] part)
+
+Removes the specified part.
+
+final void
+
+save [link: #save()]()
+
+Saves all ongoing modifications made to this package.
+
+final void
+
+saveAs [link: #saveAs(java.io.File)] (@NotNull File [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/File.html] file)
+
+Saves all ongoing modifications made to this package, to a new file.
+
+final void
+
+saveToTemp [link: #saveToTemp()]()
+
+Saves all ongoing modifications made to this package to a temporary folder.
+
+final void
+
+setMetadata [link: #setMetadata(com.myscript.iink.ParameterSet)] (@NotNull ParameterSet [link: ParameterSet.html] parameters)
+
+Set this package's metadata with the given parameter set.
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Returns a String representation of the object.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+save
+
+public final void save ()
+throws IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html]
+
+Saves all ongoing modifications made to this package.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - when an I/O operation fails.
+
+saveToTemp
+
+public final void saveToTemp ()
+throws IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html]
+
+Saves all ongoing modifications made to this package to a temporary folder.
+This operation is faster than save() [link: #save()].
+
+Note: by default temporary folder is located in the same directory as this
+package, and named by appending -files to this package's name.
+
+Note: temporary folder location can be set via the
+content-package.temp-folder configuration property.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - when an I/O operation fails.
+
+saveAs
+
+public final void saveAs (@NotNull
+@NotNull File [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/File.html] file)
+throws IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html]
+
+Saves all ongoing modifications made to this package, to a new file.
+
+Parameters:
+
+file - the new file name.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - when an I/O operation fails.
+
+getPartCount
+
+public final int getPartCount ()
+
+Returns the number of parts in this package.
+
+Returns:
+
+the part count.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+getPart
+
+@NotNull
+public final @NotNull ContentPart [link: ContentPart.html] getPart (int index)
+throws IndexOutOfBoundsException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IndexOutOfBoundsException.html]
+
+Returns the part at the specified index.
+
+Parameters:
+
+index - the index of the requested part.
+
+Returns:
+
+the requested part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+IndexOutOfBoundsException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IndexOutOfBoundsException.html] - when index is out of range.
+
+getPart
+
+@NotNull
+public final @NotNull ContentPart [link: ContentPart.html] getPart (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] id)
+throws IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html]
+
+Returns the specified part.
+
+Parameters:
+
+id - the identifier of the requested part.
+
+Returns:
+
+the part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when no part is associated with identifier id .
+
+indexOfPart
+
+public final int indexOfPart (@NotNull
+@NotNull ContentPart [link: ContentPart.html] part)
+
+Returns the index of a given part.
+
+Parameters:
+
+part - the part.
+
+Returns:
+
+the index of the part, or -1 if the part does not belong to this package.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package's part is closed.
+
+createPart
+
+@NotNull
+public final @NotNull ContentPart [link: ContentPart.html] createPart (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] type)
+throws IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html]
+
+Appends a new part to this package.
+
+Parameters:
+
+type - the type of part.
+
+Returns:
+
+the newly created part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when type is not a valid ContentPart type.
+
+createPart
+
+@NotNull
+public final @NotNull ContentPart [link: ContentPart.html] createPart (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] type,
+float width,
+float height)
+throws IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html]
+
+Warning: This is a Beta API.
+
+Appends a new fixed-size part to this package.
+
+Parameters:
+
+type - the type of part.
+
+width - the width of the part (document coordinates in mm).
+
+height - the height of part (document coordinates in mm).
+
+Returns:
+
+the newly created part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when type is not a Raw Content ContentPart type.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when width or height are not a number or less than 1.0 .
+
+Since:
+
+4.1
+
+removePart
+
+public final void removePart (@NotNull
+@NotNull ContentPart [link: ContentPart.html] part)
+throws IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html]
+
+Removes the specified part.
+
+Parameters:
+
+part - the part to remove.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package's part is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when part does not belong to this package.
+
+Since:
+
+1.2
+
+movePart
+
+public final void movePart (int fromIndex,
+int toIndex)
+throws IndexOutOfBoundsException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IndexOutOfBoundsException.html]
+
+Moves the specified part to another index.
+
+Parameters:
+
+fromIndex - the current index of the requested part.
+
+toIndex - the new index of the part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when fromIndex is out of range.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when toIndex is out of range.
+
+IndexOutOfBoundsException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IndexOutOfBoundsException.html]
+
+Since:
+
+2.1.1
+
+clonePart
+
+@NotNull
+public final @NotNull ContentPart [link: ContentPart.html] clonePart (@NotNull
+@NotNull ContentPart [link: ContentPart.html] part)
+
+Adds an existing part to this package.
+
+Note: Part modifications that have not been saved (to temporary directory
+or to an actual package file) will not be imported.
+
+Note: The part can be an existing part from this package or from another
+open package.
+
+Parameters:
+
+part - the part to clone into this package.
+
+Returns:
+
+the newly created part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package's part is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when part is not valid.
+
+Since:
+
+1.2
+
+extractObject
+
+public final void extractObject (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] url,
+@NotNull
+@NotNull File [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/File.html] file)
+throws IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html],
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html]
+
+Extracts an object from this package to a given file.
+
+Parameters:
+
+url - URL of the object.
+
+file - destination file.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when no object named url exists.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - when an I/O operation fails.
+
+getMetadata
+
+@NotNull
+public final @NotNull ParameterSet [link: ParameterSet.html] getMetadata ()
+
+Returns this package's metadata as a parameter set.
+
+Returns:
+
+the metadata.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+setMetadata
+
+public final void setMetadata (@NotNull
+@NotNull ParameterSet [link: ParameterSet.html] parameters)
+
+Set this package's metadata with the given parameter set.
+
+Parameters:
+
+parameters - the metadata.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when parameters is closed.
+
+getPath
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getPath ()
+
+Returns the path of this package.
+
+Returns:
+
+the path.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this package is closed.
+
+Since:
+
+2.0
+
+toString
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Returns a String representation of the object.
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Returns:
+
+the representation of the object.
+
+Since:
+
+2.1

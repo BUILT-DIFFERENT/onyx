@@ -1,5 +1,6 @@
 package com.onyx.android.data.serialization
 
+import com.onyx.android.ink.model.Stroke
 import com.onyx.android.ink.model.StrokeBounds
 import com.onyx.android.ink.model.StrokePoint
 import com.onyx.android.ink.model.StrokeStyle
@@ -95,5 +96,27 @@ class StrokeSerializerTest {
         val deserialized = StrokeSerializer.deserializeStyle(json)
 
         assertEquals(original, deserialized)
+    }
+
+    @Test
+    fun `raw stroke persistence excludes display-only points`() {
+        val rawPoints =
+            listOf(
+                StrokePoint(x = 0f, y = 0f, t = 1L),
+                StrokePoint(x = 4f, y = 4f, t = 2L),
+            )
+        val stroke =
+            Stroke(
+                id = "stroke-1",
+                points = rawPoints,
+                displayPoints = rawPoints + StrokePoint(x = 6f, y = 6f, t = 3L),
+                style = StrokeStyle(tool = Tool.PEN, baseWidth = 2f),
+                bounds = StrokeBounds(x = 0f, y = 0f, w = 6f, h = 6f),
+                createdAt = 1L,
+            )
+
+        val persisted = StrokeSerializer.deserializePoints(StrokeSerializer.serializePoints(stroke.points))
+
+        assertEquals(rawPoints, persisted)
     }
 }

@@ -1,0 +1,53 @@
+Getting started
+
+MyScript iink SDK makes it easy to get started. This page helps you set up a development environment, get a certificate and play with provided example applications.
+Setting up a development environment
+
+To develop with iink SDK for Android, you will need:
+
+    Android Studio Narwhal or higher
+    Git (to clone the GitHub example repository)
+
+Example applications
+
+MyScript iink SDK comes with example applications illustrating how to use key APIs:
+
+    The GetStarted example is a good starting point to discover MyScript iink SDK.
+    The Demo example is a more advanced integration that you can refer too, once familiar with MyScript iink SDK.
+
+The code is available on GitHub.
+A custom compilation step will download the minimal set of recognition assets required for the example to run. More assets (e.g. to support other recognition languages) can be downloaded from MyScript Developer Portal.
+
+A reference implementation for the platform-specific integration layer can be found alongside the examples. It covers aspects such as rendering that the low-level iink SDK does not provide out-of-the-box for flexibility and portability reasons.
+
+The source code of both the examples and the reference implementation is released under the Apache 2.0 license. You can reuse it into your own projects without any particular restriction.
+Getting a certificate
+
+A certificate is a binary “key” provided by MyScript that is required to enable iink SDK in an application:
+
+    If you have just registered with MyScript Developer Portal, you should have received a certificate by mail that will let you run the provided GetStarted and Demo examples.
+    If not - or to activate iink SDK with your own applications - please follow the on-device license management instructions.
+
+More details on certificates and license management can be found in the dedicated support section.
+Developer Portal certificates are specifically generated for each app identifier. You cannot directly reuse the certificate inside your own application.
+
+The certificate comes embedded in a source file that you should include in your project:
+
+    MyScript-provided examples expect it to be located at a specific location (see instructions below).
+    For your own application, you can place it where you want, provided that it is accessible to instantiate the iink runtime.
+
+Playing with the Demo and Get started examples
+
+To run them, just follow the following instructions:
+
+Step 1: Clone the MyScript Git repository containing the examples for the Android platform and navigate to the root of the folder containing the applications:
+
+git clone https://github.com/MyScript/interactive-ink-examples-android.git
+cd interactive-ink-examples-android
+
+Step 2: Replace the MyCertificate.java file in the GetStarted/src/main/java/com/myscript/certificate or in the Demo/src/main/java/com/myscript/certificate directory with your certificate.
+
+Step 3: Open the interactive-ink-examples-android directory as an existing Android Studio project. The Gradle dependencies should be grabbed and the project should compile with success.
+If you encounter build errors of the form No version of NDK matched the requested version, please install the requested NDK version or update the one referenced in build.gradle to match your installed NDK version. You can follow these instructions.
+
+Step 4: Run the GetStarted or the Demo target.

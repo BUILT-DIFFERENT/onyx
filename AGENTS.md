@@ -91,7 +91,7 @@ The Android app follows MVVM with Compose:
 - **Raw stylus input is canonical**. Display geometry is derived from raw input, not the other way around.
 - **Offline-first**: All writes go to Room first; sync is opportunistic.
 - **Blob references, not blobs in DB**: Convex stores metadata + CRDT deltas. Binary assets (PDFs, images, audio, snapshots) go to S3-compatible storage (Cloudflare R2).
-- **Op ordering**: `(lamport, deviceId, opId)` tuple for deterministic sync.
+- **CRDT sync**: Y-Octo/Yjs binary updates. Conflict resolution is automatic via CRDT merge semantics — no Lamport clocks or manual conflict handling.
 
 ### Key files (editor)
 - `apps/android/app/src/main/java/com/onyx/android/ui/NoteEditorScreen.kt` — Main editor screen

@@ -1,0 +1,66 @@
+Styling
+
+MyScript iink SDK makes it easy to style content. In this part of the guide, you will learn how to set a theme and how you can change the style of the pen at any time.
+How to set the style of the strokes
+
+You can set the style associated with a pointer tool that adds content to the Content Part, for example to choose the PEN or HIGHLIGHTER color or their thicknesses. This is useful when providing end users with a color palette or when letting them define the characteristics of the PEN or HIGHLIGHTER tool.
+
+This approach consists in directly setting the style of the tool by calling setToolStyle method on the tool controller.
+
+It makes it easy to dynamically create styles (for instance if you let your users build their own color palettes) and will be saved within the content part. Supported properties are color, -myscript-pen-brush and -myscript-pen-width.
+
+Example applied on the pen tool:
+
+editor.getToolController().setToolStyle(PointerTool.PEN,"color: #00FF00FF; -myscript-pen-width: 2.4");
+
+Pressure, tilt and orientation settings
+
+There are three additional options -myscript-pen-orientation-sensitivity, -myscript-pen-tilt-sensitivity and -myscript-pen-pressure-sensitivity to adjust the effect of orientation, tilt and pressure sensitivity on stroke rendering when such information is present in the input pointer events for the Editor.
+To get the best effect according to your brush, you will need to adjust their values, as the effect is disabled by default and an optimized effect for each brush may require a different set of values.
+
+Example of style applied on a custom brush:
+
+"-myscript-pen-brush: Extra-Pencil; -myscript-pen-pressure-sensitivity: 1.0; -myscript-pen-tilt-sensitivity: 1.0; -myscript-pen-orientation-sensitivity: 1.0;"
+
+Fonts style with a theme
+Main principle
+
+A theme is a style sheet that influences the look & feel of the content rendered by a particular Editor object. It is not specific to any particular piece of content and it is therefore not stored in the ContentPart.
+The same content will look different if it is opened by two editor instances configured with different themes.
+
+The style sheet shall be passed as a string to the setTheme() method of the Editor object. For example, to set the default text fonts family for the current editor, you can write:
+
+editor.setTheme(".text { font-family: monospace; } ");
+
+MyScript iink SDK dynamically computes the default styling parameters such as line height and font size, based on the device resolution. You can override this default styling, by setting a theme: values defined by your provided style sheet will have a higher priority.
+
+Theme changes are not managed by iink SDK undo/redo stack. To let your users undo or redo theme changes, you have to manage it on the integration side. For a possible implementation path, read how you can combine the iink SDK undo/redo stack with that of your application (advanced).
+Illustration by an example
+
+Let’s imagine that you have developed an application based on Math content:
+
+You may want converted content to appear blue, while keeping the default black color for handwritten ink. You may also choose a nice green color for the results of the math solver, and set the font to bold (weight of 700) and italic.
+
+The code would look like this:
+
+editor.setTheme(".math {" +
+                " font-family: STIX Two Math;" +
+                " color: #3A308CFF; }" +
+                ".math-solved {" +
+                "  color: #1E9035FF;" +
+                "  font-weight: 700;" +
+                "  font-style: italic;" +
+                "}");
+
+In this example, the values defined in the new style sheet overwrote the values of the default built-in style sheet.
+Note that there is an order of precedence between the different ways to adjust the style: the tool controller properties always override the theme, which overrides the default stylesheet.
+How to apply style a posteriori
+
+Depending on the Content Part type, it is possible to apply style on some content after it has been written or typeset:
+
+    Select the content either with the lasso selector or as an entire block.
+    Call the editor applyStyle method with the corresponding selection/block and the CSS style properties to apply.
+
+iink SDK CSS built-in classes and properties
+
+The full reference of supported classes and properties can be found in the styling reference.

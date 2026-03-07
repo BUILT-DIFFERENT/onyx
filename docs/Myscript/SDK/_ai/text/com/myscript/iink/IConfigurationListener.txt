@@ -1,0 +1,44 @@
+SOURCE: com/myscript/iink/IConfigurationListener.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Interface IConfigurationListener
+
+public interface IConfigurationListener
+
+The listener interface for receiving configuration change events.
+
+See Also:
+
+Configuration.addListener(IConfigurationListener) [link: Configuration.html#addListener(com.myscript.iink.IConfigurationListener)]
+
+Configuration.removeListener(IConfigurationListener) [link: Configuration.html#removeListener(com.myscript.iink.IConfigurationListener)]
+
+Method Summary
+
+All Methods Instance Methods Abstract Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+void
+
+configurationChanged [link: #configurationChanged(com.myscript.iink.Configuration)] (@NotNull Configuration [link: Configuration.html] configuration)
+
+Invoked when the configuration has changed.
+
+Method Details
+
+configurationChanged
+
+void configurationChanged (@NotNull
+@NotNull Configuration [link: Configuration.html] configuration)
+
+Invoked when the configuration has changed.
+
+Parameters:
+
+configuration - the configuration that has changed.

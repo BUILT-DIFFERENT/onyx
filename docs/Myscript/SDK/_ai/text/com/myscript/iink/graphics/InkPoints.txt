@@ -1,0 +1,162 @@
+SOURCE: com/myscript/iink/graphics/InkPoints.html
+
+Package com.myscript.iink.graphics [link: package-summary.html]
+
+Class InkPoints
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.graphics.InkPoints
+
+public class InkPoints
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Represents ink points.
+
+Since:
+
+3.1
+
+Field Summary
+
+Fields
+
+Modifier and Type
+
+Field
+
+Description
+
+float[]
+
+f [link: #f]
+
+The points normalized pressures, in [0,1].
+
+float[]
+
+orientations [link: #orientations]
+
+The points orientations in radians, or empty if none.
+
+long[]
+
+t [link: #t]
+
+The points timestamps in ms since Unix EPOCH.
+
+float[]
+
+tilts [link: #tilts]
+
+The points tilts in radians, or empty if none.
+
+float[]
+
+x [link: #x]
+
+The points x coordinates.
+
+float[]
+
+y [link: #y]
+
+The points y coordinates.
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+InkPoints [link: #%3Cinit%3E(float%5B%5D,float%5B%5D,long%5B%5D,float%5B%5D,float%5B%5D,float%5B%5D)] (float[] x,
+float[] y,
+long[] t,
+float[] f,
+float[] tilts,
+float[] orientations)
+
+Constructs an InkPoints
+
+Method Summary
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Field Details
+
+x
+
+public float[] x
+
+The points x coordinates.
+
+y
+
+public float[] y
+
+The points y coordinates.
+
+t
+
+public long[] t
+
+The points timestamps in ms since Unix EPOCH.
+
+f
+
+public float[] f
+
+The points normalized pressures, in [0,1].
+
+tilts
+
+public float[] tilts
+
+The points tilts in radians, or empty if none.
+0 is perpendicular, Pi/2 if flat on screen.
+
+Since:
+
+4.0
+
+orientations
+
+public float[] orientations
+
+The points orientations in radians, or empty if none.
+0 is pointing up, -Pi/2 is left, Pi/2 is right, +/-Pi is down.
+
+Since:
+
+4.0
+
+Constructor Details
+
+InkPoints
+
+public InkPoints (float[] x,
+float[] y,
+long[] t,
+float[] f,
+float[] tilts,
+float[] orientations)
+
+Constructs an InkPoints
+
+Parameters:
+
+x - the x coordinates.
+
+y - the y coordinates.
+
+t - the timestamps in ms since Unix EPOCH, or -1 .
+
+f - the normalized pressures.
+
+tilts - the tilts in radians.
+
+orientations - the orientations in radians.

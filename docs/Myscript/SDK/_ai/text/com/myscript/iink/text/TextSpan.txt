@@ -1,0 +1,152 @@
+SOURCE: com/myscript/iink/text/TextSpan.html
+
+Package com.myscript.iink.text [link: package-summary.html]
+
+Class TextSpan
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.text.TextSpan
+
+public final class TextSpan
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Describes glyphs spans in a label.
+
+Field Summary
+
+Fields
+
+Modifier and Type
+
+Field
+
+Description
+
+final int
+
+beginPosition [link: #beginPosition]
+
+The begin position in a label of this span, in glyph (i.e.
+
+final int
+
+endPosition [link: #endPosition]
+
+The end position in a label of this span, in glyph (i.e.
+
+final @NotNull Style [link: ../graphics/Style.html]
+
+style [link: #style]
+
+The style associated with this span.
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+TextSpan [link: #%3Cinit%3E(int,int,com.myscript.iink.graphics.Style)] (int beginPosition,
+int endPosition,
+@NotNull Style [link: ../graphics/Style.html] style)
+
+Constructor.
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+boolean
+
+equals [link: #equals(java.lang.Object)] (@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+int
+
+hashCode [link: #hashCode()]()
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Field Details
+
+beginPosition
+
+public final int beginPosition
+
+The begin position in a label of this span, in glyph (i.e. grapheme
+cluster) count.
+
+endPosition
+
+public final int endPosition
+
+The end position in a label of this span, in glyph (i.e. grapheme
+cluster) count.
+
+style
+
+@NotNull
+public final @NotNull Style [link: ../graphics/Style.html] style
+
+The style associated with this span.
+
+Constructor Details
+
+TextSpan
+
+public TextSpan (int beginPosition,
+int endPosition,
+@NotNull
+@NotNull Style [link: ../graphics/Style.html] style)
+
+Constructor.
+
+Parameters:
+
+beginPosition - begin index inside the span
+
+endPosition - end index inside the span
+
+style - the span style.
+
+Method Details
+
+equals
+
+public boolean equals (@Nullable
+@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+Overrides:
+
+equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+hashCode
+
+public int hashCode ()
+
+Overrides:
+
+hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+toString
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]

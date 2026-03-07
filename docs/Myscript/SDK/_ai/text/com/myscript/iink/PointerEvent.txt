@@ -1,0 +1,559 @@
+SOURCE: com/myscript/iink/PointerEvent.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class PointerEvent
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.PointerEvent
+
+public class PointerEvent
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Represents a pointer event.
+
+Field Summary
+
+Fields
+
+Modifier and Type
+
+Field
+
+Description
+
+@NotNull PointerEventType [link: PointerEventType.html]
+
+eventType [link: #eventType]
+
+The event type.
+
+float
+
+f [link: #f]
+
+The event normalized pressure, in [0,1].
+
+float
+
+orientation [link: #orientation]
+
+The event orientation in radians.
+
+int
+
+pointerId [link: #pointerId]
+
+The id of the pointer.
+
+@NotNull PointerType [link: PointerType.html]
+
+pointerType [link: #pointerType]
+
+The type of input pointer.
+
+long
+
+t [link: #t]
+
+The event timestamp in ms since Unix EPOCH, or -1 .
+
+float
+
+tilt [link: #tilt]
+
+The event tilt in radians.
+
+float
+
+x [link: #x]
+
+The event x coordinate.
+
+float
+
+y [link: #y]
+
+The event y coordinate.
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+PointerEvent [link: #%3Cinit%3E()]()
+
+Default constructor.
+
+PointerEvent [link: #%3Cinit%3E(com.myscript.iink.PointerEvent)] (@NotNull PointerEvent [link: PointerEvent.html] other)
+
+Copy constructor.
+
+PointerEvent [link: #%3Cinit%3E(com.myscript.iink.PointerEventType,float,float,long,float,float,float,com.myscript.iink.PointerType,int)] (@NotNull PointerEventType [link: PointerEventType.html] eventType,
+float x,
+float y,
+long t,
+float f,
+float tilt,
+float orientation,
+@NotNull PointerType [link: PointerType.html] pointerType,
+int pointerId)
+
+Constructs a PointerEvent
+
+PointerEvent [link: #%3Cinit%3E(com.myscript.iink.PointerEventType,float,float,long,float,com.myscript.iink.PointerType,int)] (@NotNull PointerEventType [link: PointerEventType.html] eventType,
+float x,
+float y,
+long t,
+float f,
+@NotNull PointerType [link: PointerType.html] pointerType,
+int pointerId)
+
+Constructs a PointerEvent
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+@NotNull PointerEvent [link: PointerEvent.html]
+
+down [link: #down(float,float)] (float x,
+float y)
+
+Update this event to a "down" event.
+
+boolean
+
+equals [link: #equals(java.lang.Object)] (@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+@NotNull PointerEvent [link: PointerEvent.html]
+
+force [link: #force(float)] (float f)
+
+Update the event pressure.
+
+final int
+
+hashCode [link: #hashCode()]()
+
+boolean
+
+hasTiltInfo [link: #hasTiltInfo()]()
+
+Check whether the event has tilt and orientation information.
+
+@NotNull PointerEvent [link: PointerEvent.html]
+
+id [link: #id(int)] (int pointerId)
+
+Update the event pointer id.
+
+@NotNull PointerEvent [link: PointerEvent.html]
+
+move [link: #move(float,float)] (float x,
+float y)
+
+Update this event to a "move" event.
+
+@NotNull PointerEvent [link: PointerEvent.html]
+
+orientationAngle [link: #orientationAngle(float)] (float orientation)
+
+Update the event orientation angle.
+
+@NotNull PointerEvent [link: PointerEvent.html]
+
+tiltAngle [link: #tiltAngle(float)] (float tilt)
+
+Update the event tilt angle.
+
+@NotNull PointerEvent [link: PointerEvent.html]
+
+timestamp [link: #timestamp(long)] (long t)
+
+Update the event timestamp.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+@NotNull PointerEvent [link: PointerEvent.html]
+
+type [link: #type(com.myscript.iink.PointerType)] (@NotNull PointerType [link: PointerType.html] pointerType)
+
+Update the event pointer type.
+
+@NotNull PointerEvent [link: PointerEvent.html]
+
+up [link: #up(float,float)] (float x,
+float y)
+
+Update this event to a "up" event.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Field Details
+
+eventType
+
+@NotNull
+public @NotNull PointerEventType [link: PointerEventType.html] eventType
+
+The event type.
+
+x
+
+public float x
+
+The event x coordinate.
+
+y
+
+public float y
+
+The event y coordinate.
+
+t
+
+public long t
+
+The event timestamp in ms since Unix EPOCH, or -1 .
+
+f
+
+public float f
+
+The event normalized pressure, in [0,1].
+
+tilt
+
+public float tilt
+
+The event tilt in radians.
+0 is perpendicular, Pi/2 if flat on screen.
+
+Since:
+
+4.0
+
+orientation
+
+public float orientation
+
+The event orientation in radians.
+0 is pointing up, -Pi/2 is left, Pi/2 is right, +/-Pi is down.
+
+Since:
+
+4.0
+
+pointerType
+
+@NotNull
+public @NotNull PointerType [link: PointerType.html] pointerType
+
+The type of input pointer.
+
+pointerId
+
+public int pointerId
+
+The id of the pointer.
+
+Constructor Details
+
+PointerEvent
+
+public PointerEvent ()
+
+Default constructor.
+
+Construct a Pen Cancel event.
+
+PointerEvent
+
+public PointerEvent (@NotNull
+@NotNull PointerEvent [link: PointerEvent.html] other)
+
+Copy constructor.
+
+Parameters:
+
+other - the pointer event to copy.
+
+PointerEvent
+
+public PointerEvent (@NotNull
+@NotNull PointerEventType [link: PointerEventType.html] eventType,
+float x,
+float y,
+long t,
+float f,
+@NotNull
+@NotNull PointerType [link: PointerType.html] pointerType,
+int pointerId)
+
+Constructs a PointerEvent
+
+Parameters:
+
+eventType - the event type.
+
+x - the event x coordinate.
+
+y - the event y coordinate.
+
+t - the event timestamp in ms since Unix EPOCH, or -1 .
+
+f - the event pressure.
+
+pointerType - the event pointer type.
+
+pointerId - the event pointer identifier.
+
+PointerEvent
+
+public PointerEvent (@NotNull
+@NotNull PointerEventType [link: PointerEventType.html] eventType,
+float x,
+float y,
+long t,
+float f,
+float tilt,
+float orientation,
+@NotNull
+@NotNull PointerType [link: PointerType.html] pointerType,
+int pointerId)
+
+Constructs a PointerEvent
+
+Parameters:
+
+eventType - the event type.
+
+x - the event x coordinate.
+
+y - the event y coordinate.
+
+t - the event timestamp in ms since Unix EPOCH, or -1 .
+
+f - the event pressure.
+
+tilt - the event tilt in radians.
+
+orientation - the event orientation in radians.
+
+pointerType - the event pointer type.
+
+pointerId - the event pointer identifier.
+
+Since:
+
+4.0
+
+Method Details
+
+down
+
+@NotNull
+public @NotNull PointerEvent [link: PointerEvent.html] down (float x,
+float y)
+
+Update this event to a "down" event.
+
+Parameters:
+
+x - the x coordinate location.
+
+y - the y coordinate location.
+
+Returns:
+
+this.
+
+move
+
+@NotNull
+public @NotNull PointerEvent [link: PointerEvent.html] move (float x,
+float y)
+
+Update this event to a "move" event.
+
+Parameters:
+
+x - the x coordinate location.
+
+y - the y coordinate location.
+
+Returns:
+
+this.
+
+up
+
+@NotNull
+public @NotNull PointerEvent [link: PointerEvent.html] up (float x,
+float y)
+
+Update this event to a "up" event.
+
+Parameters:
+
+x - the x coordinate location.
+
+y - the y coordinate location.
+
+Returns:
+
+this.
+
+timestamp
+
+@NotNull
+public @NotNull PointerEvent [link: PointerEvent.html] timestamp (long t)
+
+Update the event timestamp.
+
+Parameters:
+
+t - the timestamp value.
+
+Returns:
+
+this.
+
+force
+
+@NotNull
+public @NotNull PointerEvent [link: PointerEvent.html] force (float f)
+
+Update the event pressure.
+
+Parameters:
+
+f - the pressure value.
+
+Returns:
+
+this.
+
+tiltAngle
+
+@NotNull
+public @NotNull PointerEvent [link: PointerEvent.html] tiltAngle (float tilt)
+
+Update the event tilt angle.
+
+Parameters:
+
+tilt - the tilt value.
+
+Returns:
+
+this.
+
+Since:
+
+4.0
+
+orientationAngle
+
+@NotNull
+public @NotNull PointerEvent [link: PointerEvent.html] orientationAngle (float orientation)
+
+Update the event orientation angle.
+
+Parameters:
+
+orientation - the orientation value.
+
+Returns:
+
+this.
+
+Since:
+
+4.0
+
+type
+
+@NotNull
+public @NotNull PointerEvent [link: PointerEvent.html] type (@NotNull
+@NotNull PointerType [link: PointerType.html] pointerType)
+
+Update the event pointer type.
+
+Parameters:
+
+pointerType - the pointer type.
+
+Returns:
+
+this.
+
+id
+
+@NotNull
+public @NotNull PointerEvent [link: PointerEvent.html] id (int pointerId)
+
+Update the event pointer id.
+
+Parameters:
+
+pointerId - the pointer id value.
+
+Returns:
+
+this.
+
+hasTiltInfo
+
+public boolean hasTiltInfo ()
+
+Check whether the event has tilt and orientation information.
+
+Returns:
+
+true if the event has tilt and orientation info, otherwise false .
+
+Since:
+
+4.0
+
+equals
+
+public boolean equals (@Nullable
+@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+Overrides:
+
+equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+hashCode
+
+public final int hashCode ()
+
+Overrides:
+
+hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+toString
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]

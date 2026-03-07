@@ -1,0 +1,80 @@
+Selection and block
+
+This page depicts how selections and blocks are managed by the Editor object within iink SDK.
+Selection and block objects
+
+Selection and block contents are both subdivisions of the content part:
+
+    A content selection is a subset of the content part that can be obtained by selecting a geometrical area within a content part thanks to the lasso selector tool.
+
+For the moment, the lasso selection is limited to “Diagram”, “Raw Content” and “Text Document” parts
+
+When the captured strokes representing the lasso are sent to the editor, iink SDK analyzes what they surround to determine a selection. This selection is represented by a ContentSelection object. If you implement the Canvas setDropShadow method, your end-users will get an immediate visual feedback on the selection with a dropshadow added on the selected items.
+
+Listening to the selectionChanged() event lets also you know that some selection changes have occurred and that you can retrieve the corresponding selection by calling getSelection on the editor.
+
+The editor has a set of utility methods to then retrieve information about the current selection, like the blocks included in it or intersecting with it, or the list of possible actions on it. In addition, the API lets you programmatically set a selection.
+For the full list of methods and how to use them, please refer to the API documentation.
+
+    A content block is a semantic subdivision of the content part, and may contain data and/or other blocks. It has a unique id and a defined type (“Text”, “Math”, “Diagram”, “Raw Content”, “Container”…). For example:
+        A “Math” part will only contain a single block, hosting the math content itself.
+        A “Text Document” part will be more complex, as it can host text paragraphs, math equations, diagrams and drawings, arranged in a complex layout, sometimes one after the other, sometimes alongside one another. This is where “Container” blocks can be used to semantically group sub-blocks together.
+
+    The following illustration shows how these different blocks relate together inside their parent parts:
+
+Package“Text” part“Math” part“Text Document” part012get root block“Text”“Math”“Container”blocks“Math”“Text”get part“Diagram”BlockhierarchySerialization
+
+When diagram.enable-sub-blocks is set to true in the configuration, “Diagram” blocks contain sub blocks of type “Text”, “Node”, “Edge” or “Polyedge” describing the content of the diagram.
+
+In iink SDK, a content block is represented by a ContentBlock object that inherits from the ContentSelection object.
+To reduce the need for use/try-with-resources/close calls on your blocks, you can handle block IDs rather than ContentBlock objects to simplify your AutoCloseable object lifecycle
+
+    Both content block and selection objects have a bounding box that can be retrieved with the editor getBox method. The part they belong to is accessible with the getPart method.
+
+Operations common to blocks and selections
+
+Some operations are possible at a finer granularity than the part, with either blocks or selections. The following sections list those main operations:
+Retrieving possible actions
+
+For an ease of integration, you can interrogate the editor to get the supported format/type/state related to the actions you intend to apply on the selection/block.
+
+    For instance, to determine whether an export action is possible, you can use the getSupportedExportMimeTypes().
+    When dealing with a lasso selection, the getAvailableSelectionModes() method lets you retrieve the selection modes of the active selection associated with the editor. You can then choose which selection mode to apply on it with the setSelectionMode(). This can be useful, for instance, in the case of a lasso selection to choose between a lasso outline, item handles (in case the selection is made of a single item), or resize handles.
+
+For further details, you can refer to the Demo example implementation of selection and block context menus.
+Checking a block hierarchy or a selection validity
+
+It is important to note that a block hierarchy or a content selection is only valid at a given point in time. For instance, in the case of a Text Document, inserting new blocks, removing some text using a gesture, are some examples of events that may invalidate the block hierarchy or the content selection you previously retrieved. So, to check an object validity, call its isValid() method. Alternatively, listening to contentChanged() and selectionChanged() events using an IEditorListener on your Editor object will provide hints that your blocks/selection may have become invalid.
+Transformation operations
+
+The editor lets you apply geometrical transformations like scaling or translation on selected content. Not all transformations are permitted on any block or selection. So, you can check whether a transformation is allowed with getTransformStatus() before actually applying it with the transform() method.
+Other operations
+
+    convert() lets you convert the ink inside a given block or selection.
+    export_() lets you export the content of a selection or of a specific block, including its children.
+    copy() lets you copy a block or selection content into the internal clipboard. You can then paste it at a given location using paste(), much like you would add a new block. Text copy and paste works from various text block sources (“Text”, “Diagram” or “Raw Content”) to either a “Text Document” or a “Text” part. In the latter case, the part must be empty before performing the paste.
+    erase() lets you remove the content selection or non-root block from the editor part.
+    isEmpty() lets you check whether this selection/block is empty or invalid. It also returns true when the editor is not associated with a part.
+    setTextFormat() lets you programmatically format the text blocks that are contained in the selection, to paragraph (P), headings of level 1 (H1) or level 2 (H2), like you would do with an underline decoration gestures. The corresponding CSS styling class is applied. The getSupportedTextFormats method allows you to retrieve the available formats.
+
+Block specific operations
+Navigating the block hierarchy
+
+Any part you create contains a root block. The different blocks form a hierarchy, which root can be obtained by calling the getRootBlock() method on the parent part. Each block, in turn, has a getChildren() method that will return its own children, if any, and a getParent() one that will return its parent.
+Block addition
+
+The editor offers methods for adding blocks.
+
+    The addBlock() method adds a new block at a given location in compatible parts, as a way to import content (only “Text Document” parts support this feature as of now).
+    A dedicated addImage() method allows you to insert an image as a “Drawing” block inside a “Text Document” part or as an “Image” block inside a “RawContent” part. It is possible to activate rotation of images in Raw Content parts with the “raw-content.rotation” property.
+
+Placeholder block
+
+A placeholder block is designed to provide integrators with a method to utilize the UI features of the iink SDK inside a “RawContent” part to manage content that is not inherently recognized by iink. It is essentially an image that can be accurately positioned and linked with specific metadata. So, this block is defined by its exact position, image, interactivity options, and custom metadata, allowing you to store relevant information within your document.
+You should avoid mixing keyboard input with placeholders and converted text, as both will be edited differently
+
+You can use the PlaceholderController object associated to the Editor to add and manipulate placeholders within a “Raw Content” part. The PlaceholderInteractivityOptions object specifies the capabilities for interacting with the placeholder.
+Other block operation
+
+    hitBlock() lets you know the top-most block at a given location, if there is any. It makes it possible for example to know which block is tapped or pressed by a user.
+

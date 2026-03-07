@@ -1,0 +1,161 @@
+Custom inking
+
+This page explains how to customize iink SDK stroke rendering.
+Terminology
+
+In MyScript terminology, “inking” refers to the process of rendering ink strokes. An inking algorithm typically processes the coordinates of the points of a stroke, their associated pressure or timestamp information, as well as stroke styling such as color or width. It consists of two main steps:
+
+    computation of the envelope (i.e. the geometry of the stroke),
+    drawing of the stroke itself.
+
+While iink SDK comes with its own built-in inking, the toolkit is flexible enough to let you customize these steps.
+Use cases
+
+If you are integrating iink SDK into an application that already implements its own inking capabilities, you may want to make sure that the same rendering algorithm is used for both iink- and application-managed content.
+
+MyScript iink SDK can be tuned to address the following use cases:
+
+    You just want to influence the shape of the strokes to render and let iink SDK draw the strokes by stroking or filling the envelop you define. In this case, all you have to do is to implement and register your own stroker.
+    You additionally want to draw the strokes by yourself, for instance if you need to draw textured strokes or if you rely on a rendering technology like OpenGL and want to use particles instead of filling an envelope. In this case, in addition to implement your own stroker (it is required by iink SDK, as explained in the following section), you will need to store information into generated path to be able to use them to render the strokes by yourself.
+
+This inking customization should be considered with special care as modifying the default implementation might reduce drastically the rendering performance.
+Requirements from iink SDK
+
+Independently from the amount of customization you intend to apply to stroke rendering, iink SDK needs to know as precisely as possible the envelope of the strokes you intend to draw.
+
+An envelope corresponds to the geometrical shape of the stroke, as shown in the following illustration:
+StrokeEnvelop
+
+Among other things, knowing the envelops of the strokes lets iink SDK optimize rendering operations (by computing areas to refresh following changes in the model), know which items to render at a given point in time and manage the geometry of selections. A precise envelop definition is key to get good results.
+How to use the API
+
+To define your own stroker, you should:
+
+    Implement the IStroker interface: its stroke and isFill methods respectively let you return the envelop of a given stroke as an IPath instance and choose whether iink SDK shall fill or just stroke the resulting path.
+    Implement the IStrokerFactory interface: the createStroker() method will let you return an instance of your custom stroker.
+    Instantiate your custom stroker factory and register it with the IRenderer interface registerStroker() method (you can unregister it later using unregisterStroker() method on the IRenderer interface ). This method will also let you specify the name of the brush corresponding to your stroker.
+    Use the brush name you defined to style the ink.
+
+To render the strokes by yourself, you may need to have your own implementation of IPath to store stroke information provided via #{strokeMethodName} method of the IStroker interface. Data stored within IPath objects will then be available in ICanvas drawPath() method for you to draw the stroke in a custom way.
+A platform-specific implementation of the IPath interface is provided for each target platform via the UI Reference Implementation. You may adapt or subclass it to store the stroke information.
+
+Note that depending on whether you close or not your paths and the value you return with isFill(), you will define a different envelope. The followingfigure shows in black the resulting envelope depending on the options and the state of the path in red:
+Rendering(fill = true)PathRendering(fill = false)w/2
+
+As you can see, if you choose to return false in the isFill() method, iink SDK will consider a larger envelope than what is strictly returned by your path, as it will take into account the pixel width of the stroke (width parameter of the method) to stroke the path.
+Code snippets
+
+For the sake of example, this section shows how to implement a very basic inking algorithm based on “line to” instructions. If you are interested to develop your own inking, you will likely implement something both smarter and better looking, but the structure of the code will be similar.
+Custom stroker
+
+Let’s start by implementing the CustomStroker class:
+
+public class CustomStroker implements IStroker
+{
+    @Override
+    public boolean isFill()
+    {
+        return false;
+    }
+
+    @Override
+    public void stroke(InkPoint[] input, float width, float pixelSize, IPath output)
+    {
+        output.moveTo(input[0].x, input[0].y);
+        for (int i=1; i< input.length; i++)
+        {
+            output.lineTo(input[i].x, input[i].y);
+        }
+    }
+}
+
+Here, the code uses the fact that a non-filled, non-closed path will be stroked by iink SDK to simplify the code. In most cases, however, you will want to manage closed paths to create a beautiful shape for the stroke. The InkPoint structure contains all required information about the points of the stroke.
+
+Now, let’s implement the custom stroker factory:
+
+public class CustomStrokerFactory implements IStrokerFactory
+{
+    @Override
+    public IStroker createStroker()
+    {
+        return new CustomStroker();
+    }
+}
+
+All you have to do now is to instantiate your factory and register it to the renderer with an appropriate brush name:
+
+CustomStrokerFactory strokerFactory = new CustomStrokerFactory();
+renderer.registerStroker("LineToBrush", strokerFactory);
+
+Finally, you can set the stroker in the theme of the editor:
+
+editor.setTheme("stroke { -myscript-pen-brush: LineToBrush; }");
+
+That’s it! From now on, iink SDK will rely on your custom stroker to render ink strokes!
+Custom drawing of the strokes
+
+First, implement a custom stroker as described above to generate the paths. As explained, iink SDK requires the stroke envelopes for a variety of tasks even if you draw the strokes by yourself.
+
+Next, create your own implementation of IPath (you can modify or subclass the one provided by MyScript) so that you can use it to store information like point coordinates, pressure, etc. that you will need to render your stroke later. Via its internal cache, iink SDK will preserve this information for you and properly free the memory if the strokes are removed from the model.
+
+Here is a possible implementation, based on the Path class from the UI reference implementation:
+
+public class CustomPath extends Path
+{
+    private InkPoint[] inkPoints;
+    private float width;
+
+    public float getWidth()
+    {
+        return width;
+    }
+
+    public void setWidth(float width)
+    {
+        this.width = width;
+    }
+
+    public InkPoint[] getInkPoints()
+    {
+        return inkPoints;
+    }
+
+    public void setInkPoints(InkPoint[] inkPoints)
+    {
+        this.inkPoints = inkPoints;
+    }
+}
+
+You can now update your custom stroker implementation to store the information into the path:
+
+public void stroke(InkPoint[] inkPoints, float width, float pixelSize, IPath output)
+{
+    CustomPath customPath = (CustomPath)output;
+    customPath.setInkPoints(inkPoints);
+    customPath.setWidth(width);
+}
+
+You need to update (or subclass) the provided ICanvas implementation to build your custom paths:
+
+@Override
+public final IPath createPath()
+{
+  return new CustomPath();
+}
+
+The drawPath() method of ICanvas will now be called with our paths and you can access your stored values and draw the stroke the way you want:
+
+public void drawPath(IPath path)
+{
+    // Retrieve stored information
+    CustomPath customPath = (CustomPath)path;
+    InkPoint[] inkPoints = customPath.getInkPoints();
+    float width = customPath.getWidth();
+
+    // Custom drawing
+    ...
+}
+
+Drawing of textured strokes
+
+If you want to support textured strokes, you can implement some additional brushes using dedicated APIs. For more details, refer to the Rendering page.

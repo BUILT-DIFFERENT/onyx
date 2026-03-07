@@ -1,0 +1,219 @@
+Result, import and export
+
+This page drives you through available possibilities to import content into iink SDK and to export content or recognition result for external usage.
+MyScript iink SDK differentiates serialization/deserialization (storage of the full content of the model in a fast and space efficient manner for future reuse by the SDK) and import/export (as a way to exchange iink content with other applications).
+Importing content
+Only integrations based on rendering-driven interactivity with Editors currently support content import. Import is not available with OffscreenEditors and has no sense with Recognizers.
+Import into a block
+This part describes import behavior for all cases but text data import from JIIX, which is described here.
+
+You can import data into content blocks. For example, the following code will import the “Hello iink SDK” text string into a “Text” part:
+
+ContentPart textPart = ... // Get the part
+editor.setPart(textPart);
+editor.import_(MimeType.TEXT, "Hello iink SDK", editor.getRootBlock());
+
+In this case, you could have omitted to specify the block. As the part only hosts a single root block, iink SDK can figure by itself where to import the content:
+
+editor.import_(MimeType.TEXT, "Hello iink SDK", null);
+
+For parts that can host multiple blocks, such as “Text Document” parts, you need to explicitly specify the target block. If it does not exist yet, you can call addBlock() and directly pass the data to import.
+
+The list of supported mime types for a given block can be obtained by calling getSupportedImportMimeTypes() on the editor. For instance:
+
+MimeType[] supportedMimeTypes = editor.getSupportedImportMimeTypes(editor.getRootBlock());
+
+Importing content is “destructive”: Pre-existing content will be cleared and replaced (except for text data import from JIIX).
+Text JIIX import
+
+When it comes to textual data, JIIX import is currently limited to text words or characters candidate changes. More import capabilities will be provided later on.
+
+To change the text candidates within a given Text, Raw Content or Diagram block:
+
+    Export the block to the JIIX format.
+    Replace the label of the target word (or character) with another word (or character) from the candidates list.
+    Import the modified JIIX data back to your block.
+
+Importing JIIX data is only possible if the target block was not modified since it was exported. For more information, refer to this page.
+JIIX import into Diagram and Raw Content parts
+
+When importing JIIX into “Diagram” and “Raw Content” parts, the performed action depends on the configured properties diagram.import.jiix.action and raw-content.import.jiix.action. So you should tune them according to your need:
+
+    When the property is set to update, iink changes the text candidates as described above. This is the default action for “Diagram” parts.
+
+    When the property is set to add or replace, iink imports the ink data: strokes, glyphs and primitives. Note that this does not reinject recognition results and iink triggers a new recognition.
+
+The remainder of this paragraph applies to add and replace actions. The difference between both actions, is that in the replace case, iink performs a clear, this removing all content from the part, before importing the ink data. The default action for “Raw Content” parts is add.
+
+In order to ease the import of the ink data at a given position, you can add a “transform” key into your jiix to apply this transform on the jiix data. The json syntax is “transform”: [xx, yx, tx, xy, yy, ty]. You can see the Transform API for details on the transform components.
+Only translate and positive scale are allowed in the transform for now, so xy and yx should be set to 0 and xx and yy should be > 0
+
+Let’s take as an example the following use case. Imagine you want to double the size of one text node into a “Diagram” part. Here is how to proceed:
+
+    Export the “Diagram” part to the JIIX format.
+
+...
+{
+   "type": "Text",
+   "parent": 183,
+   "id": 190,
+   "bounding-box": {
+    "x": 58.4949799,
+    "y": 31.677475,
+    "width": 10.9569321,
+    "height": 5.24174881
+   }, ...
+
+    Insert the transform object with a 2 scale factor (xx and yy) into the node you want to enlarge. The scale factor is done compared to (0,0) so don’t forget to compute the translate values (tx and ty) if you want your text to remain centered at the same location. Keeping the previous sample, the modified node would be:
+
+...
+{
+   "type": "Text",
+   "parent": 183,
+   "id": 190,
+   "transform": [ 2, 0, -63.973446 , 0, 2, -34.398349],
+   "bounding-box": {
+    "x": 58.4949799,
+    "y": 31.677475,
+    "width": 10.9569321,
+    "height": 5.24174881
+   },...
+
+    Import the modified JIIX data back to your part.
+
+When applying scale to typeset nodes, keep in mind that the typeset size might be modified by iink on further convert
+Import using a specific configuration
+
+You can temporarily “override” the current editor configuration for the need of a specific import. For instance, in the case of “Diagram” and “Raw Content” parts, it might be convenient to momentarily modify the current editor configuration for the need of changing the text candidates, without impacting your global or your editor configurations. You can perform such a specific import using the method illustrated by the following example:
+
+// Create an empty parameter set
+ParameterSet importParams = engine.createParameterSet();
+// Set the appropriate configuration to set import action for candidate update
+importParams.setString("raw-content.import.jiix.action", "update");
+// Import into your block the jiixString corresponding to your updated candidate
+editor.import_(MimeType.JIIX, jiixString, currentBlock, importParams);
+
+Raw ink import
+
+To import raw ink content, instantiate an editor and pass it an array of pointer events. Note that in this scenario, according to recognition and classification configurations, the recognition engine will automatically process the new strokes. This approach is documented in the Editing part of this guide.
+Exporting content or getting recognition result
+Make sure that recognition is complete
+
+Recognition can sometimes take a certain time to complete, especially if you send many strokes to the editor at once.
+
+If you want to make sure that you export the final recognition results, you have to call waitForIdle() before export_() or getResult().
+Select what you want to export or get
+
+Export operations with Editors are performed on content blocks or selections: For instance, this allows you to export a specific diagram from a Text Document part. With OffscreenEditors, they are performed on a set of items and with Recognizers recognition results can only be obtained on the full context.
+
+You can retrieve the list of supported export or result mime types by calling:
+
+// Editor
+MimeType[] supportedMimeTypes1 = editor.getSupportedImportMimeTypes(block);
+// OffscreenEditor
+MimeType[] supportedMimeTypes2 = offscreenEditor.getSupportedImportMimeTypes(itemids);
+// Recognizer
+MimeType[] supportedMimeTypes3 = recognizer.getSupportedResultMimeTypes();
+
+To export content, call the export_() method of the editor or offscreenEditors object, passing it the block, selection or item ids to export and the desired mime type:
+
+// Export a math block to MathML
+String result = editor.export_(mathBlock, MimeType.MATHML);
+// Export a text document to docx
+editor.export_(textDocBlock, new File("export.docx"), MimeType.DOCX, imagePainter);
+
+The API provides a convenience method that lets you omit the mime type if iink SDK is able to guess it unambiguously from the file extension:
+
+// Export a text document to docx
+editor.export_(block, new File("export.docx"), imagePainter);
+
+You can call the getFileExtensions() to get the extensions supported for a given mime type.
+
+To get the recognition result of recognizers, call the getResult() method of the recognizer object, passing it the desired mime type:
+
+// Export a math recognition to LaTeX
+String mathResult = mathRecognizer.getResult(MimeType.LATEX);
+// Export a text recognition to JIIX
+String textResult = textRecognizer.getResult(MimeType.JIIX);
+
+Image painter
+
+Certain formats require you to provide an object implementing the IImagePainter interface to let iink SDK generate images from the content. This is expectedly the case for png and jpeg exports, but also for formats such as docx.
+
+A default, ready-to-use, image painter implementation is provided by MyScript as part of the UI Reference Implementation.
+
+If the format does not require an image painter, you can provide the export method with a null pointer instead.
+To know which formats require an image painter, refer to this page.
+Textual vs. binary exports
+
+Textual format exports are returned as a string that can then be programmatically manipulated. Binary formats, on the other hand, are saved as files on the disk at a location you can specify.
+
+IImagePainter imagePainter = new ImagePainter();
+imagePainter.setImageLoader(editorView.getImageLoader());
+
+editor.export_(editor.getRootBlock(), new File("out/export.docx"), imagePainter);
+
+You can call the isTextual() method of a MimeType object to know whether a format is textual or binary.
+Apply a specific configuration
+
+Some export functions let you temporarily “override” the current editor configuration for the need of a specific export. This is useful if you want to tune the export parameters (like the type of information to export to JIIX) without impacting your global or your editor configurations.
+
+The following example shows how you can export a block recognition result as JIIX without including original ink information:
+
+// Create an empty parameter set
+ParameterSet params = engine.createParameterSet();
+// Set the appropriate configuration to exclude strokes from the export
+params.setBoolean("export.jiix.strokes", false);
+// Export a block with the new configuration
+String jiix = editor.export_(block, MimeType.JIIX, params);
+
+Apply an image export configuration
+
+Image export can apply to a part only of the page or more than the chosen block extent. You can also choose whether guides appear or not in the image. For details about the image export properties, refer to the configuration page
+
+In order to export image, an image painter object is necessary as described in this section
+
+The following example illustrates the export as a PNG image of a viewport. The guides are visible:
+
+// Create an empty parameter set
+ParameterSet imageParams = engine.createParameterSet();
+
+// Set the appropriate configuration to tune the viewport to export
+float originPx = 0f;
+float widthPx = 100f;
+float heightPx = 200f;
+imageParams.setNumber("export.image.viewport.x", originPx );
+imageParams.setNumber("export.image.viewport.y", originPx );
+imageParams.setNumber("export.image.viewport.width", widthPx);
+imageParams.setNumber("export.image.viewport.height", heightPx);
+
+// Set the appropriate configuration to enable the guides into the exported image
+imageParams.setBoolean("export.image.guides", true);
+
+// Create the image painter
+ImagePainter imagePainter = new ImagePainter();
+imagePainter.setImageLoader(editorView.getImageLoader());
+
+// Export the image with the customised parameters
+editor.export_(editor.getRootBlock(), new File("out/ImageFileName.png"), MimeType.PNG, imagePainter,imageParams);
+
+Supported imports/exports
+Exchange format
+
+MyScript iink SDK defines its own format, called JIIX (short for JSON Interactive Ink eXchange format).
+
+This format provides a consistent representation of the different types of content that are supported, covering semantics, positions, styling and ink-related aspects.
+
+Thanks to its JSON syntax, it stays readable and can be easily parsed, making it appropriate to exchange information with the host application or as a transitory representation to support custom export formats.
+The complete JIIX reference can be found here.
+Other formats
+
+MyScript iink SDK allows you to import and export some commonly used formats, such as LaTeX for math content or Docx in the case of Text Document blocks. The full list can be found here.
+
+The next part of the guide will talk about zooming and scrolling.
+Useful links
+
+    Working with content blocks
+    Supported import/export formats
+    JIIX format reference
+

@@ -1,65 +1,37 @@
-# Search Index Contracts (Handwriting + PDF OCR)
+# Search Text Contracts (Handwriting + PDF)
 
-Date: 2026-02-24
+Date: 2026-03-07 (updated)
 
 ## Scope
 
-This document defines the cross-surface contract for persisted search tokens generated from:
+Defines the cross-surface contract for search text pushed by Android to Convex.
 
-- Handwriting recognition (`source = handwriting`)
-- PDF OCR extraction (`source = pdfOcr`)
+## Architecture
 
-Runtime indexing/sync is intentionally out of scope for this wave. This is schema + fixture groundwork.
+- Android pushes recognized handwriting text (MyScript IInk) and PDF-extracted text (PDFBox) to Convex via `search.upsertPageText`.
+- Convex stores this in the `searchTexts` table.
+- Web/global search uses Convex full-text search indexes (`search_content` on `recognizedText`, `search_pdf_content` on `pdfText`).
 
-## Canonical Contract Sources
+## Canonical Sources
 
-- Validation schema: `C:/onyx/packages/validation/src/schemas/searchIndexToken.ts`
-- Convex table: `C:/onyx/convex/schema.ts` (`searchIndexTokens`)
-- Fixtures: `C:/onyx/tests/contracts/fixtures/search-index-*.fixture.json`
+- Convex table: `searchTexts` in `convex/schema.ts`
+- Validation schema: `packages/validation/src/schemas/searchText.ts`
+- Fixture: `tests/contracts/fixtures/search-text.fixture.json`
+- API endpoint: `search.upsertPageText`, `search.global` in `V0-api.md` §3.10
 
 ## Contract Shape
 
-Shared required fields:
+| Field | Type | Notes |
+|---|---|---|
+| notebookId | string | FK → notebooks |
+| pageId | string | FK → pages |
+| recognizedText | string? | IInk HWR output |
+| pdfText | string? | PDFBox extracted text |
+| source | enum | `"handwriting"` \| `"pdfText"` \| `"both"` |
+| extractedAt | number | Unix ms |
 
-- `tokenId`, `noteId`, `pageId`
-- `token`, `displayText?`
-- `source`: `handwriting | pdfOcr`
-- `bounds`: `{ x, y, width, height, rotationDeg? }`
-- `indexVersion`: positive integer schema version
-- `mergeKey`: deterministic dedupe key
-- `sourceRevision`: non-negative integer revision from upstream source
-- `sourceUpdatedAt`, `indexedAt`
-- `payload` (source-specific)
-- `deletedAt?`
+## Notes
 
-Source-specific payloads:
-
-- `handwriting` payload:
-  - `recognitionProvider?`: `myscript | mlkit | other`
-  - `confidence?`: `0..1`
-  - `strokeIds?`: UUID list
-- `pdfOcr` payload:
-  - `pdfAssetId`
-  - `pdfPageNo` (non-negative)
-  - `ocrEngine?`: `pdfium | mlkit | tesseract | other`
-  - `confidence?`: `0..1`
-
-## Merge / Conflict Policy (Contract-Level)
-
-Use `mergeKey` as the logical identity for dedupe and merge.
-
-When two entries have the same `mergeKey`:
-
-1. Higher `sourceRevision` wins.
-2. If `sourceRevision` ties, higher `sourceUpdatedAt` wins.
-3. If still tied, higher `indexedAt` wins.
-
-Deletion semantics:
-
-- Tombstones are represented via `deletedAt`.
-- A non-null `deletedAt` record wins over older non-deleted records for the same `mergeKey`.
-
-## Web Fallback Expectations
-
-Web clients that do not yet consume this table should ignore unknown token metadata without failing note/page decode.
-Search UI must not assume availability of this index until runtime sync/query work lands.
+- Search deduplication is handled by upsert semantics on (notebookId, pageId) — not by token-level `mergeKey`. The old token-level model was removed.
+- Both `recognizedText` and `pdfText` are indexed for full-text search via separate Convex search indexes.
+- `search.global` queries both indexes and merges results by relevance + recency.

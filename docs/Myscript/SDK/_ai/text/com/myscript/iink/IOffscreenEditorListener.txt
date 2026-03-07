@@ -1,0 +1,142 @@
+SOURCE: com/myscript/iink/IOffscreenEditorListener.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Interface IOffscreenEditorListener
+
+public interface IOffscreenEditorListener
+
+The listener interface for receiving offscreen editor events.
+
+Since:
+
+2.1
+
+See Also:
+
+OffscreenEditor.addListener(IOffscreenEditorListener) [link: OffscreenEditor.html#addListener(com.myscript.iink.IOffscreenEditorListener)]
+
+OffscreenEditor.removeListener(IOffscreenEditorListener) [link: OffscreenEditor.html#removeListener(com.myscript.iink.IOffscreenEditorListener)]
+
+Method Summary
+
+All Methods Instance Methods Abstract Methods Default Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+void
+
+contentChanged [link: #contentChanged(com.myscript.iink.OffscreenEditor,java.lang.String%5B%5D)] (@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] blockIds)
+
+Invoked when the content has changed.
+
+default void
+
+contentChanged2 [link: #contentChanged2(com.myscript.iink.OffscreenEditor,java.lang.String%5B%5D,java.lang.String%5B%5D,java.lang.String%5B%5D)] (@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] addedBlockIds,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] removedBlockIds,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] updatedBlockIds)
+
+Invoked when the content has changed, with detailed information.
+
+void
+
+onError [link: #onError(com.myscript.iink.OffscreenEditor,java.lang.String,com.myscript.iink.EditorError,java.lang.String)] (@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId,
+@NotNull EditorError [link: EditorError.html] err,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] message)
+
+Invoked when an error has occurred.
+
+void
+
+partChanged [link: #partChanged(com.myscript.iink.OffscreenEditor)] (@NotNull OffscreenEditor [link: OffscreenEditor.html] editor)
+
+Invoked when the part associated with the listened offscreen editor has changed.
+
+Method Details
+
+partChanged
+
+void partChanged (@NotNull
+@NotNull OffscreenEditor [link: OffscreenEditor.html] editor)
+
+Invoked when the part associated with the listened offscreen editor has changed.
+
+Parameters:
+
+editor - the offscreen editor.
+
+See Also:
+
+OffscreenEditor.setPart(ContentPart) [link: OffscreenEditor.html#setPart(com.myscript.iink.ContentPart)]
+
+contentChanged
+
+void contentChanged (@NotNull
+@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] blockIds)
+
+Invoked when the content has changed.
+
+Parameters:
+
+editor - the offscreen editor.
+
+blockIds - the identifiers of the modified blocks.
+
+contentChanged2
+
+default void contentChanged2 (@NotNull
+@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] addedBlockIds,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] removedBlockIds,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] updatedBlockIds)
+
+Invoked when the content has changed, with detailed information.
+
+Parameters:
+
+editor - the offscreen editor.
+
+addedBlockIds - the identifiers of the added blocks.
+
+removedBlockIds - the identifiers of the removed blocks.
+
+updatedBlockIds - the identifiers of the updated blocks.
+
+Since:
+
+4.2
+
+onError
+
+void onError (@NotNull
+@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId,
+@NotNull
+@NotNull EditorError [link: EditorError.html] err,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] message)
+
+Invoked when an error has occurred.
+
+Parameters:
+
+editor - the offscreen editor.
+
+blockId - the identifier of the block on which this error has occurred.
+
+err - the error code corresponding to the error.
+
+message - the error message.

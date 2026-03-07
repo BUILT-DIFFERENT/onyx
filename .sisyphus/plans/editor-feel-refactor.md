@@ -4,7 +4,7 @@ The current Onyx Android app already has the difficult foundation pieces in plac
 
 The key product issue is that live ink, predicted ink, and committed ink are currently treated as different visual systems. This causes tip lag, ghost prediction artifacts, visible handoff differences on pen-up, and excessive smoothing/identity drift. For STEM/engineering students, preserving exact handwritten intent matters more than aggressive beautification.
 
-The intended outcome of this change is to make raw stylus input authoritative, keep the pen tip visually attached to the stylus, make prediction invisible, separate live-preview rendering from committed rendering, and restructure editor state ownership so future work (semantic recognition, sync, collaboration) can build on a simpler, more reliable editor core.
+The intended outcome of this change is to make raw stylus input authoritative, keep the pen tip visually attached to the stylus, make prediction invisible, separate live-preview rendering from committed rendering, and restructure editor state ownership so future work (semantic recognition, CRDT sync, collaboration) can build on a simpler, more reliable editor core.
 
 # Recommended Approach
 
@@ -32,6 +32,8 @@ Do not allow semantic or UI concerns to sit inside the hot path.
 - **MultiPageViewportController**: virtualization, page loading/unloading, stacked-page orchestration, but not low-level editing state.
 
 Single-page and stacked-page editor flows should share one page interaction model. Multi-page mode should be composition/virtualization over page controllers, not a second editor product.
+
+Note: all page content (strokes, objects) will ultimately be stored in per-page Yjs docs. During this milestone, the local Room stroke cache and Yjs integration are separate concerns — this plan focuses purely on rendering and interaction architecture.
 
 ## 2. Make raw stroke input authoritative
 
@@ -178,9 +180,9 @@ Goal: reduce centralization and unify single-page/multi-page editor behavior.
 
 Tasks:
 1. **EditorInteractionSession**: New class `ui/editor/EditorInteractionSession.kt` owns all transient editing state: active tool, hover state, transform state, lasso state, gesture state, active pointer/stroke, stylus-button state, temporary preview state. `NoteEditorViewModel` delegates to this session for anything not persisted. Verification: `NoteEditorViewModel` no longer directly holds `activeTool`, `hoverPosition`, `transformState`, or `lassoState` — these are accessed via `interactionSession`. Compile passes.
-2. **PageEditorController**: New class `ui/editor/PageEditorController.kt` owns page-scoped lifecycle: stroke list, object list, selection state, viewport (for single page), undo/redo stack for that page. Verification: a new `PageEditorControllerTest` exercises add-stroke → undo → redo → verify stroke list state.
+2. **PageEditorController**: New class `ui/editor/PageEditorController.kt` owns page-scoped lifecycle: stroke list, object list, selection state, viewport (for single page), undo/redo stack for that page (100 undo + 100 redo cap, FIFO eviction). Verification: a new `PageEditorControllerTest` exercises add-stroke → undo → redo → verify stroke list state.
 3. **MultiPageViewportController**: New class `ui/editor/MultiPageViewportController.kt` handles page virtualization, loading/unloading, stacked-page scroll position, page-to-screen coordinate mapping. It delegates per-page editing to `PageEditorController` instances. Verification: `NoteEditorScreen` stacked-page mode uses `MultiPageViewportController` and single-page mode uses a direct `PageEditorController`. Both compile and `android:lint` passes.
-4. **Split ViewModel**: `NoteEditorViewModel` reduced to: note-level state (note metadata, page list, current page index), persistence coordination, and navigation. Page-level editing state moves to `PageEditorController`. Verification: `NoteEditorViewModel` line count reduced by >30% from current. `NoteEditorViewModelTest` passes.
+4. **Split ViewModel**: `NoteEditorViewModel` reduced to: notebook-level state (notebook metadata, page list, current page index), persistence coordination, and navigation. Page-level editing state moves to `PageEditorController`. Verification: `NoteEditorViewModel` line count reduced by >30% from current. `NoteEditorViewModelTest` passes.
 5. **Unified page interaction**: Single-page and stacked-page modes share the same `PageEditorController` → `EditorInteractionSession` path. No separate touch routing or tool dispatch for the two modes. Verification: `InkCanvasTouchRoutingTest` runs identically for both single and stacked configurations (parameterized test).
 
 **Milestone 2 gate**: `bun run android:lint` passes. All 5 new/updated tests pass. `NoteEditorScreen` stacked-page and single-page modes both function correctly (create note → draw stroke → undo → switch page).

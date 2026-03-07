@@ -1,10 +1,23 @@
 import { z } from 'zod';
 
+/**
+ * PageObjectSchema — JSON-serializable API contract for Page Objects
+ * Aligned with PLAN.md §5.1, V0-api.md PageObjectType, and convex/schema.ts.
+ *
+ * Page objects live inside per-page Yjs docs (objects: Y.Map<objectId, ObjectData>).
+ * This schema is for web decode / contract testing.
+ *
+ * Changes from old schema:
+ * - noteId → notebookId
+ * - Removed `sync` block (CRDT replaces per-object conflict metadata)
+ * - Object types remain as discriminated union by `kind`
+ */
+
 const PageObjectBaseSchema = z
   .object({
     objectId: z.string().uuid(),
     pageId: z.string().uuid(),
-    noteId: z.string().uuid(),
+    notebookId: z.string().uuid(),
     zIndex: z.number().int(),
     x: z.number(),
     y: z.number(),
@@ -14,15 +27,6 @@ const PageObjectBaseSchema = z
     createdAt: z.number().int(),
     updatedAt: z.number().int(),
     deletedAt: z.number().int().nullable().optional(),
-    sync: z
-      .object({
-        objectRevision: z.number().int().nonnegative(),
-        parentRevision: z.number().int().nonnegative().optional(),
-        lastMutationId: z.string().min(1),
-        conflictPolicy: z.enum(['lastWriteWins', 'manualResolve']),
-      })
-      .strict()
-      .optional(),
   })
   .strict();
 

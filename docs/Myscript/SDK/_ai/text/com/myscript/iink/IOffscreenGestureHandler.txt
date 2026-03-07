@@ -1,0 +1,255 @@
+SOURCE: com/myscript/iink/IOffscreenGestureHandler.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Interface IOffscreenGestureHandler
+
+public interface IOffscreenGestureHandler
+
+The listener interface for handling offscreen gesture events.
+
+Since:
+
+2.1
+
+See Also:
+
+OffscreenEditor.setGestureHandler(IOffscreenGestureHandler) [link: OffscreenEditor.html#setGestureHandler(com.myscript.iink.IOffscreenGestureHandler)]
+
+OffscreenEditor.removeGestureHandler() [link: OffscreenEditor.html#removeGestureHandler()]
+
+Method Summary
+
+All Methods Instance Methods Abstract Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+@NotNull OffscreenGestureAction [link: OffscreenGestureAction.html]
+
+onInsert [link: #onInsert(com.myscript.iink.OffscreenEditor,java.lang.String,java.lang.String%5B%5D,java.lang.String%5B%5D)] (@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] before,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] after)
+
+Invoked when an insert gesture has been drawn between two portions of a text line,
+or at the beginning or end of a line.
+
+@NotNull OffscreenGestureAction [link: OffscreenGestureAction.html]
+
+onJoin [link: #onJoin(com.myscript.iink.OffscreenEditor,java.lang.String,java.lang.String%5B%5D,java.lang.String%5B%5D)] (@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] before,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] after)
+
+Invoked when a join gesture has been drawn between two portions of a text line,
+or at the beginning or end of a line.
+
+@NotNull OffscreenGestureAction [link: OffscreenGestureAction.html]
+
+onScratch [link: #onScratch(com.myscript.iink.OffscreenEditor,java.lang.String,java.lang.String%5B%5D)] (@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Invoked when a portion of text has been scratched.
+
+@NotNull OffscreenGestureAction [link: OffscreenGestureAction.html]
+
+onStrikethrough [link: #onStrikethrough(com.myscript.iink.OffscreenEditor,java.lang.String,java.lang.String%5B%5D)] (@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Invoked when a portion of text has been striked through.
+
+@NotNull OffscreenGestureAction [link: OffscreenGestureAction.html]
+
+onSurround [link: #onSurround(com.myscript.iink.OffscreenEditor,java.lang.String,java.lang.String%5B%5D)] (@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Invoked when a portion of text has been surrounded.
+
+@NotNull OffscreenGestureAction [link: OffscreenGestureAction.html]
+
+onUnderline [link: #onUnderline(com.myscript.iink.OffscreenEditor,java.lang.String,java.lang.String%5B%5D)] (@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Invoked when a portion of text has been underlined.
+
+Method Details
+
+onUnderline
+
+@NotNull
+@NotNull OffscreenGestureAction [link: OffscreenGestureAction.html] onUnderline (@NotNull
+@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Invoked when a portion of text has been underlined.
+
+To activate underline detection in a Raw Content part, add "underline" to the
+"raw-content.pen.gestures" configuration list.
+
+Parameters:
+
+editor - the offscreen editor.
+
+gestureStrokeId - the id of the gesture stroke.
+
+itemIds - the underlined portion of text.
+
+Returns:
+
+the OffscreenGestureAction to perform.
+
+onSurround
+
+@NotNull
+@NotNull OffscreenGestureAction [link: OffscreenGestureAction.html] onSurround (@NotNull
+@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Invoked when a portion of text has been surrounded.
+
+To activate surround detection in a Raw Content part, add "surround" to
+the "raw-content.pen.gestures" configuration list.
+
+Parameters:
+
+editor - the offscreen editor.
+
+gestureStrokeId - the id of the gesture stroke.
+
+itemIds - the surrounded portion of text.
+
+Returns:
+
+the OffscreenGestureAction to perform.
+
+onJoin
+
+@NotNull
+@NotNull OffscreenGestureAction [link: OffscreenGestureAction.html] onJoin (@NotNull
+@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] before,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] after)
+
+Invoked when a join gesture has been drawn between two portions of a text line,
+or at the beginning or end of a line.
+
+To activate join detection in a Raw Content part, add "join" to the
+"raw-content.pen.gestures" configuration list.
+
+Parameters:
+
+editor - the offscreen editor.
+
+gestureStrokeId - the id of the gesture stroke.
+
+before - the portion of the text line before the join gesture.
+
+after - the portion of the text line after the join gesture.
+
+Returns:
+
+the OffscreenGestureAction to perform.
+
+onInsert
+
+@NotNull
+@NotNull OffscreenGestureAction [link: OffscreenGestureAction.html] onInsert (@NotNull
+@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] before,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] after)
+
+Invoked when an insert gesture has been drawn between two portions of a text line,
+or at the beginning or end of a line.
+
+To activate insert detection in a Raw Content part, add "insert" to the
+"raw-content.pen.gestures" configuration list.
+
+Parameters:
+
+editor - the offscreen editor.
+
+gestureStrokeId - the id of the gesture stroke.
+
+before - the portion of the text line before the insert gesture.
+
+after - the portion of the text line after the insert gesture.
+
+Returns:
+
+the OffscreenGestureAction to perform.
+
+onStrikethrough
+
+@NotNull
+@NotNull OffscreenGestureAction [link: OffscreenGestureAction.html] onStrikethrough (@NotNull
+@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Invoked when a portion of text has been striked through.
+
+To activate strikethrough detection in a Raw Content part, add "strike-through"
+to the "raw-content.pen.gestures" configuration list.
+
+Parameters:
+
+editor - the offscreen editor.
+
+gestureStrokeId - the id of the gesture stroke.
+
+itemIds - the striked through portion of text.
+
+Returns:
+
+the OffscreenGestureAction to perform.
+
+onScratch
+
+@NotNull
+@NotNull OffscreenGestureAction [link: OffscreenGestureAction.html] onScratch (@NotNull
+@NotNull OffscreenEditor [link: OffscreenEditor.html] editor,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Invoked when a portion of text has been scratched.
+
+To activate scratch detection in a Raw Content part, add "scratch-out" to the
+"raw-content.pen.gestures" configuration list.
+
+Parameters:
+
+editor - the offscreen editor.
+
+gestureStrokeId - the id of the gesture stroke.
+
+itemIds - the scratched portion of text.
+
+Returns:
+
+the OffscreenGestureAction to perform.

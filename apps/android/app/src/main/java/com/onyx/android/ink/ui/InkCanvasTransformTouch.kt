@@ -19,13 +19,13 @@ import com.onyx.android.input.SingleFingerMode
 import kotlin.math.abs
 import kotlin.math.hypot
 
-private const val MIN_ZOOM_CHANGE = 0.85f
-private const val MAX_ZOOM_CHANGE = 1.18f
+private const val MIN_ZOOM_CHANGE = 0.6f
+private const val MAX_ZOOM_CHANGE = 1.8f
 private const val PAN_FLING_MIN_VELOCITY_PX_PER_SECOND = 250f
 private const val PAN_VELOCITY_UNITS_PER_SECOND = 1000
 private const val LASSO_ZOOM_EPSILON = 0.001f
 private const val MIN_ZOOM_FOR_PAGE_DELTA = 0.001f
-private const val TRANSFORM_SMOOTHING_ALPHA = 0.22f
+private const val TRANSFORM_SMOOTHING_ALPHA = 0.72f
 private const val PAN_NOISE_THRESHOLD_PX = 0.35f
 private const val ZOOM_NOISE_THRESHOLD = 0.0025f
 private const val MULTI_FINGER_TAP_TIMEOUT_MS = 260L
@@ -183,7 +183,11 @@ private fun startTransformGesture(
 ) {
     endSingleFingerPanGesture(view, interaction = null, runtime = runtime, fling = false)
     cancelActiveStrokes(view, event, runtime)
+    runtime.activeStrokeSmoothers.values.forEach { it.reset() }
+    runtime.activeStrokeSmoothers.clear()
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
+    runtime.lastPredictedStrokeInputs.clear()
+    runtime.lastPredictionFrameBucket = -1
     runtime.hoverPreviewState.hide()
     runtime.isTransforming = true
     view.setGestureRenderingActive(true)
@@ -342,7 +346,11 @@ private fun startSingleFingerPanGesture(
         fling = false,
     )
     cancelActiveStrokes(view, event, runtime)
+    runtime.activeStrokeSmoothers.values.forEach { it.reset() }
+    runtime.activeStrokeSmoothers.clear()
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
+    runtime.lastPredictedStrokeInputs.clear()
+    runtime.lastPredictionFrameBucket = -1
     runtime.hoverPreviewState.hide()
     val actionIndex = event.actionIndex
     runtime.isSingleFingerPanning = true

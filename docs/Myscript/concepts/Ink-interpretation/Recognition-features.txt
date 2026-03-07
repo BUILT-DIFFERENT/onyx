@@ -1,0 +1,51 @@
+Recognition features
+
+MyScript technology can recognize different types of content that are mainly: Text, Math and Shapes.
+Text
+Language support
+
+MyScript technology supports up to 72 languages in cursive, handprint and superimposed writing.
+
+Since recognition is inherently related to handwriting language, it is important to define it correctly from the beginning. It can be based on one of the following:
+
+    A specific language resource that restricts the semantic rules applied to interpreting the input based on the alphabet and grammar of the language. You can then add an extra resource to support mixed recognition of your primary language and English words. This secondary English resource will help the engine properly recognize English words mixed with the other language.
+
+    A mul_Latn resource that supports the equivalent of nine Latin languages resources: de_DE, en_US, en_GB, es_ES, es_MX, fr_FR, it_IT, nl_NL, pt_BR. Therefore, when you write text in a mix of these languages, the recognition engine only needs this resource to recognize your text.
+
+Recognition modes
+
+MyScript technology supports different handwriting modes to fit user needs.
+
+Whether you are targeting small-screen devices, tablets or interactive whiteboards and whatever your use case is, MyScript has a solution for you!
+
+MyScript iink SDK recognizes both kinds of handwriting, whether print or cursive:
+
+You are targeting small-screen devices, such as watches or smartphones? You want your user to be able to write without necessarily looking at his/her device? The superimposed mode might just be what you need!
+
+MyScript superimposed technology enables the recognition of letters, words or parts of words written over each other, without any explicit separation between consecutive fragments. The user can write one word fragment over the other or one character over the other, as depicted below. Spaces between two written words are automatically added, so there is no need for an explicit gesture.
+Suggestion list
+
+Even if MyScript technology is very reliable with handwriting recognition, a word or a character can still be incorrectly recognized sometimes. That’s where suggestion lists come into play!
+helloHellohellosheelshella
+
+Suggestions are alternative options for a given word or character. Meaning in case a recognized word or character is not what users intended to write, they can choose an alternative in a list of alike words or characters.
+Math
+
+With MyScript technology, users can smoothly handwrite mathematical operations and equations, edit them if needed, typeset them for a clean rendering and even solve them!
+2 × 3 =6
+
+Useful export options are also available: LaTeX, MathML, image, etc.
+
+MyScript technology obviously supports simple equations, but can also recognize complex equations and formulas.
+
+To see the complete list of supported symbols, rules and operations, read this section.
+Shapes
+
+MyScript technology can recognize shapes regardless of whether they are drawn in a single stroke or multiple strokes. It is also able to identify multiple shapes in a row. To check out which shape can be identified, consult this page.
+Diagram
+
+MyScript technology allows users to draw and annotate all kinds of diagrams. Editing gestures are supported and a clean rendering can be obtained very easily.
+
+In the above example, text has been centered and typeset, shapes have been aligned and made congruent.
+
+To explore the diagram features, take a look at this section.

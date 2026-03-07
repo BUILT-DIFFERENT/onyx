@@ -1,0 +1,141 @@
+kind	source	text	title	summary
+index	allclasses-index.html	text/allclasses-index.txt	All Classes and Interfaces (MyScript Interactive Ink 4.3.0 API)	Represents a changeset operation.
+index	allpackages-index.html	text/allpackages-index.txt	All Packages (MyScript Interactive Ink 4.3.0 API)	package index
+symbol	com/myscript/iink/ChangesetOperation.html	text/com/myscript/iink/ChangesetOperation.txt	ChangesetOperation (MyScript Interactive Ink 4.3.0 API)	Represents a changeset operation.
+symbol	com/myscript/iink/ChangesetOperationType.html	text/com/myscript/iink/ChangesetOperationType.txt	ChangesetOperationType (MyScript Interactive Ink 4.3.0 API)	Changeset operation types.
+symbol	com/myscript/iink/Configuration.html	text/com/myscript/iink/Configuration.txt	Configuration (MyScript Interactive Ink 4.3.0 API)	Represents the configuration values of the iink runtime environment.
+symbol	com/myscript/iink/ContentBlock.html	text/com/myscript/iink/ContentBlock.txt	ContentBlock (MyScript Interactive Ink 4.3.0 API)	Represents a block of content. The tree of content blocks provides the
+hierarchical structure of a content part into semantic units.
+symbol	com/myscript/iink/ContentPackage.html	text/com/myscript/iink/ContentPackage.txt	ContentPackage (MyScript Interactive Ink 4.3.0 API)	A package stores the user content as a sorted collection of parts.
+symbol	com/myscript/iink/ContentPart.html	text/com/myscript/iink/ContentPart.txt	ContentPart (MyScript Interactive Ink 4.3.0 API)	A part stores one content item. It is structured into several blocks that
+consist of semantically meaningful sub sections of content. A part can be
+interpreted as a hierarchy of blocks.
+symbol	com/myscript/iink/ContentSelection.html	text/com/myscript/iink/ContentSelection.txt	ContentSelection (MyScript Interactive Ink 4.3.0 API)	Represents a selection of content.
+symbol	com/myscript/iink/ContentSelectionMode.html	text/com/myscript/iink/ContentSelectionMode.txt	ContentSelectionMode (MyScript Interactive Ink 4.3.0 API)	Predefined Content Selection modes.
+symbol	com/myscript/iink/ConversionState.html	text/com/myscript/iink/ConversionState.txt	ConversionState (MyScript Interactive Ink 4.3.0 API)	Describes the state of the content for a given block.
+symbol	com/myscript/iink/Editor.html	text/com/myscript/iink/Editor.txt	Editor (MyScript Interactive Ink 4.3.0 API)	The Editor is the entry point to modify a part.
+An editor is associated with a single part.
+symbol	com/myscript/iink/EditorError.html	text/com/myscript/iink/EditorError.txt	EditorError (MyScript Interactive Ink 4.3.0 API)	Represents an Editor error code.
+symbol	com/myscript/iink/Engine.html	text/com/myscript/iink/Engine.txt	Engine (MyScript Interactive Ink 4.3.0 API)	Represents the iink runtime environment.
+symbol	com/myscript/iink/GestureAction.html	text/com/myscript/iink/GestureAction.txt	GestureAction (MyScript Interactive Ink 4.3.0 API)	Represents the action to be performed upon gesture detection.
+symbol	com/myscript/iink/graphics/Color.html	text/com/myscript/iink/graphics/Color.txt	Color (MyScript Interactive Ink 4.3.0 API)	Red green blue alpha color representation.
+symbol	com/myscript/iink/graphics/ExtraBrushStyle.html	text/com/myscript/iink/graphics/ExtraBrushStyle.txt	ExtraBrushStyle (MyScript Interactive Ink 4.3.0 API)	Extra brush style information for the rendering of strokes.
+symbol	com/myscript/iink/graphics/FillRule.html	text/com/myscript/iink/graphics/FillRule.txt	FillRule (MyScript Interactive Ink 4.3.0 API)	Defines the methods used to fill paths and polygons.
+symbol	com/myscript/iink/graphics/ICanvas.html	text/com/myscript/iink/graphics/ICanvas.txt	ICanvas (MyScript Interactive Ink 4.3.0 API)	The ICanvas interface receives drawing commands.
+symbol	com/myscript/iink/graphics/InkPoint.html	text/com/myscript/iink/graphics/InkPoint.txt	InkPoint (MyScript Interactive Ink 4.3.0 API)	Represents an ink point.
+symbol	com/myscript/iink/graphics/InkPoints.html	text/com/myscript/iink/graphics/InkPoints.txt	InkPoints (MyScript Interactive Ink 4.3.0 API)	Represents ink points.
+symbol	com/myscript/iink/graphics/IPath.html	text/com/myscript/iink/graphics/IPath.txt	IPath (MyScript Interactive Ink 4.3.0 API)	The path interface, for building a path as described in the SVG
+specifications.
+symbol	com/myscript/iink/graphics/IPath.OperationType.html	text/com/myscript/iink/graphics/IPath.OperationType.txt	IPath.OperationType (MyScript Interactive Ink 4.3.0 API)	Lists the path operation types.
+symbol	com/myscript/iink/graphics/IStroker.html	text/com/myscript/iink/graphics/IStroker.txt	IStroker (MyScript Interactive Ink 4.3.0 API)	The `IStroker` converts input points (touch, digital pen, etc) into a
+renderable stroke representation.
+symbol	com/myscript/iink/graphics/IStrokerFactory.html	text/com/myscript/iink/graphics/IStrokerFactory.txt	IStrokerFactory (MyScript Interactive Ink 4.3.0 API)	The `IStrokerFactory` is responsible to create `IStroker` instances.
+symbol	com/myscript/iink/graphics/LineCap.html	text/com/myscript/iink/graphics/LineCap.txt	LineCap (MyScript Interactive Ink 4.3.0 API)	Defines how the ends of segments are drawn.
+symbol	com/myscript/iink/graphics/LineJoin.html	text/com/myscript/iink/graphics/LineJoin.txt	LineJoin (MyScript Interactive Ink 4.3.0 API)	Defines how the joins between connected segments are drawn.
+package	com/myscript/iink/graphics/package-summary.html	text/com/myscript/iink/graphics/package-summary.txt	com.myscript.iink.graphics (MyScript Interactive Ink 4.3.0 API)	Red green blue alpha color representation.
+tree	com/myscript/iink/graphics/package-tree.html	text/com/myscript/iink/graphics/package-tree.txt	com.myscript.iink.graphics Class Hierarchy (MyScript Interactive Ink 4.3.0 API)	tree: package: com.myscript.iink.graphics
+symbol	com/myscript/iink/graphics/Point.html	text/com/myscript/iink/graphics/Point.txt	Point (MyScript Interactive Ink 4.3.0 API)	Represents a point on the 2D plane.
+symbol	com/myscript/iink/graphics/PointD.html	text/com/myscript/iink/graphics/PointD.txt	PointD (MyScript Interactive Ink 4.3.0 API)	Represents a high-precision point on the 2D plane.
+symbol	com/myscript/iink/graphics/Rectangle.html	text/com/myscript/iink/graphics/Rectangle.txt	Rectangle (MyScript Interactive Ink 4.3.0 API)	Represents an axis aligned rectangle on the 2D plane.
+symbol	com/myscript/iink/graphics/Style.html	text/com/myscript/iink/graphics/Style.txt	Style (MyScript Interactive Ink 4.3.0 API)	Style information for the rendering of strokes and text.
+symbol	com/myscript/iink/graphics/StyleFlag.html	text/com/myscript/iink/graphics/StyleFlag.txt	StyleFlag (MyScript Interactive Ink 4.3.0 API)	Style information flags.
+symbol	com/myscript/iink/graphics/Transform.html	text/com/myscript/iink/graphics/Transform.txt	Transform (MyScript Interactive Ink 4.3.0 API)	Represents a 2D affine transform, defined as a 3x3 matrix with an implicit
+third raw of <code>[ 0 0 1 ]</code>:
+
+<pre>
+[ x' ] [ xx yx tx ] [ x ] [ xx * x + yx * y + tx ]
+[ y' ] = [ xy yy ty ] * [ y ] = [ xy * x + yy * y + ty ]
+[ 1 ] [ 0 0 1 ] [ 1 ] [ 1 ]
+</pre>
+
+A transform is invalid if a value is infinite or not a number, or if the
+matrix is not invertible (when its determinant <code>(xx * yy - yx * xy)</code> is zero).
+symbol	com/myscript/iink/HandwritingGenerator.html	text/com/myscript/iink/HandwritingGenerator.txt	HandwritingGenerator (MyScript Interactive Ink 4.3.0 API)	Represents a handwriting generator that provides a way to generate
+handwritten content from source parameters (label, writing profile and formatting).
+symbol	com/myscript/iink/HandwritingGeneratorError.html	text/com/myscript/iink/HandwritingGeneratorError.txt	HandwritingGeneratorError (MyScript Interactive Ink 4.3.0 API)	Error code used in IHandwritingGeneratorListener::onError
+symbol	com/myscript/iink/HandwritingProfile.html	text/com/myscript/iink/HandwritingProfile.txt	HandwritingProfile (MyScript Interactive Ink 4.3.0 API)	Represents a handwriting profile used to generate content with a handwriting generator.
+symbol	com/myscript/iink/HandwritingProfileBuilder.html	text/com/myscript/iink/HandwritingProfileBuilder.txt	HandwritingProfileBuilder (MyScript Interactive Ink 4.3.0 API)	A builder for handwriting profiles.
+symbol	com/myscript/iink/HandwritingResult.html	text/com/myscript/iink/HandwritingResult.txt	HandwritingResult (MyScript Interactive Ink 4.3.0 API)	Represents a handwritten content generated by a handwriting generator.
+symbol	com/myscript/iink/HistoryManager.html	text/com/myscript/iink/HistoryManager.txt	HistoryManager (MyScript Interactive Ink 4.3.0 API)	A HistoryManager allows managing changesets for undo/redo.
+It is associated with an offscreen editor.
+symbol	com/myscript/iink/IConfigurationListener.html	text/com/myscript/iink/IConfigurationListener.txt	IConfigurationListener (MyScript Interactive Ink 4.3.0 API)	The listener interface for receiving configuration change events.
+symbol	com/myscript/iink/IEditorListener.html	text/com/myscript/iink/IEditorListener.txt	IEditorListener (MyScript Interactive Ink 4.3.0 API)	The listener interface for receiving editor events.
+symbol	com/myscript/iink/IGestureHandler.html	text/com/myscript/iink/IGestureHandler.txt	IGestureHandler (MyScript Interactive Ink 4.3.0 API)	The listener interface for handling gesture events.
+symbol	com/myscript/iink/IHandwritingGeneratorListener.html	text/com/myscript/iink/IHandwritingGeneratorListener.txt	IHandwritingGeneratorListener (MyScript Interactive Ink 4.3.0 API)	The listener interface for receiving handwriting generator events.
+symbol	com/myscript/iink/IImagePainter.html	text/com/myscript/iink/IImagePainter.txt	IImagePainter (MyScript Interactive Ink 4.3.0 API)	The ImagePainter converts rendering data into images in view
+for example for integration into docx exports.
+symbol	com/myscript/iink/IndentationLevels.html	text/com/myscript/iink/IndentationLevels.txt	IndentationLevels (MyScript Interactive Ink 4.3.0 API)	Represents a selection indentation levels.
+symbol	com/myscript/iink/IOffscreenEditorListener.html	text/com/myscript/iink/IOffscreenEditorListener.txt	IOffscreenEditorListener (MyScript Interactive Ink 4.3.0 API)	The listener interface for receiving offscreen editor events.
+symbol	com/myscript/iink/IOffscreenGestureHandler.html	text/com/myscript/iink/IOffscreenGestureHandler.txt	IOffscreenGestureHandler (MyScript Interactive Ink 4.3.0 API)	The listener interface for handling offscreen gesture events.
+symbol	com/myscript/iink/IRecognizerListener.html	text/com/myscript/iink/IRecognizerListener.txt	IRecognizerListener (MyScript Interactive Ink 4.3.0 API)	The listener interface for receiving recognizer events.
+symbol	com/myscript/iink/IRendererListener.html	text/com/myscript/iink/IRendererListener.txt	IRendererListener (MyScript Interactive Ink 4.3.0 API)	The listener interface for receiving renderer events.
+symbol	com/myscript/iink/IRenderTarget.html	text/com/myscript/iink/IRenderTarget.txt	IRenderTarget (MyScript Interactive Ink 4.3.0 API)	Represents a render target for the iink renderer.
+symbol	com/myscript/iink/IRenderTarget.LayerType.html	text/com/myscript/iink/IRenderTarget.LayerType.txt	IRenderTarget.LayerType (MyScript Interactive Ink 4.3.0 API)	Represents the type of a layer
+symbol	com/myscript/iink/ItemIdCombinationModifier.html	text/com/myscript/iink/ItemIdCombinationModifier.txt	ItemIdCombinationModifier (MyScript Interactive Ink 4.3.0 API)	Describes the combination modifiers.
+symbol	com/myscript/iink/ItemIdHelper.html	text/com/myscript/iink/ItemIdHelper.txt	ItemIdHelper (MyScript Interactive Ink 4.3.0 API)	An ItemIdHelper allows working with item ids (example: strokes, glyphs, primitives, objects).
+It is associated with an offscreen editor.
+symbol	com/myscript/iink/MathDiagnostic.html	text/com/myscript/iink/MathDiagnostic.txt	MathDiagnostic (MyScript Interactive Ink 4.3.0 API)	Error code returned by MathSolverController::getDiagnostic.
+symbol	com/myscript/iink/MathEvaluationVariables.html	text/com/myscript/iink/MathEvaluationVariables.txt	MathEvaluationVariables (MyScript Interactive Ink 4.3.0 API)	Represents a pair of input/output math variables used for evaluation.
+Example: for <code>"y = x^2 - 3x + 2"</code>, <code>getEvaluables()</code> returns <code>{ inputName = "x"; outputName = "y" }</code>.
+symbol	com/myscript/iink/MathExternalExpression.html	text/com/myscript/iink/MathExternalExpression.txt	MathExternalExpression (MyScript Interactive Ink 4.3.0 API)	The MathExternalExpression allows to manage an external math expression.
+symbol	com/myscript/iink/MathSolverController.html	text/com/myscript/iink/MathSolverController.txt	MathSolverController (MyScript Interactive Ink 4.3.0 API)	A MathSolverController allows to configure and run math operations on an editor.
+
+<p>
+Note: Following limitation applies: the part managed by the associated
+editor must be a "Raw Content" and the specified block must be a
+"Math" block.
+</p>
+symbol	com/myscript/iink/MathVariableDefinition.html	text/com/myscript/iink/MathVariableDefinition.txt	MathVariableDefinition (MyScript Interactive Ink 4.3.0 API)	Represents a math variable definition.
+symbol	com/myscript/iink/MathVariableDefinitionInfo.html	text/com/myscript/iink/MathVariableDefinitionInfo.txt	MathVariableDefinitionInfo (MyScript Interactive Ink 4.3.0 API)	Represents a math variable definition info.
+symbol	com/myscript/iink/MathVariableDefinitions.html	text/com/myscript/iink/MathVariableDefinitions.txt	MathVariableDefinitions (MyScript Interactive Ink 4.3.0 API)	Represents a math variable definitions.
+symbol	com/myscript/iink/MathVariableInfo.html	text/com/myscript/iink/MathVariableInfo.txt	MathVariableInfo (MyScript Interactive Ink 4.3.0 API)	Represents a math variable information, relative to a block or global.
+symbol	com/myscript/iink/MathVariableSourceType.html	text/com/myscript/iink/MathVariableSourceType.txt	MathVariableSourceType (MyScript Interactive Ink 4.3.0 API)	Enumerates the possible sources from which a variable can be defined.
+
+<p>
+Note: <code>API</code> variables have priority over <code>BLOCK</code> variables, which have priority over <code>API_GLOBAL</code> variables.
+<code>PREDEFINED</code> variables cannot be redefined.
+</p>
+symbol	com/myscript/iink/MimeType.html	text/com/myscript/iink/MimeType.txt	MimeType (MyScript Interactive Ink 4.3.0 API)	Represents a MIME type.
+symbol	com/myscript/iink/NativeLibrary.html	text/com/myscript/iink/NativeLibrary.txt	NativeLibrary (MyScript Interactive Ink 4.3.0 API)	Represents the iink native library.
+symbol	com/myscript/iink/NativeObjectHandle.html	text/com/myscript/iink/NativeObjectHandle.txt	NativeObjectHandle (MyScript Interactive Ink 4.3.0 API)	Allows requesting ownership of a native object.
+Object must be close() to release native resource.
+symbol	com/myscript/iink/OffscreenEditor.html	text/com/myscript/iink/OffscreenEditor.txt	OffscreenEditor (MyScript Interactive Ink 4.3.0 API)	The OffscreenEditor is a service allowing offscreen interactivity.
+It is the entry point to edit an associated part and receive change notifications.
+symbol	com/myscript/iink/OffscreenGestureAction.html	text/com/myscript/iink/OffscreenGestureAction.txt	OffscreenGestureAction (MyScript Interactive Ink 4.3.0 API)	Represents the action to be performed upon offscreen gesture detection.
+symbol	com/myscript/iink/PackageOpenOption.html	text/com/myscript/iink/PackageOpenOption.txt	PackageOpenOption (MyScript Interactive Ink 4.3.0 API)	Describes the different options given when opening a package.
+package	com/myscript/iink/package-summary.html	text/com/myscript/iink/package-summary.txt	com.myscript.iink (MyScript Interactive Ink 4.3.0 API)	Represents a changeset operation.
+tree	com/myscript/iink/package-tree.html	text/com/myscript/iink/package-tree.txt	com.myscript.iink Class Hierarchy (MyScript Interactive Ink 4.3.0 API)	tree: package: com.myscript.iink
+symbol	com/myscript/iink/ParameterSet.html	text/com/myscript/iink/ParameterSet.txt	ParameterSet (MyScript Interactive Ink 4.3.0 API)	Represents a set of iink parameters.
+symbol	com/myscript/iink/PlaceholderController.html	text/com/myscript/iink/PlaceholderController.txt	PlaceholderController (MyScript Interactive Ink 4.3.0 API)	A PlaceholderController allows to add and update placeholders in an editor.
+symbol	com/myscript/iink/PlaceholderController.PlaceholderInteractivityOptions.html	text/com/myscript/iink/PlaceholderController.PlaceholderInteractivityOptions.txt	PlaceholderController.PlaceholderInteractivityOptions (MyScript Interactive Ink 4.3.0 API)	Defines how a placeholder shall behave regarding user interactions.
+symbol	com/myscript/iink/PointerEvent.html	text/com/myscript/iink/PointerEvent.txt	PointerEvent (MyScript Interactive Ink 4.3.0 API)	Represents a pointer event.
+symbol	com/myscript/iink/PointerEventType.html	text/com/myscript/iink/PointerEventType.txt	PointerEventType (MyScript Interactive Ink 4.3.0 API)	Describes the types of pointer event that can be provided to the editor.
+symbol	com/myscript/iink/PointerTool.html	text/com/myscript/iink/PointerTool.txt	PointerTool (MyScript Interactive Ink 4.3.0 API)	Describes the tools that the pointer types can be associated with.
+symbol	com/myscript/iink/PointerType.html	text/com/myscript/iink/PointerType.txt	PointerType (MyScript Interactive Ink 4.3.0 API)	Describes the types of pointer that can be used for input.
+symbol	com/myscript/iink/RecognitionAssetsBuilder.html	text/com/myscript/iink/RecognitionAssetsBuilder.txt	RecognitionAssetsBuilder (MyScript Interactive Ink 4.3.0 API)	The RecognitionAssetsBuilder implements the tools to generate and save recognition assets.
+symbol	com/myscript/iink/Recognizer.html	text/com/myscript/iink/Recognizer.txt	Recognizer (MyScript Interactive Ink 4.3.0 API)	The Recognizer runs background handwriting recognition on ink.
+symbol	com/myscript/iink/RecognizerError.html	text/com/myscript/iink/RecognizerError.txt	RecognizerError (MyScript Interactive Ink 4.3.0 API)	Represents a Recognizer error code.
+symbol	com/myscript/iink/Renderer.html	text/com/myscript/iink/Renderer.txt	Renderer (MyScript Interactive Ink 4.3.0 API)	The Renderer implements content rendering of parts.
+symbol	com/myscript/iink/ShapeOnHoldAction.html	text/com/myscript/iink/ShapeOnHoldAction.txt	ShapeOnHoldAction (MyScript Interactive Ink 4.3.0 API)	Action type associated with a shape on hold event.
+symbol	com/myscript/iink/text/GlyphMetrics.html	text/com/myscript/iink/text/GlyphMetrics.txt	GlyphMetrics (MyScript Interactive Ink 4.3.0 API)	Describes the position of a converted glyph.
+symbol	com/myscript/iink/text/IFontMetricsProvider.html	text/com/myscript/iink/text/IFontMetricsProvider.txt	IFontMetricsProvider (MyScript Interactive Ink 4.3.0 API)	Interface providing fontified text typesetting operations.
+package	com/myscript/iink/text/package-summary.html	text/com/myscript/iink/text/package-summary.txt	com.myscript.iink.text (MyScript Interactive Ink 4.3.0 API)	Describes the position of a converted glyph.
+tree	com/myscript/iink/text/package-tree.html	text/com/myscript/iink/text/package-tree.txt	com.myscript.iink.text Class Hierarchy (MyScript Interactive Ink 4.3.0 API)	tree: package: com.myscript.iink.text
+symbol	com/myscript/iink/text/Text.html	text/com/myscript/iink/text/Text.txt	Text (MyScript Interactive Ink 4.3.0 API)	Allows to access the glyphs (i.e. grapheme clusters) within a label.
+<p>
+Note: what is called glyph here, is actually a grapheme cluster. For more
+details refer to <a href="http://unicode.org/reports/tr29/">http://unicode.org/reports/tr29/</a>
+</p>
+symbol	com/myscript/iink/text/TextSpan.html	text/com/myscript/iink/text/TextSpan.txt	TextSpan (MyScript Interactive Ink 4.3.0 API)	Describes glyphs spans in a label.
+symbol	com/myscript/iink/TextFormat.html	text/com/myscript/iink/TextFormat.txt	TextFormat (MyScript Interactive Ink 4.3.0 API)	Predefined Text Box formats.
+symbol	com/myscript/iink/ToolController.html	text/com/myscript/iink/ToolController.txt	ToolController (MyScript Interactive Ink 4.3.0 API)	The ToolController manages pointer tools configuration.
+symbol	com/myscript/iink/TransformError.html	text/com/myscript/iink/TransformError.txt	TransformError (MyScript Interactive Ink 4.3.0 API)	Error code returned by Editor getTransformStatus
+symbol	com/myscript/util/Numbers.html	text/com/myscript/util/Numbers.txt	Numbers (MyScript Interactive Ink 4.3.0 API)	Set of utility functions to compare floating point values.
+package	com/myscript/util/package-summary.html	text/com/myscript/util/package-summary.txt	com.myscript.util (MyScript Interactive Ink 4.3.0 API)	Set of utility functions to compare floating point values.
+tree	com/myscript/util/package-tree.html	text/com/myscript/util/package-tree.txt	com.myscript.util Class Hierarchy (MyScript Interactive Ink 4.3.0 API)	tree: package: com.myscript.util
+symbol	com/myscript/util/TTFAnalyzer.html	text/com/myscript/util/TTFAnalyzer.txt	TTFAnalyzer (MyScript Interactive Ink 4.3.0 API)	The class which loads the TTF file, parses it and returns the TTF font name.
+index	constant-values.html	text/constant-values.txt	Constant Field Values (MyScript Interactive Ink 4.3.0 API)	summary of constants
+index	help-doc.html	text/help-doc.txt	API Help (MyScript Interactive Ink 4.3.0 API)	help
+package	index.html	text/index.txt	Overview (MyScript Interactive Ink 4.3.0 API)	package index
+index	index-all.html	text/index-all.txt	Index (MyScript Interactive Ink 4.3.0 API)	Returns the alpha channel value.
+tree	overview-tree.html	text/overview-tree.txt	Class Hierarchy (MyScript Interactive Ink 4.3.0 API)	class tree

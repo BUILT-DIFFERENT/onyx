@@ -1,16 +1,12 @@
 import {
-  ExportMetadata,
-  ExportMetadataSchema,
-  GestureSettings,
-  GestureSettingsSchema,
-  Note,
-  NoteSchema,
+  Export,
+  ExportSchema,
+  Notebook,
+  NotebookSchema,
   PageObject,
   PageObjectSchema,
-  SearchIndexToken,
-  SearchIndexTokenSchema,
-  TemplateScope,
-  TemplateScopeSchema,
+  SearchText,
+  SearchTextSchema,
 } from '@onyx/validation';
 import { z } from 'zod';
 
@@ -29,19 +25,15 @@ export interface DecodeReport {
 }
 
 export interface DecodedWebMetadata {
-  note: Note;
+  notebook: Notebook;
   pageObjects: PageObject[];
   unknownPageObjects: UnknownPageObject[];
-  searchIndexTokens: SearchIndexToken[];
-  gestureSettings: GestureSettings[];
-  templateScopes: TemplateScope[];
-  exportMetadata: ExportMetadata[];
+  searchTexts: SearchText[];
+  exports: Export[];
   reports: {
     pageObjects: DecodeReport;
-    searchIndexTokens: DecodeReport;
-    gestureSettings: DecodeReport;
-    templateScopes: DecodeReport;
-    exportMetadata: DecodeReport;
+    searchTexts: DecodeReport;
+    exports: DecodeReport;
   };
 }
 
@@ -79,9 +71,9 @@ export function decodeWebMetadata(payload: unknown): DecodedWebMetadata {
     throw new Error('Metadata payload must be an object');
   }
 
-  const noteParse = NoteSchema.safeParse(root.note);
-  if (!noteParse.success) {
-    throw new Error('Invalid note payload');
+  const notebookParse = NotebookSchema.safeParse(root.notebook);
+  if (!notebookParse.success) {
+    throw new Error('Invalid notebook payload');
   }
 
   const rawPageObjects = asArray(root.pageObjects);
@@ -115,45 +107,27 @@ export function decodeWebMetadata(payload: unknown): DecodedWebMetadata {
     pageObjects.push(parsed.data);
   }
 
-  const searchTokensResult = decodeKnownArray(
-    asArray(root.searchIndexTokens),
-    SearchIndexTokenSchema,
-  );
-  const gestureSettingsResult = decodeKnownArray(
-    asArray(root.gestureSettings),
-    GestureSettingsSchema,
-  );
-  const templateScopesResult = decodeKnownArray(asArray(root.templateScopes), TemplateScopeSchema);
-  const exportMetadataResult = decodeKnownArray(asArray(root.exportMetadata), ExportMetadataSchema);
+  const searchTextsResult = decodeKnownArray(asArray(root.searchTexts), SearchTextSchema);
+  const exportsResult = decodeKnownArray(asArray(root.exports), ExportSchema);
 
   return {
-    note: noteParse.data,
+    notebook: notebookParse.data,
     pageObjects,
     unknownPageObjects,
-    searchIndexTokens: searchTokensResult.decoded,
-    gestureSettings: gestureSettingsResult.decoded,
-    templateScopes: templateScopesResult.decoded,
-    exportMetadata: exportMetadataResult.decoded,
+    searchTexts: searchTextsResult.decoded,
+    exports: exportsResult.decoded,
     reports: {
       pageObjects: {
         decodedCount: pageObjects.length,
         skippedInvalidCount: invalidPageObjectCount,
       },
-      searchIndexTokens: {
-        decodedCount: searchTokensResult.decoded.length,
-        skippedInvalidCount: searchTokensResult.skippedInvalidCount,
+      searchTexts: {
+        decodedCount: searchTextsResult.decoded.length,
+        skippedInvalidCount: searchTextsResult.skippedInvalidCount,
       },
-      gestureSettings: {
-        decodedCount: gestureSettingsResult.decoded.length,
-        skippedInvalidCount: gestureSettingsResult.skippedInvalidCount,
-      },
-      templateScopes: {
-        decodedCount: templateScopesResult.decoded.length,
-        skippedInvalidCount: templateScopesResult.skippedInvalidCount,
-      },
-      exportMetadata: {
-        decodedCount: exportMetadataResult.decoded.length,
-        skippedInvalidCount: exportMetadataResult.skippedInvalidCount,
+      exports: {
+        decodedCount: exportsResult.decoded.length,
+        skippedInvalidCount: exportsResult.skippedInvalidCount,
       },
     },
   };

@@ -1,0 +1,857 @@
+SOURCE: com/myscript/iink/OffscreenEditor.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class OffscreenEditor
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.OffscreenEditor
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class OffscreenEditor
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+The OffscreenEditor is a service allowing offscreen interactivity.
+It is the entry point to edit an associated part and receive change notifications.
+
+Since:
+
+2.1
+
+See Also:
+
+ContentPart [link: ContentPart.html]
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final void
+
+addListener [link: #addListener(com.myscript.iink.IOffscreenEditorListener)] (@NotNull IOffscreenEditorListener [link: IOffscreenEditorListener.html] listener)
+
+Adds the specified listener to this offscreen editor.
+
+final String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][]
+
+addStrokes [link: #addStrokes(com.myscript.iink.PointerEvent%5B%5D,boolean)] (@NotNull PointerEvent [link: PointerEvent.html][] events,
+boolean processGestures)
+
+Adds strokes.
+
+final void
+
+clear [link: #clear()]()
+
+Removes all content from the part.
+
+final void
+
+close [link: #close()]()
+
+final void
+
+erase [link: #erase(java.lang.String%5B%5D)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Erases the specified items.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+export_ [link: #export_(java.lang.String%5B%5D,com.myscript.iink.MimeType)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds,
+@NotNull MimeType [link: MimeType.html] mimeType)
+
+Exports the specified items.
+
+final String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+export_ [link: #export_(java.lang.String%5B%5D,com.myscript.iink.MimeType,com.myscript.iink.ParameterSet)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds,
+@NotNull MimeType [link: MimeType.html] mimeType,
+@Nullable ParameterSet [link: ParameterSet.html] overrideConfiguration)
+
+Exports the specified items.
+
+protected void
+
+finalize [link: #finalize()]()
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][]
+
+getAvailableItemsTypes [link: #getAvailableItemsTypes(java.lang.String%5B%5D)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Returns the available types for the specified items.
+
+final @NotNull Configuration [link: Configuration.html]
+
+getConfiguration [link: #getConfiguration()]()
+
+Returns the Configuration associated with this offscreen editor.
+
+final @NotNull Engine [link: Engine.html]
+
+getEngine [link: #getEngine()]()
+
+Returns the Engine to which this offscreen editor is attached.
+
+final @Nullable HistoryManager [link: HistoryManager.html]
+
+getHistoryManager [link: #getHistoryManager()]()
+
+Returns the HistoryManager to which this offscreen editor is attached if any.
+
+final @NotNull MathSolverController [link: MathSolverController.html]
+
+getMathSolverController [link: #getMathSolverController()]()
+
+Returns the MathSolverController associated with this offscreen editor.
+
+final @Nullable ContentPart [link: ContentPart.html]
+
+getPart [link: #getPart()]()
+
+Returns the part managed by this offscreen editor.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getRootBlockId [link: #getRootBlockId()]()
+
+Returns the block id at the root of the current part.
+
+final float
+
+getScaleX [link: #getScaleX()]()
+
+Returns the scale to convert input horizontal coordinates unit into mm,
+such that (X coordinate unit * scaleX = mm).
+
+final float
+
+getScaleY [link: #getScaleY()]()
+
+Returns the scale to convert input vertical coordinates unit into mm,
+such that (Y coordinate unit * scaleY = mm).
+
+final @NotNull MimeType [link: MimeType.html][]
+
+getSupportedExportMimeTypes [link: #getSupportedExportMimeTypes(java.lang.String%5B%5D)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Returns the supported export formats for specified items.
+
+final @NotNull EnumSet [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/EnumSet.html]<TransformError [link: TransformError.html]>
+
+getTransformStatus [link: #getTransformStatus(java.lang.String%5B%5D,com.myscript.iink.graphics.Transform)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds,
+@NotNull Transform [link: graphics/Transform.html] transform)
+
+Checks if a transformation is allowed on the specified items.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+final boolean
+
+isIdle [link: #isIdle()]()
+
+Checks whether part modification operations are over.
+
+final void
+
+removeGestureHandler [link: #removeGestureHandler()]()
+
+Removes the gesture handler from this offscreen editor, if any.
+
+final void
+
+removeListener [link: #removeListener(com.myscript.iink.IOffscreenEditorListener)] (@NotNull IOffscreenEditorListener [link: IOffscreenEditorListener.html] listener)
+
+Removes the specified listener from this offscreen editor.
+
+final String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][]
+
+replaceStrokes [link: #replaceStrokes(java.lang.String%5B%5D,com.myscript.iink.PointerEvent%5B%5D)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds,
+@NotNull PointerEvent [link: PointerEvent.html][] events)
+
+Replaces strokes.
+
+final void
+
+setGestureHandler [link: #setGestureHandler(com.myscript.iink.IOffscreenGestureHandler)] (@Nullable IOffscreenGestureHandler [link: IOffscreenGestureHandler.html] handler)
+
+Registers the specified gesture handler to this offscreen editor.
+
+final void
+
+setItemsType [link: #setItemsType(java.lang.String%5B%5D,java.lang.String,boolean)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] type,
+boolean forceSingleBlock)
+
+Sets the classification of the specified items to a given type.
+
+final void
+
+setPart [link: #setPart(com.myscript.iink.ContentPart)] (@Nullable ContentPart [link: ContentPart.html] part)
+
+Sets the part managed by this offscreen editor.
+
+final void
+
+transform [link: #transform(java.lang.String%5B%5D,com.myscript.iink.graphics.Transform)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds,
+@NotNull Transform [link: graphics/Transform.html] transform)
+
+Transforms the specified items.
+
+final void
+
+waitForIdle [link: #waitForIdle()]()
+
+Waits until part modification operations are over.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+addListener
+
+public final void addListener (@NotNull
+@NotNull IOffscreenEditorListener [link: IOffscreenEditorListener.html] listener)
+
+Adds the specified listener to this offscreen editor.
+
+Parameters:
+
+listener - the listener to be added.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when listener is null .
+
+removeListener
+
+public final void removeListener (@NotNull
+@NotNull IOffscreenEditorListener [link: IOffscreenEditorListener.html] listener)
+
+Removes the specified listener from this offscreen editor.
+
+Parameters:
+
+listener - the listener to be removed.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when listener is null .
+
+setGestureHandler
+
+public final void setGestureHandler (@Nullable
+@Nullable IOffscreenGestureHandler [link: IOffscreenGestureHandler.html] handler)
+
+Registers the specified gesture handler to this offscreen editor.
+
+Parameters:
+
+handler - the gesture handler to be used.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+removeGestureHandler
+
+public final void removeGestureHandler ()
+
+Removes the gesture handler from this offscreen editor, if any.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+getEngine
+
+@NotNull
+public final @NotNull Engine [link: Engine.html] getEngine ()
+
+Returns the Engine to which this offscreen editor is attached.
+
+Returns:
+
+the engine.
+
+getConfiguration
+
+@NotNull
+public final @NotNull Configuration [link: Configuration.html] getConfiguration ()
+
+Returns the Configuration associated with this offscreen editor.
+
+Note: do not close the returned object as it is owned by the offscreen editor.
+
+Returns:
+
+the offscreen editor configuration.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+getHistoryManager
+
+@Nullable
+public final @Nullable HistoryManager [link: HistoryManager.html] getHistoryManager ()
+
+Returns the HistoryManager to which this offscreen editor is attached if any.
+
+Note: the returned object is NOT owned by the offscreen editor and should be closed.
+
+Returns:
+
+the history manager or null .
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+Since:
+
+3.0
+
+getMathSolverController
+
+@NotNull
+public final @NotNull MathSolverController [link: MathSolverController.html] getMathSolverController ()
+
+Returns the MathSolverController associated with this offscreen editor.
+
+Note: do not close the returned object as it is owned by the offscreen editor.
+
+Returns:
+
+the math solver controller.
+
+Since:
+
+4.0
+
+getScaleX
+
+public final float getScaleX ()
+
+Returns the scale to convert input horizontal coordinates unit into mm,
+such that (X coordinate unit * scaleX = mm).
+
+Returns:
+
+the horizontal scale.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+getScaleY
+
+public final float getScaleY ()
+
+Returns the scale to convert input vertical coordinates unit into mm,
+such that (Y coordinate unit * scaleY = mm).
+
+Returns:
+
+the vertical scale.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+getPart
+
+@Nullable
+public final @Nullable ContentPart [link: ContentPart.html] getPart ()
+
+Returns the part managed by this offscreen editor.
+
+Returns:
+
+the part.
+
+setPart
+
+public final void setPart (@Nullable
+@Nullable ContentPart [link: ContentPart.html] part)
+
+Sets the part managed by this offscreen editor.
+
+Parameters:
+
+part - the part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when part is already bound.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor cannot be configured.
+
+clear
+
+public final void clear ()
+
+Removes all content from the part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+isIdle
+
+public final boolean isIdle ()
+
+Checks whether part modification operations are over.
+
+Returns:
+
+true if there are no pending operations.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is not associated with a part.
+
+waitForIdle
+
+public final void waitForIdle ()
+
+Waits until part modification operations are over.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+getRootBlockId
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getRootBlockId ()
+
+Returns the block id at the root of the current part.
+
+Returns:
+
+the root block id, empty if none.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+addStrokes
+
+public final String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] addStrokes (@NotNull
+@NotNull PointerEvent [link: PointerEvent.html][] events,
+boolean processGestures)
+
+Adds strokes.
+
+Parameters:
+
+events - the strokes pointer events (with coordinates in input units).
+
+processGestures - tells whether to process gestures or not.
+
+Returns:
+
+the new item ids.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when events is null .
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when events contain a null pointer event.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when events is empty.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when a pointer event contains incorrect data.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when a stroke has too many points.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when events contain more than 20 strokes and processGestures is true .
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when a pointer event contains a null pointerType .
+
+UnsupportedOperationException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/UnsupportedOperationException.html] - when event sequence is not allowed.
+
+replaceStrokes
+
+public final String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] replaceStrokes (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds,
+@NotNull
+@NotNull PointerEvent [link: PointerEvent.html][] events)
+
+Replaces strokes.
+
+Parameters:
+
+itemIds - the item ids to replace. Unknown ids are ignored.
+
+events - the replacing strokes pointer events (with coordinates in input units).
+
+Returns:
+
+the replacing item ids.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemIds is null .
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when itemIds contains a null item id.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when itemIds is empty.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when events is null .
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when events contains a null pointer event.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when events is empty.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when a pointer event contains incorrect data.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when a stroke has too many points.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when a pointer event contains a null pointerType .
+
+UnsupportedOperationException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/UnsupportedOperationException.html] - when event sequence is not allowed.
+
+erase
+
+public final void erase (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Erases the specified items. Unknown ids are ignored.
+
+Parameters:
+
+itemIds - the item ids to erase.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemIds is null .
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when itemIds contains a null item id.
+
+getTransformStatus
+
+@NotNull
+public final @NotNull EnumSet [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/EnumSet.html]<TransformError [link: TransformError.html]> getTransformStatus (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds,
+@NotNull
+@NotNull Transform [link: graphics/Transform.html] transform)
+
+Checks if a transformation is allowed on the specified items.
+
+Parameters:
+
+itemIds - the item ids on which to check the transformation.
+
+transform - the transformation to check.
+
+Returns:
+
+an error code from enum TransformError .
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemIds is null .
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when itemIds contains a null item id.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when item ids are not valid.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when transform is null .
+
+transform
+
+public final void transform (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds,
+@NotNull
+@NotNull Transform [link: graphics/Transform.html] transform)
+
+Transforms the specified items.
+
+Parameters:
+
+itemIds - the item ids on which to apply the transformation.
+
+transform - the transformation to apply.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemIds is null .
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when itemIds contains a null item id.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when item ids are not valid.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when transform is null .
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when transform is not valid for this operation.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when the transform is not allowed on the item ids.
+
+getSupportedExportMimeTypes
+
+@NotNull
+public final @NotNull MimeType [link: MimeType.html][] getSupportedExportMimeTypes (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Returns the supported export formats for specified items.
+
+Parameters:
+
+itemIds - the item ids to request export mime types for, empty means full part.
+
+Returns:
+
+an array of the supported mime types, empty if not associated with a part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemIds is null .
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when itemIds contains a null item id.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when item ids are not valid.
+
+export_
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] export_ (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds,
+@NotNull
+@NotNull MimeType [link: MimeType.html] mimeType)
+throws NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html],
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html],
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+Exports the specified items.
+
+Parameters:
+
+itemIds - the item ids to export, empty means full part.
+
+mimeType - the mime type that specifies the output format.
+
+Returns:
+
+the exported content.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemIds is null .
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when itemIds contains a null item id.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when item ids are not valid.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - if mimeType is null .
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - if the mime type is not a textual format.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - if the specified mime type is not supported.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when there are some ongoing operations on
+the part that prevent export, see isIdle() .
+
+export_
+
+public final String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] export_ (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds,
+@NotNull
+@NotNull MimeType [link: MimeType.html] mimeType,
+@Nullable
+@Nullable ParameterSet [link: ParameterSet.html] overrideConfiguration)
+throws NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html],
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html],
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+Exports the specified items.
+
+Parameters:
+
+itemIds - the item ids to export, empty means full part.
+
+mimeType - the mime type that specifies the output format.
+
+overrideConfiguration - the extra configuration used when exporting.
+
+Returns:
+
+the exported content.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemIds is null .
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when itemIds contains a null item id.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when item ids are not valid.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - if mimeType is null .
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - if the mime type is not a textual format.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - if the specified mime type is not supported.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - if overrideConfiguration is invalid.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when there are some ongoing operations on
+the part that prevent export, see isIdle() .
+
+getAvailableItemsTypes
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] getAvailableItemsTypes (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds)
+
+Returns the available types for the specified items.
+Note that this function will wait for pending gesture recognition before returning available types.
+
+Parameters:
+
+itemIds - the item ids to request types for.
+
+Returns:
+
+an array of the available types.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemIds is null .
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when itemIds contains a null item id.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when item ids are not valid.
+
+Since:
+
+3.1
+
+setItemsType
+
+public final void setItemsType (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] itemIds,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] type,
+boolean forceSingleBlock)
+
+Sets the classification of the specified items to a given type.
+Note that this function will wait for pending gesture recognition before changing items type.
+
+Parameters:
+
+itemIds - the item ids to classify.
+
+type - the type to apply to the items.
+
+forceSingleBlock - true to force converting the items to a single block, otherwise false .
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this offscreen editor is not associated with a part.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when itemIds is null .
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when itemIds contains a null item id.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when item ids are not valid.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when type is null .
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when items are not compatible with the type.
+
+Since:
+
+3.1

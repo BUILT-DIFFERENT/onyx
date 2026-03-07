@@ -1,0 +1,29 @@
+SOURCE: constant-values.html
+
+Constant Field Values
+
+Contents
+
+com.myscript.* [link: #com.myscript]
+
+com.myscript.*
+
+com.myscript.util.Numbers [link: com/myscript/util/Numbers.html]
+
+Modifier and Type
+
+Constant Field
+
+Value
+
+public static final double
+
+DBL_EPSILON [link: com/myscript/util/Numbers.html#DBL_EPSILON]
+
+2.220446049250313E-16
+
+public static final float
+
+FLT_EPSILON [link: com/myscript/util/Numbers.html#FLT_EPSILON]
+
+1.1920928955078125E-7f

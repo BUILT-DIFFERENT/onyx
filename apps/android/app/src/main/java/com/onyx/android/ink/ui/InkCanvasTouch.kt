@@ -33,10 +33,14 @@ import com.onyx.android.input.StylusButtonAction
 import kotlin.math.hypot
 
 private const val PALM_CONTACT_SIZE_THRESHOLD = 1.0f
-private const val PREDICTED_STROKE_ALPHA = 0.2f
+private const val PALM_FINGER_CONTACT_SIZE_THRESHOLD = 0.5f
+private const val PALM_FINGER_PRESSURE_THRESHOLD = 0.8f
+private const val PREDICTED_STROKE_ALPHA = 0f
 private const val IN_PROGRESS_STROKE_ALPHA = 1f
-private const val EDGE_TOLERANCE_PX = 12f
+private const val EDGE_TOLERANCE_PX = 40f
 private const val MIN_TOLERANCE_ZOOM = 0.001f
+private const val PREDICTION_REUSE_DELTA_THRESHOLD_PX = 3f
+private const val PREDICTION_UPDATE_INTERVAL = 2
 private const val SEGMENT_ERASER_BASE_RADIUS_PX = 10f
 private const val ERASER_BASE_WIDTH_DEFAULT = 12f
 private const val ERASER_RADIUS_SCALE_MIN = 0.5f
@@ -408,15 +412,23 @@ private fun handlePointerDown(
     val pointerIsStylusStream = isPointerStylusStream(event, actionIndex, runtime)
     val isKnownDrawingTool = isSupportedToolType(actionToolType)
     val isUnknownTool = actionToolType == MotionEvent.TOOL_TYPE_UNKNOWN
-    val shouldHandle =
-        (isKnownDrawingTool || isUnknownTool || pointerIsStylusStream) && contactSize <= PALM_CONTACT_SIZE_THRESHOLD
+    val shouldHandle = isKnownDrawingTool || isUnknownTool || pointerIsStylusStream
     if (!shouldHandle) {
         return false
     }
+    if (isLikelyPalmContact(event, actionIndex, pointerIsStylusStream, runtime, contactSize)) {
+        runtime.activePointerModes.remove(pointerId)
+        runtime.eraserLastPagePoints.remove(pointerId)
+        return true
+    }
+    view.requestUnbufferedDispatch(event)
     if (pointerIsStylusStream) {
         runtime.stylusPointerIds.add(pointerId)
     } else {
         runtime.stylusPointerIds.remove(pointerId)
+        if (runtime.stylusPointerIds.isNotEmpty()) {
+            return true
+        }
         if (event.pointerCount > 1 && interaction.inputSettings.doubleFingerMode == DoubleFingerMode.IGNORE) {
             return false
         }
@@ -434,9 +446,6 @@ private fun handlePointerDown(
     }
     val pointerMode = resolvePointerMode(event, actionIndex, interaction, runtime, pointerIsStylusStream)
     runtime.activePointerModes[pointerId] = pointerMode
-    if (pointerIsStylusStream) {
-        view.requestUnbufferedDispatch(event)
-    }
     if (pointerMode == PointerMode.ERASE) {
         runtime.hoverPreviewState.hide()
         handleEraserAtPointer(event, actionIndex, interaction, runtime)
@@ -447,25 +456,35 @@ private fun handlePointerDown(
     val tolerance =
         EDGE_TOLERANCE_PX /
             interaction.viewTransform.zoom.coerceAtLeast(MIN_TOLERANCE_ZOOM)
-    if (!isInsidePageWithTolerance(downPageX, downPageY, interaction.pageWidth, interaction.pageHeight, tolerance)) {
-        runtime.activePointerModes.remove(pointerId)
-        return true
+    val clampedDownPageX = clampPageCoordinate(downPageX, interaction.pageWidth)
+    val clampedDownPageY = clampPageCoordinate(downPageY, interaction.pageHeight)
+    val startedOutsideTolerance =
+        !isInsidePageWithTolerance(
+            downPageX,
+            downPageY,
+            interaction.pageWidth,
+            interaction.pageHeight,
+            tolerance,
+        )
+    if (startedOutsideTolerance) {
+        runtime.hoverPreviewState.hide()
     }
     runtime.hoverPreviewState.hide()
     cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
+    runtime.lastPredictedStrokeInputs.clear()
+    runtime.lastPredictionFrameBucket = -1
     if (isPredictionEnabled(view.context)) {
         runtime.motionPredictionAdapter?.record(event)
     }
     val startTime = event.eventTime
     runtime.activeStrokeStartTimes[pointerId] = startTime
     val strokeInput =
-        createStrokeInput(
+        createStrokeInputAtPagePoint(
             event = event,
             pointerIndex = actionIndex,
             startTime = startTime,
-            viewTransform = interaction.viewTransform,
-            pageWidth = interaction.pageWidth,
-            pageHeight = interaction.pageHeight,
+            pageX = clampedDownPageX,
+            pageY = clampedDownPageY,
             resolvedToolType =
                 if (actionToolType == MotionEvent.TOOL_TYPE_UNKNOWN && pointerIsStylusStream) {
                     MotionEvent.TOOL_TYPE_STYLUS
@@ -483,18 +502,45 @@ private fun handlePointerDown(
     runtime.activeStrokeIds[pointerId] = strokeId
     runtime.activeStrokeBrushes[pointerId] = effectiveBrush
     val points = mutableListOf<StrokePoint>()
-    points.add(
+    val initialPoint =
         createStrokePoint(
             event = event,
             pointerIndex = actionIndex,
             viewTransform = interaction.viewTransform,
             pageWidth = interaction.pageWidth,
             pageHeight = interaction.pageHeight,
-        ),
-    )
+        )
+    points.add(initialPoint)
     runtime.activeStrokePoints[pointerId] = points
+    runtime.activeStrokeSmoothers[pointerId] =
+        CausalStrokeSmoothing().also { smoother ->
+            smoother.push(initialPoint)
+        }
     runtime.invalidateActiveStrokeRender()
     return true
+}
+
+private fun isLikelyPalmContact(
+    event: MotionEvent,
+    pointerIndex: Int,
+    pointerIsStylusStream: Boolean,
+    runtime: InkCanvasRuntime,
+    contactSize: Float,
+): Boolean {
+    if (pointerIsStylusStream) {
+        return false
+    }
+    if (runtime.stylusPointerIds.isNotEmpty()) {
+        return true
+    }
+    if (contactSize > PALM_CONTACT_SIZE_THRESHOLD) {
+        return true
+    }
+    val isFinger = isPointerDefinitelyFinger(event, pointerIndex)
+    val pressure = event.getPressure(pointerIndex)
+    return isFinger &&
+        pressure > PALM_FINGER_PRESSURE_THRESHOLD &&
+        contactSize > PALM_FINGER_CONTACT_SIZE_THRESHOLD
 }
 
 private fun pointerIsDoubleTapGesture(
@@ -584,7 +630,11 @@ private fun handlePointerMove(
 ): Boolean {
     if (event.isCanceledEvent()) {
         cancelActiveStrokes(view, event, runtime)
+        runtime.activeStrokeSmoothers.values.forEach { it.reset() }
+        runtime.activeStrokeSmoothers.clear()
         cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
+        runtime.lastPredictedStrokeInputs.clear()
+        runtime.lastPredictionFrameBucket = -1
         view.setStrokeRenderingActive(false)
         runtime.hoverPreviewState.hide()
         return true
@@ -593,7 +643,6 @@ private fun handlePointerMove(
     if (predictedStrokesEnabled) {
         runtime.motionPredictionAdapter?.record(event)
     }
-    cancelPredictedStrokes(view, event, runtime.predictedStrokeIds)
     val pointerCount = event.pointerCount
     var handled = false
     for (index in 0 until pointerCount) {
@@ -611,6 +660,7 @@ private fun handlePointerMove(
                         interaction.brush.tool != Tool.ERASER
                 if (shouldPromoteStylusToEraser) {
                     cancelActiveStroke(view, event, movePointerId, runtime)
+                    runtime.activeStrokeSmoothers.remove(movePointerId)?.reset()
                     runtime.activePointerModes[movePointerId] = PointerMode.ERASE
                     handleEraserAtPointer(event, index, interaction, runtime)
                     handled = true
@@ -619,17 +669,11 @@ private fun handlePointerMove(
                 val strokeId = runtime.activeStrokeIds[movePointerId]
                 if (strokeId != null) {
                     val startTime = runtime.activeStrokeStartTimes[movePointerId] ?: event.eventTime
-                    val strokeInput =
-                        createStrokeInput(
-                            event = event,
-                            pointerIndex = index,
-                            startTime = startTime,
-                            viewTransform = interaction.viewTransform,
-                            pageWidth = interaction.pageWidth,
-                            pageHeight = interaction.pageHeight,
-                        )
-                    view.addToStroke(strokeInput, strokeId)
+                    val smoothPoints =
+                        runtime.activeStrokeSmoothers.getOrPut(movePointerId) { CausalStrokeSmoothing() }
+                    val inputsToSubmit = mutableListOf<VkStrokeInput>()
                     runtime.activeStrokePoints[movePointerId]?.let { points ->
+                        val pointsForSmoothing = mutableListOf<StrokePoint>()
                         appendHistoricalStrokePoints(
                             event = event,
                             pointerIndex = index,
@@ -637,6 +681,7 @@ private fun handlePointerMove(
                             pageWidth = interaction.pageWidth,
                             pageHeight = interaction.pageHeight,
                             outPoints = points,
+                            outAddedPoints = pointsForSmoothing,
                         )
                         addPointDeduped(
                             outPoints = points,
@@ -648,7 +693,28 @@ private fun handlePointerMove(
                                     pageWidth = interaction.pageWidth,
                                     pageHeight = interaction.pageHeight,
                                 ),
+                            outAddedPoint = pointsForSmoothing,
                         )
+                        pointsForSmoothing.forEach { addedPoint ->
+                            smoothPoints
+                                .push(addedPoint)
+                                .forEach { smoothedPoint ->
+                                    inputsToSubmit +=
+                                        createStrokeInputFromPoint(
+                                            point = smoothedPoint,
+                                            startTime = startTime,
+                                            pointerToolType = event.getToolType(index),
+                                            pointerIsStylusStream =
+                                                runtime.stylusPointerIds.contains(movePointerId) ||
+                                                    isPointerStylusStream(event, index, runtime),
+                                        )
+                                }
+                        }
+                    }
+                    if (inputsToSubmit.isNotEmpty()) {
+                        inputsToSubmit.forEach { strokeInput ->
+                            view.addToStroke(strokeInput, strokeId)
+                        }
                     }
                     handled = true
                 }
@@ -659,10 +725,19 @@ private fun handlePointerMove(
             }
         }
     }
-    if (predictedStrokesEnabled) {
+    if (predictedStrokesEnabled && shouldUpdatePrediction(runtime)) {
         handlePredictedStrokes(view, event, interaction, runtime)
     }
     return handled
+}
+
+private fun shouldUpdatePrediction(runtime: InkCanvasRuntime): Boolean {
+    runtime.lastPredictionFrameBucket += 1
+    if (runtime.lastPredictionFrameBucket < PREDICTION_UPDATE_INTERVAL) {
+        return false
+    }
+    runtime.lastPredictionFrameBucket = 0
+    return true
 }
 
 private fun handleEraserAtPointer(
@@ -741,11 +816,13 @@ private fun handlePredictedStrokes(
 ) {
     val predictedEvent = runtime.motionPredictionAdapter?.predict() ?: return
     val predictedPointerCount = predictedEvent.pointerCount
+    val activePredictedPointerIds = mutableSetOf<Int>()
     for (index in 0 until predictedPointerCount) {
         val toolType = predictedEvent.getToolType(index)
         val predictedPointerId = predictedEvent.getPointerId(index)
         val isActive = runtime.activeStrokeIds.containsKey(predictedPointerId)
         if (isActive) {
+            activePredictedPointerIds += predictedPointerId
             val startIndex = event.findPointerIndex(predictedPointerId)
             if (startIndex < 0) {
                 continue
@@ -774,11 +851,6 @@ private fun handlePredictedStrokes(
                 } else {
                     interaction.brush.withToolType(toolType)
                 }
-            val predictedStrokeId =
-                view.startStroke(
-                    startInput,
-                    effectiveBrush.toVkBrush(alphaMultiplier = predictedAlphaForBrush(effectiveBrush)),
-                )
             val predictedInput =
                 createStrokeInput(
                     event = predictedEvent,
@@ -794,11 +866,45 @@ private fun handlePredictedStrokes(
                             toolType
                         },
                 )
-            view.addToStroke(predictedInput, predictedStrokeId)
-            runtime.predictedStrokeIds[predictedPointerId] = predictedStrokeId
+            val existingPredictedStrokeId = runtime.predictedStrokeIds[predictedPointerId]
+            val previousPredictedInput = runtime.lastPredictedStrokeInputs[predictedPointerId]
+            val predictionMovedEnough =
+                previousPredictedInput == null ||
+                    hasPredictionDelta(
+                        previous = previousPredictedInput,
+                        next = predictedInput,
+                    )
+            if (existingPredictedStrokeId == null) {
+                val predictedStrokeId =
+                    view.startStroke(
+                        startInput,
+                        effectiveBrush.toVkBrush(alphaMultiplier = predictedAlphaForBrush(effectiveBrush)),
+                    )
+                view.addToStroke(predictedInput, predictedStrokeId)
+                runtime.predictedStrokeIds[predictedPointerId] = predictedStrokeId
+                runtime.lastPredictedStrokeInputs[predictedPointerId] = predictedInput
+            } else if (predictionMovedEnough) {
+                view.addToStroke(predictedInput, existingPredictedStrokeId)
+                runtime.lastPredictedStrokeInputs[predictedPointerId] = predictedInput
+            }
         }
     }
+    val stalePointerIds = runtime.predictedStrokeIds.keys - activePredictedPointerIds
+    stalePointerIds.forEach { stalePointerId ->
+        cancelPredictedStroke(view, event, stalePointerId, runtime.predictedStrokeIds)
+        runtime.lastPredictedStrokeInputs.remove(stalePointerId)
+    }
     predictedEvent.recycle()
+}
+
+private fun hasPredictionDelta(
+    previous: VkStrokeInput,
+    next: VkStrokeInput,
+): Boolean {
+    val deltaX = next.x - previous.x
+    val deltaY = next.y - previous.y
+    return (deltaX * deltaX + deltaY * deltaY) >=
+        (PREDICTION_REUSE_DELTA_THRESHOLD_PX * PREDICTION_REUSE_DELTA_THRESHOLD_PX)
 }
 
 private fun handlePointerUp(
@@ -818,7 +924,9 @@ private fun handlePointerUp(
     var handled = false
     if (event.isCanceledEvent()) {
         cancelActiveStroke(view, event, pointerId, runtime)
+        runtime.activeStrokeSmoothers.remove(pointerId)?.reset()
         cancelPredictedStroke(view, event, pointerId, runtime.predictedStrokeIds)
+        runtime.lastPredictedStrokeInputs.remove(pointerId)
         view.setStrokeRenderingActive(runtime.activeStrokeIds.isNotEmpty())
         runtime.hoverPreviewState.hide()
         handled = true
@@ -856,21 +964,24 @@ private fun handlePointerUp(
             val effectiveBrush =
                 runtime.activeStrokeBrushes[pointerId] ?: interaction.brush.withToolType(actionToolType)
             cancelPredictedStroke(view, event, pointerId, runtime.predictedStrokeIds)
+            runtime.lastPredictedStrokeInputs.remove(pointerId)
             if (isPredictionEnabled(view.context)) {
                 runtime.motionPredictionAdapter?.record(event)
             }
-            view.finishStroke(strokeInput, strokeId)
-            val points = runtime.activeStrokePoints[pointerId].orEmpty().toMutableList()
+            val rawPoints = runtime.activeStrokePoints[pointerId].orEmpty().toMutableList()
+            val smoother = runtime.activeStrokeSmoothers[pointerId]
+            val pointsForSmoothing = mutableListOf<StrokePoint>()
             appendHistoricalStrokePoints(
                 event = event,
                 pointerIndex = actionIndex,
                 viewTransform = interaction.viewTransform,
                 pageWidth = interaction.pageWidth,
                 pageHeight = interaction.pageHeight,
-                outPoints = points,
+                outPoints = rawPoints,
+                outAddedPoints = pointsForSmoothing,
             )
             addPointDeduped(
-                outPoints = points,
+                outPoints = rawPoints,
                 point =
                     createStrokePoint(
                         event = event,
@@ -879,14 +990,45 @@ private fun handlePointerUp(
                         pageWidth = interaction.pageWidth,
                         pageHeight = interaction.pageHeight,
                     ),
+                outAddedPoint = pointsForSmoothing,
             )
-            val finishedStroke = buildStroke(points, effectiveBrush)
+            var lastSubmittedInput: VkStrokeInput? = null
+            pointsForSmoothing.forEach { point ->
+                smoother
+                    ?.push(point)
+                    ?.forEach { smoothedPoint ->
+                        val smoothedInput =
+                            createStrokeInputFromPoint(
+                                point = smoothedPoint,
+                                startTime = startTime,
+                                pointerToolType = actionToolType,
+                                pointerIsStylusStream = pointerWasStylusStream,
+                            )
+                        view.addToStroke(smoothedInput, strokeId)
+                        lastSubmittedInput = smoothedInput
+                    }
+            }
+            smoother?.drainTail()?.forEach { smoothedPoint ->
+                val smoothedInput =
+                    createStrokeInputFromPoint(
+                        point = smoothedPoint,
+                        startTime = startTime,
+                        pointerToolType = actionToolType,
+                        pointerIsStylusStream = pointerWasStylusStream,
+                    )
+                view.addToStroke(smoothedInput, strokeId)
+                lastSubmittedInput = smoothedInput
+            }
+            view.finishStroke(lastSubmittedInput ?: strokeInput, strokeId)
+            val displayPoints = smoother?.previewPoints(rawPoints) ?: rawPoints
+            val finishedStroke = buildStroke(rawPoints = rawPoints, brush = effectiveBrush, displayPoints = displayPoints)
             interaction.onStrokeFinished(finishedStroke)
             // Defer removal to callback synchronized with view rendering to prevent ghosting
             interaction.onStrokeRenderFinished(strokeId)
             runtime.activeStrokeIds.remove(pointerId)
             runtime.activeStrokeBrushes.remove(pointerId)
             runtime.activeStrokePoints.remove(pointerId)
+            runtime.activeStrokeSmoothers.remove(pointerId)
             runtime.activeStrokeStartTimes.remove(pointerId)
             view.setStrokeRenderingActive(runtime.activeStrokeIds.isNotEmpty())
             runtime.invalidateActiveStrokeRender()
@@ -916,6 +1058,7 @@ private fun appendHistoricalStrokePoints(
     pageWidth: Float,
     pageHeight: Float,
     outPoints: MutableList<StrokePoint>,
+    outAddedPoints: MutableList<StrokePoint>? = null,
 ) {
     val historySize = event.historySize
     if (historySize <= 0) {
@@ -933,6 +1076,7 @@ private fun appendHistoricalStrokePoints(
                     pageWidth = pageWidth,
                     pageHeight = pageHeight,
                 ),
+            outAddedPoint = outAddedPoints,
         )
     }
 }
@@ -940,6 +1084,7 @@ private fun appendHistoricalStrokePoints(
 private fun addPointDeduped(
     outPoints: MutableList<StrokePoint>,
     point: StrokePoint,
+    outAddedPoint: MutableList<StrokePoint>? = null,
 ) {
     val lastPoint = outPoints.lastOrNull()
     if (lastPoint != null && lastPoint.x == point.x && lastPoint.y == point.y) {
@@ -951,6 +1096,7 @@ private fun addPointDeduped(
         return
     }
     outPoints.add(point)
+    outAddedPoint?.add(point)
 }
 
 private fun handleHover(
@@ -1001,7 +1147,11 @@ private fun handleCancel(
     runtime.eraserLastPagePoints.clear()
     runtime.activeStrokeBrushes.clear()
     runtime.activeStrokePoints.clear()
+    runtime.activeStrokeSmoothers.values.forEach { it.reset() }
+    runtime.activeStrokeSmoothers.clear()
     runtime.activeStrokeStartTimes.clear()
+    runtime.lastPredictedStrokeInputs.clear()
+    runtime.lastPredictionFrameBucket = 0
     runtime.stylusPointerIds.clear()
     runtime.stylusLongHoldStartTimes.clear()
     runtime.stylusLongHoldActivePointerIds.clear()
@@ -1068,6 +1218,51 @@ private fun createStrokeInput(
         pressure = pressure,
         tiltRadians = tilt,
         orientationRadians = orientation,
+    )
+}
+
+private fun createStrokeInputAtPagePoint(
+    event: MotionEvent,
+    pointerIndex: Int,
+    startTime: Long,
+    pageX: Float,
+    pageY: Float,
+    resolvedToolType: Int = event.getToolType(pointerIndex),
+): VkStrokeInput {
+    val pressure = applyPressureGamma(event.getPressure(pointerIndex))
+    val tilt = event.getAxisValue(MotionEvent.AXIS_TILT, pointerIndex)
+    val orientation = event.getOrientation(pointerIndex)
+    return VkStrokeInput(
+        x = pageX,
+        y = pageY,
+        eventTimeMillis = (event.eventTime - startTime).coerceAtLeast(0L),
+        toolType = resolvedToolType,
+        pressure = pressure,
+        tiltRadians = tilt,
+        orientationRadians = orientation,
+    )
+}
+
+private fun createStrokeInputFromPoint(
+    point: StrokePoint,
+    startTime: Long,
+    pointerToolType: Int,
+    pointerIsStylusStream: Boolean,
+): VkStrokeInput {
+    val resolvedToolType =
+        if (pointerToolType == MotionEvent.TOOL_TYPE_UNKNOWN && pointerIsStylusStream) {
+            MotionEvent.TOOL_TYPE_STYLUS
+        } else {
+            pointerToolType
+        }
+    return VkStrokeInput(
+        x = point.x,
+        y = point.y,
+        eventTimeMillis = (point.t - startTime).coerceAtLeast(0L),
+        toolType = resolvedToolType,
+        pressure = applyPressureGamma(point.p ?: 1f),
+        tiltRadians = kotlin.math.hypot(point.tx?.toDouble() ?: 0.0, point.ty?.toDouble() ?: 0.0).toFloat(),
+        orientationRadians = point.r ?: 0f,
     )
 }
 

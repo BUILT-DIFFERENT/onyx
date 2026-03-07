@@ -1,0 +1,177 @@
+SOURCE: com/myscript/iink/graphics/Point.html
+
+Package com.myscript.iink.graphics [link: package-summary.html]
+
+Class Point
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.graphics.Point
+
+public class Point
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Represents a point on the 2D plane.
+
+Field Summary
+
+Fields
+
+Modifier and Type
+
+Field
+
+Description
+
+float
+
+x [link: #x]
+
+The x position of the point.
+
+float
+
+y [link: #y]
+
+The y position of the point.
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+Point [link: #%3Cinit%3E()]()
+
+Default constructor.
+
+Point [link: #%3Cinit%3E(float,float)] (float x,
+float y)
+
+Constructor.
+
+Point [link: #%3Cinit%3E(com.myscript.iink.graphics.Point)] (@NotNull Point [link: Point.html] other)
+
+Copy constructor.
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+boolean
+
+equals [link: #equals(java.lang.Object)] (@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+int
+
+hashCode [link: #hashCode()]()
+
+boolean
+
+isFinite [link: #isFinite()]()
+
+Checks if point values are finite.
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Field Details
+
+x
+
+public float x
+
+The x position of the point.
+
+y
+
+public float y
+
+The y position of the point.
+
+Constructor Details
+
+Point
+
+public Point ()
+
+Default constructor.
+
+Point
+
+public Point (float x,
+float y)
+
+Constructor.
+
+Parameters:
+
+x - the x coordinate of the point.
+
+y - the y coordinate of the point.
+
+Point
+
+public Point (@NotNull
+@NotNull Point [link: Point.html] other)
+
+Copy constructor.
+
+Parameters:
+
+other - copied object.
+
+Method Details
+
+isFinite
+
+public boolean isFinite ()
+
+Checks if point values are finite.
+
+Returns:
+
+true if both x and y are finite, otherwise false .
+
+Since:
+
+4.1
+
+equals
+
+public boolean equals (@Nullable
+@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+Overrides:
+
+equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+hashCode
+
+public int hashCode ()
+
+Overrides:
+
+hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+toString
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]

@@ -1,0 +1,55 @@
+Gestures
+
+In the on-screen interactivity mode, the MyScript iink technology is designed to reflect the results of the research conducted by the MyScript UX team.
+How we chose our set of iink gestures
+
+When MyScript started defining interactive ink, we were offering a wider range of gestures than today. Our UX research has then shown that the amount of gestures made our applications hard to learn and use. The rule that the human working memory can only hold three items at a time proved to be true. So, we have set out to find a way to simplify gestures to shorten our products learning curve.
+
+We also took into account the recognition rate: The gestures should be easy to disambiguate from handwriting and should lead to the highest possible recognition rates for both gestures and handwriting.
+
+So after the introduction of our set of interactive ink gestures, we saw that when they were used as taught, the recognition rate we targeted was reached. Overall it has led to a much higher adoption of gestures compared to before interactive ink. And the story to tell the world had become a lot simpler!
+
+Based on this research work and our accumulated experience, we have decided to go for the following ink gestures.
+Ink gestures
+
+    To erase a letter, a symbol, a word, a formula or a paragraph, scratch it out or strike it through:
+
+    To insert a word in your sentence, draw a straight line downwards (or several) to create an extra space.
+
+    To bring two words closer, you can either draw a straight line upwards:
+
+or draw a line from one word to the next one:
+
+    To add a freeform section into a "Text Document" part, draw a line from left to right across the page, we call this gesture the slice gesture:
+
+Decoration gestures
+
+    To highlight your text, draw a frame to surround it:
+
+    To define a subtitle or a title, just underline or double underline it:
+
+Touch gestures
+
+Besides the gestures described above, MyScript iink technology supports extra touch gestures. These gestures allow users selecting one or several items either handwritten or typeset:
+
+Actions associated to touch gestures allow applying a change on items.
+
+    Actions can be replacing handwritten ink by typeset:
+
+hello
+
+    Beautifying a diagram:
+
+    Showing or hiding a contextual menu:
+
+Copy
+
+    Moving and/or resizing selected block:
+
+Hello worldHello world
+
+    Moving a selected item:
+
+To sum up gestures
+
+With MyScript iink technology, use your pen to write, and your finger to interact! But if you want to modify this default behavior, you can reroute your input events so that they correspond to another MyScript iink event type.

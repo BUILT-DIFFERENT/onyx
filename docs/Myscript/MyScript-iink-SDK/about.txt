@@ -1,0 +1,48 @@
+About MyScript iink SDK
+
+MyScript iink SDK is a development toolkit provided by MyScript to help integrators build interactive-ink-enabled applications.
+
+Its goal is to provide the right balance between flexibility and ease of integration, in order to maximize the value brought to end users for an optimized time to market.
+
+MyScript iink SDK is built to be:
+
+    Relevant for a wide range of use cases,
+    Cross-platform,
+    Easy to use and to interoperate with other solutions,
+    Flexible to accommodate different integration scenarios,
+    Compliant with Interactive Ink principles.
+
+Use cases
+
+There are many use cases where pen input can add value to a user’s workflow. Among the use cases that the current version of MyScript iink SDK can push to the next level, we can highlight the following non-exhaustive list:
+
+    Note-taking, with the ability to use Text Document content types to support simple or advanced note-taking, depending on whether you intend to input short notes or complex notes with advanced layout capabilities.
+    Form-filling, with fields of different types that can be filled directly on canvas or in a dedicated input and exported for validation and automated processing.
+    Diagram input, for instance in the case of office suites, to let your users quickly add diagrams to their documents without fighting their way through several trays of shapes or options.
+    Math or text-based exercises, with the ability to write those types of content and extract student inputs for automatic hints or assessment.
+    Creative sessions, to let you write and draw freely on a wide canvas with a Raw Content and use a lasso or hand selector to select some areas or blocks within the canvas for converting them, copying them to paste them in the same app, or exporting them for reuse in other apps.
+    Input method, to offer the possibility to write content into text field, and detect edition gesture on top of it​.
+    Live content, to let you interact with any content by identifying gesture on top of any item​.
+
+Cross-platform
+
+To let you reach your users where they are, whatever their device is or the platform you are building, we designed iink SDK to be portable from the ground up, with limited platform-specific parts.
+
+MyScript iink SDK already supports several platforms, including mobile, desktop and the web.
+
+Our goal is to have all supported platforms providing the same set of functionalities each time it makes sense. While some platforms such as the web do not support the full breadth of what is possible with MyScript iink SDK yet – because of the specific challenges they pose, we are working hard to improve in that respect.
+Ease of use and interoperability
+
+With MyScript iink SDK, MyScript does the heavy lifting for you, bringing its twenty years of experience around handwriting recognition into simple APIs and a sensible default configuration.
+Should you need to do so, a wide choice of configuration or styling options still lets you tune the default behaviors without the hassle of implementing anything by yourself.
+
+We also aim at staying close to what you know, with platform-specific bindingsand the support of popular package managers like CocoaPods or NuGet, making it a breeze to integrate MyScript technology.
+
+Finally, we favor semantic manipulation of model content, with the support of a readable and parseable exchange format that makes it possible to exchange information with the host application or any third-party solution.
+Integration flexibility
+
+In addition to its cross-platform nature, iink SDK is meant to enable a significant flexibility in terms of integration scenarios:
+
+    Code examples and a ready-to-use implementation of platform-specific parts (including some UI parts) make it easy to quickly address light integration needs.
+    Platform-specific bindings give you access to a more flexible API that lets you implement your use cases, tune the provided platform implementation or even develop a totally new one to support any particular graphical toolkit you are required to use.
+

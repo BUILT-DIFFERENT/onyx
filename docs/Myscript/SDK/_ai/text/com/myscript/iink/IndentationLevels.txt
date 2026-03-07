@@ -1,0 +1,152 @@
+SOURCE: com/myscript/iink/IndentationLevels.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class IndentationLevels
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.IndentationLevels
+
+public final class IndentationLevels
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Represents a selection indentation levels.
+
+Since:
+
+2.1
+
+Field Summary
+
+Fields
+
+Modifier and Type
+
+Field
+
+Description
+
+final long
+
+high [link: #high]
+
+The highest indentation level.
+
+final long
+
+low [link: #low]
+
+The lowest indentation level.
+
+final long
+
+max [link: #max]
+
+The maximum indentation level.
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+IndentationLevels [link: #%3Cinit%3E(long,long,long)] (long low,
+long high,
+long max)
+
+Constructor.
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+boolean
+
+equals [link: #equals(java.lang.Object)] (@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+int
+
+hashCode [link: #hashCode()]()
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Field Details
+
+low
+
+public final long low
+
+The lowest indentation level.
+
+high
+
+public final long high
+
+The highest indentation level.
+
+max
+
+public final long max
+
+The maximum indentation level.
+
+Constructor Details
+
+IndentationLevels
+
+public IndentationLevels (long low,
+long high,
+long max)
+
+Constructor.
+
+Parameters:
+
+low - the lowest indentation level.
+
+high - the highest indentation level.
+
+max - the maximum indentation level.
+
+Method Details
+
+equals
+
+public boolean equals (@Nullable
+@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+Overrides:
+
+equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+hashCode
+
+public int hashCode ()
+
+Overrides:
+
+hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+toString
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]

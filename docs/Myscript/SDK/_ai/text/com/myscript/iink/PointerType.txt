@@ -1,0 +1,193 @@
+SOURCE: com/myscript/iink/PointerType.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Enum Class PointerType
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<PointerType [link: PointerType.html]>
+
+com.myscript.iink.PointerType
+
+All Implemented Interfaces:
+
+Serializable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Serializable.html] , Comparable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Comparable.html]<PointerType [link: PointerType.html]> , Constable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/constant/Constable.html]
+
+public enum PointerType
+extends Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<PointerType [link: PointerType.html]>
+
+Describes the types of pointer that can be used for input.
+
+Nested Class Summary
+
+Nested classes/interfaces inherited from class java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]
+
+Enum.EnumDesc [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html]<E [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html] extends Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<E [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html]>>
+
+Enum Constant Summary
+
+Enum Constants
+
+Enum Constant
+
+Description
+
+CUSTOM_1 [link: #CUSTOM_1]
+
+A custom pointer.
+
+CUSTOM_2 [link: #CUSTOM_2]
+
+A custom pointer.
+
+CUSTOM_3 [link: #CUSTOM_3]
+
+A custom pointer.
+
+CUSTOM_4 [link: #CUSTOM_4]
+
+A custom pointer.
+
+CUSTOM_5 [link: #CUSTOM_5]
+
+A custom pointer.
+
+ERASER [link: #ERASER]
+
+An eraser or inverted pen.
+
+MOUSE [link: #MOUSE]
+
+A mouse.
+
+PEN [link: #PEN]
+
+An active stylus.
+
+TOUCH [link: #TOUCH]
+
+A finger on a touchscreen (or a passive stylus).
+
+Method Summary
+
+All Methods Static Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+static PointerType [link: PointerType.html]
+
+valueOf [link: #valueOf(java.lang.String)] (String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Returns the enum constant of this class with the specified name.
+
+static PointerType [link: PointerType.html][]
+
+values [link: #values()]()
+
+Returns an array containing the constants of this enum class, in
+the order they are declared.
+
+Methods inherited from class java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#clone()], compareTo [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#compareTo(E)], describeConstable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#describeConstable()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#equals(java.lang.Object)], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#finalize()], getDeclaringClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#getDeclaringClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#hashCode()], name [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#name()], ordinal [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#ordinal()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#toString()], valueOf [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#valueOf(java.lang.Class,java.lang.String)]
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Enum Constant Details
+
+PEN
+
+public static final PointerType [link: PointerType.html] PEN
+
+An active stylus.
+
+TOUCH
+
+public static final PointerType [link: PointerType.html] TOUCH
+
+A finger on a touchscreen (or a passive stylus).
+
+ERASER
+
+public static final PointerType [link: PointerType.html] ERASER
+
+An eraser or inverted pen.
+
+MOUSE
+
+public static final PointerType [link: PointerType.html] MOUSE
+
+A mouse.
+
+CUSTOM_1
+
+public static final PointerType [link: PointerType.html] CUSTOM_1
+
+A custom pointer.
+
+CUSTOM_2
+
+public static final PointerType [link: PointerType.html] CUSTOM_2
+
+A custom pointer.
+
+CUSTOM_3
+
+public static final PointerType [link: PointerType.html] CUSTOM_3
+
+A custom pointer.
+
+CUSTOM_4
+
+public static final PointerType [link: PointerType.html] CUSTOM_4
+
+A custom pointer.
+
+CUSTOM_5
+
+public static final PointerType [link: PointerType.html] CUSTOM_5
+
+A custom pointer.
+
+Method Details
+
+values
+
+public static PointerType [link: PointerType.html][] values ()
+
+Returns an array containing the constants of this enum class, in
+the order they are declared.
+
+Returns:
+
+an array containing the constants of this enum class, in the order they are declared
+
+valueOf
+
+public static PointerType [link: PointerType.html] valueOf (String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Returns the enum constant of this class with the specified name.
+The string must match exactly an identifier used to declare an
+enum constant in this class. (Extraneous whitespace characters are
+not permitted.)
+
+Parameters:
+
+name - the name of the enum constant to be returned.
+
+Returns:
+
+the enum constant with the specified name
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - if this enum class has no constant with the specified name
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - if the argument is null

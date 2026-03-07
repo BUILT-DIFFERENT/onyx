@@ -10,17 +10,24 @@ data class Stroke(
     val bounds: StrokeBounds,
     val createdAt: Long,
     val createdLamport: Long = 0,
+    val displayPoints: List<StrokePoint> = points,
 )
+
+val Stroke.rawPoints: List<StrokePoint>
+    get() = points
+
+val Stroke.renderPoints: List<StrokePoint>
+    get() = displayPoints
 
 @Serializable
 data class StrokeStyle(
     val tool: Tool,
     val color: String = "#000000",
     val baseWidth: Float,
-    val minWidthFactor: Float = 0.85f,
-    val maxWidthFactor: Float = 1.15f,
-    val smoothingLevel: Float = 0.35f,
-    val endTaperStrength: Float = 0.35f,
+    val minWidthFactor: Float = 0.15f,
+    val maxWidthFactor: Float = 2.5f,
+    val smoothingLevel: Float = 0.5f,
+    val endTaperStrength: Float = 0.6f,
     val lineStyle: StrokeLineStyle = StrokeLineStyle.SOLID,
     val nibRotation: Boolean = false,
 )

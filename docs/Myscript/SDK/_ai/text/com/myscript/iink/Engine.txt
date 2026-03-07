@@ -1,0 +1,841 @@
+SOURCE: com/myscript/iink/Engine.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class Engine
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.Engine
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class Engine
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+Represents the iink runtime environment.
+
+Method Summary
+
+All Methods Static Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final void
+
+close [link: #close()]()
+
+static @NotNull Engine [link: Engine.html]
+
+create [link: #create(byte%5B%5D)] (byte[] certificate)
+
+Creates a new engine.
+
+final @NotNull Editor [link: Editor.html]
+
+createEditor [link: #createEditor(com.myscript.iink.Renderer)] (@NotNull Renderer [link: Renderer.html] renderer)
+
+Creates a new editor.
+
+final @NotNull Editor [link: Editor.html]
+
+createEditor [link: #createEditor(com.myscript.iink.Renderer,com.myscript.iink.ToolController)] (@NotNull Renderer [link: Renderer.html] renderer,
+@NotNull ToolController [link: ToolController.html] toolController)
+
+Creates a new editor.
+
+final @NotNull HandwritingGenerator [link: HandwritingGenerator.html]
+
+createHandwritingGenerator [link: #createHandwritingGenerator()]()
+
+Create a new handwriting generator.
+
+final @NotNull ItemIdHelper [link: ItemIdHelper.html]
+
+createItemIdHelper [link: #createItemIdHelper(com.myscript.iink.OffscreenEditor)] (@NotNull OffscreenEditor [link: OffscreenEditor.html] offscreenEditor)
+
+Creates a new item id helper associated with an offscreen editor.
+
+final @NotNull OffscreenEditor [link: OffscreenEditor.html]
+
+createOffscreenEditor [link: #createOffscreenEditor(float,float)] (float scaleX,
+float scaleY)
+
+Creates a new offscreen editor.
+
+final @NotNull ContentPackage [link: ContentPackage.html]
+
+createPackage [link: #createPackage(java.io.File)] (@NotNull File [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/File.html] file)
+
+Creates a new package.
+
+final @NotNull ContentPackage [link: ContentPackage.html]
+
+createPackage [link: #createPackage(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] path)
+
+Creates a new package.
+
+final @NotNull ParameterSet [link: ParameterSet.html]
+
+createParameterSet [link: #createParameterSet()]()
+
+Creates a new empty parameter set.
+
+final @NotNull RecognitionAssetsBuilder [link: RecognitionAssetsBuilder.html]
+
+createRecognitionAssetsBuilder [link: #createRecognitionAssetsBuilder()]()
+
+Creates a new RecognitionAssetsBuilder.
+
+final @NotNull Recognizer [link: Recognizer.html]
+
+createRecognizer [link: #createRecognizer(float,float,java.lang.String)] (float scaleX,
+float scaleY,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] type)
+
+Creates a new recognizer.
+
+final @NotNull Renderer [link: Renderer.html]
+
+createRenderer [link: #createRenderer(float,float,com.myscript.iink.IRenderTarget)] (float dpiX,
+float dpiY,
+@Nullable IRenderTarget [link: IRenderTarget.html] renderTarget)
+
+Creates a new renderer.
+
+final @NotNull ToolController [link: ToolController.html]
+
+createToolController [link: #createToolController()]()
+
+Creates a new tool controller.
+
+final void
+
+deletePackage [link: #deletePackage(java.io.File)] (@NotNull File [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/File.html] file)
+
+Deletes the specified package.
+
+final void
+
+deletePackage [link: #deletePackage(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] path)
+
+Deletes the specified package.
+
+protected void
+
+finalize [link: #finalize()]()
+
+final @NotNull Configuration [link: Configuration.html]
+
+getConfiguration [link: #getConfiguration()]()
+
+Returns the configuration associated with this engine.
+
+final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][]
+
+getSupportedPartTypes [link: #getSupportedPartTypes()]()
+
+Returns the set of content part types that this engine can handle.
+
+final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][]
+
+getSupportedRecognizerTypes [link: #getSupportedRecognizerTypes()]()
+
+Lists the recognizer types supported by this engine.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getVersion [link: #getVersion()]()
+
+Returns the version of iink SDK.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+static @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+nativeResources [link: #nativeResources()]()
+
+Lists the number of native objects that are not closed yet.
+
+final @NotNull ContentPackage [link: ContentPackage.html]
+
+openPackage [link: #openPackage(java.io.File)] (@NotNull File [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/File.html] file)
+
+Opens the specified package using the EXISTING package open option.
+
+final @NotNull ContentPackage [link: ContentPackage.html]
+
+openPackage [link: #openPackage(java.io.File,com.myscript.iink.PackageOpenOption)] (@NotNull File [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/File.html] file,
+@NotNull PackageOpenOption [link: PackageOpenOption.html] openOption)
+
+Opens the specified package.
+
+final @NotNull ContentPackage [link: ContentPackage.html]
+
+openPackage [link: #openPackage(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] path)
+
+Opens the specified package using the EXISTING package open option.
+
+final @NotNull ContentPackage [link: ContentPackage.html]
+
+openPackage [link: #openPackage(java.lang.String,com.myscript.iink.PackageOpenOption)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] path,
+@NotNull PackageOpenOption [link: PackageOpenOption.html] openOption)
+
+Opens the specified package.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+create
+
+@NotNull
+public static @NotNull Engine [link: Engine.html] create (byte[] certificate)
+throws IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html]
+
+Creates a new engine.
+
+Note: make sure to close the returned object.
+
+Parameters:
+
+certificate - the certificate that identifies you as a valid MyScript
+technology integrator.
+
+Returns:
+
+the newly created engine.
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when the certificate is invalid.
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+getVersion
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getVersion ()
+
+Returns the version of iink SDK.
+
+Returns:
+
+the iink SDK version.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+Since:
+
+2.3
+
+getConfiguration
+
+@NotNull
+public final @NotNull Configuration [link: Configuration.html] getConfiguration ()
+
+Returns the configuration associated with this engine.
+
+Note: do not close the returned object as it is owned by the engine.
+
+Returns:
+
+the engine configuration.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+createPackage
+
+@NotNull
+public final @NotNull ContentPackage [link: ContentPackage.html] createPackage (@NotNull
+@NotNull File [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/File.html] file)
+throws IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html]
+
+Creates a new package.
+
+Note: make sure to close the returned object.
+
+Parameters:
+
+file - the package file.
+
+Returns:
+
+the package.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - if a package with associated filename already exists.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - if an I/O operation fails.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - if a package associated with the same filename
+is already opened, it can be accessed via a call to openPackage().
+
+createPackage
+
+@NotNull
+public final @NotNull ContentPackage [link: ContentPackage.html] createPackage (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] path)
+throws IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html]
+
+Creates a new package.
+
+Note: make sure to close the returned object.
+
+Parameters:
+
+path - the package file path.
+
+Returns:
+
+the package.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - if a package with associated filename already exists.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - if an I/O operation fails.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - if a package associated with the same filename
+is already opened, it can be accessed via a call to openPackage().
+
+openPackage
+
+@NotNull
+public final @NotNull ContentPackage [link: ContentPackage.html] openPackage (@NotNull
+@NotNull File [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/File.html] file)
+throws IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html]
+
+Opens the specified package using the EXISTING package open option.
+
+Note: make sure to close the returned object.
+
+Parameters:
+
+file - the package file.
+
+Returns:
+
+the package.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - if a package with associated filename does not exist.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - if an I/O operation fails.
+
+openPackage
+
+@NotNull
+public final @NotNull ContentPackage [link: ContentPackage.html] openPackage (@NotNull
+@NotNull File [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/File.html] file,
+@NotNull
+@NotNull PackageOpenOption [link: PackageOpenOption.html] openOption)
+throws IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html]
+
+Opens the specified package.
+
+Note: make sure to close the returned object.
+
+Parameters:
+
+file - the package file.
+
+openOption - the open option used to open the package file.
+
+Returns:
+
+the package.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - when openOption is EXISTING , if a package with associated filename does not exist.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - when openOption is CREATE_NEW , if a package with associated filename already exists.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when openOption is CREATE_NEW , if a package associated with the same
+filename is already opened.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - if an I/O operation fails.
+
+Since:
+
+1.2
+
+openPackage
+
+@NotNull
+public final @NotNull ContentPackage [link: ContentPackage.html] openPackage (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] path)
+throws IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html]
+
+Opens the specified package using the EXISTING package open option.
+
+Note: make sure to close the returned object.
+
+Parameters:
+
+path - the package file path.
+
+Returns:
+
+the package.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - if a package with associated filename does not exist.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - if an I/O operation fails.
+
+openPackage
+
+@NotNull
+public final @NotNull ContentPackage [link: ContentPackage.html] openPackage (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] path,
+@NotNull
+@NotNull PackageOpenOption [link: PackageOpenOption.html] openOption)
+throws IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html]
+
+Opens the specified package.
+
+Note: make sure to close the returned object.
+
+Parameters:
+
+path - the package file path.
+
+openOption - the open option used to open the package file.
+
+Returns:
+
+the package.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - when openOption is EXISTING , if a package with associated filename does not exist.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - when openOption is CREATE_NEW , if a package with associated filename already exists.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when openOption is CREATE_NEW , if a package associated with the same
+filename is already opened.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - if an I/O operation fails.
+
+Since:
+
+1.2
+
+deletePackage
+
+public final void deletePackage (@NotNull
+@NotNull File [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/File.html] file)
+throws IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html],
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html]
+
+Deletes the specified package.
+
+Parameters:
+
+file - the package file.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - if an I/O operation fails.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when a package associated with the same
+fileName is already opened.
+
+Since:
+
+1.2
+
+deletePackage
+
+public final void deletePackage (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] path)
+throws IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html],
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html]
+
+Deletes the specified package.
+
+Parameters:
+
+path - the package file path.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - if an I/O operation fails.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when a package associated with the same
+fileName is already opened.
+
+Since:
+
+1.2
+
+createRenderer
+
+@NotNull
+public final @NotNull Renderer [link: Renderer.html] createRenderer (float dpiX,
+float dpiY,
+@Nullable
+@Nullable IRenderTarget [link: IRenderTarget.html] renderTarget)
+
+Creates a new renderer.
+
+Note: make sure to close the returned object.
+
+Parameters:
+
+dpiX - the physical horizontal resolution of the display in dots per
+inch.
+
+dpiY - the physical vertical resolution of the display in dots per
+inch.
+
+renderTarget - the render target.
+
+Returns:
+
+the newly created renderer.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when dpiX is not a number, is zero or is negative.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when dpiY is not a number, is zero or is negative.
+
+createToolController
+
+@NotNull
+public final @NotNull ToolController [link: ToolController.html] createToolController ()
+
+Creates a new tool controller.
+
+Returns:
+
+the newly created tool controller.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+Since:
+
+2.0
+
+createEditor
+
+@NotNull
+public final @NotNull Editor [link: Editor.html] createEditor (@NotNull
+@NotNull Renderer [link: Renderer.html] renderer)
+
+Creates a new editor.
+
+Parameters:
+
+renderer - the renderer to be used to display editor's content.
+
+Returns:
+
+the newly created editor, with default tool controller.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+createEditor
+
+@NotNull
+public final @NotNull Editor [link: Editor.html] createEditor (@NotNull
+@NotNull Renderer [link: Renderer.html] renderer,
+@NotNull
+@NotNull ToolController [link: ToolController.html] toolController)
+
+Creates a new editor.
+
+Parameters:
+
+renderer - the renderer to be used to display editor's content.
+
+toolController - the tool controller to be used to manage tools.
+
+Returns:
+
+the newly created editor.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+Since:
+
+2.0
+
+createOffscreenEditor
+
+@NotNull
+public final @NotNull OffscreenEditor [link: OffscreenEditor.html] createOffscreenEditor (float scaleX,
+float scaleY)
+
+Creates a new offscreen editor.
+
+Parameters:
+
+scaleX - the scale to convert input horizontal coordinates unit into mm.
+
+scaleY - the scale to convert input vertical coordinates unit into mm.
+
+Returns:
+
+the newly created offscreen editor.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when scaleX is not a number, is zero or is negative.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when scaleY is not a number, is zero or is negative.
+
+Since:
+
+2.1
+
+createItemIdHelper
+
+@NotNull
+public final @NotNull ItemIdHelper [link: ItemIdHelper.html] createItemIdHelper (@NotNull
+@NotNull OffscreenEditor [link: OffscreenEditor.html] offscreenEditor)
+
+Creates a new item id helper associated with an offscreen editor.
+
+Parameters:
+
+offscreenEditor - the associated offscreen editor.
+
+Returns:
+
+the newly created item id helper.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - if offscreenEditor is null.
+
+Since:
+
+2.1
+
+getSupportedPartTypes
+
+@Nullable
+public final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] getSupportedPartTypes ()
+
+Returns the set of content part types that this engine can handle.
+
+Returns:
+
+an unmodifiable set of the handled content type names.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+createParameterSet
+
+@NotNull
+public final @NotNull ParameterSet [link: ParameterSet.html] createParameterSet ()
+
+Creates a new empty parameter set.
+
+Returns:
+
+the newly created parameter set.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+createRecognitionAssetsBuilder
+
+@NotNull
+public final @NotNull RecognitionAssetsBuilder [link: RecognitionAssetsBuilder.html] createRecognitionAssetsBuilder ()
+
+Creates a new RecognitionAssetsBuilder.
+
+Returns:
+
+the newly created recognition assets builder.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+Since:
+
+1.2.4
+
+getSupportedRecognizerTypes
+
+@Nullable
+public final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] getSupportedRecognizerTypes ()
+
+Lists the recognizer types supported by this engine.
+
+Returns:
+
+an unmodifiable set of the handled recognizer type names.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+Since:
+
+2.1
+
+createRecognizer
+
+@NotNull
+public final @NotNull Recognizer [link: Recognizer.html] createRecognizer (float scaleX,
+float scaleY,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] type)
+
+Creates a new recognizer.
+
+Parameters:
+
+scaleX - the scale to convert input horizontal coordinates unit into mm.
+
+scaleY - the scale to convert input vertical coordinates unit into mm.
+
+type - the type of recognizer.
+
+Returns:
+
+the newly created recognizer.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when scaleX is not a number, is zero or is negative.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when scaleY is not a number, is zero or is negative.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when type is not a supported recognizer type.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when type is "Text" and the search path of the configuration manager is empty.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when type is "Text", guides are enabled and the language does not allow guides.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when type is "Text", guides are enabled and the line gap is zero or is negative.
+
+Since:
+
+2.1
+
+createHandwritingGenerator
+
+@NotNull
+public final @NotNull HandwritingGenerator [link: HandwritingGenerator.html] createHandwritingGenerator ()
+
+Create a new handwriting generator.
+
+Returns:
+
+the newly created handwriting generator.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this engine is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when the handwriting generator cannot be created.
+
+Since:
+
+4.1
+
+nativeResources
+
+@NotNull
+public static @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] nativeResources ()
+
+Lists the number of native objects that are not closed yet.
+
+Returns:
+
+a string describing the native resources currently in use.
+
+Since:
+
+2.0.3

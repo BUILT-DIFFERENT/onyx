@@ -1,0 +1,224 @@
+SOURCE: com/myscript/iink/IEditorListener.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Interface IEditorListener
+
+public interface IEditorListener
+
+The listener interface for receiving editor events.
+
+See Also:
+
+Editor.addListener(IEditorListener) [link: Editor.html#addListener(com.myscript.iink.IEditorListener)]
+
+Editor.removeListener(IEditorListener) [link: Editor.html#removeListener(com.myscript.iink.IEditorListener)]
+
+Method Summary
+
+All Methods Instance Methods Abstract Methods Default Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+void
+
+activeBlockChanged [link: #activeBlockChanged(com.myscript.iink.Editor,java.lang.String)] (@NotNull Editor [link: Editor.html] editor,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Invoked when the active block has changed.
+
+void
+
+contentChanged [link: #contentChanged(com.myscript.iink.Editor,java.lang.String%5B%5D)] (@NotNull Editor [link: Editor.html] editor,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] blockIds)
+
+Invoked when the content has changed.
+
+default void
+
+contentChanged2 [link: #contentChanged2(com.myscript.iink.Editor,java.lang.String%5B%5D,java.lang.String%5B%5D,java.lang.String%5B%5D)] (@NotNull Editor [link: Editor.html] editor,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] addedBlockIds,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] removedBlockIds,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] updatedBlockIds)
+
+Invoked when the content has changed, with detailed information.
+
+void
+
+onError [link: #onError(com.myscript.iink.Editor,java.lang.String,com.myscript.iink.EditorError,java.lang.String)] (@NotNull Editor [link: Editor.html] editor,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId,
+@NotNull EditorError [link: EditorError.html] err,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] message)
+
+Invoked when an error has occurred.
+
+void
+
+partChanged [link: #partChanged(com.myscript.iink.Editor)] (@NotNull Editor [link: Editor.html] editor)
+
+Invoked when the part associated with the listened editor has changed.
+
+void
+
+partChanging [link: #partChanging(com.myscript.iink.Editor,com.myscript.iink.ContentPart,com.myscript.iink.ContentPart)] (@NotNull Editor [link: Editor.html] editor,
+@Nullable ContentPart [link: ContentPart.html] oldPart,
+@Nullable ContentPart [link: ContentPart.html] newPart)
+
+Invoked when the part associated with the listened editor is about to change.
+
+void
+
+selectionChanged [link: #selectionChanged(com.myscript.iink.Editor)] (@NotNull Editor [link: Editor.html] editor)
+
+Invoked when the selection has changed.
+
+Method Details
+
+partChanging
+
+void partChanging (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+@Nullable
+@Nullable ContentPart [link: ContentPart.html] oldPart,
+@Nullable
+@Nullable ContentPart [link: ContentPart.html] newPart)
+
+Invoked when the part associated with the listened editor is about to change.
+
+Parameters:
+
+editor - the editor.
+
+oldPart - the old part.
+
+newPart - the new part.
+
+See Also:
+
+Editor.setPart(ContentPart) [link: Editor.html#setPart(com.myscript.iink.ContentPart)]
+
+partChanged
+
+void partChanged (@NotNull
+@NotNull Editor [link: Editor.html] editor)
+
+Invoked when the part associated with the listened editor has changed.
+
+Parameters:
+
+editor - the editor.
+
+See Also:
+
+Editor.setPart(ContentPart) [link: Editor.html#setPart(com.myscript.iink.ContentPart)]
+
+contentChanged
+
+void contentChanged (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] blockIds)
+
+Invoked when the content has changed.
+
+Parameters:
+
+editor - the editor.
+
+blockIds - the identifiers of the modified blocks.
+
+contentChanged2
+
+default void contentChanged2 (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] addedBlockIds,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] removedBlockIds,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] updatedBlockIds)
+
+Invoked when the content has changed, with detailed information.
+
+Note: only supported for "Raw Content" parts.
+
+Parameters:
+
+editor - the editor.
+
+addedBlockIds - the identifiers of the added blocks.
+
+removedBlockIds - the identifiers of the removed blocks.
+
+updatedBlockIds - the identifiers of the updated blocks.
+
+Since:
+
+4.2
+
+onError
+
+void onError (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId,
+@NotNull
+@NotNull EditorError [link: EditorError.html] err,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] message)
+
+Invoked when an error has occurred.
+
+Parameters:
+
+editor - the editor.
+
+blockId - the identifier of the block on which this error has occurred.
+
+err - the error code corresponding to the error.
+
+message - the error message.
+
+Since:
+
+1.5
+
+selectionChanged
+
+void selectionChanged (@NotNull
+@NotNull Editor [link: Editor.html] editor)
+
+Invoked when the selection has changed. The selection can be retrieved by
+calling getSelection on the editor.
+
+Parameters:
+
+editor - the editor.
+
+Since:
+
+2.0
+
+activeBlockChanged
+
+void activeBlockChanged (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Invoked when the active block has changed.
+The active block is usually the last modified text block.
+
+Parameters:
+
+editor - the editor.
+
+blockId - the identifier of the active block.
+
+Since:
+
+1.1

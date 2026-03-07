@@ -1,0 +1,38 @@
+SOURCE: com/myscript/iink/graphics/IStrokerFactory.html
+
+Package com.myscript.iink.graphics [link: package-summary.html]
+
+Interface IStrokerFactory
+
+public interface IStrokerFactory
+
+The `IStrokerFactory` is responsible to create `IStroker` instances.
+
+Method Summary
+
+All Methods Instance Methods Abstract Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+@NotNull IStroker [link: IStroker.html]
+
+createStroker [link: #createStroker()]()
+
+Creates a new stroker instance.
+
+Method Details
+
+createStroker
+
+@NotNull
+@NotNull IStroker [link: IStroker.html] createStroker ()
+
+Creates a new stroker instance.
+
+Returns:
+
+a stroker instance.

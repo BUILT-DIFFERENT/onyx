@@ -1,0 +1,472 @@
+SOURCE: com/myscript/iink/MathExternalExpression.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class MathExternalExpression
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.MathExternalExpression
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class MathExternalExpression
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+The MathExternalExpression allows to manage an external math expression.
+
+Since:
+
+4.2
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final @NotNull MathVariableDefinition [link: MathVariableDefinition.html]
+
+asVariableDefinition [link: #asVariableDefinition()]()
+
+Checks if expression represents a variable definition and returns the associated information.
+
+final void
+
+close [link: #close()]()
+
+final @org.jetbrains.annotations.NotNull double[][]
+
+evaluate [link: #evaluate(com.myscript.iink.MathEvaluationVariables,double,double,int)] (@NotNull MathEvaluationVariables [link: MathEvaluationVariables.html] variables,
+double from,
+double to,
+int pointCount)
+
+Returns the list of points resulting from evaluating the given variables.
+
+final @org.jetbrains.annotations.NotNull double[][]
+
+evaluate [link: #evaluate(com.myscript.iink.MathEvaluationVariables,double,double,int,com.myscript.iink.ParameterSet)] (@NotNull MathEvaluationVariables [link: MathEvaluationVariables.html] variables,
+double from,
+double to,
+int pointCount,
+@Nullable ParameterSet [link: ParameterSet.html] overrideConfiguration)
+
+Returns the list of points resulting from evaluating the given variables.
+
+protected void
+
+finalize [link: #finalize()]()
+
+final @NotNull MathDiagnostic [link: MathDiagnostic.html]
+
+getDiagnostic [link: #getDiagnostic(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] task)
+
+Returns the diagnostic info for the given task.
+
+final @NotNull MathDiagnostic [link: MathDiagnostic.html]
+
+getDiagnostic [link: #getDiagnostic(java.lang.String,com.myscript.iink.ParameterSet)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] task,
+@Nullable ParameterSet [link: ParameterSet.html] overrideConfiguration)
+
+Returns the diagnostic info for the given task.
+
+final @NotNull MathEvaluationVariables [link: MathEvaluationVariables.html][]
+
+getEvaluables [link: #getEvaluables()]()
+
+Returns the list of variable names that can be evaluated.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getString [link: #getString()]()
+
+Returns the expression original string.
+
+final @NotNull MathVariableInfo [link: MathVariableInfo.html][]
+
+getVariables [link: #getVariables()]()
+
+Retrieves information about all variables associated with the expression.
+
+final double
+
+getVariableValue [link: #getVariableValue(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Returns the value associated with the given variable name.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+final boolean
+
+removeVariableValue [link: #removeVariableValue(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Removes the definition of the given variable name.
+
+final void
+
+setVariableValue [link: #setVariableValue(java.lang.String,double)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name,
+double value)
+
+Sets the value associated with the given variable name.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+getString
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getString ()
+throws IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+Returns the expression original string.
+
+Returns:
+
+the original string.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+getDiagnostic
+
+@NotNull
+public final @NotNull MathDiagnostic [link: MathDiagnostic.html] getDiagnostic (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] task,
+@Nullable
+@Nullable ParameterSet [link: ParameterSet.html] overrideConfiguration)
+throws NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html],
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html],
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+Returns the diagnostic info for the given task.
+
+Parameters:
+
+task - the task to diagnose. Only "evaluation" is currently supported.
+
+overrideConfiguration - the extra configuration used.
+
+Returns:
+
+a diagnostic error code.
+
+Throws:
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - if task is null.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when task is invalid.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when overrideConfiguration is invalid.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+getDiagnostic
+
+@NotNull
+public final @NotNull MathDiagnostic [link: MathDiagnostic.html] getDiagnostic (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] task)
+throws NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html],
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html],
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+Returns the diagnostic info for the given task.
+
+Parameters:
+
+task - the task to diagnose: either "numerical-computation" or "evaluation" .
+
+Returns:
+
+a diagnostic error code.
+
+Throws:
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - if task is null.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when task is invalid.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+getEvaluables
+
+@NotNull
+public final @NotNull MathEvaluationVariables [link: MathEvaluationVariables.html][] getEvaluables ()
+throws IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+Returns the list of variable names that can be evaluated.
+An expression with no syntax error can be evaluated when it contains:
+- a variable definition
+- a single (multi-occurrence) undefined variable and no equal sign
+- an equal sign and two undefined variables, with at least one being a single-occurrence
+Returns an empty list if expression cannot be evaluated.
+
+Example: see MathSolverController::getEvaluables .
+
+Note: in case both variables can be evaluated interchangeably, the first returned MathEvaluationVariables
+will use the (leftmost) isolated variable as output if any.
+Example: "y = cos(x) + 1" will always return: {{ in:"x", out:"y" }, { in:"y", out:"x" }} in that order.
+
+Returns:
+
+a list of MathEvaluationVariables that can be evaluated.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+evaluate
+
+@NotNull
+public final @org.jetbrains.annotations.NotNull double[][] evaluate (@NotNull
+@NotNull MathEvaluationVariables [link: MathEvaluationVariables.html] variables,
+double from,
+double to,
+int pointCount,
+@Nullable
+@Nullable ParameterSet [link: ParameterSet.html] overrideConfiguration)
+throws NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html],
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html],
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+Returns the list of points resulting from evaluating the given variables.
+
+Example: for "y = 2x" , evaluate({ in:"x", out:"y" }, -1, 1, 3)
+returns { {-1, -2, 0, 0, 1, 2} } , meaning { {x0, y0, x1, y1, x2, y2} } .
+
+Parameters:
+
+variables - the variables to evaluate.
+
+from - the start of the range to evaluate.
+
+to - the end of the range to evaluate.
+
+pointCount - the number of values to evaluate between [from, to].
+
+overrideConfiguration - the extra configuration used.
+
+Returns:
+
+a list of evaluated points, representing continuous parts of a curve.
+With points[2N] being the input value and points[2N+1] the evaluated variable output.
+
+Throws:
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when variables is null.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when variables are not evaluable.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when from or to is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when from is greater than to .
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when pointCount is not in [1, 10000] .
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when overrideConfiguration is invalid.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+evaluate
+
+@NotNull
+public final @org.jetbrains.annotations.NotNull double[][] evaluate (@NotNull
+@NotNull MathEvaluationVariables [link: MathEvaluationVariables.html] variables,
+double from,
+double to,
+int pointCount)
+throws NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html],
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html],
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+Returns the list of points resulting from evaluating the given variables.
+
+Example: for "y = 2x" , evaluate({ in:"x", out:"y" }, -1, 1, 3)
+returns { {-1, -2, 0, 0, 1, 2} } , meaning { {x0, y0, x1, y1, x2, y2} } .
+
+Parameters:
+
+variables - the variables to evaluate.
+
+from - the start of the range to evaluate.
+
+to - the end of the range to evaluate.
+
+pointCount - the number of values to evaluate between [from, to].
+
+Returns:
+
+a list of evaluated points, representing continuous parts of a curve.
+With points[2N] being the input value and points[2N+1] the evaluated variable output.
+
+Throws:
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when variables is null.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when variables are not evaluable.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when from or to is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when from is greater than to .
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when pointCount is not in [1, 10000] .
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+asVariableDefinition
+
+@NotNull
+public final @NotNull MathVariableDefinition [link: MathVariableDefinition.html] asVariableDefinition ()
+throws IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+Checks if expression represents a variable definition and returns the associated information.
+An expression represents a variable definition if it is an equation with a single variable
+on the left of the equal sign and at least one constant expression on the right (first value is used).
+Example: "a = 1/2" or "b = 1/3 = 0.33"
+
+Returns:
+
+the name and value of the defined variable if any, otherwise an invalid definition.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+getVariables
+
+@NotNull
+public final @NotNull MathVariableInfo [link: MathVariableInfo.html][] getVariables ()
+throws IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+Retrieves information about all variables associated with the expression.
+
+Returns:
+
+a vector containing the information of all variables.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+getVariableValue
+
+public final double getVariableValue (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+throws NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html],
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html],
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+Returns the value associated with the given variable name.
+
+Parameters:
+
+name - the variable name.
+
+Returns:
+
+a variable value.
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - if name is not an existing variable name.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html]
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+setVariableValue
+
+public final void setVariableValue (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name,
+double value)
+throws NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html],
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html],
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+Sets the value associated with the given variable name.
+
+Parameters:
+
+name - the variable name.
+
+value - the variable value.
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when name is an invalid variable name.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when value is an invalid variable value.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html]
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+removeVariableValue
+
+public final boolean removeVariableValue (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+throws NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html],
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]
+
+Removes the definition of the given variable name.
+
+Parameters:
+
+name - the variable name.
+
+Returns:
+
+true if the variable existed, otherwise false .
+
+Throws:
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html]
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html]

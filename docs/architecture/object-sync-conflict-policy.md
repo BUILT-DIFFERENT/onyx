@@ -1,41 +1,22 @@
-# Object Sync Conflict Policy (Contract Scaffold)
+# Object Sync — CRDT Model
 
-Date: 2026-02-24
+Date: 2026-03-07 (updated)
 
 ## Scope
 
-This document defines contract-level conflict metadata for page objects. It is intentionally schema-only in this wave; runtime sync/reconciliation engines are deferred.
+Documents the sync/conflict resolution model for page objects.
+
+## Resolution
+
+All page objects (TextBlock, Image, StickyNote, Table, AudioAttachment, Shape) live inside per-page Yjs docs as entries in the `objects: Y.Map<objectId, ObjectData>` structure.
+
+Conflict resolution is **automatic via CRDT merge semantics**. There is no per-object `objectRevision`, `conflictPolicy`, or `lastMutationId`. The old revision-based conflict model was removed when the architecture shifted from Lamport clocks to Y-Octo/Yjs CRDTs.
+
+- **Concurrent edits to different objects on the same page**: merge automatically (no conflict).
+- **Concurrent edits to the same object from different devices**: Yjs Map last-writer-wins at the field level (each field is independently mergeable).
+- **Deletions**: tombstoned in `deletedObjects: Y.Map<objectId, { deletedAt }>` inside the Yjs doc.
 
 ## Canonical Sources
 
-- Validation schema: `C:/onyx/packages/validation/src/schemas/pageObject.ts` (`sync` field)
-- Convex schema: `C:/onyx/convex/schema.ts` (`pageObjects.sync`)
-- Fixture coverage: `C:/onyx/tests/contracts/fixtures/page-object-shape-conflict.fixture.json`
-
-## Metadata Fields
-
-Optional `sync` object per page object:
-
-- `objectRevision`: current logical revision for the object
-- `parentRevision?`: revision ancestry pointer used for conflict detection
-- `lastMutationId`: deterministic mutation identifier (client-scoped)
-- `conflictPolicy`: `lastWriteWins | manualResolve`
-
-## Contract-Level Resolution Rules
-
-For equal `objectId` writes from different sources:
-
-1. If either side has higher `objectRevision`, higher revision wins.
-2. If revisions tie, compare `updatedAt`; newer wins.
-3. If both tie, apply deterministic winner by lexical compare of `lastMutationId`.
-
-Policy handling:
-
-- `lastWriteWins`: auto-resolve via rule ordering above.
-- `manualResolve`: preserve both branches in conflict handling pipeline (runtime deferred), but do not drop either update at decode time.
-
-## Deferred Runtime Work
-
-- Persisting and incrementing revision metadata from Android edit operations.
-- Convex mutation/query APIs that apply the policy live.
-- Web conflict-UI affordances for `manualResolve` branches.
+- CRDT doc structure: `PLAN.md` §8.1, `V0-api.md` §0 (Sync Model)
+- Validation schema: `packages/validation/src/schemas/pageObject.ts` (no `sync` field)

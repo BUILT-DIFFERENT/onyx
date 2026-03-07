@@ -1,0 +1,67 @@
+SOURCE: com/myscript/util/TTFAnalyzer.html
+
+Package com.myscript.util [link: package-summary.html]
+
+Class TTFAnalyzer
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.util.TTFAnalyzer
+
+public abstract class TTFAnalyzer
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+The class which loads the TTF file, parses it and returns the TTF font name.
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+TTFAnalyzer [link: #%3Cinit%3E()]()
+
+Method Summary
+
+All Methods Static Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+static String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getTtfFontName [link: #getTtfFontName(java.io.InputStream)] (@NotNull InputStream [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/InputStream.html] in)
+
+This function parses the TTF file and returns the font name specified in the file.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Constructor Details
+
+TTFAnalyzer
+
+public TTFAnalyzer ()
+
+Method Details
+
+getTtfFontName
+
+public static String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getTtfFontName (@NotNull
+@NotNull InputStream [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/InputStream.html] in)
+
+This function parses the TTF file and returns the font name specified in the file.
+
+Parameters:
+
+in - the file to parse.
+
+Returns:
+
+the font name.

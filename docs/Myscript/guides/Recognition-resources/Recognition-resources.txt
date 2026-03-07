@@ -1,0 +1,236 @@
+Recognition resources
+
+MyScript’s recognition technology is very flexible. While the default configurations support common use cases, this page explains how you can fine tune them to address specific needs.
+What are recognition resources?
+
+Resources are pieces of knowledge that should be attached to the recognition engine to make it able to recognize a given language or content.
+Alphabet knowledge
+
+An Alphabet knowledge (AK) is a resource that enables the engine to recognize individual characters for a given language and a given writing style. Default configurations include a cursive AK for each supported language.
+You can only attach a single AK to an engine at a time.
+Linguistic knowledge
+
+A Linguistic knowledge (LK) is a resource that provides the engine with linguistic information for a given language. It allows the recognition engine to improve its accuracy by favoring words from its lexicon that are the most likely to occur. Default configurations include an LK for each supported language.
+Default configurations for all languages but English variants also attach a “secondary English” LK that allows the engine to recognize a mix of the target language and English. Except for this particular case, it is not expected to mix languages together.
+Lexicon
+
+A lexicon is a resource that lists words that can be recognized in addition to what is included into linguistic knowledge resources.
+Subset knowledge
+
+A subset knowledge (SK) is a resource that restricts the number of text characters or math symbols and rules that the engine shall attempt to recognize. It thus corresponds to a restriction of another resource.
+Math grammar
+
+A math grammar is a resource that restricts the number of math symbols and rules that the engine shall be able to process.
+Ready-to use resources delivered by MyScript
+
+For on-device use, we deliver two different sets of ready to use recognition resources with associated configurations: the standard ones and the lite ones.
+Choosing between standard and lite resources
+
+The standard resources should meet most of your recognition needs. But there might be specific situation where the resource file sizes matter: as they add to the overall footprint of the OS, it reduces the space available for user data. On low end devices, you might also need the recognition process to be faster and/or to use less CPU/battery.
+
+The usage of lite recognition resources could tackle these needs: In addition to their lower sizes, they enable an increase in recognition speed. But you have to be aware that using them might slightly decrease the recognition accuracy.
+
+So, the decision to use lite versus standard resources is an arbitration between speed/sparing CPU/battery versus accuracy.
+Choosing between classical handwriting and other handwriting
+
+    The classical (print or cursive) handwriting is the most common one. In the .conf files, its resources are defined by the text configuration Name, for instance:
+
+Name: text
+Type: Text
+Configuration-Script:
+ AddResource en_US/en_US-ak-cur.res
+ AddResource en_US/en_US-lk-text.res
+...
+
+For more details to understand the .conf content, you can learn about its syntax.
+
+    In specific use cases, you may want to recognize letters, words or parts of words written over each other, without any explicit separation between consecutive fragments. This is what we call superimposed handwriting.
+
+Superimposed recognition is not suited for use with an Editor or an OffscreenEditor
+
+In the .conf files, superimposed resources are defined by the text-superimposed configuration Name, for instance:
+
+Name: text-superimposed
+Type: Text
+Configuration-Script:
+ AddResource en_US/en_US-ak-superimposed.res
+ AddResource en_US/en_US-lk-text.res
+...
+
+    With Japanese language, you may want to recognize vertical handwriting.
+
+Vertical Japanese recognition is not suited for interactive use with an Editor or an OffscreenEditor.
+
+In the .conf files, vertical Japanese resources are defined by the vertical configuration Name:
+
+Name: vertical
+Type: Text
+Configuration-Script:
+ AddResource ja_JP/ja_JP-ak-vertical.res
+ AddResource ja_JP/ja_JP-lk-text.res
+...
+
+Downloading the resources
+
+MyScript Developer Portal lets you download recognition assets to support a wide range of languages, as well as math, raw-content, shapes and diagram use cases. Each pack comes with the two ready-to-use standard and lite configurations that will work in most cases.
+Procedure to use these resources:
+The procedure to configure the resources is the same for the Engine or for the Text Recognizer, except that for the latter one, the configuration keys listed below must have the recognizer. prefix
+
+Step 1 Download as described above, your language pack(s), and if needed the content type package as well: math, diagram. For raw content, refer to this table.
+
+Step 2 Install the pack(s) in your application project:
+
+The packs consist in a *.zip archive containing the following folders to be extracted in your project path:
+
+    a conf folder (recognition-assets/conf) containing the standard resources configuration (*.conf),
+    a conf-lite folder (recognition-assets/conf-lite) containing the lite resources configuration (*.conf),
+    a * resources folder and its subtree containing the resources files (*.res).
+
+Make sure to properly deploy these files as the .conf file refers to the .res files with relative paths. So take care to keep the archive folder structure when extracting the files
+
+Step 3 Modifiy the engine or recognizer configuration manager path in your application code:
+
+Set the value of the configuration-manager.search-path and/or recognizer.configuration-manager.search-path keys to the folder(s) containing your configuration file(s) (*.conf):
+
+    So to use the standard resources, set the value to the conf folder, for instance: zip://${packageCodePath}!/assets/conf
+
+    Or to use the lite ones, set the value to to the conf-lite folder, for instance:zip://${packageCodePath}!/assets/conf-lite
+
+Additionnal optional step if you want to perform superimposed recognition or vertical Japanese (only for Text Recognizer):
+
+Modify the Text Recognizer recognizer.text.configuration.name value to text-superimposed or vertical. For vertical Japanese, you must also disable the text guides.
+Before going to production in order to avoid embedding useless resources, you should check that your assets folder contains only the necessary .res files, i.e. the ones listed in the .conf files (either in the conf or the conf-lite folder) that you are actually using.
+Using customized resources
+Why customize the recognition?
+
+There are a few situations where you may want to adapt these provided configurations:
+
+    You need the engine to recognize some vocabulary that is not included within the default MyScript lexicons, like proper names. In this case, you may build and attach a custom lexicon.
+    You target different education levels with a math application and want to restrict the amount of symbols that MyScript can recognize: this will reduce some possible ambiguities (many math symbols are very similar) and improve the overall user experience. In that case, you can build and attach a custom math grammar, if you use an editor with legacy math recognition engine, or a custom math sk, if you use a math recognizer or an editor with latest math recognition engine.
+
+    You are building a form application and want to reduce some fields to only accept certain types of symbols, such as alphanumerical symbols, digits or even capital letters. In this case, consider building and attaching a subset knowledge.
+    You need more or less recognition candidates to be made available to the end user, or you plan to index the recognition results for search purposes and want to just consider the top n candidates. You may edit the configuration accordingly.
+
+How to do so?
+
+An LK is not mandatory but not attaching one often results in a significant accuracy drop. It may be relevant to build your own LK if you do not expect to write full meaningful words, for instance if you plan to filter a list with a few letters.
+
+You can build and attach your own custom lexicons.
+
+A customized SK can be useful in a form application, for example, to restrict the authorized characters of an email field to alphanumerical characters, @ and a few allowed punctuation signs.
+
+You can build and attach your own custom subset knowledge.
+
+In education use cases, it can be useful to adapt the recognition to a given math level (for instance, only digits and basic operators for pupils):
+
+    You can build and attach your own custom math grammars for math legacy use.
+
+    You can build and attach your own custom math sk for math recognizer use.
+
+Configuration files
+Role
+
+As explained in the runtime part of the guide, iink SDK consumes configuration files, a standardized way to provide the right parameters and knowledge to recognize a specific type of content.
+Deployment and usage
+
+The resources packs that we deliver contain the corresponding configuration files that can be used as explained in previous section. This section focuses on the configuration files usage for customized resources.
+
+To deploy and use a configuration, you need to:
+
+    Deploy the *.conf file with your application, along with all the resource files that it references (make sure that all paths are correct).
+    Add the folder containing the *.conf file to the paths stored in the engine configuration for the configuration-manager.search-path key.
+    Depending on the content type, set the right configuration keys. For instance, to recognize text (in “Raw Content”, “Text”, “Diagram” and “Text Document” parts) you will need to ensure that the values of the text.configuration.bundle and text.configuration.name keys are matching your text configuration bundle and configuration item name (see example below).
+
+Syntax
+
+A configuration file is a text file with a *.conf extension. It is composed of a header (identifying a configuration bundle) and one or more named configuration items (defining configuration names) separated by empty lines.
+
+Here is an example:
+
+# Bundle header
+Bundle-Version: 2.4
+Bundle-Name: en_US
+Configuration-Script:
+  AddResDir ../resources/
+
+# Configuration item #1
+Name: text
+Type: Text
+Configuration-Script:
+  AddResource en_US/en_US-ak-cur.res
+  AddResource en_US/en_US-lk-text.res
+  SetTextListSize 1
+  SetWordListSize 5
+  SetCharListSize 1
+
+# Configuration item #2
+Name: text-no-candidate
+Type: Text
+Configuration-Script:
+  AddResource en_US/en_US-ak-cur.res
+  AddResource en_US/en_US-lk-text.res
+  SetTextListSize 1
+  SetWordListSize 1
+  SetCharListSize 1
+
+Explanations:
+
+    Lines starting with # and ! are considered as comments and ignored.
+    Lines starting with a space are continuation lines. Here, several commands are gathered under Configuration-Script.
+    The value provided as Bundle-name is the name of the bundle. This is what iink SDK expects as a possible value for the text.configuration.bundle configuration key. In this example, it would be en_US.
+    The value provided as Name defines a configuration item. This is one of these names that iink SDK expects as a possible value for the text.configuration.name configuration key. In this example, it could be text and text-no-candidate. A given engine can only be configured with a single configuration item for each type of recognizer at any point in time.
+    Possible values for the Type key are: Text, Math, Shape and Analyzer. They correspond to the types of content that the core MyScript technology is able to recognize.
+
+It is mandatory to separate configuration items with a blank line.
+Configuration commands
+
+The table below lists some possible configuration commands (to be placed under Configuration-Script):
+Configuration item type 	Syntax 	Argument
+All 	AddResDir DIRECTORY 	Folder that the engine shall consider for resource files relative paths
+  	AddResource FILE 	Name of an individual resource file to attach
+Text 	SetCharListSize N 	An integer between 1 and 20, representing the number of character candidates to keep
+  	SetWordListSize N 	An integer between 1 and 20, representing the number of word candidates to keep
+  	SetTextListSize N 	An integer between 1 and 20, representing the number of text candidates to keep
+Required bundle according to content types
+
+The following tables lists the types of configuration items that you need to provide for iink SDK to support its different content types:
+Content type 	Required configuration item types
+Text 	Text
+Math 	Math
+Diagram 	Text + Shape + Analyzer
+Text Document 	Text + Math + Shape + Analyzer
+Required bundles for Raw Content
+
+    If you are using a Raw Content Recognizer, refer to the Recognizers page to get the list of needed bundles.
+
+    If you are using an Editor or OffscreenEditor, you need to deploy the following resources depending on your recognition configuration and analyzer bundle.
+
+➤ With the latest analyzer:
+Configuration item types 	Required configuration bundles 	Resource package containing the bundle
+Text 	${lang} 1 	Language package defined by your lang configuration. See principles of language resources
+Shape 	shape 2 	myscript-iink-recognition-diagram.zip
+Math 	math2 3 	myscript-iink-recognition-math2.zip
+Analyzer 	raw-content2 	myscript-iink-recognition-raw-content2.zip
+
+➤ With the legacy analyzer:
+Configuration item types 	Required configuration bundles 	Resource package
+Text 	${lang} 1 	Language package defined by your lang configuration. See principles of language resources
+Shape 	shape 2 	myscript-iink-recognition-diagram.zip
+Math 	math 3 	myscript-iink-recognition-math.zip
+Analyzer 	raw-content 	myscript-iink-recognition-raw-content.zip
+
+    If you enable text recognition (see configuration). ↩ ↩2
+
+    If you enable shape recognition (see configuration). ↩ ↩2
+
+    If you enable math recognition (see configuration). ↩ ↩2
+
+Attaching resources
+
+Resouces are attached in the Configuration-Script part of the configuration items by using the AddResource command.
+
+For example, in the case of an en_US AK, you would write:
+
+AddResource en_US/en_US-ak-cur.res
+
+Make sure that the path to the resource is correct.

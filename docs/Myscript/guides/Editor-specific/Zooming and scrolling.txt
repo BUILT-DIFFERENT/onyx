@@ -1,0 +1,46 @@
+Zooming and scrolling
+
+This page explains how zooming and scrolling can be managed via the Renderer object of iink SDK.
+View transformation matrix
+
+Although interactive ink is digital by essence, handwriting itself has its roots in the physical world. A user feels comfortable when writing with a certain line spacing and will write differently depending on the type and quality of its stylus. Similarly the recognition engine will not interpret the same way an ink circle, if it is almost undistinguishable from a dot or if it one centimeter wide. True to this anchoring in the physical world, iink SDK internally stores its data in millimeters.
+
+Your application, however, will most likely work in view coordinates, and this is the unit you will rely on to dispatch input to the SDK. As you may also specify a zoom factor, things are likely to get complicated.
+
+MyScript iink SDK makes the link between these two coordinate systems via the view transform of the Renderer object you attached to your editor. It takes into account dpi, zoom and potential offset.
+
+Like with most iink SDK APIs, you do not need to manipulate the transformation matrix yourself. You can however access it by calling getViewTransform() on the renderer and use it to transform from one system into the other.
+View size
+
+The size of the view must be provided to the editor using setViewSize(). If not, an exception will be raised when trying to attach a part to the editor (note that in the reference implementation, this call is made for you as part of the implementation of the EditorView object).
+
+The size of the view plays an important role to enable interactive content to dynamically reflow and adjust to the view size.
+Zoom and scroll management
+
+Zooming and scrolling are managed by acting on the view transformation matrix. Rather than manipulating it directly, however, a set of convenience methods are provided on the renderer object.
+If you change the renderer transformation matrix, you need to invalidate the render target to force a redraw.
+Zooming
+
+You can manipulate the absolute value of the view scale by calling getViewScale() and setViewScale(). A scale of 2.0 will make your content look twice as large as it is in reality, while a scale of 0.5 will render it twice smaller.
+
+Alternatively, you can apply a zoom factor relatively to the current scale by calling zoom() and passing it the desired factor.
+
+For example:
+
+renderer.setViewScale(2.0f); // Scale = 2.0f
+renderer.zoom(4.3f);         // Scale = 8.0f
+
+If you are processing a pinch to zoom gesture, you may also want to specify the location of the point around which to adjust the zoom. In this case, use zoomAt() and provide the coordinates of the point to consider in addition to the zoom factor you want to apply.
+Scrolling
+
+To scroll the view, just apply an offset to the renderer by calling setViewOffset() with the x and y absolute components of the offset to consider.
+
+For example:
+
+renderer.setViewOffset(2.4f, 4.3f);
+renderer.setViewOffset(2.4f, 2.4f);
+
+You can get the current view offset with getViewOffset().
+Monitoring transformation matrix changes
+
+You may want to attach a listener to the renderer to be notified of transformation matrix changes (for instance to adapt your user interface). Such a listener shall implement the viewTransformChanged() method of the IRendererListener interface and can be respectively attached to or detached from your rendering using the addListener() and removeListener() methods.

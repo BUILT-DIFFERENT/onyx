@@ -1,1 +1,1 @@
-export { createTestNote } from './factories/note';
+export { createTestNotebook } from './factories/note';

@@ -33,7 +33,7 @@ Onyx is a handwritten note-taking application targeting engineering and STEM stu
 
 - Lowest achievable input-to-ink latency via a custom Vulkan rendering pipeline with motion prediction
 - Full pressure and tilt sensitivity leveraging the S Pen hardware
-- Offline-first operation with optional real-time collaboration powered by CRDT-based sync
+- Offline-first operation with optional real-time collaboration powered by Y-Octo/Yjs CRDT-based sync
 - MyScript IInk SDK integration for handwriting recognition, shape recognition, and LaTeX equation recognition — recognition only, rendering is handled by the custom pipeline
 - Flexible organization (folders, notebooks, pages) with HWR-indexed search
 
@@ -45,9 +45,9 @@ Onyx is a handwritten note-taking application targeting engineering and STEM stu
 |---|---|
 | Primary users | Engineering / STEM students |
 | Primary device | Samsung tablets with Samsung S Pen |
-| Input model | Stylus-only — finger drawing is disabled |
+| Input model | Stylus-first. Finger drawing is disabled by default; optional single-finger draw mode can be enabled in settings |
 | Primary platform | Android (Kotlin + Jetpack Compose) |
-|| Secondary platform | Web viewer (TanStack Start, read-only) |
+| Secondary platform | Web viewer (TanStack Start, read-only) |
 
 ---
 
@@ -64,21 +64,21 @@ Onyx is a handwritten note-taking application targeting engineering and STEM stu
 | Background sync | WorkManager |
 | PDF rendering | PdfiumAndroid (Zoltaneusz/PdfiumAndroid:v1.10.0) |
 | PDF text extraction | Apache PDFBox Android |
-| Handwriting recognition | MyScript IInk SDK 4.3 (recognition only, no rendering) |
-| CRDT engine | Y-Octo (Rust, compiled via Android NDK/JNI) — binary compatible with Yjs on web |
+| Handwriting recognition | MyScript IInk SDK 4.3 (offline, recognition only, no rendering) |
+| CRDT engine | Y-Octo (Rust, compiled via Android NDK/JNI) — binary-compatible with Yjs on web. Yjs doc stored as raw binary file on device (magic header `ONYX` + uint32 version + encoded state array) |
 
 ### 3.2 Backend
 
 | Service | Role |
 |---|---|
-| Convex | Metadata, user data, sharing settings, CRDT operation deltas (small payloads only) |
-| Cloudflare R2 | Large blobs: PDFs, images, audio recordings, periodic stroke snapshots |
+| Convex | Metadata, user data, folder hierarchy, sharing settings, CRDT update deltas (<10 KB each), search index, presence |
+| Cloudflare R2 | Large blobs: PDFs (original, never auto-flattened), images, audio recordings, Yjs doc snapshots, exported PDFs |
 
-Convex stores blob references (R2 URL + version hash); it never stores raw binary data directly.
+Convex stores asset references (R2 key + size + hash); it never stores raw binary data directly. PDFs are never auto-flattened to R2 — the original PDF plus separate stroke data in the Yjs doc is the canonical storage. Flattened PDFs are only generated on explicit user export.
 
 ### 3.3 Auth
 
-- Clerk (preferred) or WorkOS — decision deferred to Phase 4
+- Clerk — chosen for v0. WorkOS considered for future enterprise SSO.
 - Google Sign-In as the primary OAuth provider
 
 ### 3.4 Web
@@ -86,9 +86,11 @@ Convex stores blob references (R2 URL + version hash); it never stores raw binar
 | Layer | Technology |
 |---|---|
 | Framework | TanStack Start |
-|| PDF rendering | Tile rasters (no raw PDF download in viewer) |
-| Real-time | Convex real-time subscriptions |
-| HWR recognition | MyScript cloud API via WebSocket / REST (secondary, online-only) |
+| PDF rendering | PDF.js renders original PDF from R2 presigned URL |
+| Ink rendering | Canvas overlay on top of PDF, strokes tessellated from raw point data |
+| CRDT engine | Yjs (JavaScript) — binary-compatible with Y-Octo on Android |
+| Real-time | Convex real-time subscriptions (sync.watchHead) |
+| HWR recognition | Not integrated in v1 (web is view-only, no drawing) |
 
 ---
 
@@ -132,47 +134,63 @@ Convex stores blob references (R2 URL + version hash); it never stores raw binar
 
 ### Key Architectural Principles
 
-1. **Offline-first**: The app is fully functional without a network connection. All writes go to Room and the local Yjs doc first; sync is opportunistic.
+1. **Offline-first**: The app is fully functional without a network connection. All writes go to the local Yjs doc and Room first; sync to Convex is opportunistic.
 2. **Rendering isolation**: The Vulkan ink canvas is a separate NDK layer. Compose UI renders chrome (toolbar, panels) around it without touching the ink surface.
 3. **Recognition decoupled from rendering**: IInk SDK receives stroke data for recognition purposes only. It never drives pixel output.
-4. **Blob references, not blobs in the DB**: Convex holds only metadata and CRDT deltas. All binary assets live in R2; Convex records the URL and a version hash.
+4. **Blob references, not blobs in the DB**: Convex holds only metadata and CRDT deltas. All binary assets live in R2; Convex records the R2 key, size, and hash.
+5. **CRDT as source of truth**: Y-Octo/Yjs is the authoritative representation of all page content (strokes, objects). Room is a local cache and metadata store. Conflict resolution is automatic via CRDT merge semantics.
+6. **Two-level CRDT documents**: A notebook-level Yjs doc owns page ordering and metadata. Each page has its own Yjs doc for content (strokes, objects). This avoids loading the full notebook CRDT when opening a single page.
 
 ---
 
 ## 5. Data Model
+
+### 5.0 Coordinate System
+
+- **Unit**: pixels (px) everywhere — strokes, objects, page dimensions, PDF overlay, positions
+- **Page size (paged mode)**: 794 × 1123 px (A4 at 96 DPI) — default; each page stores its own dimensions
+- **Infinite canvas**: 794 px wide (same as paged), infinite vertical scroll; internal tile size 2048 px
+- **Stroke coordinates**: absolute pixel positions within the page coordinate space (origin = top-left of page)
+- **Zoom**: client-side viewport transform only. Stroke/object data always stored in page-space pixels. The renderer scales the viewport, not the stored data.
+- **PDF overlay**: PDF pages are rasterized to match page pixel dimensions at render time. Strokes drawn on PDF-backed pages share the same px coordinate space. On export (user-initiated), strokes are composited onto the PDF at the PDF’s native resolution.
 
 ### 5.1 Entities
 
 #### User
 | Field | Type | Notes |
 |---|---|---|
-| id | String (UUID) | Primary key |
-| email | String | Unique |
+| id | String (UUID) | Primary key (Clerk user ID) |
+| email | String | Unique, lowercase |
 | displayName | String | |
 | avatarUrl | String? | |
-| authProvider | Enum | clerk / workos |
 
 #### Folder
 | Field | Type | Notes |
 |---|---|---|
 | id | String | |
 | ownerId | String | FK -> User |
-| parentFolderId | String? | Nullable — root folder has no parent |
+| parentFolderId | String? | Nullable — root folder has no parent. Arbitrary nesting. |
 | name | String | |
 | createdAt | Instant | |
+| updatedAt | Instant | |
+
+Folders are server-synced via Convex `folders` table. Consistent across all devices.
 
 #### Notebook
 | Field | Type | Notes |
 |---|---|---|
 | id | String | |
 | ownerId | String | FK -> User |
-| folderId | String? | FK -> Folder |
+| folderId | String? | FK -> Folder. Null = root level |
 | title | String | |
 | coverColor | String | Hex color |
+| isFavorite | Boolean | Favorites float to top of current folder view |
+| notebookMode | Enum | paged / infinite_canvas |
 | createdAt | Instant | |
 | updatedAt | Instant | |
-| snapshotUrl | String? | R2 URL of latest Yjs snapshot |
-| snapshotVersion | Long | Used to detect stale snapshots |
+| deletedAt | Instant? | Null = not deleted; soft delete to Trash |
+| snapshotUrl | String? | R2 URL of latest notebook-level Yjs snapshot |
+| snapshotStateVector | ByteArray? | Yjs state vector of the snapshot (used to fetch only deltas since snapshot) |
 
 #### Page
 | Field | Type | Notes |
@@ -181,89 +199,146 @@ Convex stores blob references (R2 URL + version hash); it never stores raw binar
 | notebookId | String | FK -> Notebook |
 | order | Int | Sort order within notebook |
 | templateType | Enum | blank / lined / dotted / grid |
-| templateDensity | Float | Lines/dots per unit |
-| templateLineWidth | Float | |
-| backgroundColorHex | String | Per-page override |
-| widthPx | Int | Default: A4 width at 96dpi (794px) |
-| heightPx | Int | Default: A4 height at 96dpi (1123px) |
+| templateDensity | Float | Lines/dots per px |
+| templateLineWidth | Float | px |
+| backgroundColorHex | String | Per-page background color |
+| widthPx | Int | Default: 794 (A4 at 96 DPI) |
+| heightPx | Int | Default: 1123 (A4 at 96 DPI). 0 = infinite canvas page |
+| pdfAssetId | String? | R2 asset ID if this page has a PDF background |
+| pdfPageNo | Int? | 0-based index into the PDF |
+| pageSnapshotUrl | String? | R2 URL of latest per-page Yjs doc snapshot |
+| pageSnapshotStateVector | ByteArray? | Yjs state vector of the per-page snapshot |
 
-#### Stroke
+#### Stroke (inside per-page Yjs doc; Room is a local query cache)
 | Field | Type | Notes |
 |---|---|---|
-| id | String | |
+| id | String | UUID, assigned by client |
 | pageId | String | FK -> Page |
-| yjsOpId | String | Yjs operation ID for CRDT merge |
 | toolType | Enum | pen / highlighter |
+| penType | Enum? | ballpoint / fountain / pencil (only for toolType=pen) |
 | colorHex | String | |
-| thickness | Float | |
-| pressure | Float[] | Per-point pressure values |
-| tilt | Float[] | Per-point tilt values |
-| points | Float[] | Interleaved x, y coordinates |
+| thickness | Float | Base width in px |
+| opacity | Float | 0.0–1.0 (mainly for highlighter) |
+| pressureSensitivity | Float | 0.0–1.0 |
+| tiltSensitivity | Float | 0.0–1.0 |
+| stabilization | Float | 0.0–1.0 smoothing level |
+| points | RawPoint[] | Per-point: x, y (px), pressure, tiltX, tiltY (radians), timestamp (unix ms) |
+| isShape | Boolean | True if IInk shape-recognized and snapped |
+| shapeData | ShapeData? | Set when isShape=true |
 | createdAt | Instant | |
 
-Strokes are the source of truth inside the Yjs document. The Room table is a materialized projection for local queries; the Yjs doc is authoritative.
+Strokes live inside the per-page Yjs doc (`strokes: Y.Map<id, StrokeData>`). The Room `strokes` table is a materialized read cache for local queries (search, hit-testing). The Yjs doc is authoritative.
 
-#### TextBlock
+#### PageObject (inside per-page Yjs doc; Room is a local query cache)
+
+All page objects share a base schema:
+
 | Field | Type | Notes |
 |---|---|---|
-| id | String | |
+| id | String | UUID |
 | pageId | String | FK -> Page |
-| content | String | Plain text or LaTeX source |
-| positionX | Float | |
-| positionY | Float | |
-| width | Float | |
-| isLatex | Boolean | Renders as inline math if true |
+| type | Enum | textBlock / image / stickyNote / table / audioAttachment / shape |
+| x | Float | px, page-space |
+| y | Float | px, page-space |
+| width | Float | px |
+| height | Float | px |
+| rotation | Float | degrees |
+| zIndex | Int | |
+| locked | Boolean | Locked objects not affected by eraser/lasso |
+| createdAt | Instant | |
+| updatedAt | Instant | |
+
+**TextBlock** (type = textBlock):
+| Field | Type | Notes |
+|---|---|---|
+| content | String | Plain text |
+| isLatex | Boolean | Renders as KaTeX if true |
 | latexSource | String? | Raw LaTeX string |
+| fontSize | Float | px |
+| color | String | Hex |
+| align | Enum | start / center / end |
+| bold | Boolean | |
+| italic | Boolean | |
+| underline | Boolean | |
 
-#### Attachment
+**Image** (type = image):
 | Field | Type | Notes |
 |---|---|---|
-| id | String | |
-| pageId | String | FK -> Page |
-| type | Enum | image / audio / pdf_page |
-| r2Url | String | |
-| positionX | Float | |
-| positionY | Float | |
-| width | Float | |
-| height | Float | |
+| assetId | String | References Convex `assets` table; binary in R2 |
+| mimeType | String | |
+| originalWidth | Int | px |
+| originalHeight | Int | px |
 
-#### AudioRecording
+**StickyNote** (type = stickyNote):
 | Field | Type | Notes |
 |---|---|---|
-| id | String | |
-| notebookId | String | FK -> Notebook |
-| r2Url | String | |
-| durationSeconds | Int | |
-| createdAt | Instant | |
+| text | String | |
+| backgroundColor | String | Hex (presets: yellow, pink, blue, green, purple) |
+| style | Enum | square / rounded |
+| fontSize | Float | px |
+
+**Table** (type = table):
+| Field | Type | Notes |
+|---|---|---|
+| rows | Int | |
+| cols | Int | |
+| cells | CellData[] | Array of {row, col, content: String} |
+| borderColor | String | Hex |
+| headerRow | Boolean | First row bold with distinct background |
+| colWidths | Float[] | px, one per column |
+| rowHeights | Float[] | px, one per row |
+
+Tapping a table cell pops up the software keyboard for text input.
+
+**AudioAttachment** (type = audioAttachment):
+| Field | Type | Notes |
+|---|---|---|
+| assetId | String | References Convex `assets` table; binary in R2 |
+| durationMs | Int | |
+| mimeType | String | |
+
+No ink-to-audio time sync in v1 (dumb attachment — record and playback only).
+
+**Shape** (type = shape, created by IInk shape recognition):
+| Field | Type | Notes |
+|---|---|---|
+| shapeType | Enum | line / rectangle / ellipse / triangle / circle / arrow |
+| strokeColor | String | Hex |
+| strokeWidth | Float | px |
+| fillColor | String? | Hex, optional |
+| controlPoints | Float[] | Shape-specific geometry points in px |
 
 #### Share
 | Field | Type | Notes |
 |---|---|---|
 | id | String | |
 | notebookId | String | FK -> Notebook |
-| accessType | Enum | view / edit |
-| linkToken | String? | Null if invite-only |
-| invitedEmail | String? | Null if public link |
+| granteeUserId | String | FK -> User |
+| role | Enum | viewer / editor |
+| grantedByUserId | String | FK -> User |
 | createdAt | Instant | |
+| revokedAt | Instant? | |
 
-#### Collaborator
+#### PublicLink
 | Field | Type | Notes |
 |---|---|---|
 | id | String | |
 | notebookId | String | FK -> Notebook |
-| userId | String | FK -> User |
-| role | Enum | viewer / editor |
+| linkToken | String | High-entropy URL token |
+| createdByUserId | String | FK -> User |
+| createdAt | Instant | |
+| revokedAt | Instant? | |
 
 ---
 
 ## 6. Feature Set
 
-### 6.1 Note Modes
+### 6.1 Notebook Modes
 
 | Mode | Description |
 |---|---|
 | Paged | Stacked discrete pages; used for imported PDFs and standard notebooks |
-| Infinite vertical canvas | Same horizontal width as paged mode, scrolls vertically without page breaks |
+| Infinite vertical canvas | 794 px wide (same as paged), scrolls vertically without page breaks. Internal tile size: 2048 px |
 | Two-page layout | Paged mode only; shows two pages side-by-side (tablet landscape) |
 
 ### 6.2 Page Templates
@@ -280,6 +355,12 @@ All template properties are stored per-page and can be changed at any time witho
 ### 6.3 Tools
 
 #### Pen
+Three named instruments with distinct feel:
+- **Ballpoint**: low latency, mild pressure→width response, strong wobble suppression, consistent line weight
+- **Fountain**: strong width/orientation dynamics, pressure produces thick-thin variation, slight pooling at slow points
+- **Pencil**: minimal smoothing, raw textured feel, lighter opacity, no taper
+
+Shared pen properties:
 - Configurable thickness
 - Pressure sensitivity (S Pen hardware data)
 - Tilt sensitivity
@@ -295,11 +376,11 @@ All template properties are stored per-page and can be changed at any time witho
 - Straight-line mode: always straight / never straight / hold-to-snap
 
 #### Lasso
-- Select one or more strokes
+- Select one or more strokes and objects
 - Move selection
-- Resize selection
-- Convert selection to typed text (in-place replacement, powered by IInk HWR)
-- Convert selection to LaTeX equation: IInk recognizes the equation, renders it inline as a TextBlock (isLatex = true); lasso the block again to copy the raw LaTeX string to the clipboard
+- Resize selection (stroke thickness does not scale with resize)
+- Convert selection to typed text (in-place replacement via IInk HWR; shows toast "Recognition failed" on failure; user can Undo)
+- Convert selection to LaTeX: IInk math recognizer returns LaTeX string, rendered inline as TextBlock (isLatex=true); shows toast "Recognition failed" on failure; user can Undo
 
 #### Eraser
 - Toggle between stroke eraser (deletes full strokes) and area eraser (deletes any stroke segment crossing the eraser area)
@@ -316,7 +397,7 @@ All template properties are stored per-page and can be changed at any time witho
 - Customizable color preset palette: configurable count and color values
 - S Pen button default: hold to activate eraser (customizable in a later phase)
 
-### 6.5 Per-Note Settings (in-editor)
+### 6.5 Per-Notebook Settings (in-editor)
 
 | Setting | Options |
 |---|---|
@@ -324,14 +405,14 @@ All template properties are stored per-page and can be changed at any time witho
 | Hide status / navigation bars | Toggle |
 | Scroll bar position | Left / Right |
 | Background color | Color picker (independent of system theme) |
-| Default pen color | Auto-contrast enforced: dark background prevents black pen; white background prevents white pen |
-| Note theme | Dark / Light (independent of system dark mode) |
+| Default pen color | Auto-contrast suggested: dark background suggests switching to light pen color (one-time suggestion, not enforcement) |
+| Notebook theme | Dark / Light (independent of system dark mode) |
 
 ### 6.6 Zoom
 
 - Range: 50% to 1000%
 - Pinch-to-zoom gesture (two fingers — stylus input only for drawing)
-- Zoom level persisted per note
+- Zoom level persisted per notebook
 
 ### 6.7 Content Types
 
@@ -341,14 +422,28 @@ All template properties are stored per-page and can be changed at any time witho
 | Typed text blocks | Inserted manually or converted from handwriting via lasso |
 | LaTeX blocks | Converted from handwriting via lasso + IInk equation recognition |
 | Images | Camera or gallery (Android) |
-| PDF pages | Imported as note backgrounds |
-| Audio recordings | Recorded in-app, tied to notebook, playback only |
+| PDF pages | Imported as page backgrounds (original PDF stored in R2, never auto-flattened) |
+| Audio recordings | Recorded in-app, tied to notebook, playback only (binary in R2) |
+| Sticky notes | Colored floating notes, insertable from toolbar |
+| Tables | Grid tables with plain-text cells, keyboard input, insertable from toolbar |
+| Shapes | Created by IInk shape recognition from drawn strokes |
 
 ### 6.8 Undo / Redo
 
-- Unlimited undo/redo within a session
-- Operation log is persisted to Room — undo/redo state survives app restarts
-- Undo/redo operations are themselves CRDT operations, keeping collaborators consistent
+- 100 undo + 100 redo operations per page (FIFO eviction of oldest entry when limit exceeded)
+- Undo/redo history persisted to local storage — survives app restarts
+- Undo/redo writes new Yjs updates to the CRDT doc; collaborators see the reverted state
+
+### 6.9 Adding Pages (Circle Gesture)
+
+When the user scrolls past the last page and continues swiping up:
+1. A circular progress indicator (64dp diameter, accent color stroke, thin) begins drawing clockwise from 12 o’clock
+2. Centered horizontally at the bottom of the viewport
+3. 120dp overscroll = complete circle (proportional fill: 60dp = half-circle)
+4. Release before complete: circle animates back to empty (150ms ease-out), no page added
+5. Release after complete: haptic feedback (light tap), circle fills solid (100ms), new blank page appends with 200ms slide-in
+6. The ’+’ icon appears in the circle center at 50% fill, scales up to full size at 100%
+7. Fallback: pages also added via ’+’ button in Zone 1
 
 ---
 
@@ -403,46 +498,64 @@ Display (committed at VSync)
 
 ### 8.1 Overview
 
-Onyx uses a snapshot + delta model on top of Y-Octo CRDTs (binary-compatible with Yjs), with Convex handling live delta streaming and Cloudflare R2 holding full snapshots. Android uses Y-Octo (Rust/JNI); the web viewer uses Yjs (JavaScript) — both read/write the same binary CRDT format.
+Onyx uses a snapshot + delta model built on Y-Octo/Yjs CRDTs. Android uses Y-Octo (Rust/JNI); the web viewer uses Yjs (JS) — both produce and consume the same binary CRDT update format.
+
+**Two-level CRDT document structure:**
+- **Notebook-level Yjs doc**: owns `pages` array (page ordering + page metadata) and notebook `metadata` map
+- **Per-page Yjs doc**: owns `strokes: Y.Map`, `objects: Y.Map`, `deletedStrokes: Y.Map`, `deletedObjects: Y.Map`
+
+This avoids loading all page content just to open a notebook or browse page thumbnails.
+
+### 8.2 Sync Flow
 
 ```
-On first load of a notebook:
-  1. Fetch latest snapshot from R2 (snapshotUrl in Notebook record)
-  2. Apply all Convex-stored CRDT deltas since snapshotVersion
-  3. Initialize local Yjs doc from merged state
-  4. Subscribe to live Convex delta stream
+On notebook open (per level):
+  1. Load local Yjs binary file (ONYX magic + uint32 version + encoded state)
+  2. Fetch latest snapshot from R2 if local file is absent or older than snapshot
+  3. Call sync.pullUpdates(stateVector) to fetch Convex deltas since snapshot
+  4. Apply updates to local Yjs doc; persist updated binary file
+  5. Subscribe to sync.watchHead for live deltas
 
 During editing:
-  1. All mutations produce Yjs operations locally (applied immediately)
-  2. Yjs delta (encoded update) pushed to Convex
-  3. WorkManager queues R2 snapshot write on a time/op-count threshold
+  1. All mutations applied locally to Yjs doc immediately (offline-first)
+  2. Yjs update binary delta queued locally (Room OfflineQueueEntity)
+  3. If online: WorkManager flushes queue via sync.pushUpdates immediately
+  4. Snapshot cadence: WorkManager schedules R2 snapshot write debounced from last edit
+     - Shared/public notebooks: 5s after last edit
+     - Private notebooks: 20s after last edit
 
 On reconnect after offline:
-  1. Flush local Room op queue to Convex in order
-  2. Receive any remote deltas since last sync
-  3. Yjs handles merge automatically (CRDT guarantee)
+  1. WorkManager drains OfflineQueueEntity in insertion order via sync.pushUpdates
+  2. Pull remote updates accumulated during offline period via sync.pullUpdates
+  3. Yjs merges automatically (CRDT guarantee — no conflict resolution logic)
 ```
 
-### 8.2 Convex Schema Responsibilities
+### 8.3 Convex Responsibilities (`crdtUpdates` table)
 
-- Store CRDT delta payloads (binary blobs, small — typically <10 KB each)
-- Store Notebook metadata including snapshotUrl and snapshotVersion
-- Store Share and Collaborator records
-- Serve real-time subscriptions for live collaboration cursors
+- Store Yjs update binary payloads (small, typically <10 KB each)
+- Index by `(notebookId, pageId, createdAt)` for efficient state-vector-based pulls
+- Serve reactive subscriptions (sync.watchHead) for live delta notification
+- Store all metadata: notebooks, pages, folders, shares, publicLinks, assets, presence, search
 
-### 8.3 Cloudflare R2 Responsibilities
+### 8.4 Cloudflare R2 Responsibilities
 
-- Full Yjs document snapshots (periodic, triggered by WorkManager)
-- Imported PDFs
-- Inserted images
-- Audio recordings
+- Full Yjs doc snapshots (notebook-level + per-page)
+- Original PDFs (never auto-flattened — flattening only on user-initiated export)
+- Images, audio recordings
+- Exported (flattened) PDFs
+- Notebook thumbnail images
 
-### 8.4 Offline Behavior
+### 8.5 Android Local Storage
 
-- The app reads exclusively from Room and the local Yjs doc while offline
-- All write operations are appended to an offline op queue in Room
-- On network restoration, WorkManager drains the queue in order and applies deltas to Convex
-- No data is lost if the app is killed while offline — the queue persists across restarts
+- **Room**: notebook/page/folder/share metadata cache, editor settings, search FTS (IInk HWR tokens + PDF text), OfflineQueueEntity for pending sync
+- **Yjs binary files** (app internal storage): one file per Yjs doc (notebook-level + per-page). Format: 4-byte magic `ONYX`, 4-byte uint32 version big-endian, then raw Yjs encoded state array. Versioned to detect incompatible format changes.
+
+### 8.6 Offline Behavior
+
+- Full read/write access while offline using local Yjs files + Room
+- All writes produce Yjs updates stored in OfflineQueueEntity
+- On network restore, WorkManager drains queue; Convex and remote clients converge via CRDT merge
+- No data loss if the app is killed offline — queue is persisted
 
 ---
 
@@ -452,14 +565,14 @@ IInk SDK 4.3 is used strictly as a recognition engine. It does not render anythi
 
 ### 9.1 Recognition Modes
 
-| Mode | Trigger | Output |
-|---|---|---|
-| HWR (handwriting recognition) | Background indexing after pen-up | Text tokens stored in search index |
-| Shape recognition | Pen-up when shape recognition is enabled | Snaps stroke to nearest geometric shape |
-| Scribble-to-erase gesture | Real-time, when gesture mode enabled | Identifies scribble pattern; triggers stroke deletion |
-| Hold-to-draw-shape gesture | Hold duration threshold at stroke end | Triggers shape snap via shape recognition |
-| LaTeX equation recognition | Lasso selection -> convert to LaTeX | Returns LaTeX string; app renders it as inline math |
-| Handwriting-to-text | Lasso selection -> convert to text | Returns plain text string; replaces selection with TextBlock |
+| Mode | Trigger | Output | Failure behavior |
+|---|---|---|---|
+| HWR (background indexing) | Debounced 500ms after pen-up | Text tokens stored in Room FTS + Convex searchTexts | Silent skip; retry on next edit |
+| Shape recognition | Pen-up when shape mode enabled | Replaces stroke with IInk geometric primitive (SDK native confidence, SDK defaults) | Stroke preserved unchanged if not recognized |
+| Scribble-to-erase gesture | Real-time, gesture mode enabled | Identifies scribble; triggers stroke deletion | Silent skip |
+| Hold-to-draw-shape | Hold threshold at stroke end | Shape snap via IInk | Stroke preserved unchanged |
+| LaTeX equation recognition | Lasso → convert to LaTeX | TextBlock (isLatex=true, latexSource populated) | Toast: "Recognition failed — try again with clearer writing"; handwriting preserved; user can Undo |
+| Handwriting-to-text | Lasso → convert to text | TextBlock (plain text) | Toast: "Recognition failed"; handwriting preserved; user can Undo |
 
 ### 9.2 Stroke Data Flow to IInk
 
@@ -467,9 +580,12 @@ Strokes are delivered to IInk as `InkModel` input after pen-up. IInk operates on
 
 ### 9.3 HWR Search Index
 
-- After each stroke is committed and recognized, IInk text tokens are stored in a local Room FTS (full-text search) table linked to the pageId
-- Search queries run against the FTS table locally; no network required for search on locally stored notes
-- On web, HWR search uses the MyScript cloud API (online only)
+- After each stroke is committed, a debounced coroutine (500ms after last pen-up) sends strokes to IInk HWR
+- Recognized text tokens are stored in Room FTS5 table (unicode61 tokenizer) linked to pageId
+- Tokens are also pushed to Convex `searchTexts` table via `search.upsertPageText` for global cross-device search
+- Local Room FTS queries: no network required for search on locally cached notebooks
+- Web search uses Convex `search.global` (Convex built-in full-text search index)
+- MyScript cloud API for web is NOT integrated in v1 (web is view-only, no drawing)
 
 ---
 
@@ -477,26 +593,31 @@ Strokes are delivered to IInk as `InkModel` input after pen-up. IInk operates on
 
 ### 10.1 Import
 
-- PDFs are imported into paged view mode
-- Each PDF page becomes one Page entity with the PDF page rendered as the background
-- PdfiumAndroidKt renders PDF pages to bitmaps, cached per zoom level
-- The original PDF binary is uploaded to R2; the Notebook record holds the R2 URL
+- PDFs are imported into paged view mode only
+- Each PDF page becomes one Page entity; the PDF page is rendered as the background at display time
+- PdfiumAndroid renders PDF pages to bitmaps cached per zoom level
+- The original PDF binary is uploaded to R2 via presigned PUT; the `assets` Convex record holds the R2 key
+- **PDFs are never auto-flattened.** Original PDF + separate Yjs stroke data = canonical storage.
 
 ### 10.2 Text Extraction
 
-- Apache PDFBox Android extracts text from PDF pages at import time
-- Extracted text is indexed in Room FTS for search
-- Text layer is used for search only — no in-app PDF text selection UI in this iteration
+- Apache PDFBox Android extracts text from PDF pages at import time (background, async)
+- Extracted text indexed in Room FTS5 for local search
+- Also pushed to Convex `searchTexts` via `search.upsertPageText` for cross-device search
+- No in-app PDF text selection UI in v1
 
-### 10.3 Export
+### 10.3 Export (User-Initiated)
 
-- Flatten strokes onto PDF pages: render each page's strokes to a bitmap, compose with original PDF page via PDFBox
-- Output PDF is compiled and uploaded to R2; user receives a share link or download
+- User explicitly requests PDF export
+- Android renders each page's strokes via Vulkan to a bitmap, composites with original PDF page via PDFBox
+- Exported (flattened) PDF uploaded to R2; registered via `exports.register`; user receives presigned download URL
+- Public link viewers can also download the exported PDF via `publicAssets.getDownloadUrl`
 
 ### 10.4 Web
 
-- PDF.js renders the PDF in the web viewer
-- Ink overlay is rendered as SVG or Canvas on top of the PDF page
+- PDF.js fetches and renders the original PDF from R2 (via `assets.getDownloadUrl` presigned URL)
+- Ink strokes rendered as Canvas overlay on top of the PDF page
+- Stroke geometry tessellated client-side from raw point data in the Yjs doc
 
 ---
 
@@ -507,25 +628,26 @@ Strokes are delivered to IInk as `InkModel` input after pen-up. IInk operates on
 | Access Type | Capabilities |
 |---|---|
 | Owner | Full access, can manage shares |
-| Editor | Can draw, edit, delete strokes; cannot manage shares |
+| Editor | Can draw, edit, delete strokes; can manage shares/public links |
 | Viewer | Read-only; can scroll and zoom; cannot write |
 
 ### 11.2 Sharing Methods
 
-- **Invite by email**: creates a Collaborator record; invited user must have an Onyx account
-- **Public link**: creates a Share record with a linkToken; anyone with the link can access at the specified accessType
+- **Invite by email**: creates a Share record (granteeUserId, role, grantedByUserId); invited user must have an Onyx account
+- **Public link**: creates a PublicLink record with a high-entropy linkToken; anyone with the link gets view access per PublicLink record
 
 ### 11.3 Real-Time Collaboration
 
-- Each collaborator's Yjs doc receives live deltas via Convex real-time subscription
-- Multi-cursor display: each active editor's current pen position is broadcast as a presence event (ephemeral, not stored in Yjs)
-- Conflict resolution is automatic via Yjs CRDT semantics — concurrent strokes from different users are merged without loss
+- Max 3 concurrent editors per notebook
+- Each collaborator subscribes to `sync.watchHead` via Convex reactive query; new updates fetched via `sync.pullUpdates`
+- **Presence (cursors)**: Each active editor pushes cursor position + active tool to Convex `presence` table every 500ms while drawing; stops after 5s idle. Viewers subscribe to `presence.watch` for the notebook to display collaborator cursors.
+- Conflict resolution is automatic via Yjs CRDT — concurrent strokes from different users merge without data loss
 
-### 11.4 Offline -> Reconnect
+### 11.4 Offline → Reconnect
 
-- While offline, a user with edit access continues to write normally
-- On reconnect, local Yjs updates are pushed to Convex; remote deltas accumulated during the offline period are fetched and merged
-- The resulting merged state is eventually consistent across all collaborators
+- While offline, an editor continues writing normally against local Yjs doc
+- On reconnect, WorkManager drains the OfflineQueueEntity via `sync.pushUpdates`
+- Remote updates accumulated during the offline period fetched via `sync.pullUpdates` and merged by Yjs automatically
 
 ---
 
@@ -549,8 +671,8 @@ User
 | Search Type | Index Source | Network Required |
 |---|---|---|
 | By title | Room (notebook/page title columns) | No |
-| By handwriting content | Room FTS (IInk HWR tokens) | No (Android) / Yes (web) |
-| By PDF text content | Room FTS (PDFBox extracted text) | No |
+| By handwriting content | Room FTS5 (IInk HWR tokens) | No (Android) / Yes (web via Convex) |
+| By PDF text content | Room FTS5 (PDFBox extracted text) | No (Android) / Yes (web via Convex) |
 
 Search results surface both notebooks and individual pages. Tapping a result navigates to the specific page and, where applicable, highlights the region containing the matched text.
 
@@ -558,29 +680,41 @@ Search results surface both notebooks and individual pages. Tapping a result nav
 
 ## 13. Web Viewer
 
-The web viewer is a read-only experience in this implementation.
+The web viewer is read-only in v1.
 
-### 13.1 Responsibilities
+### 13.1 Rendering Architecture
 
-- Display notebook pages with rendered strokes (SVG or Canvas)
-- Render PDF backgrounds via PDF.js
-- Display typed text blocks and LaTeX blocks (rendered via KaTeX or MathJax)
-- Display inserted images
+The web viewer uses a **full CRDT replay engine** (Yjs JS library) to reconstruct page state:
+1. Fetch notebook-level Yjs snapshot from R2 + deltas from Convex (`sync.pullUpdates`)
+2. Reconstruct page list and metadata from notebook Yjs doc
+3. For each visible page, fetch per-page Yjs snapshot + deltas
+4. Render strokes: tessellate raw point arrays into variable-width Bezier paths on an HTML Canvas
+5. Render PDF background: PDF.js fetches original PDF from R2 presigned URL; rendered to canvas layer below ink
+6. Subscribe to `sync.watchHead` for live updates; pull new deltas and re-render affected regions
+
+### 13.2 Responsibilities
+
+- Render notebook pages with ink strokes (Canvas, tessellated from raw point data)
+- Render PDF backgrounds via PDF.js (original PDF from R2)
+- Render TextBlocks (KaTeX for LaTeX, plain text otherwise)
+- Render Images, StickyNotes, Tables, Shapes
 - Support zoom and pan
-- Live updates via Convex real-time subscriptions (viewer sees collaborator edits in real time)
+- Live updates via `sync.watchHead` Convex subscription
+- Search results via `search.global`
 
-### 13.2 Out of Scope (Web, this iteration)
+### 13.3 Out of Scope (Web, v1)
 
-- Editing or drawing
+- Editing, drawing, or any input
 - Audio playback
 - Lasso / tool interactions
+- HWR recognition
 
-### 13.3 URL Structure
+### 13.4 URL Structure
 
 ```
-/view/:linkToken          — public share link (view or edit access per Share record)
-/note/:notebookId         — authenticated user's own notebook
-/note/:notebookId/:pageId — direct page link
+/view/:linkToken                    — public share link
+/notebook/:notebookId               — authenticated user's own notebook
+/notebook/:notebookId/:pageId       — direct page link
 ```
 
 ---
@@ -677,32 +811,32 @@ Detailed UX specification: see Warp plan "Onyx UX Specification".
 
 ### Phase 4 — Sync & Backend
 
-**Goal**: Notes live in the cloud; multiple devices; offline-first sync.
+**Goal**: Notebooks live in the cloud; multiple devices; offline-first sync.
 
-- [ ] Convex backend schema and functions
+- [ ] Convex backend schema and functions (all tables in scope)
 - [ ] Cloudflare R2 bucket setup and upload/download helpers
-- [ ] Clerk (or WorkOS) auth + Google Sign-In
+- [ ] Clerk auth + Google Sign-In
 - [ ] Y-Octo CRDT integration with Android (Rust compiled via NDK, JNI bindings to Kotlin)
 - [ ] WorkManager sync jobs: delta push, snapshot write, offline queue drain
 - [ ] Snapshot + delta load sequence on notebook open
 
-**Exit criteria**: A user can install the app on two devices, write on one, and see the notes appear on the other after coming online.
+**Exit criteria**: A user can install the app on two devices, write on one, and see the notebooks appear on the other after coming online.
 
 ---
 
-### Phase 5 — Collaboration
+### Phase 5 — Web Viewer & Collaboration
 
-**Goal**: Real-time shared editing and public sharing.
+**Goal**: Read-only web viewer plus real-time collaboration plumbing across clients.
 
-- [ ] Real-time multi-cursor editing via Convex + Yjs
+- [ ] Web viewer: TanStack Start app, view-only (Milestone B)
+- [ ] PDF.js rendering of original PDFs from R2 + Canvas overlay for ink strokes in web viewer
+- [ ] LaTeX rendering in web viewer (KaTeX)
+- [ ] Real-time multi-cursor collaboration via Convex + Yjs (Milestone C)
 - [ ] Share by email (invite, view/edit roles)
-- [ ] Share by public link (view/edit modes, revocable)
-- [ ] Web viewer: TanStack Start app, read-only
-- [ ] Tile-based PDF and ink rendering in web viewer (no pdf.js, no raw PDF download)
-- [ ] LaTeX rendering in web viewer (KaTeX or MathJax)
+- [ ] Share by public link (view-only mode, revocable)
 - [ ] Live updates in web viewer via Convex subscriptions
 
-**Exit criteria**: User A shares a notebook with User B via link; User B can view and edit (if granted) in real time from a web browser while User A edits on Android.
+**Exit criteria**: User A shares a notebook with User B; User A and other granted editors can edit in real time, and User B can view live updates from a web browser while Android editors continue writing.
 
 ---
 
@@ -714,8 +848,8 @@ Detailed UX specification: see Warp plan "Onyx UX Specification".
 - [ ] Two-page layout (paged mode, landscape)
 - [ ] Full toolbar / gesture customization UI
 - [ ] Highlighter advanced modes: straight-line always / never / hold-to-snap
-- [ ] Per-note settings: screen awake, hide bars, scroll bar side
-- [ ] Dark / light note mode independent of system theme
+- [ ] Per-notebook settings: screen awake, hide bars, scroll bar side
+- [ ] Dark / light notebook mode independent of system theme
 - [ ] Zoom range 50%-1000% with persisted zoom level
 - [ ] Search UI: combined title + HWR + PDF content results
 - [ ] S Pen button customization (beyond default hold-to-erase)
@@ -735,7 +869,7 @@ Detailed UX specification: see Warp plan "Onyx UX Specification".
 | 16.3 | Lasso resize behavior | **Resolved** | Stroke thickness does not scale with resize — selection is repositioned/resized, thickness stays constant |
 | 16.4 | Stroke smoothing algorithm | **Resolved** | Tip-preserving causal smoothing (newest 1-2 points near raw, older tail smoothed). See editor-feel-refactor.md |
 | 16.5 | Offline HWR language support | **Resolved** | English only for initial IInk license; multi-language deferred |
-| 16.6 | Convex delta retention policy | **Resolved** | Ops below the latest commit’s baseLamport are eligible for cleanup. Retention job in Milestone C deletes old ops. Snapshots are the long-term record |
-| 16.7 | Web viewer stroke format | **Resolved** | Tile-based rasters for PDF; SVG or Canvas overlay for ink strokes. No raw PDF download. See milestone-b-web-viewer.md |
+| 16.6 | Convex CRDT delta retention policy | **Resolved** | Yjs update deltas in `crdtUpdates` table below the latest snapshot's state vector are eligible for cleanup. Retention job deletes stale deltas. R2 snapshots are the long-term record |
+| 16.7 | Web viewer rendering | **Resolved** | PDF.js renders original PDF from R2 presigned URL; Canvas overlay tessellates ink strokes from Yjs doc point data. See milestone-b-web-viewer.md |
 | 16.8 | Two-finger gesture conflict | **Resolved** | Two-finger touch is allowed for pan/zoom/undo. Stylus-only policy applies to drawing. MotionEvent filtering confirmed working in InkCanvasTouch.kt |
 | 16.9 | Rendering engine | **Resolved** | Vulkan via Android NDK — confirmed over OpenGL ES for lower CPU overhead, explicit pipeline control, and long-term investment |

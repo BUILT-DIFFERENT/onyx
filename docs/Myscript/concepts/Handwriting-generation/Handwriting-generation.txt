@@ -1,0 +1,17 @@
+Handwriting generation
+
+Handwriting generation is the process of converting digital text to digital ink by creating the basic strokes that form the letters, words, and sentences of the input text.
+HandwritingGeneratorHello[ { “x”: [ 4.77, 4.74, 4.70, 4.72, 4.76, 4.78, 4.84,      4.81, 4.84, 4.81, 4.79, 4.77, 4.70, 4.69, 4.64,      4.78, 4.90, 5.17, 5.51, 5.91, 6.48, 7.08, 7.43,       7.62, 7.71, 7.77, 7.83, 7.81, 7.85, 8.19 ],     “y”: [ 13.27, 13.84, 14.42, 14.91, 15.49, 16.03,       16.52, 17.15, 17.73, 18.27, 18.79, 19.36, 18.86,      18.34, 17.84, 17.23, 16.75, 16.25, 15.69, 15.40,      15.25, 15.41, 15.77, 16.28,  16.76, 17.36, 17.93,      18.55, 19.04, 18.71 ],     “t”: [ … , … ],
+
+It involves various settings that affect the quality, style, and flow of the handwriting.
+Predefined handwriting profiles
+
+When generating ink, the handwriting generator can use a predefined handwriting profile from among those available in its dataset. Depending on the selected profile, it will calculate the corresponding strokes and the generated ink will look different:
+HelloPredefinedhandwriting profilesHandwritingGenerator
+Estimate handwriting profiles
+
+The handwriting generator can also learn user profiles from handwriting samples. It will then be able to generate strokes from the input text that will be like the user’s handwriting style.
+Amino acids are theessential building blocksof proteins, which carryout almost every function inour bodies. Writing style estimatorUser handwritingprofileHandwritingGenerator
+Beautify user handwriting
+
+Beautification refers to the process of improving and refining handwritten ink to make it aesthetically pleasing and elegant. In this context, embellishment may involve improving the shape of the letters, symbols or shapes, or adjusting the spacing and flow to create a polished result.

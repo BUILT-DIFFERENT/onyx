@@ -1,0 +1,343 @@
+SOURCE: com/myscript/iink/PlaceholderController.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class PlaceholderController
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.PlaceholderController
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class PlaceholderController
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+A PlaceholderController allows to add and update placeholders in an editor.
+
+Since:
+
+3.2
+
+Nested Class Summary
+
+Nested Classes
+
+Modifier and Type
+
+Class
+
+Description
+
+static class
+
+PlaceholderController.PlaceholderInteractivityOptions [link: PlaceholderController.PlaceholderInteractivityOptions.html]
+
+Defines how a placeholder shall behave regarding user interactions.
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final @NotNull ContentBlock [link: ContentBlock.html]
+
+add [link: #add(com.myscript.iink.graphics.Rectangle,java.lang.String,com.myscript.iink.MimeType,java.lang.String,boolean,com.myscript.iink.PlaceholderController.PlaceholderInteractivityOptions)] (@NotNull Rectangle [link: graphics/Rectangle.html] box,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] inputFile,
+@NotNull MimeType [link: MimeType.html] mimeType,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] userData,
+boolean selectOnAdd,
+@NotNull PlaceholderController.PlaceholderInteractivityOptions [link: PlaceholderController.PlaceholderInteractivityOptions.html] interactivityOptions)
+
+Adds a new placeholder image to the part.
+
+final void
+
+close [link: #close()]()
+
+protected void
+
+finalize [link: #finalize()]()
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getUserData [link: #getUserData(com.myscript.iink.ContentSelection)] (@NotNull ContentSelection [link: ContentSelection.html] placeholder)
+
+Returns the user data corresponding to a placeholder image.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+final boolean
+
+isPlaceholder [link: #isPlaceholder(com.myscript.iink.ContentSelection)] (@NotNull ContentSelection [link: ContentSelection.html] selection)
+
+Indicates whether a content block is a placeholder.
+
+final boolean
+
+isVisible [link: #isVisible(com.myscript.iink.ContentSelection)] (@NotNull ContentSelection [link: ContentSelection.html] placeholder)
+
+Returns the visiblity of a placeholder image.
+
+final void
+
+setUserData [link: #setUserData(com.myscript.iink.ContentSelection,java.lang.String)] (@NotNull ContentSelection [link: ContentSelection.html] placeholder,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] userData)
+
+Sets the custom user data of a placeholder image.
+
+final void
+
+setVisible [link: #setVisible(com.myscript.iink.ContentSelection,boolean)] (@NotNull ContentSelection [link: ContentSelection.html] placeholder,
+boolean visible)
+
+Set a placeholder image visibility.
+
+final void
+
+update [link: #update(com.myscript.iink.ContentSelection,com.myscript.iink.graphics.Rectangle,java.lang.String,com.myscript.iink.MimeType,java.lang.String)] (@NotNull ContentSelection [link: ContentSelection.html] placeholder,
+@NotNull Rectangle [link: graphics/Rectangle.html] box,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] inputFile,
+@NotNull MimeType [link: MimeType.html] mimeType,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] userData)
+
+Updates the specified placeholder image and moves it to the front.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+add
+
+@NotNull
+public final @NotNull ContentBlock [link: ContentBlock.html] add (@NotNull
+@NotNull Rectangle [link: graphics/Rectangle.html] box,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] inputFile,
+@NotNull
+@NotNull MimeType [link: MimeType.html] mimeType,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] userData,
+boolean selectOnAdd,
+@NotNull
+@NotNull PlaceholderController.PlaceholderInteractivityOptions [link: PlaceholderController.PlaceholderInteractivityOptions.html] interactivityOptions)
+
+Adds a new placeholder image to the part.
+
+Parameters:
+
+box - the position of the new image (view coordinates in pixel).
+
+inputFile - the image file to add.
+
+mimeType - the mime type that specifies the format of inputFile .
+
+userData - custom additional data.
+
+selectOnAdd - true to select the image when it is added, otherwise false .
+
+interactivityOptions - the allowed interactivity features.
+
+Returns:
+
+the block associated with the newly added placeholder.
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when the dimensions of box are not valid.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when mimeType is not an image type.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when inputFile is not a valid image file.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a Raw Content part.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when an I/O operation fails.
+
+update
+
+public final void update (@NotNull
+@NotNull ContentSelection [link: ContentSelection.html] placeholder,
+@NotNull
+@NotNull Rectangle [link: graphics/Rectangle.html] box,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] inputFile,
+@NotNull
+@NotNull MimeType [link: MimeType.html] mimeType,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] userData)
+
+Updates the specified placeholder image and moves it to the front.
+
+Parameters:
+
+placeholder - the placeholder image to update.
+
+box - the position of the new image (view coordinates in pixel).
+
+inputFile - the image file to add.
+
+mimeType - the mime type that specifies the format of inputFile .
+
+userData - custom additional data.
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when placeholder is not a valid placeholder image.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when the dimensions of box are not valid.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when mimeType is not an image type.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when inputFile is not a valid image file.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a Raw Content part.
+
+setUserData
+
+public final void setUserData (@NotNull
+@NotNull ContentSelection [link: ContentSelection.html] placeholder,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] userData)
+
+Sets the custom user data of a placeholder image.
+
+Parameters:
+
+placeholder - the placeholder image to update.
+
+userData - custom additional data.
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when placeholder is not a valid placeholder image.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a Raw Content part.
+
+getUserData
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getUserData (@NotNull
+@NotNull ContentSelection [link: ContentSelection.html] placeholder)
+
+Returns the user data corresponding to a placeholder image.
+
+Parameters:
+
+placeholder - the placeholder image.
+
+Returns:
+
+the user data.
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when placeholder is not a valid placeholder image.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a Raw Content part.
+
+setVisible
+
+public final void setVisible (@NotNull
+@NotNull ContentSelection [link: ContentSelection.html] placeholder,
+boolean visible)
+
+Set a placeholder image visibility.
+
+Parameters:
+
+placeholder - the placeholder image to update.
+
+visible - true to set the placeholder image visble, otherwise it will be set invisible
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when placeholder is not a valid placeholder image.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a Raw Content part.
+
+isVisible
+
+public final boolean isVisible (@NotNull
+@NotNull ContentSelection [link: ContentSelection.html] placeholder)
+
+Returns the visiblity of a placeholder image.
+
+Parameters:
+
+placeholder - the placeholder image to update.
+
+Returns:
+
+true if the placeholder image is visible, otherwise false .
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when placeholder is not a valid placeholder image.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a Raw Content part.
+
+isPlaceholder
+
+public final boolean isPlaceholder (@NotNull
+@NotNull ContentSelection [link: ContentSelection.html] selection)
+
+Indicates whether a content block is a placeholder.
+
+Parameters:
+
+selection - the contentSelection.
+
+Returns:
+
+true if selection is a placeholder, otherwise false .
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a Raw Content part.

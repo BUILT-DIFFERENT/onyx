@@ -1,0 +1,91 @@
+SOURCE: com/myscript/iink/IImagePainter.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Interface IImagePainter
+
+public interface IImagePainter
+
+The ImagePainter converts rendering data into images in view
+for example for integration into docx exports.
+
+Method Summary
+
+All Methods Instance Methods Abstract Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+ICanvas [link: graphics/ICanvas.html]
+
+createCanvas [link: #createCanvas()]()
+
+Creates a canvas to draw the image.
+
+void
+
+prepareImage [link: #prepareImage(int,int,float)] (int width,
+int height,
+float dpi)
+
+Invoked before starting to draw an image.
+
+void
+
+saveImage [link: #saveImage(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] path)
+
+Invoked once image drawing is over.
+
+Method Details
+
+prepareImage
+
+void prepareImage (int width,
+int height,
+float dpi)
+
+Invoked before starting to draw an image.
+This call is meant to enable preparation of the image destination in memory
+(e.g. memory allocation).
+
+Parameters:
+
+width - the image width.
+
+height - the image height.
+
+dpi - the resolution of the image in dots per inch.
+
+saveImage
+
+void saveImage (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] path)
+throws IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html]
+
+Invoked once image drawing is over.
+Requests saving the image to disk.
+
+Parameters:
+
+path - the image destination.
+
+Throws:
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - when an I/O operation fails.
+
+createCanvas
+
+ICanvas [link: graphics/ICanvas.html] createCanvas ()
+
+Creates a canvas to draw the image.
+
+Returns:
+
+a canvas to draw the image.
+
+Since:
+
+2.0

@@ -1,0 +1,796 @@
+SOURCE: com/myscript/iink/graphics/Style.html
+
+Package com.myscript.iink.graphics [link: package-summary.html]
+
+Class Style
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.graphics.Style
+
+public class Style
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Style information for the rendering of strokes and text.
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+Style [link: #%3Cinit%3E()]()
+
+Default constructor.
+
+Style [link: #%3Cinit%3E(com.myscript.iink.graphics.Style)] (@NotNull Style [link: Style.html] other)
+
+Copy constructor.
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+void
+
+applyTo [link: #applyTo(com.myscript.iink.graphics.ICanvas)] (@NotNull ICanvas [link: ICanvas.html] canvas)
+
+Apply changed style attributes to the specified target canvas.
+
+void
+
+clear [link: #clear()]()
+
+Resets all style attributes to their default values and clear the change flags.
+
+void
+
+clearChangeFlags [link: #clearChangeFlags()]()
+
+Clears the change flags.
+
+boolean
+
+equals [link: #equals(java.lang.Object)] (@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+@NotNull EnumSet [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/EnumSet.html]<StyleFlag [link: StyleFlag.html]>
+
+getChangeFlags [link: #getChangeFlags()]()
+
+Returns the set of style attributes changed since construction or last call
+to clearChangeFlags() [link: #clearChangeFlags()].
+
+@NotNull Color [link: Color.html]
+
+getDropShadowColor [link: #getDropShadowColor()]()
+
+Retrieves the drop shadow color.
+
+float
+
+getDropShadowRadius [link: #getDropShadowRadius()]()
+
+Retrieves the drop shadow blur radius.
+
+float
+
+getDropShadowXOffset [link: #getDropShadowXOffset()]()
+
+Retrieves the drop shadow horizontal offset.
+
+float
+
+getDropShadowYOffset [link: #getDropShadowYOffset()]()
+
+Retrieves the drop shadow vertical offset.
+
+@NotNull Color [link: Color.html]
+
+getFillColor [link: #getFillColor()]()
+
+Retrieves the stroke fill color.
+
+@NotNull FillRule [link: FillRule.html]
+
+getFillRule [link: #getFillRule()]()
+
+Retrieves the stroke fill rule.
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getFontFamily [link: #getFontFamily()]()
+
+Retrieves the font family.
+
+float
+
+getFontLineHeight [link: #getFontLineHeight()]()
+
+Retrieves the font line height.
+
+float
+
+getFontSize [link: #getFontSize()]()
+
+Retrieves the font size.
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getFontStyle [link: #getFontStyle()]()
+
+Retrieves the font style.
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getFontVariant [link: #getFontVariant()]()
+
+Retrieves the font variant.
+
+int
+
+getFontWeight [link: #getFontWeight()]()
+
+Retrieves the font weight.
+
+@NotNull Color [link: Color.html]
+
+getStrokeColor [link: #getStrokeColor()]()
+
+Retrieves the stroke color.
+
+@org.jetbrains.annotations.Nullable float[]
+
+getStrokeDashArray [link: #getStrokeDashArray()]()
+
+Retrieves the stroke dash pattern.
+
+float
+
+getStrokeDashOffset [link: #getStrokeDashOffset()]()
+
+Retrieves the stroke dash offset.
+
+@NotNull LineCap [link: LineCap.html]
+
+getStrokeLineCap [link: #getStrokeLineCap()]()
+
+Retrieves the stroke line cap.
+
+@NotNull LineJoin [link: LineJoin.html]
+
+getStrokeLineJoin [link: #getStrokeLineJoin()]()
+
+Retrieves the stroke line join.
+
+float
+
+getStrokeMiterLimit [link: #getStrokeMiterLimit()]()
+
+Retrieves the stroke miter limit.
+
+float
+
+getStrokeWidth [link: #getStrokeWidth()]()
+
+Retrieves the stroke width.
+
+int
+
+hashCode [link: #hashCode()]()
+
+void
+
+setDropShadowColor [link: #setDropShadowColor(com.myscript.iink.graphics.Color)] (@NotNull Color [link: Color.html] dropShadowColor)
+
+Sets the drop shadow color.
+
+void
+
+setDropShadowRadius [link: #setDropShadowRadius(float)] (float dropShadowRadius)
+
+Sets the drop shadow blur radius.
+
+void
+
+setDropShadowXOffset [link: #setDropShadowXOffset(float)] (float dropShadowXOffset)
+
+Sets the drop shadow horizontal offset.
+
+void
+
+setDropShadowYOffset [link: #setDropShadowYOffset(float)] (float dropShadowYOffset)
+
+Sets the drop shadow vertical offset.
+
+void
+
+setFillColor [link: #setFillColor(com.myscript.iink.graphics.Color)] (@NotNull Color [link: Color.html] fillColor)
+
+Sets the fill color.
+
+void
+
+setFillRule [link: #setFillRule(com.myscript.iink.graphics.FillRule)] (@NotNull FillRule [link: FillRule.html] fillRule)
+
+Sets the fill rule.
+
+void
+
+setFontFamily [link: #setFontFamily(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] fontFamily)
+
+Sets the font family.
+
+void
+
+setFontLineHeight [link: #setFontLineHeight(float)] (float fontLineHeight)
+
+Sets the font line height.
+
+void
+
+setFontSize [link: #setFontSize(float)] (float fontSize)
+
+Sets the font size.
+
+void
+
+setFontStyle [link: #setFontStyle(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] fontStyle)
+
+Sets the font style.
+
+void
+
+setFontVariant [link: #setFontVariant(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] fontVariant)
+
+Sets the font variant.
+
+void
+
+setFontWeight [link: #setFontWeight(int)] (int fontWeight)
+
+Sets the font weight.
+
+void
+
+setStrokeColor [link: #setStrokeColor(com.myscript.iink.graphics.Color)] (@NotNull Color [link: Color.html] strokeColor)
+
+Sets the stroke color.
+
+void
+
+setStrokeDashArray [link: #setStrokeDashArray(float%5B%5D)] (@org.jetbrains.annotations.Nullable float[] strokeDashArray)
+
+Sets the pattern of dashes and gaps used to stroke paths.
+
+void
+
+setStrokeDashOffset [link: #setStrokeDashOffset(float)] (float strokeDashOffset)
+
+Sets the distance into the dash pattern to start the dash.
+
+void
+
+setStrokeLineCap [link: #setStrokeLineCap(com.myscript.iink.graphics.LineCap)] (@NotNull LineCap [link: LineCap.html] strokeLineCap)
+
+Sets the stroke line cap.
+
+void
+
+setStrokeLineJoin [link: #setStrokeLineJoin(com.myscript.iink.graphics.LineJoin)] (@NotNull LineJoin [link: LineJoin.html] strokeLineJoin)
+
+Sets the stroke line join.
+
+void
+
+setStrokeMiterLimit [link: #setStrokeMiterLimit(float)] (float strokeMiterLimit)
+
+Sets the stroke miter limit.
+
+void
+
+setStrokeWidth [link: #setStrokeWidth(float)] (float strokeWidth)
+
+Sets the stroke width.
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Constructor Details
+
+Style
+
+public Style ()
+
+Default constructor.
+Builds a Style with default values
+
+Style
+
+public Style (@NotNull
+@NotNull Style [link: Style.html] other)
+
+Copy constructor.
+
+Parameters:
+
+other - copied object.
+
+Method Details
+
+clear
+
+public void clear ()
+
+Resets all style attributes to their default values and clear the change flags.
+
+setStrokeColor
+
+public void setStrokeColor (@NotNull
+@NotNull Color [link: Color.html] strokeColor)
+
+Sets the stroke color.
+
+Parameters:
+
+strokeColor - the stroke color.
+
+getStrokeColor
+
+@NotNull
+public @NotNull Color [link: Color.html] getStrokeColor ()
+
+Retrieves the stroke color.
+
+Returns:
+
+the stroke color.
+
+setStrokeWidth
+
+public void setStrokeWidth (float strokeWidth)
+
+Sets the stroke width.
+
+Parameters:
+
+strokeWidth - the stroke width.
+
+getStrokeWidth
+
+public float getStrokeWidth ()
+
+Retrieves the stroke width.
+
+Returns:
+
+the stroke width.
+
+setStrokeLineCap
+
+public void setStrokeLineCap (@NotNull
+@NotNull LineCap [link: LineCap.html] strokeLineCap)
+
+Sets the stroke line cap.
+
+Parameters:
+
+strokeLineCap - the stroke line cap.
+
+getStrokeLineCap
+
+@NotNull
+public @NotNull LineCap [link: LineCap.html] getStrokeLineCap ()
+
+Retrieves the stroke line cap.
+
+Returns:
+
+the stroke line cap.
+
+setStrokeLineJoin
+
+public void setStrokeLineJoin (@NotNull
+@NotNull LineJoin [link: LineJoin.html] strokeLineJoin)
+
+Sets the stroke line join.
+
+Parameters:
+
+strokeLineJoin - the stroke line join.
+
+getStrokeLineJoin
+
+@NotNull
+public @NotNull LineJoin [link: LineJoin.html] getStrokeLineJoin ()
+
+Retrieves the stroke line join.
+
+Returns:
+
+the stroke line join.
+
+setStrokeMiterLimit
+
+public void setStrokeMiterLimit (float strokeMiterLimit)
+
+Sets the stroke miter limit.
+
+Parameters:
+
+strokeMiterLimit - the stroke miter limit.
+
+getStrokeMiterLimit
+
+public float getStrokeMiterLimit ()
+
+Retrieves the stroke miter limit.
+
+Returns:
+
+the stroke miter limit.
+
+setStrokeDashArray
+
+public void setStrokeDashArray (@Nullable
+@org.jetbrains.annotations.Nullable float[] strokeDashArray)
+
+Sets the pattern of dashes and gaps used to stroke paths.
+
+Parameters:
+
+strokeDashArray - the vector describing the dashes pattern.
+
+getStrokeDashArray
+
+@Nullable
+public @org.jetbrains.annotations.Nullable float[] getStrokeDashArray ()
+
+Retrieves the stroke dash pattern.
+
+Returns:
+
+the stroke dash pattern.
+
+setStrokeDashOffset
+
+public void setStrokeDashOffset (float strokeDashOffset)
+
+Sets the distance into the dash pattern to start the dash.
+
+Parameters:
+
+strokeDashOffset - the dash offset.
+
+getStrokeDashOffset
+
+public float getStrokeDashOffset ()
+
+Retrieves the stroke dash offset.
+
+Returns:
+
+the stroke dash offset.
+
+setFillColor
+
+public void setFillColor (@NotNull
+@NotNull Color [link: Color.html] fillColor)
+
+Sets the fill color.
+
+Parameters:
+
+fillColor - the fill color.
+
+getFillColor
+
+@NotNull
+public @NotNull Color [link: Color.html] getFillColor ()
+
+Retrieves the stroke fill color.
+
+Returns:
+
+the stroke fill color.
+
+setFillRule
+
+public void setFillRule (@NotNull
+@NotNull FillRule [link: FillRule.html] fillRule)
+
+Sets the fill rule.
+
+Parameters:
+
+fillRule - the fill rule.
+
+getFillRule
+
+@NotNull
+public @NotNull FillRule [link: FillRule.html] getFillRule ()
+
+Retrieves the stroke fill rule.
+
+Returns:
+
+the stroke fill rule.
+
+setFontFamily
+
+public void setFontFamily (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] fontFamily)
+
+Sets the font family.
+
+Parameters:
+
+fontFamily - the font family.
+
+getFontFamily
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getFontFamily ()
+
+Retrieves the font family.
+
+Returns:
+
+the font family.
+
+setFontLineHeight
+
+public void setFontLineHeight (float fontLineHeight)
+
+Sets the font line height.
+
+Parameters:
+
+fontLineHeight - the font line height.
+
+getFontLineHeight
+
+public float getFontLineHeight ()
+
+Retrieves the font line height.
+
+Returns:
+
+the font line height.
+
+setFontSize
+
+public void setFontSize (float fontSize)
+
+Sets the font size.
+
+Parameters:
+
+fontSize - the font size.
+
+getFontSize
+
+public float getFontSize ()
+
+Retrieves the font size.
+
+Returns:
+
+the font size.
+
+setFontStyle
+
+public void setFontStyle (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] fontStyle)
+
+Sets the font style.
+
+Parameters:
+
+fontStyle - the font style.
+
+getFontStyle
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getFontStyle ()
+
+Retrieves the font style.
+
+Returns:
+
+the font style.
+
+setFontVariant
+
+public void setFontVariant (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] fontVariant)
+
+Sets the font variant.
+
+Parameters:
+
+fontVariant - the font variant.
+
+getFontVariant
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getFontVariant ()
+
+Retrieves the font variant.
+
+Returns:
+
+the font variant.
+
+setFontWeight
+
+public void setFontWeight (int fontWeight)
+
+Sets the font weight.
+
+Parameters:
+
+fontWeight - the font weight.
+
+getFontWeight
+
+public int getFontWeight ()
+
+Retrieves the font weight.
+
+Returns:
+
+the font weight.
+
+setDropShadowXOffset
+
+public void setDropShadowXOffset (float dropShadowXOffset)
+
+Sets the drop shadow horizontal offset.
+
+Parameters:
+
+dropShadowXOffset - the drop shadow horizontal offset.
+
+getDropShadowXOffset
+
+public float getDropShadowXOffset ()
+
+Retrieves the drop shadow horizontal offset.
+
+Returns:
+
+the drop shadow horizontal offset.
+
+setDropShadowYOffset
+
+public void setDropShadowYOffset (float dropShadowYOffset)
+
+Sets the drop shadow vertical offset.
+
+Parameters:
+
+dropShadowYOffset - the drop shadow vertical offset.
+
+getDropShadowYOffset
+
+public float getDropShadowYOffset ()
+
+Retrieves the drop shadow vertical offset.
+
+Returns:
+
+the drop shadow vertical offset.
+
+setDropShadowRadius
+
+public void setDropShadowRadius (float dropShadowRadius)
+
+Sets the drop shadow blur radius.
+
+Parameters:
+
+dropShadowRadius - the drop shadow blur radius.
+
+getDropShadowRadius
+
+public float getDropShadowRadius ()
+
+Retrieves the drop shadow blur radius.
+
+Returns:
+
+the drop shadow blur radius.
+
+setDropShadowColor
+
+public void setDropShadowColor (@NotNull
+@NotNull Color [link: Color.html] dropShadowColor)
+
+Sets the drop shadow color.
+
+Parameters:
+
+dropShadowColor - the drop shadow color.
+
+getDropShadowColor
+
+@NotNull
+public @NotNull Color [link: Color.html] getDropShadowColor ()
+
+Retrieves the drop shadow color.
+
+Returns:
+
+the drop shadow color.
+
+getChangeFlags
+
+@NotNull
+public @NotNull EnumSet [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/EnumSet.html]<StyleFlag [link: StyleFlag.html]> getChangeFlags ()
+
+Returns the set of style attributes changed since construction or last call
+to clearChangeFlags() [link: #clearChangeFlags()].
+
+Returns:
+
+the set of style flags.
+
+clearChangeFlags
+
+public void clearChangeFlags ()
+
+Clears the change flags.
+
+applyTo
+
+public void applyTo (@NotNull
+@NotNull ICanvas [link: ICanvas.html] canvas)
+
+Apply changed style attributes to the specified target canvas.
+
+Parameters:
+
+canvas - the target canvas.
+
+See Also:
+
+getChangeFlags() [link: #getChangeFlags()]
+
+equals
+
+public boolean equals (@Nullable
+@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+Overrides:
+
+equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+hashCode
+
+public int hashCode ()
+
+Overrides:
+
+hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+toString
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]

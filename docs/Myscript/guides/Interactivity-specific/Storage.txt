@@ -1,0 +1,122 @@
+Storage
+
+This page explains how iink SDK lets you organize the data it works on, store content and load it again later.
+Structure of the model
+
+MyScript iink SDK stores content using the following structures:
+
+    ContentPackage - A Package is a container storing ink and its interpretation as an ordered collection of parts. It can be saved as a file on the file system and later reloaded or shared between users.
+    ContentPart - A part corresponds to a standalone content unit that can be processed by iink SDK. Each part has a specific type, corresponding to the type of its root block, that can be retrieved via its getType() method.
+
+The complete list of supported part types can be found here.
+
+It is possible to get the number of parts of a given package by calling getPartCount() and access an individual part by calling getPart() and pass it the 0-based index of the part to load.
+
+Parts host the data iink SDK works on. As a result, it is required to use them even if you do not intend to persist data on the disk as part of your application workflow.
+Although a content part sometimes hosts a single content block, both concepts are not equivalent. A part corresponds to a serialization unit, while a block corresponds to a semantic unit that can be manipulated.
+Working with packages
+
+MyScript iink SDK uses the file system to limit the amount of RAM that is required at a given point in time, as well as to store temporary files. It also provides serialization/deserialization methods to let application save/load MyScript data, either for persistence needs or to exchange it between users.
+MyScript iink SDK serialization format is optimized for speed and compactness, but is not easily readable. If you want to parse the content of the interactive model, refer to the import/export section.
+Temporary folder
+
+Even if you do not intend to explicitly save any content, MyScript iink SDK requires a read/write access to at least one folder on the file system: the temporary folder, where it will output the intermediate files it is working on.
+
+By default, iink SDK uses the folder where the package file is located. It may however be relevant (and even mandatory on certain platforms) to choose another folder. This can be achieved by setting the value of content-package.temp-folder in the configuration of the engine.
+If it does not exist, the folder will be created if you save the corresponding package. It may also be automatically created by iink SDK in case it has a need to reduce its memory usage or when handling some particular objects such as images.
+Creating and loading packages
+
+To create or open packages, use the openPackage() method. It comes with different possible options:
+
+    EXISTING to open an existing package and fail if it does not exist (default behavior).
+    CREATE to open an existing package or create it if it does not exist.
+    CREATE_NEW to ensure to create and open a package that did not previously exist.
+    TRUNCATE_EXISTING to create and open a new package, overwriting any pre-existing package at the same location.
+
+To create a new package, you can alternatively call the createPackage() convenience method, which is equivalent to call openPackage() with the CREATE_NEW option.
+
+Both methods take as their first parameter the name of the file corresponding to the package on the file system.
+
+import com.myscript.iink.ContentPackage;
+
+// Create a new package
+ContentPackage contentPackage = engine.createPackage(newContentPackageFile);
+
+// Load an existing package
+ContentPackage existingPackage = engine.openPackage(existingContentPackageFile);
+
+Saving packages
+
+MyScript iink SDK provides two distinct methods to save content: save() and saveToTemp(), both to be called on the ContentPackage instance to consider.
+
+It is important to understand the distinction between them, as they play different roles:
+
+    save() will serialize all data into a zip archive named after the package, whether such data is on the memory or if it was off-loaded into the temporary folder. The resulting file is self-contained, and can be reloaded at a later point. Due to the compression, this method is rather slow.
+    saveToTemp() will save the content that was loaded into the memory to the temporary folder. As it only writes the content that was in the memory at a given point in time and does not require compression, calling this method is much faster. It can let iink SDK recover such data if it was forced to exit without saving to the compressed archive.
+
+The following diagram explains how iink SDK manages the memory, as well as the role of the different save operations:
+ContentPackage “content.iink” (in RAM)content.iink(zip archive)Temporary foldercontent.iink-filesfragment 1fragment 2fragment 3first “save”create archive and commit content“open”partial extraction“saveToTemp”off-load memory<automatic>partial extraction<automatic>partial loador off-load“save”commit changes
+By default, data corresponding to a content package is stored in a folder named after this package by appending the -files suffix and located in the same folder.
+Deleting packages
+
+Use the deletePackage() method to remove an existing package from the disk. Make sure to first release all references to this package, including parts you opened by explicitly calling their respective close() methods.
+Working with parts
+
+Parts are created and manipulated from their parent package.
+Creating parts
+
+To create a part, call createPart() on the parent package and pass it a string corresponding to the content type you want to assign to its root block (it cannot be changed afterwards).
+
+Possible options are currently “Text”, “Math”, “Diagram”, “Raw Content” or “Text Document” (case sensitive).
+
+To copy a part from an existing package, call clonePart() on the destination package (which can be the same as the origin package if you just want to duplicate the part) and pass it a pointer to the part to copy.
+
+To “move” a part from a package to another, first clone it into the new package and then delete the part from the original package.
+Opening parts
+
+To open a part, call getPart() and pass in parameter its index in its parent package (indexes start at 0). The number of parts of a given package can be retrieved by calling its getPartCount() method.
+Deleting parts
+
+To delete a part, call removePart() on its parent package.
+Objects lifecycle
+
+Before closing your application or opening a new package, make sure to first release all references to the corresponding objects. If you don’t, you might encounter unexpected behavior, as native resources are still allocated.
+This resource management must be applied to all objects implementing the IAutoCloseable interface.
+
+We suggest you to handle those AutoCloseable objects with the Kotlin Use function or Java try-with-resources mechanism.
+
+To force the immediate release of native resources, you should also explicity call the close method of the corresponding objects. Make sure not to reference them somewhere else by setting their references to null as well.
+
+For instance:
+
+// close contentPart and set its reference to null
+if (contentPart != null)
+{
+  contentPart.close();
+  contentPart = null;
+}
+
+// then close contentPackage and set its reference to null
+if (contentPackage != null)
+{
+  contentPackage.close();
+  contentPackage = null;
+}
+
+The Demo also comes with a Property delegate autoClosable utility that you can use to enforce AutoCloseable.close is being called when overwriting a previous value
+Metadata
+
+You can attach metadata to both ContentPart and ContentPackage objects, and they will be serialized with the file. This can prove useful to store client-specific parameters.
+
+Use setMetadata() and getMetadata() to respectively store and retrieve the metadata attached to the object.
+
+// Retrieve the metadata from a part
+ParameterSet metadata = contentPart.getMetadata();
+
+// Set and Get (key, value) pairs
+// ...
+
+// Store the metadata back into the part. You have to set expressively as the content part is a native object and metada is not.
+contentPart.setMetadata(metadata);
+
+The structure representing metadata is a ParameterSet and is manipulated the exact same way as engine configuration parameters.

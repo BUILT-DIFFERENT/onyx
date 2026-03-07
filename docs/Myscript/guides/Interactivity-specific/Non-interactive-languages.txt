@@ -1,0 +1,14 @@
+Non-interactive languages
+
+This page explains how some additional languages can be handled by iink SDK in non-interactive mode only.
+
+This page list the languages that currently don’t support interactive features provided with OffscreenEditor and Editor integrations. They are available for Recognizer integrations:
+
+    Arabic
+    Farsi - Iran
+    Hebrew - Israel
+    Hindi - India
+    Thai - Thailand
+    Urdu - Pakistan
+    Vertical Japanese - Japan: vertical writing is supported by using dedicated resources.
+

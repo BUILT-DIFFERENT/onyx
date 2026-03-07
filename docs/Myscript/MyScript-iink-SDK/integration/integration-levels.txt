@@ -1,0 +1,42 @@
+Integration levels
+
+In some cases, integrating MyScript iink SDK can be as simple as configuring and adding a view to your application. However, it may sometimes call for a deeper integration. MyScript iink SDK offers this flexibility via the support of different integration levels.
+
+Depending on the circumstances, MyScript iink SDK can be integrated at different levels:
+
+    Code examples
+    Platform-specific bindings
+    Cross-platform or server APIs
+
+Code examples
+
+MyScript provides integrators with code examples to ease the integration of MyScript iink SDK.
+This code is released under the permissive Apache 2 license. This lets you free to modify and integrate it into your own solutions without restrictive constraints.
+Native platforms
+
+The example code repositories (one per platform) provide useful examples illustrating some usages of the SDK that you can import into your own project. More importantly, it comes with a reference UI implementation for the target platform that consists in a set of classes that you can directly reuse to get a working base to build on.
+
+All the code relies on platform-specific bindings, making it both easy to integrate into your project and to tune to your liking.
+Web
+
+Ready-to-use examples based on our iinkTS library expose samples that you can integrate in your project.
+Platform bindings
+Native platforms
+
+MyScript iink SDK comes with platform-specific bindings for Android, iOS and Windows, which let you integrate the toolkit using the main programming language(s) of the target platform.
+
+Bindings provide a flexible entry point and offer functionalities you may require. For example, you may need to tune the provided UI reference implementation or even develop a new one. The latter could be useful if you have specific requirements, such as a particular graphical toolkit or performance optimization specific to your use case.
+Web
+
+MyScript iink SDK is supported by the iinkTS library that you can directly use or tune for more flexibility.
+Just like the code examples and the UI reference implementation, iinkTS is released under the permissive Apache 2 license. This lets you free to modify and integrate it into your own solutions without restrictive constraints.
+Cross-platform/server APIs
+Native platforms
+
+MyScript iink SDK comes with a cross-platform C++ API (only available on demand) that supports a wide range of platforms.
+
+As a generic, non-graphical API, it is flexible when it comes to cross-platform development, but you may need more efforts in some cases to develop the different UI parts.
+Web
+
+The Web platforms provides low-level WebSocket and REST APIs that can be used to integrate Interactive Ink into native or web applications alike.
+MyScript does not necessarily recommend the WebSocket API to all integrators, as it requires significant work, e.g. to parse the SVG deltas to apply for the rendering.

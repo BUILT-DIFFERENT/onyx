@@ -1,23 +1,31 @@
 import { z } from 'zod';
-import { StrokeStyleSchema, BoundsSchema } from './common';
 
 /**
- * StrokeSchema - JSON-serializable API contract for Stroke (METADATA ONLY)
- * Canonical sync contract lives in packages/validation + tests/contracts fixtures.
+ * StrokeMetaSchema — JSON-serializable API contract for Stroke metadata
+ * Aligned with PLAN.md §5.1 Stroke entity.
  *
- * Note: strokeData and points are intentionally excluded:
- * - strokeData is ByteArray (not JSON-serializable)
- * - points deferred to sync implementation (Milestone C)
+ * Strokes live inside per-page Yjs docs. This schema is for the metadata-only contract
+ * used by search/hit-testing cache (Room on Android, contract tests). It does NOT contain
+ * raw point data (which is inside the Yjs binary).
+ *
+ * The old StrokeSchema used StrokeStyleSchema + BoundsSchema + createdLamport.
+ * Those have been replaced with inline fields matching the CRDT data model.
  */
-export const StrokeSchema = z
+export const StrokeMetaSchema = z
   .object({
     strokeId: z.string().uuid(),
     pageId: z.string().uuid(),
-    style: StrokeStyleSchema, // Nested object
-    bounds: BoundsSchema, // Nested object
+    toolType: z.enum(['pen', 'highlighter']),
+    penType: z.enum(['ballpoint', 'fountain', 'pencil']).optional(), // only for toolType=pen
+    colorHex: z.string(),
+    thickness: z.number(), // base width in px
+    opacity: z.number(), // 0.0–1.0 (mainly for highlighter)
+    pressureSensitivity: z.number(), // 0.0–1.0
+    tiltSensitivity: z.number(), // 0.0–1.0
+    stabilization: z.number(), // 0.0–1.0 smoothing level
+    isShape: z.boolean(), // true if IInk shape-recognized and snapped
     createdAt: z.number().int(), // Unix ms
-    createdLamport: z.number().int(), // Lamport clock
   })
   .strict();
 
-export type Stroke = z.infer<typeof StrokeSchema>;
+export type StrokeMeta = z.infer<typeof StrokeMetaSchema>;

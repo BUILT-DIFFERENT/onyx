@@ -21,7 +21,7 @@ class BrushPresetStore private constructor(
 
     fun getPresets(): List<BrushPreset> {
         val encoded = prefs.getString(PRESETS_KEY, null) ?: return BrushPreset.DEFAULT_PRESETS
-        return runCatching { json.decodeFromString<List<BrushPreset>>(encoded) }
+        return runCatching { json.decodeFromString<List<BrushPreset>>(encoded).map(::normalizePreset) }
             .getOrDefault(BrushPreset.DEFAULT_PRESETS)
     }
 
@@ -58,3 +58,35 @@ class BrushPresetStore private constructor(
                 }
     }
 }
+
+private fun normalizePreset(preset: BrushPreset): BrushPreset {
+    val normalizedRanges =
+        when (preset.tool) {
+            com.onyx.android.ink.model.Tool.HIGHLIGHTER ->
+                preset.copy(
+                    minWidthFactor = preset.minWidthFactor.coerceAtLeast(HIGHLIGHTER_MIN_WIDTH_FACTOR_FLOOR),
+                    maxWidthFactor = preset.maxWidthFactor.coerceAtLeast(HIGHLIGHTER_MAX_WIDTH_FACTOR_FLOOR),
+                    smoothingLevel = preset.smoothingLevel.coerceAtLeast(DEFAULT_SMOOTHING_LEVEL),
+                )
+
+            else ->
+                preset.copy(
+                    minWidthFactor = preset.minWidthFactor.coerceAtMost(PEN_MIN_WIDTH_FACTOR_CEILING),
+                    maxWidthFactor = preset.maxWidthFactor.coerceAtLeast(PEN_MAX_WIDTH_FACTOR_FLOOR),
+                    smoothingLevel = preset.smoothingLevel.coerceAtLeast(DEFAULT_SMOOTHING_LEVEL),
+                    endTaperStrength = preset.endTaperStrength.coerceAtLeast(DEFAULT_END_TAPER_STRENGTH),
+                )
+        }
+    return if (normalizedRanges.id == "fountain") {
+        normalizedRanges.copy(nibRotation = true)
+    } else {
+        normalizedRanges
+    }
+}
+
+private const val HIGHLIGHTER_MIN_WIDTH_FACTOR_FLOOR = 0.7f
+private const val HIGHLIGHTER_MAX_WIDTH_FACTOR_FLOOR = 1.3f
+private const val PEN_MIN_WIDTH_FACTOR_CEILING = 0.3f
+private const val PEN_MAX_WIDTH_FACTOR_FLOOR = 2.5f
+private const val DEFAULT_SMOOTHING_LEVEL = 0.5f
+private const val DEFAULT_END_TAPER_STRENGTH = 0.6f

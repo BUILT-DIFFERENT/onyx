@@ -1,0 +1,44 @@
+Import and export formats
+
+This page lists the available import and export formats depending on the configuration being considered. For further explanation, refer to the import/export section of the guide.
+Available exports with Offscreen Editor
+
+    Raw Content: JIIX, SVG, HTML.
+
+Available exports with Editor
+
+    Text block: JIIX, raw text, docx1 , HTML1, PNG, JPEG
+    Math block: JIIX, LaTeX, MathML2, docx1 , HTML1, PNG, JPEG
+    Diagram block: JIIX, SVG, GraphML3, pptx4, docx1 , Microsoft Office clipboard format5, HTML1, PNG, JPEG
+    Text Document: JIIX, raw text, docx, HTML, PNG, JPEG
+    Raw Content block: JIIX, SVG, HTML, PNG, JPEG
+
+Available imports with Editor
+
+    Text block: JIIX6, raw text
+
+    Math block: JIIX
+
+    Diagram block: JIIX7
+
+    Text Document: JIIX6, raw text8
+    Raw Content block: JIIX9
+
+    Direct export for the Web platform only. Native platforms are required to paste the part in an intermediate “Text Document” part to get this result. ↩ ↩2 ↩3 ↩4 ↩5 ↩6
+
+    A configuration property export.mathml.flavor allows you to choose between “standard” and Microsoft Office MathML. ↩
+
+    Deprecated as of iink SDK 2.3. A configuration property export.graphml.flavor allows you to choose between “standard” and yEd options. ↩
+
+    Diagram content will be exported in its converted form. ↩
+
+    Saved as a file at a location you define. It is up to you to place it into the clipboard using the Art::GVML ClipFormat key. Note also that Microsoft Office does not support pasting content from the system clipboard on all platforms. ↩
+
+    For the time being, JIIX import of text content can only be used to select recognized text word candidates, as explained here. ↩ ↩2
+
+    For “Diagram” parts, a configuration property diagram.import.jiix.action allows you to choose whether you want to import ink data or to change the recognition candidates. ↩
+
+    Raw text is imported into a “Text Document” with the addBlock method, as explained here. ↩
+
+    For “Raw Content” parts, a configuration property raw-content.import.jiix.action allows you to choose whether you want to import ink data or to change the recognition candidates. ↩
+

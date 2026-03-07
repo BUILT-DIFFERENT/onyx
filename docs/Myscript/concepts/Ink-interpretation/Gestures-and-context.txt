@@ -1,0 +1,21 @@
+Gestures and context
+
+One of the benefits of digital handwriting is clean and direct editing.
+
+When writing on paper, you sometimes need to modify your content: You cross off, you strike out, you add something, you write over something else… The result can be quite a mess!
+
+MyScript iink technology lets you handwrite on a digital device just as you would on paper. But you can also take advantage of these gestures to get a cleaner result by using them to edit your content. You can use the following gestures to improve your user experience.
+
+There are two types of gestures: contextless gestures and content-based gestures.
+Contextless gestures
+
+Contextless gesture algorithms can classify ink into gesture categories based on the shape of the strokes. This can be useful if you don’t fully control the content to which the gestures apply. The downside can be a lack of understanding of what the gestures are intended to do.
+Content-based gestures
+
+Gestures on content provide more information by indicating the content to which they apply. The content can also help to classify the gestures.
+
+For instance, consider the following gestures:
+
+    A contextless gesture classifier will return a single result for both cases: a left-to-right gesture.
+    A content-based gesture classifier will return two different results: a strike-through gesture for the first one, and an underline gesture for the second one.
+

@@ -1,0 +1,111 @@
+Error management
+
+This page explains how to manage errors with iink SDK, as well as common pitfalls
+Getting error notifications
+
+There are two ways iink SDK may return an error:
+
+    Via an exception during the call to an API.
+
+    Via IEditorListener.onError(), IOffscreenEditorListener.onError() or IRecognizerListener.onError() when the error occurs in a background thread.
+
+Exceptions
+
+Possible exceptions for each API call are described in detail in the corresponding API headers.
+Editor-level and OffScreenEditor-level errors
+
+It is highly recommended that you implement IEditorListener.onError() or IOffscreenEditorListener.onError() as part of your integration. This callback provides detailed messages to explain what happened.
+
+In addition, this method comes with an error code argument that will help you customize or internationalize messages to guide your customers in their use of iink technology.
+
+The following table lists the main errors and their possible causes.
+
+    Configuration errors:
+
+Error code 	Message 	Possible cause/solution
+GENERIC 	“error: no such configuration” 	The configuration file could not be found. Check that the folder containing the *.conf file is referenced by the configuration-manager.search-path key of your engine or editor configuration.
+GENERIC 	“error: no such configuration bundle” 	The configuration bundle could not be found. Check that a bundle with the provided name exists in the *.conf file specified by your engine or editor configuration.
+GENERIC 	“error: invalid configuration type”
+“error: failed to expand environment variables in placeholders ${}”,
+“error: invalid command “
+… 	There was an error when parsing the *.conf files. Many variants of this message exist, and each of them should be self-explanatory.
+
+    Ink errors, when ink cannot be added to a Text Document:
+
+Error code 	Message 	Possible cause/solution
+INK_REJECTED_TOO_SMALL 	“ink rejected: stroke is too small (write larger)” 	The stroke you sent to the part is too small. It may originate from the use of a wrong dpi value to configure the renderer.
+INK_REJECTED_TOO_BIG 	“ink rejected: stroke is too large (write smaller)” 	The stroke you sent is too large vertically: a Text Document part assumes that ink is written on, and not across, the guides.
+INK_REJECTED_ABOVE_FIRST_LINE 	“ink rejected: stroke is above first line” 	Ink was written within the top margin.
+INK_REJECTED_BEFORE_FIRST_COLUMN 	“ink rejected: stroke is too far left of the first column” 	Ink was written too far left.
+INK_REJECTED_SMALL_TYPESET 	“ink rejected: cannot write on DIGITAL PUBLISH paragraphs (convert to DIGITAL EDIT)” 	Text blocks in DIGITAL_PUBLISH conversion state can only receive edit/decoration gestures but no input. You have to convert them to DIGITAL_EDIT to add extra content.
+INK_REJECTED_OUT_OF_PAGE 	“ink rejected: stroke is out of document bounds” 	Ink was written outside of the document bounds. Note that each time content is added, iink SDK will allocate extra vertical space at the end of the page corresponding to the height of the provided view size.
+INK_REJECTED_TOO_LONG 	“ink rejected: stroke is too long” 	The length of the stroke (i.e. its number of points) exceeds what the engine can process.
+
+    Gesture errors, when an ink gesture has been detected into a Text Document, but cannot be applied:
+
+Error code 	Message 	Possible cause/solution
+GESTURE_NOTIFICATION_NO_WORDS_TO_JOIN 	“gesture: no words to join” 	A join words gesture has been detected but no words to join have been found.
+GESTURE_NOTIFICATION_MESSAGE_CANNOT_MOVE_ABOVE_FIRSTLINE 	“gesture: there is no line above to join” 	A join line gesture has been detected on the first line so no there is no line above to join.
+GESTURE_NOTIFICATION_MESSAGE_UNABLE_TO_APPLY 	“gesture: gesture cannot be applied” 	A gesture has been detected but an unexpected error has been encountered
+
+    Other errors :
+
+Error 	Message 	Possible cause/solution
+Import Error 	“could not import JIIX: transform contains a skew or a rotation component” 	You imported a JIIX with a transform containing a skew or a rotation component but only scale and translate are now allowed.
+Too many strokes to process 	“LIMIT_EXCEEDED” 	You sent more strokes to the recognition engine than what it can concurrently process.
+Unexpected error 	“INVALID_STATE” or “INTERNAL_ERROR” 	The recognition engine encountered an unexpected error.
+Recognizer-level errors
+
+It is highly recommended that you implement IRecognizerListener.onError() as part of your integration. This callback provides detailed messages to explain what happened.
+
+In addition, this method comes with an error code argument that will help you customize or internationalize messages to guide your customers in their use of iink technology.
+
+The following table lists the main errors and their possible causes.
+
+    Configuration errors:
+
+Error code 	Message 	Possible cause/solution
+GENERIC 	“error: no such configuration” 	The configuration file could not be found. Check that the folder containing the *.conf file is referenced by the recognizer.configuration-manager.search-path key of your engine.
+GENERIC 	“error: no such configuration bundle” 	The configuration bundle could not be found. Check that a bundle with the provided name exists in the *.conf file specified by your engine.
+GENERIC 	“error: invalid configuration type”
+“error: failed to expand environment variables in placeholders ${}”,
+“error: invalid command “
+… 	There was an error when parsing the *.conf files. Many variants of this message exist, and each of them should be self-explanatory.
+
+    Other errors :
+
+Too many strokes to process 	“LIMIT_EXCEEDED” 	You sent more strokes to the recognition engine than what it can concurrently process.
+Unexpected error 	“INVALID_STATE” or “INTERNAL_ERROR” 	The recognition engine encountered an unexpected error.
+Engine-level error
+Error 	Message 	Possible causes/solutions
+Package cannot be opened 	“error: package is already opened” 	Before closing a contentPackage, you shall ensure the editor is in idle state, and that no object referencing this contentPackage remains.
+Certificate errors
+
+It usually takes the form of an INVALID_CERTIFICATE message printed to the console.
+
+If this occurs, please check:
+
+    That the certificate is not time-limited or still valid
+    If you retrieved the certificate from the Developer Portal, check that it was generated for the bundle ID of your application.
+
+No recognition
+
+If recognition is not working, you may usually get the root cause by looking at errors raised by the editor or by the recognizer:
+
+The following causes are the most likely to be involved:
+
+    The configuration was not found - Ensure that the *.conf file you reference is part of the paths provided to the engine/editor/recognizer and that the name of the bundle is correct.
+    Recognition assets could not be found - Ensure that the recognition assets are properly deployed alongside your application and properly referenced by the *.conf file.
+
+Recognition quality is poor
+
+Here is a small checklist to consider in this case:
+
+    Did you specify the right language? - Check your engine, editor or recognizer configuration and the corresponding *.conf file and the selected bundle.
+
+    If you are recognizing text, are guides enabled? - If they are but you are not relying on them, they may negatively impact the recognition.
+
+    Did you call waitForIdle() before attempting to retrieve the results? - Temporary results may not be as relevant as the final one.
+    Did you provide proper dpi value when instantiating the renderer? - This is fundamental to provide the engine with a sense of “scale”, which may let it for instance differentiate a circle, a letter “o” or a dot, if context is lacking.
+    Do you send the right content? - If not, you are not likely to get the expected output 😉!
+

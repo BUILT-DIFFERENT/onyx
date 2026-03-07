@@ -1,0 +1,186 @@
+SOURCE: com/myscript/iink/MathVariableInfo.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class MathVariableInfo
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.MathVariableInfo
+
+public class MathVariableInfo
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Represents a math variable information, relative to a block or global.
+
+Since:
+
+4.1
+
+Field Summary
+
+Fields
+
+Modifier and Type
+
+Field
+
+Description
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+name [link: #name]
+
+The name of the variable.
+
+int
+
+occurrenceCount [link: #occurrenceCount]
+
+The number of times the variable appears in the block expression.
+
+String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+sourceId [link: #sourceId]
+
+The identifier of the block where the variable was defined, or an empty string if not applicable.
+
+MathVariableSourceType [link: MathVariableSourceType.html]
+
+sourceType [link: #sourceType]
+
+The source from which the variable was defined, or MathVariableSourceType.UNDEFINED .
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+MathVariableInfo [link: #%3Cinit%3E(com.myscript.iink.MathVariableInfo)] (@NotNull MathVariableInfo [link: MathVariableInfo.html] other)
+
+Copy constructor.
+
+MathVariableInfo [link: #%3Cinit%3E(java.lang.String,com.myscript.iink.MathVariableSourceType,java.lang.String,int)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name,
+MathVariableSourceType [link: MathVariableSourceType.html] sourceType,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] sourceId,
+int occurrenceCount)
+
+Constructs a MathVariableInfo
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+boolean
+
+equals [link: #equals(java.lang.Object)] (@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+final int
+
+hashCode [link: #hashCode()]()
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Field Details
+
+name
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name
+
+The name of the variable.
+
+sourceType
+
+public MathVariableSourceType [link: MathVariableSourceType.html] sourceType
+
+The source from which the variable was defined, or MathVariableSourceType.UNDEFINED .
+
+sourceId
+
+public String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] sourceId
+
+The identifier of the block where the variable was defined, or an empty string if not applicable.
+
+occurrenceCount
+
+public int occurrenceCount
+
+The number of times the variable appears in the block expression.
+
+Constructor Details
+
+MathVariableInfo
+
+public MathVariableInfo (@NotNull
+@NotNull MathVariableInfo [link: MathVariableInfo.html] other)
+
+Copy constructor.
+
+Parameters:
+
+other - the math variable info to copy.
+
+MathVariableInfo
+
+public MathVariableInfo (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name,
+MathVariableSourceType [link: MathVariableSourceType.html] sourceType,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] sourceId,
+int occurrenceCount)
+
+Constructs a MathVariableInfo
+
+Parameters:
+
+name - the variable name.
+
+sourceType - the source from which the variable was defined, or MathVariableSourceType.UNDEFINED .
+
+sourceId - the identifier of the block where the variable was defined, or an empty string if not applicable.
+
+occurrenceCount - the number of times the variable appears in the block expression.
+
+Method Details
+
+equals
+
+public boolean equals (@Nullable
+@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+Overrides:
+
+equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+hashCode
+
+public final int hashCode ()
+
+Overrides:
+
+hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+toString
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]

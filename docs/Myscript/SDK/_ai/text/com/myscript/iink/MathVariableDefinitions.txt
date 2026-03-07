@@ -1,0 +1,155 @@
+SOURCE: com/myscript/iink/MathVariableDefinitions.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class MathVariableDefinitions
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.MathVariableDefinitions
+
+public class MathVariableDefinitions
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Represents a math variable definitions.
+
+Since:
+
+4.2
+
+Field Summary
+
+Fields
+
+Modifier and Type
+
+Field
+
+Description
+
+@NotNull MathVariableDefinitionInfo [link: MathVariableDefinitionInfo.html][]
+
+definitions [link: #definitions]
+
+The info associated with the definitions.
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+name [link: #name]
+
+The name of the variable.
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+MathVariableDefinitions [link: #%3Cinit%3E(com.myscript.iink.MathVariableDefinitions)] (@NotNull MathVariableDefinitions [link: MathVariableDefinitions.html] other)
+
+Copy constructor.
+
+MathVariableDefinitions [link: #%3Cinit%3E(java.lang.String,com.myscript.iink.MathVariableDefinitionInfo%5B%5D)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name,
+@NotNull MathVariableDefinitionInfo [link: MathVariableDefinitionInfo.html][] definitions)
+
+Constructs a MathVariableDefinitions
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+boolean
+
+equals [link: #equals(java.lang.Object)] (@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+final int
+
+hashCode [link: #hashCode()]()
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Field Details
+
+name
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name
+
+The name of the variable.
+
+definitions
+
+@NotNull
+public @NotNull MathVariableDefinitionInfo [link: MathVariableDefinitionInfo.html][] definitions
+
+The info associated with the definitions.
+
+Constructor Details
+
+MathVariableDefinitions
+
+public MathVariableDefinitions (@NotNull
+@NotNull MathVariableDefinitions [link: MathVariableDefinitions.html] other)
+
+Copy constructor.
+
+Parameters:
+
+other - the math variable definitions to copy.
+
+MathVariableDefinitions
+
+public MathVariableDefinitions (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name,
+@NotNull
+@NotNull MathVariableDefinitionInfo [link: MathVariableDefinitionInfo.html][] definitions)
+
+Constructs a MathVariableDefinitions
+
+Parameters:
+
+name - the variable name.
+
+definitions - the variable definitions.
+
+Method Details
+
+equals
+
+public boolean equals (@Nullable
+@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+Overrides:
+
+equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+hashCode
+
+public final int hashCode ()
+
+Overrides:
+
+hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+toString
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]

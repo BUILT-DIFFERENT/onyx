@@ -1,0 +1,282 @@
+SOURCE: com/myscript/iink/ToolController.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class ToolController
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.ToolController
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class ToolController
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+The ToolController manages pointer tools configuration.
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final void
+
+close [link: #close()]()
+
+protected void
+
+finalize [link: #finalize()]()
+
+final @Nullable PointerTool [link: PointerTool.html]
+
+getToolForType [link: #getToolForType(com.myscript.iink.PointerType)] (@NotNull PointerType [link: PointerType.html] type)
+
+Returns the tool associated with a pointer type.
+
+final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getToolStyle [link: #getToolStyle(com.myscript.iink.PointerTool)] (@NotNull PointerTool [link: PointerTool.html] tool)
+
+Returns the CSS style properties associated with a pointer tool.
+
+final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getToolStyleClasses [link: #getToolStyleClasses(com.myscript.iink.PointerTool)] (@NotNull PointerTool [link: PointerTool.html] tool)
+
+Returns the style classes associated with a pointer tool.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+final void
+
+setToolForType [link: #setToolForType(com.myscript.iink.PointerType,com.myscript.iink.PointerTool)] (@NotNull PointerType [link: PointerType.html] type,
+@NotNull PointerTool [link: PointerTool.html] tool)
+
+Sets the tool associated with a pointer type.
+
+final void
+
+setToolStyle [link: #setToolStyle(com.myscript.iink.PointerTool,java.lang.String)] (@NotNull PointerTool [link: PointerTool.html] tool,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] style)
+
+Sets the CSS style properties associated with a pointer tool.
+
+final void
+
+setToolStyleClasses [link: #setToolStyleClasses(com.myscript.iink.PointerTool,java.lang.String)] (@NotNull PointerTool [link: PointerTool.html] tool,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] styleClasses)
+
+Sets the style classes associated with a pointer tool.
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Returns a String representation of the object, with the current mapping of pointer tools and types.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+getToolForType
+
+@Nullable
+public final @Nullable PointerTool [link: PointerTool.html] getToolForType (@NotNull
+@NotNull PointerType [link: PointerType.html] type)
+
+Returns the tool associated with a pointer type.
+
+Parameters:
+
+type - the pointer type.
+
+Returns:
+
+the pointer tool associated with this type.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this tool controller is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when type is unknown.
+
+setToolForType
+
+public final void setToolForType (@NotNull
+@NotNull PointerType [link: PointerType.html] type,
+@NotNull
+@NotNull PointerTool [link: PointerTool.html] tool)
+
+Sets the tool associated with a pointer type.
+
+Parameters:
+
+type - the pointer type.
+
+tool - the pointer tool.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this tool controller is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when a pointer event sequence is in progress with this pointer type.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when type is unknown.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when tool is unknown.
+
+getToolStyle
+
+@Nullable
+public final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getToolStyle (@NotNull
+@NotNull PointerTool [link: PointerTool.html] tool)
+
+Returns the CSS style properties associated with a pointer tool.
+
+Parameters:
+
+tool - the pointer tool.
+
+Returns:
+
+the CSS style properties associated with this pointer tool.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this tool controller is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when tool is unknown.
+
+setToolStyle
+
+public final void setToolStyle (@NotNull
+@NotNull PointerTool [link: PointerTool.html] tool,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] style)
+
+Sets the CSS style properties associated with a pointer tool.
+
+Parameters:
+
+tool - the pointer tool.
+
+style - the tool CSS style properties.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this tool controller is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when a pointer event sequence is in progress with this pointer type.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when tool is unknown.
+
+getToolStyleClasses
+
+@Nullable
+public final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getToolStyleClasses (@NotNull
+@NotNull PointerTool [link: PointerTool.html] tool)
+
+Returns the style classes associated with a pointer tool.
+
+Parameters:
+
+tool - the pointer tool.
+
+Returns:
+
+the style classes associated with this pointer tool.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this tool controller is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when tool is unknown.
+
+setToolStyleClasses
+
+public final void setToolStyleClasses (@NotNull
+@NotNull PointerTool [link: PointerTool.html] tool,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] styleClasses)
+
+Sets the style classes associated with a pointer tool.
+Note: style properties provided via `setToolStyle()` may override the
+styling associated with the style classes provided here.
+
+Parameters:
+
+tool - the pointer tool.
+
+styleClasses - the style class names, separated by spaces.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this tool controller is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when tool is unknown.
+
+toString
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Returns a String representation of the object, with the current mapping of pointer tools and types.
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Returns:
+
+the representation of the object.
+
+Since:
+
+2.1

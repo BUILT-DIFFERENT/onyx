@@ -3,6 +3,7 @@ package com.onyx.android.ink.ui
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -94,6 +95,38 @@ class InkCanvasStrokeTest {
         val stroke = buildStroke(points, brush)
         assertEquals(Tool.HIGHLIGHTER, stroke.style.tool)
         assertNotNull(stroke.id)
+    }
+
+    @Test
+    fun `buildStroke keeps raw points canonical when display points differ`() {
+        val rawPoints = createTestPoints(3)
+        val displayPoints = rawPoints + com.onyx.android.ink.model.StrokePoint(x = 99f, y = 42f, t = 4L)
+        val brush = Brush(tool = Tool.PEN, baseWidth = 4f)
+
+        val stroke = buildStroke(rawPoints = rawPoints, brush = brush, displayPoints = displayPoints)
+
+        assertEquals(rawPoints, stroke.points)
+        assertEquals(displayPoints, stroke.displayPoints)
+        assertNotEquals(stroke.points, stroke.displayPoints)
+        assertTrue(stroke.bounds.w > 0f)
+    }
+
+    @Test
+    fun `preview smoothing keeps newest tip near raw input`() {
+        val smoother = CausalStrokeSmoothing()
+        val rawPoints =
+            listOf(
+                com.onyx.android.ink.model.StrokePoint(x = 0f, y = 0f, t = 0L),
+                com.onyx.android.ink.model.StrokePoint(x = 10f, y = 10f, t = 1L),
+                com.onyx.android.ink.model.StrokePoint(x = 20f, y = 20f, t = 2L),
+            )
+
+        val preview = smoother.previewPoints(rawPoints)
+        val lastPreview = preview.last()
+        val lastRaw = rawPoints.last()
+
+        assertTrue(kotlin.math.abs(lastPreview.x - lastRaw.x) <= 3f)
+        assertTrue(kotlin.math.abs(lastPreview.y - lastRaw.y) <= 3f)
     }
 
     private fun createTestPoints(count: Int) =

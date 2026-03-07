@@ -2,27 +2,27 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import {
-  ExportMetadataSchema,
-  GestureSettingsSchema,
-  NoteSchema,
+  ExportSchema,
+  NotebookSchema,
   PageObjectSchema,
   PageSchema,
-  SearchIndexTokenSchema,
-  StrokeSchema,
-  TemplateScopeSchema,
+  SearchTextSchema,
+  StrokeMetaSchema,
 } from '@onyx/validation';
 
 const fixturesDir = join(__dirname, '../fixtures');
 
 describe('Contract Fixtures Validation', () => {
-  describe('NoteSchema', () => {
-    it('validates note.fixture.json', () => {
-      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'note.fixture.json'), 'utf-8'));
-      // Using .parse() throws on invalid schema
-      const result = NoteSchema.parse(fixture);
-      expect(result.noteId).toBeDefined();
+  describe('NotebookSchema', () => {
+    it('validates notebook.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'notebook.fixture.json'), 'utf-8'));
+      const result = NotebookSchema.parse(fixture);
+      expect(result.notebookId).toBeDefined();
       expect(result.ownerUserId).toBeDefined();
       expect(result.title).toBeDefined();
+      expect(result.coverColor).toBeDefined();
+      expect(result.isFavorite).toBe(false);
+      expect(result.notebookMode).toBe('paged');
       expect(result.createdAt).toBeTypeOf('number');
       expect(result.updatedAt).toBeTypeOf('number');
       // deletedAt should be absent (not deleted)
@@ -33,39 +33,30 @@ describe('Contract Fixtures Validation', () => {
   describe('PageSchema', () => {
     it('validates page.fixture.json', () => {
       const fixture = JSON.parse(readFileSync(join(fixturesDir, 'page.fixture.json'), 'utf-8'));
-      // Using .parse() throws on invalid schema
       const result = PageSchema.parse(fixture);
       expect(result.pageId).toBeDefined();
-      expect(result.noteId).toBeDefined();
-      expect(result.kind).toBe('ink');
-      expect(result.geometryKind).toBe('fixed');
-      expect(result.width).toBeTypeOf('number');
-      expect(result.height).toBeTypeOf('number');
-      expect(result.unit).toBe('pt');
-      expect(result.contentLamportMax).toBeTypeOf('number');
+      expect(result.notebookId).toBeDefined();
+      expect(result.order).toBeTypeOf('number');
+      expect(result.templateType).toBe('blank');
+      expect(result.widthPx).toBeTypeOf('number');
+      expect(result.heightPx).toBeTypeOf('number');
       expect(result.updatedAt).toBeTypeOf('number');
     });
   });
 
-  describe('StrokeSchema', () => {
+  describe('StrokeMetaSchema', () => {
     it('validates stroke.fixture.json', () => {
       const fixture = JSON.parse(readFileSync(join(fixturesDir, 'stroke.fixture.json'), 'utf-8'));
-      // Using .parse() throws on invalid schema
-      const result = StrokeSchema.parse(fixture);
+      const result = StrokeMetaSchema.parse(fixture);
       expect(result.strokeId).toBeDefined();
       expect(result.pageId).toBeDefined();
-      expect(result.style).toBeDefined();
-      expect(result.style.tool).toBe('pen');
-      expect(result.style.color).toBe('#000000');
-      expect(result.style.lineStyle).toBe('solid');
-      expect(result.style.baseWidth).toBeTypeOf('number');
-      expect(result.bounds).toBeDefined();
-      expect(result.bounds.x).toBeTypeOf('number');
-      expect(result.bounds.y).toBeTypeOf('number');
-      expect(result.bounds.w).toBeTypeOf('number');
-      expect(result.bounds.h).toBeTypeOf('number');
+      expect(result.toolType).toBe('pen');
+      expect(result.penType).toBe('ballpoint');
+      expect(result.colorHex).toBe('#000000');
+      expect(result.thickness).toBeTypeOf('number');
+      expect(result.opacity).toBeTypeOf('number');
+      expect(result.isShape).toBe(false);
       expect(result.createdAt).toBeTypeOf('number');
-      expect(result.createdLamport).toBeTypeOf('number');
     });
   });
 
@@ -74,6 +65,7 @@ describe('Contract Fixtures Validation', () => {
       const fixture = JSON.parse(readFileSync(join(fixturesDir, 'page-object-shape.fixture.json'), 'utf-8'));
       const result = PageObjectSchema.parse(fixture);
       expect(result.kind).toBe('shape');
+      if (result.kind !== 'shape') throw new Error('Expected shape');
       expect(result.payload.shapeType).toBe('rectangle');
       expect(result.zIndex).toBeTypeOf('number');
     });
@@ -102,54 +94,28 @@ describe('Contract Fixtures Validation', () => {
         expect(result.kind).toBe(kind);
       }
     });
-
-    it('validates page-object-shape-conflict.fixture.json', () => {
-      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'page-object-shape-conflict.fixture.json'), 'utf-8'));
-      const result = PageObjectSchema.parse(fixture);
-      expect(result.kind).toBe('shape');
-      expect(result.sync?.objectRevision).toBe(7);
-      expect(result.sync?.conflictPolicy).toBe('lastWriteWins');
-    });
   });
 
-  describe('SearchIndexTokenSchema', () => {
-    it('validates search-index-handwriting-token.fixture.json', () => {
-      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'search-index-handwriting-token.fixture.json'), 'utf-8'));
-      const result = SearchIndexTokenSchema.parse(fixture);
+  describe('SearchTextSchema', () => {
+    it('validates search-text.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'search-text.fixture.json'), 'utf-8'));
+      const result = SearchTextSchema.parse(fixture);
       expect(result.source).toBe('handwriting');
-      expect(result.token).toBe('meeting');
-      expect(result.indexVersion).toBeTypeOf('number');
-    });
-
-    it('validates search-index-pdf-ocr-token.fixture.json', () => {
-      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'search-index-pdf-ocr-token.fixture.json'), 'utf-8'));
-      const result = SearchIndexTokenSchema.parse(fixture);
-      expect(result.source).toBe('pdfOcr');
-      expect(result.token).toBe('diagram');
-      expect(result.indexVersion).toBeTypeOf('number');
+      expect(result.notebookId).toBeDefined();
+      expect(result.pageId).toBeDefined();
+      expect(result.recognizedText).toBeDefined();
+      expect(result.extractedAt).toBeTypeOf('number');
     });
   });
 
-  describe('Feature metadata schemas', () => {
-    it('validates gesture-settings.fixture.json', () => {
-      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'gesture-settings.fixture.json'), 'utf-8'));
-      const result = GestureSettingsSchema.parse(fixture);
-      expect(result.singleFingerMode).toBe('PAN');
-      expect(result.threeFingerTapAction).toBe('REDO');
-    });
-
-    it('validates template-scope.fixture.json', () => {
-      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'template-scope.fixture.json'), 'utf-8'));
-      const result = TemplateScopeSchema.parse(fixture);
-      expect(result.backgroundKind).toBe('grid');
-      expect(result.applyScope).toBe('allPages');
-    });
-
-    it('validates export-metadata.fixture.json', () => {
-      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'export-metadata.fixture.json'), 'utf-8'));
-      const result = ExportMetadataSchema.parse(fixture);
-      expect(result.format).toBe('pdf');
+  describe('ExportSchema', () => {
+    it('validates export.fixture.json', () => {
+      const fixture = JSON.parse(readFileSync(join(fixturesDir, 'export.fixture.json'), 'utf-8'));
+      const result = ExportSchema.parse(fixture);
       expect(result.mode).toBe('flattened');
+      expect(result.notebookId).toBeDefined();
+      expect(result.exportAssetId).toBeDefined();
+      expect(result.createdByUserId).toBeDefined();
     });
   });
 });

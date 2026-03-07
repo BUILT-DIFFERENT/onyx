@@ -1,0 +1,293 @@
+SOURCE: com/myscript/iink/graphics/StyleFlag.html
+
+Package com.myscript.iink.graphics [link: package-summary.html]
+
+Enum Class StyleFlag
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<StyleFlag [link: StyleFlag.html]>
+
+com.myscript.iink.graphics.StyleFlag
+
+All Implemented Interfaces:
+
+Serializable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Serializable.html] , Comparable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Comparable.html]<StyleFlag [link: StyleFlag.html]> , Constable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/constant/Constable.html]
+
+public enum StyleFlag
+extends Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<StyleFlag [link: StyleFlag.html]>
+
+Style information flags.
+
+Nested Class Summary
+
+Nested classes/interfaces inherited from class java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]
+
+Enum.EnumDesc [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html]<E [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html] extends Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<E [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html]>>
+
+Enum Constant Summary
+
+Enum Constants
+
+Enum Constant
+
+Description
+
+DROPSHADOW_COLOR [link: #DROPSHADOW_COLOR]
+
+Drop shadow color property.
+
+DROPSHADOW_RADIUS [link: #DROPSHADOW_RADIUS]
+
+Drop shadow blur radius property.
+
+DROPSHADOW_XOFFSET [link: #DROPSHADOW_XOFFSET]
+
+Drop shadow horizontal property.
+
+DROPSHADOW_YOFFSET [link: #DROPSHADOW_YOFFSET]
+
+Drop shadow vertical property.
+
+FILL_COLOR [link: #FILL_COLOR]
+
+Fill color property.
+
+FILL_RULE [link: #FILL_RULE]
+
+Fill rule property.
+
+FONT_FAMILY [link: #FONT_FAMILY]
+
+Font family property.
+
+FONT_LINE_HEIGHT [link: #FONT_LINE_HEIGHT]
+
+Font line height property.
+
+FONT_SIZE [link: #FONT_SIZE]
+
+Font size property.
+
+FONT_STYLE [link: #FONT_STYLE]
+
+Font style property.
+
+FONT_VARIANT [link: #FONT_VARIANT]
+
+Font variant property.
+
+FONT_WEIGHT [link: #FONT_WEIGHT]
+
+Font weight property.
+
+STROKE_COLOR [link: #STROKE_COLOR]
+
+Stroke color property.
+
+STROKE_DASH_ARRAY [link: #STROKE_DASH_ARRAY]
+
+Stroke dash array property.
+
+STROKE_DASH_OFFSET [link: #STROKE_DASH_OFFSET]
+
+Stroke dash offset property.
+
+STROKE_LINE_CAP [link: #STROKE_LINE_CAP]
+
+Stroke line cap property.
+
+STROKE_LINE_JOIN [link: #STROKE_LINE_JOIN]
+
+Stroke line join property.
+
+STROKE_MITER_LIMIT [link: #STROKE_MITER_LIMIT]
+
+Stroke miter limit property.
+
+STROKE_WIDTH [link: #STROKE_WIDTH]
+
+Stroke width property.
+
+Method Summary
+
+All Methods Static Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+static StyleFlag [link: StyleFlag.html]
+
+valueOf [link: #valueOf(java.lang.String)] (String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Returns the enum constant of this class with the specified name.
+
+static StyleFlag [link: StyleFlag.html][]
+
+values [link: #values()]()
+
+Returns an array containing the constants of this enum class, in
+the order they are declared.
+
+Methods inherited from class java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#clone()], compareTo [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#compareTo(E)], describeConstable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#describeConstable()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#equals(java.lang.Object)], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#finalize()], getDeclaringClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#getDeclaringClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#hashCode()], name [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#name()], ordinal [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#ordinal()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#toString()], valueOf [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#valueOf(java.lang.Class,java.lang.String)]
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Enum Constant Details
+
+STROKE_COLOR
+
+public static final StyleFlag [link: StyleFlag.html] STROKE_COLOR
+
+Stroke color property.
+
+STROKE_WIDTH
+
+public static final StyleFlag [link: StyleFlag.html] STROKE_WIDTH
+
+Stroke width property.
+
+STROKE_LINE_CAP
+
+public static final StyleFlag [link: StyleFlag.html] STROKE_LINE_CAP
+
+Stroke line cap property.
+
+STROKE_LINE_JOIN
+
+public static final StyleFlag [link: StyleFlag.html] STROKE_LINE_JOIN
+
+Stroke line join property.
+
+STROKE_MITER_LIMIT
+
+public static final StyleFlag [link: StyleFlag.html] STROKE_MITER_LIMIT
+
+Stroke miter limit property.
+
+STROKE_DASH_ARRAY
+
+public static final StyleFlag [link: StyleFlag.html] STROKE_DASH_ARRAY
+
+Stroke dash array property.
+
+STROKE_DASH_OFFSET
+
+public static final StyleFlag [link: StyleFlag.html] STROKE_DASH_OFFSET
+
+Stroke dash offset property.
+
+FILL_COLOR
+
+public static final StyleFlag [link: StyleFlag.html] FILL_COLOR
+
+Fill color property.
+
+FILL_RULE
+
+public static final StyleFlag [link: StyleFlag.html] FILL_RULE
+
+Fill rule property.
+
+FONT_FAMILY
+
+public static final StyleFlag [link: StyleFlag.html] FONT_FAMILY
+
+Font family property.
+
+FONT_LINE_HEIGHT
+
+public static final StyleFlag [link: StyleFlag.html] FONT_LINE_HEIGHT
+
+Font line height property.
+
+FONT_SIZE
+
+public static final StyleFlag [link: StyleFlag.html] FONT_SIZE
+
+Font size property.
+
+FONT_STYLE
+
+public static final StyleFlag [link: StyleFlag.html] FONT_STYLE
+
+Font style property.
+
+FONT_VARIANT
+
+public static final StyleFlag [link: StyleFlag.html] FONT_VARIANT
+
+Font variant property.
+
+FONT_WEIGHT
+
+public static final StyleFlag [link: StyleFlag.html] FONT_WEIGHT
+
+Font weight property.
+
+DROPSHADOW_XOFFSET
+
+public static final StyleFlag [link: StyleFlag.html] DROPSHADOW_XOFFSET
+
+Drop shadow horizontal property.
+
+DROPSHADOW_YOFFSET
+
+public static final StyleFlag [link: StyleFlag.html] DROPSHADOW_YOFFSET
+
+Drop shadow vertical property.
+
+DROPSHADOW_RADIUS
+
+public static final StyleFlag [link: StyleFlag.html] DROPSHADOW_RADIUS
+
+Drop shadow blur radius property.
+
+DROPSHADOW_COLOR
+
+public static final StyleFlag [link: StyleFlag.html] DROPSHADOW_COLOR
+
+Drop shadow color property.
+
+Method Details
+
+values
+
+public static StyleFlag [link: StyleFlag.html][] values ()
+
+Returns an array containing the constants of this enum class, in
+the order they are declared.
+
+Returns:
+
+an array containing the constants of this enum class, in the order they are declared
+
+valueOf
+
+public static StyleFlag [link: StyleFlag.html] valueOf (String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Returns the enum constant of this class with the specified name.
+The string must match exactly an identifier used to declare an
+enum constant in this class. (Extraneous whitespace characters are
+not permitted.)
+
+Parameters:
+
+name - the name of the enum constant to be returned.
+
+Returns:
+
+the enum constant with the specified name
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - if this enum class has no constant with the specified name
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - if the argument is null

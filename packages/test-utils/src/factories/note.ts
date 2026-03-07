@@ -1,25 +1,28 @@
-import { type Note } from '@onyx/validation';
+import { type Notebook } from '@onyx/validation';
 
 /**
- * Creates a test Note object with sensible defaults.
+ * Creates a test Notebook object with sensible defaults.
  * Override any field by passing a partial object.
  *
- * @param overrides - Partial Note fields to override defaults
- * @returns A valid Note object matching NoteSchema
+ * @param overrides - Partial Notebook fields to override defaults
+ * @returns A valid Notebook object matching NotebookSchema
  *
  * @example
- * const note = createTestNote({ title: 'My Custom Title' });
- * const deletedNote = createTestNote({ deletedAt: Date.now() });
+ * const notebook = createTestNotebook({ title: 'My Custom Title' });
+ * const deletedNotebook = createTestNotebook({ deletedAt: Date.now() });
  */
-export function createTestNote(overrides?: Partial<Note>): Note {
-  const defaults: Note = {
-    noteId: crypto.randomUUID(),
+export function createTestNotebook(overrides?: Partial<Notebook>): Notebook {
+  const defaults: Notebook = {
+    notebookId: crypto.randomUUID(),
     ownerUserId: 'test-user-123',
-    title: 'Test Note',
+    title: 'Test Notebook',
+    coverColor: '#6366F1',
+    isFavorite: false,
+    notebookMode: 'paged',
     createdAt: Date.now(),
     updatedAt: Date.now(),
     // deletedAt omitted (optional field - absent means not deleted)
   };
 
-  return { ...defaults, ...overrides } as Note;
+  return { ...defaults, ...overrides } as Notebook;
 }

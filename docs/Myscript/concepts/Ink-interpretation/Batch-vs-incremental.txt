@@ -1,0 +1,24 @@
+What are batch mode and incremental mode?
+
+Batch mode and incremental mode refer to the way you deliver your strokes to the recognition engine.
+Batch mode
+
+Sometimes, you need to wait until the user has finished writing to send ink strokes to the engine and get a result. So, you buffer the strokes before sending them to the engine: batch mode lets you send all strokes at once.
+
+Such a mode takes only advantage of the interpretation part of MyScript technology. Export can retrieve this semantics in either common digital formats or the most-complete MyScript internal format. Furthermore, for now, batch mode does not support any gesture.
+Incremental mode
+
+Incremental mode means your application captures and sends ink strokes to the MyScript iink engine along the way users write. Thus, MyScript iink SDK starts interpreting the digital ink as soon as users produce it.
+      ink strokes are sent           as the user writes    
+
+MyScript iink SDK analyzes the new strokes to interpret them but also to refine previous recognition results. So this recognition process is incremental.
+Benefits
+
+Recognition takes place as people write. As a result, full recognition results are available almost immediately after they are finished, since incremental mode focuses only on new input. When new input is added, batch mode requires the entire content to be re-processed. For this reason, incremental mode optimizes recognition time compared to batch mode.
+
+When combining incremental mode with on screen usage, users can see and fix interpretation issues as they write. They can also enjoy gestures, thus experiencing full interactivity.
+Mixing batch mode and incremental mode
+
+Incremental and batch modes can co-exist in your application with MyScript iink SDK, as they are complementary. A typical use case for mixing both modes is indexing.
+
+Imagine you want to index for searching your notes. You will likely send strokes as a batch for all non-indexed pages but the current one, where you will send the strokes in real time. This will allow you to have current page content available for immediate search.

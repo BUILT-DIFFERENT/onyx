@@ -1,0 +1,251 @@
+Configuration
+
+MyScript iink SDK is a flexible toolkit, and its default configuration can be adjusted to meet different needs. This page lists available options, their default values and usage.
+On native platforms, you can access the Configuration via your Engine object. Refer to the Interactive Ink runtime page of the guide for more instructions.
+
+Further options are available to customize your styling with css properties. They are inventoried in the styling page.
+
+In the tables below, note how the ${KEY_NAME} syntax allows retrieving the value of another key.
+General
+Key 	Type 	Default value 	Description
+configuration-manager.search-path 	string array 	<empty> 	List of directories where the configuration files (*.conf) used by the Editor and OffScreenEditor are stored.
+lang 	string 	en_US 	Defines the language used in the Editor and OffScreenEditor.
+content-package.temp-folder 	string 	<empty> 	Location for the temporary folder where content packages shall be extracted1. If empty, the folder will be placed alongside the corresponding content package.
+convert.convert-on-double-tap 	boolean 	true 	If true, double tap on a block will convert it.
+debug.log-file 	string 	<empty> 	Path to the file where debug logs shall be stored.
+export.graphml.flavor 	string 	yed 	Defines the flavor you want for GraphML export: possible values are standard and yed. The latter is recommended if you want to edit exported GraphML into yEd. The yEd flavor is also more expressive and thus truthful.
+export.image-max-size 	number 	4096 	Maximum width and height of exported images.
+export.image-resolution 	number 	300 	Resolution of the images that are exported, in dpi.
+export.image.guides 	boolean 	false 	If true, guides are visible in the exported images.
+export.image.viewport.x 	number 	none 	The x-coordinate, in pixels, of the viewport origin to be used for the image export.
+export.image.viewport.y 	number 	none 	The y-coordinate, in pixels, of the viewport origin to be used for the image export.
+export.image.viewport.width 	number 	none 	The width, in pixels, of the viewport to be used for the image export.
+export.image.viewport.height 	number 	none 	The height, in pixels, of the viewport to be used for the image export.
+export.jiix.bounding-box 	boolean 	true 	If true, JIIX export will contain the bounding boxes of exported items.
+export.jiix.strokes 	boolean 	true 	If true, JIIX export will include the detailed ink information.
+export.jiix.glyphs 	boolean 	true 	If true, JIIX export will include the converted glyphs.
+export.jiix.primitives 	boolean 	true 	If true, JIIX export will include the converted shape primitives.
+export.jiix.style 	boolean 	false 	If true, JIIX export will include the style information. Note only dynamic style will be exported, not the editor-level stylesheet.
+export.jiix.math-label 	boolean 	true 	If true, JIIX export will include the LaTeX label for Math blocks.
+export.jiix.ids 	boolean 	false 	If true, JIIX export will include item ids: is useful to get items id, without having all item information: for instance having strokes ids without their full coordinates to avoid an heavy .jiix file.
+export.jiix.ranges 	boolean 	false 	If true, JIIX export will include ink ranges of every object 2: is useful for having strokes ranges without their full coordinates to avoid an heavy .jiix file.
+export.jiix.text.chars 	boolean 	false 	If true, JIIX export will include the detailed characters information.
+export.jiix.text.words 	boolean 	true 	If true, JIIX export will include the detailed words information.
+export.jiix.text.lines 	boolean 	false 	If true, JIIX export will include the detailed geometric information per line in the text interpretation.
+export.jiix.text.spans 	boolean 	false 	If true, JIIX export will include detailed recognition information per line in the text interpretation 3.
+export.jiix.deprecated.text.linebreaks 	boolean 	false 	If true, JIIX export will include detailed information about the line breaks within a text. Deprecated, you should rather use the export.jiix.text.structure option.
+export.jiix.text.structure 	boolean 	false 	If true, JIIX export will include detailed information about the text layout structure for Text blocks.
+export.jiix.shape.candidates 	boolean 	true 	If true, JIIX export will include shape candidates when using a Shape Recognizer or a Raw Content Recognizer with shape recognition.
+export.mathml.flavor 	string 	standard 	Defines the flavor you want for MathML export: possible values are standard and ms-office. The latter is recommended if you want to use exported MathML into Microsoft Office suite.
+export.temporary-file 	string 	<empty> 	Path to temporary export file. If not set, temporary file will be created alongside the corresponding content package.
+gesture.enable 	boolean 	true 	If true, MyScript iink SDK will attempt to detect gestures while writing.
+renderer.debug.draw-image-boxes 	boolean 	false 	If true, the bounding of the images are visible.
+renderer.debug.draw-text-boxes 	boolean 	false 	If true, the bounding of the words (for text) or characters (for math) are visible.
+renderer.prediction.enable 	boolean 	false 	If true, enables the ink prediction. See rendering. mechanism.
+renderer.prediction.duration 	number 	16 	When ink prediction is enabled, defines the targeted prediction duration in milliseconds. Default value is 16, max is 200. See rendering.
+renderer.sqrt.bar-scale 	number 	1 	Adjusts the thickness of the square root bar.
+selector.shape 	string 	polygon 	Defines the shape of the lasso selector: possible value are polygon and rectangle.
+max-recognition-thread-count 	number 	1 	A number between 1 and 64. Maximum number of threads used by the Engine for recognition. This tuning might be relevant when processing at one time with an Editor, an OffscreenEditor or a Recognizer a large set of strokes of text, or with a Math Recognizer a large set of strokes. It is advised however, to leave this configuration to 1 if you are doing incremental recognition, as it may have a negative impact on performances and accuracy.
+Text
+Key 	Type 	Default value 	Description
+text.configuration.bundle 	string 	${lang} 	Configuration bundle to be used (name of the *.conf file).
+text.configuration.name 	string 	text 	Configuration name, within the bundle (configuration within the *.conf file).
+text.eraser.radius 	number 	3 	Radius of the eraser tool in mm.
+text.eraser.show 	boolean 	false 	If true, a halo shows up at eraser position.
+text.eraser.erase-precisely 	boolean 	false 	If false, the eraser removes any character it touches, else it only erases ink portions within its trajectory.
+text.eraser.dynamic-radius 	boolean 	false 	If false, the eraser size is fixed and equal to the radius. If it is true, the eraser size is dynamic and varies with speed and/or pressure.
+text.eraser.min-pressure-factor 	number 	1 	When text.eraser.dynamic-radius is activated, it sets the maximum dividing ratio for the pressure effect on the eraser radius. The recommended value is 5.
+text.eraser.max-pressure-factor 	number 	1 	When text.eraser.dynamic-radius is activated, it sets the maximum multiplication ratio for the pressure effect on the eraser radius. The recommended value is 5.
+text.eraser.max-velocity-factor 	number 	5 	When text.eraser.dynamic-radius is activated, it sets the maximum multiplication ratio for the speed effect on the eraser radius.
+text.margin.left 	number 	15 	Margin from the left of the part to the left of the text bounding box (used for reflow).
+text.margin.right 	number 	15 	Margin from the right of the part to the right of the text bounding box (used for reflow).
+text.margin.top 	number 	10 	Margin from the top of the part to the top of the text bounding box (used for reflow).
+text.guides.enable 	boolean 	true 	If true, guides are visible and used for convert and reflow operations. The default line spacing is 10 mm and can be tuned by choosing the .text class font-size and line-height values.
+All these text.* parameters only affect the “Text” content type, not “Text Document”.
+Math
+Math general settings
+Key 	Type 	Default value 	Description
+math.configuration.bundle 	string 	math 	Configuration bundle to be used (name of the *.conf file).
+math.configuration.name 	string 	standard 	Configuration name, within the bundle (configuration within the *.conf file).
+math.convert.animate 	boolean 	false 	If true, math animation (morphing) is performed when converting math strokes to typeset. Math animation is supported only in a Math part or Text Document part.
+math.eraser.radius 	number 	3 	Radius of the eraser tool in mm.
+math.eraser.show 	boolean 	false 	If true, a halo shows up at eraser position.
+math.eraser.erase-precisely 	boolean 	false 	If false, the eraser removes any symbol it touches, else it only erases ink portions within its trajectory.
+math.eraser.dynamic-radius 	boolean 	false 	If false, the eraser size is fixed and equal to the radius. If it is true, the eraser size is dynamic and varies with speed and/or pressure.
+math.eraser.min-pressure-factor 	number 	1 	When math.eraser.dynamic-radius is activated, it sets the maximum dividing ratio for the pressure effect on the eraser radius. The recommended value is 5.
+math.eraser.max-pressure-factor 	number 	1 	When math.eraser.dynamic-radius is activated, it sets the maximum multiplication ratio for the pressure effect on the eraser radius. The recommended value is 5.
+math.eraser.max-velocity-factor 	number 	5 	When math.eraser.dynamic-radius is activated, it sets the maximum multiplication ratio for the speed effect on the eraser radius.
+math.margin.bottom 	number 	10 	Margin from the bottom of the part to the bottom of the math expression bounding box (used for conversion operations).
+math.margin.left 	number 	15 	Margin from the left of the part to the left of the math expression bounding box (used for conversion operations).
+math.margin.right 	number 	15 	Margin from the right of the part to the right of the math expression bounding box (used for conversion operations).
+math.margin.top 	number 	10 	Margin from the top of the part to the top of the math expression bounding box (used for conversion operations).
+Math solver settings
+Key 	Type 	Default value 	Description
+math.solver.angle-unit 	string 	deg 	Unit of the angle computation in the solver: It must be either deg (degrees) or rad (radians).
+math.solver.decimal-separator 	string 	. 	The decimal separator symbol (usually . or ,).
+math.solver.enable 	boolean 	true 	If true, solver result is visible upon conversion in a Math part or Text Document part.
+math.solver.fractional-part-digits 	number 	3 	The number of decimals in the solver computation result.
+math.solver.number-format 	string 	decimal 	The way the solver displays the results: decimal (e.g. “2.4”), rational (e.g. “3/2”) or mixed (e.g. “1½”).
+math.solver.options 	string 	algebraic 	numeric choice lets the solver modify the structure of the expression to obtain something computable. algebraic one preserves the structure of the input in any case.
+math.solver.rounding-mode 	string 	half-up 	Rounding method used to display solver results: It must be either half-up or truncate.
+math.solver.numerical-computation 	string array 	[ "anywhere" ] for Editor, [ "at-right-of-equal-sign" ] for OffscreenEditor 	Indicates when solver should perform a numerical-computation action. Possible values are: at-right-of-equal-sign to insert the value of left expression at the right of an equal sign without right expression, at-question-mark to replace a written question mark by the corresponding value if it can be computed. When anywhere value is set the solver performs all supported numerical computations, including the two previous cases.
+math.solver.enable-syntactic-correction 	boolean 	true for Editor, false for OffscreenEditor 	If true, the solver inserts missing fences, operands and zeros in the math formula when applying a numerical-computation action.
+math.solver.display-implicit-multiply 	boolean 	true for Editor, false for OffscreenEditor 	If true, the solver inserts implicit multiply operators in the math formula when applying a numerical-computation action.
+math.solver.display-vop-implicits 	boolean 	false 	If true, the solver inserts implicit addition operators in vertical operation when applying a numerical-computation action.
+math.solver.auto-variable-management.enable 	boolean 	false 	If true, enables the automatic management of variables.
+math.solver.auto-variable-management.scoping-policy 	string 	closest 	The scoping policy determines which variable definitions apply to a formula, identified by its block Id, when variables are used across formulas. Possible values are: closest the definition from the closest block in spatial distance is used, last-modified the most recently modified block is used, last-edited, similar to last-modified, but moving a block does not count as a modification.
+math.solver.evaluate-resample-max-depth 	number 	5 	The maximum number of resampling points that can be inserted between the equidistant points, to improve accuracy around local extrema and discontinuities when evaluating variables in a math block. 0 means no resampling.
+Diagram
+Key 	Type 	Default value 	Description 	 
+diagram.configuration.analyzer.bundle 	string 	diagram 	Configuration bundle to be used (name of the *.conf file). 	 
+diagram.configuration.analyzer.name 	string 	analyzer 	Configuration name, within the bundle (configuration within the *.conf file). 	 
+diagram.configuration.shape.bundle 	string 	diagram 	Configuration bundle to be used (name of the *.conf file). 	 
+diagram.configuration.shape.name 	string 	shape 	Configuration name, within the bundle (configuration within the *.conf file). 	 
+diagram.configuration.text.bundle 	string 	${lang} 	Configuration bundle to be used (name of the *.conf file). 	 
+diagram.configuration.text.name 	string 	text 	Configuration name, within the bundle (configuration within the *.conf file). 	 
+diagram.convert.types 	string array 	[ "text", "shape" ] 	Defines which types of blocks respond to convert operations. Blocks whose types are not listed here remain unaffected by convert operations. Possible values are text and shape. 	 
+diagram.convert.snap 	boolean 	true 	If true, allows to align to nearby items when converting. 	 
+diagram.convert.match-text-size 	boolean 	false 	If true, enable scaling font so that on convert typeset text size fits handwritten text one. 	 
+diagram.convert.text-size-scale 	number 	1.25 	When diagram.convert.match-text-size is activated, sets the text scale value. Relevant values are within range 1 to 2. The larger the scale, the less font sizes are used. The closer to 1, the most linear the scale is, thus using more font sizes. If you set a value less than or equal to 1, the default value 1.25 is used. 	 
+diagram.enable-sub-blocks 	boolean 	true 	If true, Diagram parts contain accessible sub-blocks that describe the diagram content. 	 
+diagram.eraser.radius 	number 	3 	Radius of the eraser tool in mm. 	 
+diagram.eraser.show 	boolean 	true 	If true, a halo shows up at eraser position. 	 
+diagram.eraser.erase-precisely 	boolean 	false 	If false, the eraser removes any object (character, shape, line…) it touches, else it only erases ink portions within its trajectory. 	 
+diagram.eraser.dynamic-radius 	boolean 	false 	If false, the eraser size is fixed and equal to the radius. If it is true, the eraser size is dynamic and varies with speed and/or pressure. 	 
+diagram.eraser.min-pressure-factor 	number 	1 	When diagram.eraser.dynamic-radius is activated, it sets the maximum dividing ratio for the pressure effect on the eraser radius. The recommended value is 5. 	 
+diagram.eraser.max-pressure-factor 	number 	1 	When diagram.eraser.dynamic-radius is activated, it sets the maximum multiplication ratio for the pressure effect on the eraser radius. The recommended value is 5. 	 
+diagram.eraser.max-velocity-factor 	number 	5 	When diagram.eraser.dynamic-radius is activated, it sets the maximum multiplication ratio for the speed effect on the eraser radius. 	 
+diagram.import.jiix.action 	string 	update 	Possible values are update, add and replace. See import for details. 	 
+diagram.session-time 	number 	1000 	Time interval (in milliseconds) between the last pen up event and subsequent contentChanged() notifications. 	 
+diagram.pen.gestures 	string array 	{ scratch-out, strike-through, insert, join } 	A string array containing any of the enabled gestures: {scratch-out, underline, insert, join, long-press, strike-through, surround}. 	 
+diagram.recognition.feedback 	string array 	[“animation-fill”] 	When shape recognition is enabled, this sets whether shapes should be highlighted temporarily. By default, there is an animation. To disable the animation, set to an empty value. 	 
+diagram.selection.feedback 	string 	animate 	A string containing none, one or more of {“animate”, “show-grabbed-handle-only”}. It sets the appearance of selection boxes: “animate” adds a short animation in the box states transition and “show-grabbed-handle-only” hides the box handles that are not used when manipulating the box. 	 
+diagram.selection.lasso-outline 	string 	as-drawn 	Possible values are {“as-drawn”, “fitted”}. It sets the appearance of the lasso: “as-drawn” keeps the lasso strokes as drawn by users, while “fitted” redraws the lasso outline to fit the lasso content. 	Yes
+diagram.z-order.highlight 	string 	default 	Possible values are {“default”, “main”}. Indicates whether highlighter strokes are set at the back of the ink (default behavior) or remain in the main layer of writing (main behavior) . 	 
+diagram.rotation 	string array 	[“shape”,”image”] 	String value among: [ “shape”, “image” ] listing the items that can be rotated with a handle. 	 
+
+You can also configure interactivity, as described below.
+Raw Content
+Key 	Type 	Default value 	Description
+raw-content.configuration.analyzer.bundle 	string 	raw-content 	Configuration bundle to be used for ink analysis (name of the *.conf file). By default, the bundle is the legacy one, working on all platforms. Other possible value is raw-content2 to use to our latest analyzer (not yet available on all platforms, check platforms for more details).
+raw-content.configuration.analyzer.name 	string 	text-block 	Configuration name for ink analysis, within the bundle (configuration within the *.conf file).
+raw-content.configuration.shape.bundle 	string 	diagram 	Configuration bundle to be used for shape recognition (name of the *.conf file).
+raw-content.configuration.shape.name 	string 	shape 	Configuration name for shape recognition, within the bundle (configuration within the *.conf file).
+raw-content.configuration.text.bundle 	string 	${lang} 	Configuration bundle to be used for text recognition (name of the *.conf file).
+raw-content.configuration.text.name 	string 	text 	Configuration name for text recognition, within the bundle (configuration within the *.conf file).
+raw-content.configuration.math.bundle 	string 	math 	Configuration bundle to be used for math recognition (name of the *.conf file). By default, the bundle is the legacy one, working on all platforms. Other possible value is math2 to use to our latest math recognition (not yet available on all platforms, check platforms for more details).
+raw-content.configuration.math.name 	string 	standard 	Configuration name for math recognition, within the bundle (configuration within the *.conf file).
+raw-content.classification.types 	string array 	["text", "drawing"] 	Controls the list of content types that can be output by the ink strokes classifier. If content types are removed from this list, the corresponding strokes are output as part of the most likely alternative choice among the remaining content types. Possible values are text, shape, math and drawing. Note that math requires the use of the latest technology with math2 for math bundle, and raw-content2 for analyzer bundle. (see above)
+raw-content.recognition.types 	string array 	<empty> 	Defines the type of recognition that will be performed on this content and the result that will be available in the JIIX export. Possible values are text, math and shape.
+raw-content.convert.types 	string array 	[ "text", "math", "shape" ] 	Defines which types of blocks respond to convert operations. Blocks whose types are not listed here remain unaffected by convert operations. Possible values are text, math and shape.
+raw-content.convert.shape-on-hold 	boolean 	false 	If true, Raw content shape conversion will be automatically triggered by holding the pen in position after drawing the shape.
+raw-content.convert.snap 	boolean 	false 	If true, allows to align to nearby items when converting.
+raw-content.eraser.radius 	number 	3 	Radius of the eraser tool in mm.
+raw-content.eraser.erase-precisely 	boolean 	true 	If false, the eraser removes any object it touches, else it only erases ink portions within its trajectory.
+raw-content.eraser.dynamic-radius 	boolean 	false 	If false, the eraser size is fixed and equal to the radius. If it is true, the eraser size is dynamic and varies with speed and/or pressure.
+raw-content.eraser.min-pressure-factor 	number 	1 	When raw-content.eraser.dynamic-radius is activated, it sets the maximum dividing ratio for the pressure effect on the eraser radius. The recommended value is 5.
+raw-content.eraser.max-pressure-factor 	number 	1 	When raw-content.eraser.dynamic-radius is activated, it sets the maximum multiplication ratio for the pressure effect on the eraser radius. The recommended value is 5.
+raw-content.eraser.max-velocity-factor 	number 	5 	When raw-content.eraser.dynamic-radius is activated, it sets the maximum multiplication ratio for the speed effect on the eraser radius.
+raw-content.eraser.show 	boolean 	true 	If true, a halo shows up at eraser position.
+raw-content.guides.show 	string array 	<empty> 	Describes which alignment guides should be shown. Possible values are alignment, text, square, square-inside, image-aspect-ratio, rotation.
+raw-content.guides.snap 	string array 	<empty> 	Describes which alignment guides should be used for snapping, i.e. there is an attraction to these guides when the shapes are moved. Possible values are alignment, text, square, square-inside, image-aspect-ratio, rotation.
+raw-content.highlight-text 	boolean 	true 	If true, allows semantic highlighter on recognized text.
+raw-content.import.jiix.action 	string 	add 	Possible values are add and replace. See import for details.
+raw-content.line-pattern 	string 	none 	Sets the pattern that shall be used for Raw Content parts backgrounds. Possible values are none, dots, lines and grid. By default there is no pattern. Set another value to display the corresponding background pattern.
+raw-content.pen.gestures 	string array 	<empty> 	A string array containing any of the enabled gestures: {scratch-out, underline, insert, join, long-press, strike-through, surround}. By default, it is empty, so no gesture is enabled.
+raw-content.auto-connection 	boolean 	false 	If true, allows auto connection of shapes and connectors
+raw-content.edge.policy 	string array 	[“default-with-drag”] for Editor, [] for OffscreenEditor 	String value among: “default” or “default-with-drag” defining shape enhancement policy in a Raw Content with Editor. By default it is “default-with-drag” which enables shape enhancement. Setting it is “default”, corresponding to a Diagram like behavior. To benefit from this feature, auto connection must be enabled (see raw-content.auto-connection configuration).
+raw-content.shape.snap-axis 	string array 	<empty> 	String value among: [ “triangle”, “rectangle”, “rhombus”, “parallelogram”, “polygon”, “ellipse” ]. Indicates the kind of shapes which will snap to X/Y axis when drawn or rotated. To benefit from this feature, auto connection must be enabled (see raw-content.auto-connection configuration)
+raw-content.recognition.feedback 	string array 	<empty> 	When shape recognition is enabled, this sets whether shapes should be highlighted temporarily. By default, there is no animation. To enable the animation, set to [“animation-fill”].
+raw-content.selection.feedback 	string 	animate 	A string containing none, one or more of {“animate”, “show-grabbed-handle-only”}. It sets the appearance of selection boxes: “animate” adds a short animation in the box states transition and “show-grabbed-handle-only” hides the box handles that are not used when manipulating the box.
+raw-content.selection.lasso-outline 	string 	as-drawn 	Possible values are {“as-drawn”, “fitted”}. It sets the appearance of the lasso: “as-drawn” keeps the lasso strokes as drawn by users, while “fitted” redraws the lasso outline to fit the lasso content.
+raw-content.z-order.highlight 	string 	default 	Possible values are {“default”, “main”}. Indicates whether highlighter strokes are set at the back of the ink (default behavior) or remain in the main layer of writing (main behavior) .
+raw-content.rotation 	string array 	[“shape”,”image”] 	String value among: [ “shape”, “image” ] listing the items that can be rotated with a handle. To benefit from this feature on handwritten shapes, shape recognition must be activated (see raw-content.recognition.types) and interactions must be allowed on handwritten content (see raw-content.interactive-items configuration). Note that raw-content.rotation is enabled by default on shape for OffscreenEditor.
+
+You can also configure interactivity, as described below.
+Interactivity customization for Raw Content and Diagram
+
+The following keys allow you to choose the interactive blocks, define the interactions upon tap and double tap on these interactive blocks and their visual feedbacks. The keys names are similar for Raw Content and Diagram, with respective raw-content. and diagram. prefixes. Example: raw-content.interactive-blocks.converted and diagram.interactive-blocks.converted.
+Keys 	Type 	Default value 	Description
+interactive-blocks.auto-classified 	string array 	<empty> 	Defines which kind of blocks becomes interactive immediately after being classified by the automatic classifier (usually immediately after their creation). Possible values are text, shape, drawing and all.
+interactive-blocks.manually-classified 	string array 	[“all”] 	Defines which kind of blocks becomes interactive immediately after being programmatically classified using the setSelectionType API. Possible values are text, math, shape, drawing and all.
+interactive-blocks.converted 	string array 	[“all”] 	Defines which kind of blocks becomes interactive after being converted. Possible values are text, math, shape, drawing and all.
+interactive-blocks.select-on-tap 	boolean 	false 	If true, allows interactive blocks to be selected on tap.
+interactive-blocks.unselect-on-tap 	boolean 	true 	If true, allows selected interactive blocks to be unselected when tapped again.
+interactive-blocks.convert-on-double-tap 	boolean 	true 	If true, allows interactive blocks to be converted on double-tap.
+interactive-blocks.feedback 	string array 	<empty> 	Defines for which kind of blocks a dedicated visual feedback is displayed to identify specific interactive blocks, depending on their type. When enabled, the feedback is a distinct border on math and text blocks, and a background-fill on shape blocks. Possible values are text, math and shape.
+interactive-blocks.feedback-hints 	string array 	<empty> 	Defines for which kind of blocks a dedicated visual feedback hint is displayed. Possible values are text and math. When enabled, the feedback is a “Σ” symbol for math blocks and a “T” letter for text blocks.
+Text Document
+
+The configurations described above also apply respectively to “Math”, “Drawing”, “Diagram” and “Raw Content” blocks within a Text Document, with the exception of the following configurations which apply to the entire Text Document:
+Key 	Type 	Default value 	Description
+text-document.convert.states 	string array 	[“digital-edit,”digital-publish”] 	Sets the target states that are available on double tap: Possible values are “digital-edit”, “digital-publish” and “handwriting”. To allow conversion only to DigitalEdit, set [“digital-edit”]. To allow conversion first to DigitalEdit then to DigitalPublish, set [“digital-edit”,”digital-publish”]. To prevent conversion on double tap, set [“handwriting”].
+text-document.enable-sub-blocks 	boolean 	true 	If true, Raw Content and Diagram blocks contain accessible sub-blocks that describe the blocks contents.
+text-document.eraser.radius 	number 	3 	Radius of the eraser tool in mm.
+text-document.eraser.show 	boolean 	true 	If true, a halo shows up at eraser position.
+text-document.eraser.erase-precisely 	boolean 	false 	If false, the eraser removes any object it touches in Text Document blocks, else it only erases ink portions within its trajectory.
+text-document.eraser.dynamic-radius 	boolean 	false 	If false, the eraser is fixed, its value is the radius. If true, the eraser size is dynamic and grows with the speed.
+text-document.slice-gesture.enable 	boolean 	true 	Set to false, to disable the slice gesture that allows adding a freeform section as a Raw Content block into a Text Document part.
+Offscreen Editor
+
+The following options apply to the Offscreen Editor object.
+Key 	Type 	Default value 	Description
+offscreen-editor.history-manager.enable 	boolean 	false 	If true, associate a HistoryManager to an OffscreenEditor on creation.
+Recognizers
+
+The following options apply to the Recognizer objects.
+Common
+Key 	Type 	Default value 	Description
+recognizer.configuration-manager.search-path 	string array 	<empty> 	List of directories where the configuration files (*.conf) are stored.
+recognizer.result.default-format 	string 	“application/vnd.myscript.jiix” 	Defines the format of the result received on IRecognizerListener resultChanged notification. It is one of the Recognizer result supported Mime types.
+recognizer.lang 	string 	en_US 	Defines the language for text recognition.
+Text Recognizer
+Key 	Type 	Default value 	Description
+recognizer.text.configuration.bundle 	string 	${recognizer.lang} 	Configuration bundle to be used (name of the *.conf file).
+recognizer.text.configuration.name 	string 	text 	Configuration name, within the bundle (configuration within the *.conf file). Possible ready-to-use text configurations are text and text-superimposed. For more details, see resources section.
+recognizer.text.guides.enable 	boolean 	false 	If true, guides are used for recognition operation.
+recognizer.text.guides.line-gap-mm 	number 	0 	Defines guides spacing in mm in the Text recognizer (ignored if recognizer.text.guides.enable is false).
+recognizer.text.guides.origin-y-mm 	number 	0 	Defines the y position of the first guide in the Text recognizer (ignored if recognizer.text.guides.enable is false).
+Gesture Recognizer
+Key 	Type 	Default value 	Description
+recognizer.gesture.tap.spacing-mm 	number 	3 	Defines the distance in mm between two taps to determine double tap.
+recognizer.gesture.disabled-gestures 	string array 	<empty> 	Defines the gestures to be disabled (all enabled by default). String value among: [ “tap”, “double-tap”, “long-press”, “top-bottom”, “bottom-top”, “left-right”, “right-left”, “scratch”, “surround” ]
+Math Recognizer
+Key 	Type 	Default value 	Description
+recognizer.math.configuration.bundle 	string 	math2 	Configuration bundle to be used (name of the *.conf file).
+recognizer.math.configuration.name 	string 	standard 	Configuration name, within the bundle (configuration within the *.conf file).
+recognizer.configuration-manager.custom-resources.math.standard 	string array 	<empty> 	List of file paths where the Math Recognizer custom SK files (*.res) are stored.
+Shape Recognizer
+Key 	Type 	Default value 	Description
+recognizer.shape.beautification.enable 	boolean 	true 	If true, enable the beautification of the shape recognition result (selected candidate only)
+recognizer.shape.configuration.shape.bundle 	string 	shape 	Configuration bundle to be used for shape recognition (name of the *.conf file).
+recognizer.shape.configuration.shape.name 	string 	shape 	Configuration name for shape recognition, within the bundle (configuration within the *.conf file).
+Raw Content Recognizer
+Key 	Type 	Default value 	Description
+recognizer.raw-content.classification.types 	string array 	[ "text", "math", "shape", "decoration", "drawing"] 	Controls the list of content types that can be output by the ink strokes classifier. If content types are removed from this list, the corresponding strokes are output as part of the most likely alternative choice among the remaining content types.
+recognizer.raw-content.recognition.types 	string array 	[ "text", "math", "shape", "decoration"] 	Controls the list of content types that are recognized after classification.
+recognizer.raw-content.configuration.analyzer.bundle 	string 	raw-content2 	Configuration bundle to be used for ink analysis (name of the *.conf file).
+recognizer.raw-content.configuration.analyzer.name 	string 	standard 	Configuration name for ink analysis, within the bundle (configuration within the *.conf file).
+recognizer.raw-content.configuration.shape.bundle 	string 	shape 	Configuration bundle to be used for shape recognition (name of the *.conf file).
+recognizer.raw-content.configuration.shape.name 	string 	shape 	Configuration name for shape recognition, within the bundle (configuration within the *.conf file).
+recognizer.raw-content.configuration.math.bundle 	string 	math2 	Configuration bundle to be used for shape recognition (name of the *.conf file).
+recognizer.raw-content.configuration.math.name 	string 	standard 	Configuration name for shape recognition, within the bundle (configuration within the *.conf file).
+recognizer.raw-content.configuration.text.bundle 	string 	${recognizer.lang} 	Configuration bundle to be used for text recognition (name of the *.conf file).
+recognizer.raw-content.configuration.text.name 	string 	text 	Configuration name for text recognition, within the bundle (configuration within the *.conf file).
+recognizer.raw-content.shape.beautification.enable 	boolean 	true 	If true, enable the beautification of the shape recognition result (selected candidate only)
+Handwriting Generation
+Key 	Type 	Default value 	Description
+handwriting-generation.init.resource 	String 	en-hw-gen.res 	The resource name to be used for the handwriting generation: possible values are en-hw-gen.res for English text and zh-hw-gen.res for Chinese text. The folder path containing this .res file must be set by using the configuration-manager.search-path value.
+handwriting-generation.session.line-gap-mm 	number 	15 	The gap in mm between two lines of generated handwriting text.
+handwriting-generation.session.origin-y-mm 	number 	0 	The y position in mm of the first line of generated handwriting text.
+handwriting-generation.session.origin-x-mm 	number 	If not defined, fall back to handwriting-generation.session.left-x-mm value. 	The x position in mm of the first line of generated handwriting text.
+handwriting-generation.session.left-x-mm 	number 	0 	The x position in mm of the other lines of generated handwriting text.
+handwriting-generation.session.width-mm 	number 	0 	The width in mm for the clipping/alignment of generated handwriting text. If the value is 0, there is no width limit: generated lines are aligned with input (no reflow).
+handwriting-generation.session.x-height-mm 	number 	5 	The x-height in mm of the generated text.
+
+    This setting only affects packages created or opened after the modification. ↩
+
+    This setting only affects Recognizer JIIX export: It is ignored by the Editor and the OffscreenEditor objects. ↩
+
+    this setting is ignored by Raw Content Recognizer JIIX export, as spans are always present in that case. ↩
+

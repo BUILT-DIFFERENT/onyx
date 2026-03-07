@@ -1,0 +1,438 @@
+SOURCE: com/myscript/iink/IGestureHandler.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Interface IGestureHandler
+
+public interface IGestureHandler
+
+The listener interface for handling gesture events.
+
+Since:
+
+2.1
+
+See Also:
+
+Editor.setGestureHandler(IGestureHandler) [link: Editor.html#setGestureHandler(com.myscript.iink.IGestureHandler)]
+
+Editor.removeGestureHandler() [link: Editor.html#removeGestureHandler()]
+
+Method Summary
+
+All Methods Instance Methods Abstract Methods Default Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+@NotNull GestureAction [link: GestureAction.html]
+
+onDoubleTap [link: #onDoubleTap(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String%5B%5D,float,float)] (@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] gestureStrokeIds,
+float x,
+float y)
+
+Invoked when a double tap has been detected.
+
+@NotNull GestureAction [link: GestureAction.html]
+
+onInsert [link: #onInsert(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,com.myscript.iink.NativeObjectHandle,com.myscript.iink.NativeObjectHandle)] (@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> before,
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> after)
+
+Invoked when an insert gesture has been drawn between two portions of a text line,
+or at the beginning or end of a line.
+
+@NotNull GestureAction [link: GestureAction.html]
+
+onJoin [link: #onJoin(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,com.myscript.iink.NativeObjectHandle,com.myscript.iink.NativeObjectHandle)] (@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> before,
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> after)
+
+Invoked when a join gesture has been drawn between two portions of a text line,
+or at the beginning or end of a line.
+
+@NotNull GestureAction [link: GestureAction.html]
+
+onLongPress [link: #onLongPress(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,float,float)] (@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+float x,
+float y)
+
+Invoked when a long press has been detected.
+
+@NotNull GestureAction [link: GestureAction.html]
+
+onScratch [link: #onScratch(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,com.myscript.iink.NativeObjectHandle)] (@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> selection)
+
+Invoked when a portion of text has been scratched.
+
+default void
+
+onShapeOnHold [link: #onShapeOnHold(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,com.myscript.iink.ShapeOnHoldAction,java.lang.String)] (@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+ShapeOnHoldAction [link: ShapeOnHoldAction.html] action,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] shapeJiix)
+
+Invoked when a shape on hold action has been triggered.
+
+@NotNull GestureAction [link: GestureAction.html]
+
+onStrikethrough [link: #onStrikethrough(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,com.myscript.iink.NativeObjectHandle)] (@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> selection)
+
+Invoked when a portion of text has been striked through.
+
+@NotNull GestureAction [link: GestureAction.html]
+
+onSurround [link: #onSurround(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,com.myscript.iink.NativeObjectHandle)] (@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> selection)
+
+Invoked when a portion of text has been surrounded.
+
+@NotNull GestureAction [link: GestureAction.html]
+
+onTap [link: #onTap(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,float,float)] (@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+float x,
+float y)
+
+Invoked when a tap has been detected.
+
+@NotNull GestureAction [link: GestureAction.html]
+
+onUnderline [link: #onUnderline(com.myscript.iink.Editor,com.myscript.iink.PointerTool,java.lang.String,com.myscript.iink.NativeObjectHandle)] (@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> selection)
+
+Invoked when a portion of text has been underlined.
+
+Method Details
+
+onTap
+
+@NotNull
+@NotNull GestureAction [link: GestureAction.html] onTap (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+float x,
+float y)
+
+Invoked when a tap has been detected.
+
+Parameters:
+
+editor - the editor.
+
+tool - the tool used to perform the gesture.
+
+gestureStrokeId - the id of the gesture stroke.
+
+x - the tap x position (view coordinate in px).
+
+y - the tap y position (view coordinate in px).
+
+Returns:
+
+the GestureAction to perform.
+
+onDoubleTap
+
+@NotNull
+@NotNull GestureAction [link: GestureAction.html] onDoubleTap (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] gestureStrokeIds,
+float x,
+float y)
+
+Invoked when a double tap has been detected.
+
+Parameters:
+
+editor - the editor.
+
+tool - the tool used to perform the gesture.
+
+gestureStrokeIds - the id of the gesture strokes.
+
+x - the double tap x position (view coordinate in px).
+
+y - the double tap y position (view coordinate in px).
+
+Returns:
+
+the GestureAction to perform.
+
+onLongPress
+
+@NotNull
+@NotNull GestureAction [link: GestureAction.html] onLongPress (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+float x,
+float y)
+
+Invoked when a long press has been detected.
+
+Parameters:
+
+editor - the editor.
+
+tool - the tool used to perform the gesture.
+
+gestureStrokeId - the id of the gesture stroke.
+
+x - the long press x position (view coordinate in px).
+
+y - the long press y position (view coordinate in px).
+
+Returns:
+
+the GestureAction to perform.
+
+onUnderline
+
+@NotNull
+@NotNull GestureAction [link: GestureAction.html] onUnderline (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> selection)
+
+Invoked when a portion of text has been underlined.
+
+To activate underline detection in a Raw Content part, add "underline" to the
+"raw-content.pen.gestures" configuration list.
+
+Parameters:
+
+editor - the editor.
+
+tool - the tool used to perform the gesture.
+
+gestureStrokeId - the id of the gesture stroke.
+
+selection - the underlined portion of text.
+
+Returns:
+
+the GestureAction to perform.
+
+onSurround
+
+@NotNull
+@NotNull GestureAction [link: GestureAction.html] onSurround (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> selection)
+
+Invoked when a portion of text has been surrounded.
+
+To activate surround detection in a Raw Content part, add "surround" to
+the "raw-content.pen.gestures" configuration list.
+
+Parameters:
+
+editor - the editor.
+
+tool - the tool used to perform the gesture.
+
+gestureStrokeId - the id of the gesture stroke.
+
+selection - the surrounded portion of text.
+
+Returns:
+
+the GestureAction to perform.
+
+onJoin
+
+@NotNull
+@NotNull GestureAction [link: GestureAction.html] onJoin (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> before,
+@NotNull
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> after)
+
+Invoked when a join gesture has been drawn between two portions of a text line,
+or at the beginning or end of a line.
+
+To activate join detection in a Raw Content part, add "join" to the
+"raw-content.pen.gestures" configuration list.
+
+Parameters:
+
+editor - the editor.
+
+tool - the tool used to perform the gesture.
+
+gestureStrokeId - the id of the gesture stroke.
+
+before - the portion of the text line before the join gesture.
+
+after - the portion of the text line after the join gesture.
+
+Returns:
+
+the GestureAction to perform.
+
+onInsert
+
+@NotNull
+@NotNull GestureAction [link: GestureAction.html] onInsert (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> before,
+@NotNull
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> after)
+
+Invoked when an insert gesture has been drawn between two portions of a text line,
+or at the beginning or end of a line.
+
+To activate insert detection in a Raw Content part, add "insert" to the
+"raw-content.pen.gestures" configuration list.
+
+Parameters:
+
+editor - the editor.
+
+tool - the tool used to perform the gesture.
+
+gestureStrokeId - the id of the gesture stroke.
+
+before - the portion of the text line before the insert gesture.
+
+after - the portion of the text line after the insert gesture.
+
+Returns:
+
+the GestureAction to perform.
+
+onStrikethrough
+
+@NotNull
+@NotNull GestureAction [link: GestureAction.html] onStrikethrough (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> selection)
+
+Invoked when a portion of text has been striked through.
+
+To activate strikethrough detection in a Raw Content part, add "strike-through"
+to the "raw-content.pen.gestures" configuration list.
+
+Parameters:
+
+editor - the editor.
+
+tool - the tool used to perform the gesture.
+
+gestureStrokeId - the id of the gesture stroke.
+
+selection - the striked through portion of text.
+
+Returns:
+
+the GestureAction to perform.
+
+onScratch
+
+@NotNull
+@NotNull GestureAction [link: GestureAction.html] onScratch (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+@NotNull
+@NotNull NativeObjectHandle [link: NativeObjectHandle.html]<ContentSelection [link: ContentSelection.html]> selection)
+
+Invoked when a portion of text has been scratched.
+
+To activate scratch detection in a Raw Content part, add "scratch-out" to the
+"raw-content.pen.gestures" configuration list.
+
+Parameters:
+
+editor - the editor.
+
+tool - the tool used to perform the gesture.
+
+gestureStrokeId - the id of the gesture stroke.
+
+selection - the scratched portion of text.
+
+Returns:
+
+the GestureAction to perform.
+
+onShapeOnHold
+
+default void onShapeOnHold (@NotNull
+@NotNull Editor [link: Editor.html] editor,
+PointerTool [link: PointerTool.html] tool,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] gestureStrokeId,
+ShapeOnHoldAction [link: ShapeOnHoldAction.html] action,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] shapeJiix)
+
+Invoked when a shape on hold action has been triggered.
+
+To activate shape on hold detection in a Raw Content part, set
+"raw-content.convert.shape-on-hold" to true .
+
+Parameters:
+
+editor - the editor.
+
+tool - the tool used to perform the gesture.
+
+gestureStrokeId - the id of the gesture stroke.
+
+action - the type of action.
+
+shapeJiix - the JIIX description of the shape, empty for ShapeOnHoldAction.CANCELED .
+
+Since:
+
+4.3

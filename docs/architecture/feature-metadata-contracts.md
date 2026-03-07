@@ -1,31 +1,19 @@
-# Feature Metadata Contracts (Gesture, Template, Export)
+# Feature Metadata Contracts
 
-Date: 2026-02-24
+Date: 2026-03-07 (updated)
 
 ## Scope
 
-Defines cross-surface schema contracts for metadata required by backlog alignment:
+Documents the contract decisions for metadata features that were evaluated during architecture alignment.
 
-- Gesture settings (`InputSettings` parity contract)
-- Template application scope metadata
-- Export metadata (`flattened` vs `layered`)
+## Resolution
 
-This wave is contract + fixture only. Runtime sync/query/UI flows remain separate.
+- **Gesture settings**: Local-only. Stored in Android DataStore/Room. No Convex table, no cross-device sync. No validation schema (local implementation detail).
+- **Template settings**: Per-page fields (`templateType`, `templateDensity`, `templateLineWidth`, `backgroundColorHex`) stored on the `pages` table in Convex and in the Page data model. No separate `templateScopes` table. Template defaults are an Android-local editor setting.
+- **Export tracking**: The `exports` table in `convex/schema.ts` stores export registration (`notebookId`, `exportAssetId`, `mode`, `createdByUserId`, `createdAt`). Validation schema: `packages/validation/src/schemas/export.ts`. Fixture: `tests/contracts/fixtures/export.fixture.json`.
 
 ## Canonical Sources
 
-- Validation schemas: `C:/onyx/packages/validation/src/schemas/featureMetadata.ts`
-- Convex schema tables in `C:/onyx/convex/schema.ts`:
-  - `gestureSettings`
-  - `templateScopes`
-  - `exportMetadata`
-- Contract fixtures:
-  - `C:/onyx/tests/contracts/fixtures/gesture-settings.fixture.json`
-  - `C:/onyx/tests/contracts/fixtures/template-scope.fixture.json`
-  - `C:/onyx/tests/contracts/fixtures/export-metadata.fixture.json`
-
-## Notes
-
-- Gesture enum values intentionally mirror Android `InputSettings`.
-- Template scope supports `currentPage`, `allPages`, and `newPages`.
-- Export mode explicitly carries `flattened | layered` for downstream consumers.
+- Convex schema: `convex/schema.ts` (tables: `pages`, `exports`)
+- Validation schemas: `packages/validation/src/schemas/export.ts`
+- Contract fixtures: `tests/contracts/fixtures/export.fixture.json`

@@ -1,0 +1,171 @@
+SOURCE: com/myscript/iink/MathVariableDefinitionInfo.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class MathVariableDefinitionInfo
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.MathVariableDefinitionInfo
+
+public class MathVariableDefinitionInfo
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Represents a math variable definition info.
+
+Since:
+
+4.2
+
+Field Summary
+
+Fields
+
+Modifier and Type
+
+Field
+
+Description
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+blockId [link: #blockId]
+
+The block id the variable is: used by (for API ), defined by (for BLOCK ) or empty (for API_GLOBAL ).
+
+@NotNull MathVariableSourceType [link: MathVariableSourceType.html]
+
+sourceType [link: #sourceType]
+
+The source type associated with the definition.
+
+double
+
+value [link: #value]
+
+The value associated with the definition.
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+MathVariableDefinitionInfo [link: #%3Cinit%3E(double,com.myscript.iink.MathVariableSourceType,java.lang.String)] (double value,
+@NotNull MathVariableSourceType [link: MathVariableSourceType.html] sourceType,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Constructs a MathVariableDefinitionInfo
+
+MathVariableDefinitionInfo [link: #%3Cinit%3E(com.myscript.iink.MathVariableDefinitionInfo)] (@NotNull MathVariableDefinitionInfo [link: MathVariableDefinitionInfo.html] other)
+
+Copy constructor.
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+boolean
+
+equals [link: #equals(java.lang.Object)] (@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+final int
+
+hashCode [link: #hashCode()]()
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Field Details
+
+value
+
+public double value
+
+The value associated with the definition.
+
+sourceType
+
+@NotNull
+public @NotNull MathVariableSourceType [link: MathVariableSourceType.html] sourceType
+
+The source type associated with the definition.
+
+blockId
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId
+
+The block id the variable is: used by (for API ), defined by (for BLOCK ) or empty (for API_GLOBAL ).
+
+Constructor Details
+
+MathVariableDefinitionInfo
+
+public MathVariableDefinitionInfo (@NotNull
+@NotNull MathVariableDefinitionInfo [link: MathVariableDefinitionInfo.html] other)
+
+Copy constructor.
+
+Parameters:
+
+other - the math variable definition info to copy.
+
+MathVariableDefinitionInfo
+
+public MathVariableDefinitionInfo (double value,
+@NotNull
+@NotNull MathVariableSourceType [link: MathVariableSourceType.html] sourceType,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] blockId)
+
+Constructs a MathVariableDefinitionInfo
+
+Parameters:
+
+value - the variable value.
+
+sourceType - the variable sourceType.
+
+blockId - the variable blockId.
+
+Method Details
+
+equals
+
+public boolean equals (@Nullable
+@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+Overrides:
+
+equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+hashCode
+
+public final int hashCode ()
+
+Overrides:
+
+hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+toString
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]

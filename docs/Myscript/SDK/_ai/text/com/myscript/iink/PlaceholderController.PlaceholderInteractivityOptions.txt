@@ -1,0 +1,112 @@
+SOURCE: com/myscript/iink/PlaceholderController.PlaceholderInteractivityOptions.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class PlaceholderController.PlaceholderInteractivityOptions
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.PlaceholderController.PlaceholderInteractivityOptions
+
+Enclosing class:
+
+PlaceholderController [link: PlaceholderController.html]
+
+public static class PlaceholderController.PlaceholderInteractivityOptions
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Defines how a placeholder shall behave regarding user interactions.
+
+Field Summary
+
+Fields
+
+Modifier and Type
+
+Field
+
+Description
+
+boolean
+
+keepAspectRatio [link: #keepAspectRatio]
+
+true to keep the aspect ratio after transforms, otherwise false
+
+boolean
+
+resizeAllowed [link: #resizeAllowed]
+
+true to allow resizing, otherwise false .
+
+boolean
+
+rotationAllowed [link: #rotationAllowed]
+
+true to allow rotations, otherwise false .
+
+boolean
+
+selectOnLassoAllowed [link: #selectOnLassoAllowed]
+
+true to allow selection on lasso, otherwise false .
+
+boolean
+
+selectOnTapAllowed [link: #selectOnTapAllowed]
+
+true to allow selection on tap, otherwise false .
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+PlaceholderInteractivityOptions [link: #%3Cinit%3E()]()
+
+Method Summary
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Field Details
+
+selectOnTapAllowed
+
+public boolean selectOnTapAllowed
+
+true to allow selection on tap, otherwise false .
+
+selectOnLassoAllowed
+
+public boolean selectOnLassoAllowed
+
+true to allow selection on lasso, otherwise false .
+
+resizeAllowed
+
+public boolean resizeAllowed
+
+true to allow resizing, otherwise false .
+
+rotationAllowed
+
+public boolean rotationAllowed
+
+true to allow rotations, otherwise false .
+
+keepAspectRatio
+
+public boolean keepAspectRatio
+
+true to keep the aspect ratio after transforms, otherwise false
+
+Constructor Details
+
+PlaceholderInteractivityOptions
+
+public PlaceholderInteractivityOptions ()

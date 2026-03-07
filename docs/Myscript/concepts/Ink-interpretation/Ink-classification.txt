@@ -1,0 +1,21 @@
+Ink classification
+Recognition versus classification
+
+The process of handwriting recognition involves proposing a digital meaning from an ink signal that represent a content.
+
+This content can be of various types, such as text, mathematics or shapes, for example.
+
+This type of content must be considered when selecting the handwriting recognition engine to ensure that the right technology is working on the right content.
+
+Depending on the use case, the content type is sometimes easy to identify: for a mathematics assessment, the input is assumed to be mathematical content. But in some situations, the content can be mixed, especially for notes-taking or free-writing use cases.
+
+Therefore, a new step called classification must be introduced to identify the content types before relying on the correct recognition engine, such as:
+TextClassificationMathShapeDrawing
+Manual and automatic classifications
+
+Classification can be done manually, where users explicitly define the type of some strokes to trigger the recognition engines accordingly.
+
+It can also be done automatically by a dedicated process to save the effort of the manual identification. Users can then use manual classification only to correct unexpected results from the automated process.
+Benefits
+
+The great advantage of such classification capabilities is the freedom it gives users: they can write freely and mix different types of content. They can select and explicitly identify some content, or even let an automatic classification process do the work of identifying content for them.

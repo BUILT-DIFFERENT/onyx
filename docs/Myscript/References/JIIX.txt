@@ -1,0 +1,1420 @@
+JIIX format reference
+
+Reference of the JSON Interactive Ink eXchange format (JIIX) version 3.
+Content
+
+JIIX is an exchange format to export, share and re-import the internal semantics of the Interactive Ink model.
+
+As such, it is designed to host information about:
+
+    Content - strokes, glyphs and graphical primitives
+    Semantic interpretation of the content, including lists
+    Style information - decorations, color, width, font, etc.
+
+When exporting JIIX from iink SDK, depending on the use case, you may sometimes want to only retrieve part of this information. This is managed at configuration level, via the following keys:
+
+    export.jiix.bounding-box - Export item bounding boxes
+    export.jiix.strokes - Export ink strokes
+    export.jiix.glyphs - Export converted glyphs
+    export.jiix.primitives - Export shape primitives (lines, circles, etc.)
+    export.jiix.style - Export detailed styling information (color, width, font, etc.)
+    export.jiix.math-label - Export the LaTeX label of the Math block.
+    export.jiix.text.chars - Export detailed information about the characters in the text interpretation
+    export.jiix.text.words - Export detailed information about the words in the text interpretation
+    export.jiix.text.spans - Export detailed recognition information per line in the text interpretation.
+    export.jiix.deprecated.text.linebreaks - Export detailed information about the line breaks within a text.
+
+    export.jiix.text.structure - Export detailed information about the text layout structure for Text blocks.
+    export.jiix.ids - Export items ids.
+    export.jiix.ranges - Export ink strokes ranges when using a Raw Content Recognizer.
+    export.jiix.shape.candidates - Export shape candidates when using a Shape Recognizer.
+
+For more information about these parameters, including default values, refer to the configuration reference.
+Versioning
+
+The version of the format that the current document conforms to is given by the version property of the root of the JSON document (as the root of the document corresponds to the root block of the exposed content block hierarchy, the version property belongs to this root block).
+Description 	Content 	Note
+Version of the JIIX format 	A string identifying the current iteration of the format 	This property was added with iink SDK 1.3. JIIX documents before 1.3 do not have this property
+
+For example, if the root block is a “Text” block, we will have something like:
+
+{
+ "version": "3",
+ "type": "Text",
+ "bounding-box": { ... },
+ "label": "Hello world!",
+ "words": [ ... ],
+ "id": "MainBlock"
+}
+
+Unit system
+
+Units are not explicitly provided in a JIIX document.
+
+For system coordinates, they shall be understood as model units, that is to say millimeters. The actual rendering of a JIIX document on the screen will then depend on the dpi and any other parameter (zoom, offset) used to configure the renderer.
+
+The angles are specified in radians.
+Structure
+Block hierarchy
+
+JIIX documents are organized as a hierarchy of JSON objects (called “Blocks” in this page) that mirrors the block hierarchy of a content part. Each object has a specific type string property identifying it as a text block, a diagram block, a math node, etc. and defining the block semantics.
+
+For example, a simple diagram may aggregate a text label and a rectangular node:
+
+{
+ "type": "Diagram",
+ "elements": [ {
+   "type": "Text",
+   ...
+  }, {
+   "type": "Node",
+   "kind": "rectangle",
+   ...
+  } ],
+ ...
+}
+
+This semantics, in turn defines how sub-blocks are aggregated. For example :
+
+    A Diagram block will host an array of “Diagram Item” blocks under its elements property.
+    A Math block will host an array of “Math Node” blocks under its expressions property.
+    A generic Container block will host its sub-blocks under a children property.
+    …
+
+To know the precise semantics of a given type of block, please refer to its detailed description below.
+Properties common to blocks
+
+Whatever their types, all blocks share the following common properties:
+Property 	Description 	Content 	Note
+id 	Block unique reference in the context of the document 	A string 	 
+bounding-box 	Extent of the block 	x, y, width, height - 4 numerical values defining a rectangle which upper-left corner is positioned at coordinates (x, y) and of size (width, height) 	Present in the JIIX export when export.jiix.bounding-box configuration is true
+
+For example, a simple text block can be represented as:
+
+{
+ "type": "Text",
+ "id": "MainBlock",
+ "bounding-box": {
+  "x": 20.43125,
+  "y": 31.272942,
+  "width": 9.9375,
+  "height": 8.9725456
+ },
+ ...
+}
+
+Other potential properties depend on the type of the block. Refer to the “blocks” section for more details.
+Block content description
+
+Block content is described using items, which represent what is actually visible when rendering the model.
+Items
+
+Items are used to describe the content of blocks in terms of ink, glyphs or shape primitives.
+
+Like blocks, items share common properties:
+Property 	Description 	Content
+type 	Type of the item 	stroke, line, arc or glyph
+id 	Item unique reference in the context of the document. 	A string
+Stroke item
+
+A stroke item represents a standalone portion of ink, that is to say the trajectory of a writing tool between a pointer down and the corresponding pointer up.
+
+It has the following specific properties:
+Property 	Description 	Content 	Note
+timestamp 	Precise date and time of the pointer down 	Example: "2018-11-28 09:31:43.893000" 	 
+X 	X coordinates of the different points of the stroke, ordered from pointer down to pointer up 	An array of numbers 	 
+Y 	Y coordinates of the different points of the stroke, ordered from pointer down to pointer up 	An array of numbers. 	 
+F 	Force (a.k.a pressure) of the different points of the stroke, ordered from pointer down to pointer up 	An array of numbers 	 
+PT 	Pen Tilt (a.k.a orientation elevation): The inclination of the stylus relative to the screen, ordered from pointer down to pointer up. Angles are between 0 and π/2 radians, where 0 is perpendicular to the screen, π/2 is flat on screen. 	An array of numbers 	Only present when set in the editor pointer events.
+PO 	Pen Orientation (a.k.a orientation azimuth): The direction in which the stylus is pointing relative to the screen, ordered from pointer down to pointer up. Angles are between -π and +π radians, where 0 is pointing up, -π/2 radians is pointing left, -π or π is pointing down, and π/2 radians is pointing right. 	An array of numbers 	Only present when set in the editor pointer events.
+T 	Time offset of the different points of the stroke in ms relatively to the timestamp of the stroke, ordered from pointer down to pointer up 	An array of numbers 	 
+
+Example:
+
+{
+     "timestamp": "2024-10-04 14:21:48.681000",
+     "X": [ 90.5946655, 90.5946655, 90.5946655, 91.300972, 91.9794159, 92.351181, 92.351181 ],
+     "Y": [ 72.6014557, 72.6014557, 72.6014557, 72.6664429, 72.6107101, 72.4155731, 72.4155731 ],
+     "F": [ 0.683028102, 0.683028102, 0.336507946, 0.0451770462, 0.0451770462, 0.0393162407, 0.0393162407 ],
+     "PT": [ 0.576388836, 0.576388836, 0.576388836, 0.576388836, 0.576388836, 0.576388836, 0.576388836 ],
+     "PO": [ -1.18705797, -1.18705797, -1.18705797, -1.18705797, -1.18705797, -1.18705797, -1.18705797 ],
+     "T": [ 0, 0, 17, 25, 29, 34, 38 ],
+     "type": "stroke",
+     "id": "0000010001000d00ff00"
+    }
+
+The number of elements in X, Y, T and F must be strictly identical.
+Line item
+
+A line item represents a converted line primitive, for instance the edge of a polygon.
+
+It has the following specific properties:
+Property 	Description 	Content
+timestamp 	Timestamp of the stroke that was converted into this primitive. 	Example: "2018-11-29 10:03:05.980000".
+x1 	X coordinate of the first point defining the line 	A number
+y1 	Y coordinate of the first point defining the line 	A number
+x2 	X coordinate of the second point defining the line 	A number
+y2 	Y coordinate of the second point defining the line 	A number
+startDecoration 	Decoration of a “line” start point 	arrow-head in case an arrow head is present, none when no decoration
+endDecoration 	Decoration of a “line” end point 	arrow-head in case an arrow head is present, none when no decoration
+
+Example:
+
+{
+  "type": "line",
+  "timestamp": "2021-09-07 09:04:39.162000",
+  "x1": 24.8770332,
+  "y1": 19.7303886,
+  "x2": 66.5452576,
+  "y2": 19.7303886,
+  "startDecoration": "none",
+  "endDecoration": "none",
+  "id": "0000010001000300ff00"
+  }
+
+Arc item
+
+An arc item represents a converted arc primitive, for instance a curved connector in a diagram or a portion of an ellipse.
+
+It has the following specific properties:
+Property 	Description 	Content
+timestamp 	Timestamp of the stroke that was converted into this primitive. 	Example: "2018-11-29 10:03:05.980000"
+cx 	X coordinate of the arc center 	A number
+cy 	Y coordinate of the arc center 	A number
+rx 	x-axis or semi-major radius 	A number (must be positive)
+ry 	y-axis or semi-minor radius 	A number (must be positive)
+phi 	x-axis rotation angle 	A number
+startAngle 	Start angle (prior to stretch and rotate) 	A number
+sweepAngle 	Sweep angle (prior to stretch and rotate) 	A number
+startDecoration 	Decoration of an “arc” item start point 	arrow-head in case an arrow head is present, none when no decoration
+endDecoration 	Decoration of an “arc” item end point 	arrow-head in case an arrow head is present, none when no decoration
+
+Example:
+
+{
+  "type": "arc",
+  "timestamp": "2021-09-06 13:56:41.110000",
+  "cx": 167.432373,
+  "cy": 105.229813,
+  "rx": 30.8068428,
+  "ry": 7.45266199,
+  "phi": 0,
+  "startAngle": 0,
+  "sweepAngle": 6.28318548,
+  "startDecoration": "none",
+  "endDecoration": "none",
+  "id": "0000300001008900ff00"
+  }
+
+Glyph item
+
+A glyph item represents a converted typeset character.
+
+It has the following specific properties:
+Property 	Description 	Content 	Note
+timestamp 	Timestamp of the stroke that was converted into this glyph 	Example: "2018-11-28 13:37:03.514000" 	 
+label 	Character represented by the glyph 	Example: "B" 	 
+baseline 	Baseline position 	A number 	Optional (not used for the glyphs present in a math context)
+x-height 	x height 	A number 	Optional (not used for the glyphs present in a math context)
+square-root-ratio 	Horizontal ratio between the size of the glyph and the “V” shape part of the square root 	A number 	Only for square roots
+left-side-bearing 	Glyph left side bearing 	A number 	 
+right-side-bearing 	Glyph right side bearing 	A number 	 
+
+Example:
+
+{
+  "type": "glyph",
+  "timestamp": "2021-09-06 13:55:37.298000",
+  "label": "2",
+  "bounding-box": {
+  "x": 39.1022644,
+  "y": 27.6022339,
+  "width": 1.92954254,
+  "height": 4.39965172
+  }
+
+Text interpretation
+
+Text interpreted by iink SDK is represented by word, lines and character objects as part of a Text block.
+Word object
+
+A word object represents the recognition of a word made by the MyScript engine. Note that to get such interpretation in JIIX export, your need to set the export.jiix.text.words configuration option to true.
+
+It has the following properties:
+Property 	Description 	Content 	Note
+label 	Top recognition result associated with this word 	A string 	 
+reflow-label 	Reflow behavior when the word is a linefeed (i.e. with a label = \n) 	Possible values are “” (empty) and “ “ (one space) depending on whether a space should be inserted when removing this linefeed for reflow. 	For inline math, the reflow-label is the label where “\n” has been replaced by “ “ (one space). For more details and an example, see RawContent blocks
+refs 	When the word is inline math, gives the lists of id of its Math items. 	An array of item id 	For more details and an example, see RawContent blocks
+candidates 	List of recognition candidates associated with this word 	An array of strings 	The mul_Latn resource does not offer this functionality.
+bounding-box 	Extent of the word. 	x, y, width, height - 4 numerical values defining a rectangle which upper-left corner is positioned at coordinates (x, y) and of size (width, height). 	Present in the JIIX export when export.jiix.bounding-box configuration is true.
+items 	Ink and/or glyphs composing the word. 	An array of stroke and/or glyph items 	Strokes only present in JIIX export when export.jiix.strokes is configured to true, glyphs only present when export.jiix.glyphs is configured to true
+first-char 	Index of the first character contained in this word. 	An integer, representing the index of a character object in the Text block. 	Only present in the JIIX export when export.jiix.text.chars is configured to true
+last-char 	Index of the last character contained in this word. 	An integer, representing the index of a character object in the Text block 	Only present in the JIIX export when export.jiix.text.chars is configured to true
+
+Examples:
+
+    Example corresponding to the word hello:
+
+{
+  "label": "hello",
+  "candidates": [ "hello", "hells", "hellor", "helle", "kello" ],
+  "first-char": 0,
+  "last-char": 4,
+  "bounding-box": {... },
+  "items": [ ... ]
+}
+
+    Linefeed example, corresponding to the word \n:
+
+{
+   "label": "\n",
+   "reflow-label": " "
+}
+
+Character object
+
+A character object represents the recognition of a character made by the MyScript engine. Note that to get such interpretation in JIIX export, your need to set the export.jiix.text.chars configuration option to true.
+
+It has the following properties:
+Property 	Description 	Content 	Note
+label 	Recognition result associated with this char 	A string 	 
+candidates 	List of recognition candidates associated with this character 	An array of strings 	The mul_Latn resource does not offer this functionality.
+grid 	Highlight area associated with this char 	An array of 4 points, each containing x and y floating points coordinates 	 
+bounding-box 	Extent of the character 	x, y, width, height - 4 numerical values defining a rectangle which upper-left corner is positioned at coordinates (x, y) and of size (width, height) 	Present in the JIIX export when export.jiix.bounding-box configuration is true
+items 	Ink and/or glyphs composing the character 	An array of stroke and/or glyph items 	Strokes are only present in JIIX export when export.jiix.strokes is configured to true, glyphs are only present when export.jiix.glyphs is configured to true
+word 	Index of the word that contains this char 	An integer 	only present in the JIIX export when export.jiix.text.words is configuredto true
+
+Example:
+
+{
+  "label": "h",
+  "candidates": [ "h", "k", "b", "H" ],
+  "word": 0,
+  "grid": [ {
+    "x": 18.875834,
+    "y": 31.736748
+   }, {
+    "x": 25.118258,
+    "y": 31.736748
+   }, {
+    "x": 25.118258,
+    "y": 44.957951
+   }, {
+    "x": 18.875834,
+    "y": 44.957951
+   } ],
+  "bounding-box": { ... },
+  "items": [ ... ]
+ }
+
+Lines object
+
+A lines object represents the information about lines analyzed by the MyScript engine. It is present in the JIIX file when the export.jiix.text.spans or when the export.jiix.text.lines configuration option is set to true.
+
+The export.jiix.text.lines allows to get the geometric information of the line:
+Property 	Description 	Content 	Note
+baseline-y 	y baseline position 	A number 	Only present when export.jiix.text.lines is configured to true
+x-height 	x height 	A number 	Only present when export.jiix.text.lines is configured to true
+first-char 	Index of the first character contained in this line. 	An integer, representing the index of a character object in the Text block. 	Only present when export.jiix.text.chars is configured to true
+last-char 	Index of the last character contained in this line. 	An integer, representing the index of a character object in the Text block 	Only present when export.jiix.text.chars is configured to true
+
+The export.jiix.text.spans allows to get the line recognition information: The line is considered as a collection separated into several span elements, each span being associated with a specific content type. Thus each line consists in a label containing the recognition result associated with it and a spans object that is an array of spans. A span object has the following properties:
+Property 	Description 	Content 	Note
+label 	Recognition result associated with this span 	A string 	 
+type 	Recognition type associated with this span 	A string 	The type can be Text or Math
+bounding-box 	Extent of the span 	x, y, width, height - 4 numerical values defining a rectangle which upper-left corner is positioned at coordinates (x, y) and of size (width, height) 	Only present in the JIIX export when export.jiix.bounding-box is true
+
+Example:
+
+   "lines": [ {
+     "first-char": 0,
+     "last-char": 7,
+     "baseline-y": 15.1058693,
+     "x-height": 14.7235212,
+     "label": "hello $2 + 3$",
+     "spans": [ {
+       "type": "Text",
+       "bounding-box": {
+        "x": -65.5972595,
+        "y": -22.9333344,
+        "width": 102.510544,
+        "height": 41.6666679
+       },
+       "label": "hello"
+      }, {
+       "type": "Math",
+       "bounding-box": {
+        "x": 64.3636673,
+        "y": -8.46666718,
+        "width": 71.9609299,
+        "height": 30.9333344
+       },
+       "label": "2 + 3"
+      } ]
+    }]
+
+Style
+
+The JIIX format can contain styling information. These encompass:
+
+    CSS properties that you explicitly assign to the pen (dynamic styles)
+    Style classes that you assign to the pen (pen style classes)
+    Classes and styles automatically set by iink SDK when decorations are detected.
+
+Themes, that are local to your editor, will not be exported.
+
+If you are exporting content, you need to set the export.jiix.style configuration key to true to get style information.
+Item span styling
+
+Blocks like Drawing and text/math/non-text raw content items can be seen as an ordered collection of strokes. Such a collection can be styled via the definition of “item spans”, each span associating a specific style to a range of items.
+
+Item spans have the following properties:
+Property 	Description 	Content
+first-item 	Index of the first item in the span 	A number (positive or null)
+last-item 	Index of the last item in the span 	A number (positive or null)
+class 	Name of the CSS class attached to the items in the span 	A string
+style 	Inline CSS style that “overrides” any default style 	A string
+
+For example, if we write 2 strokes with pen style class set to “greenThickPen” then 2 more strokes with no pen style class but pen style set to “color : #FF324233”, we obtain something like:
+
+{
+  "first-item": 0,
+  "last-item": 1,
+  "class": "greenThickPen"
+}
+
+and
+
+{
+ "first-item": 2,
+ "last-item": 3,
+ "style": "color: #FF324233"
+}
+
+Note that an item may be contain both class and style indications, or none of them if default styling applies.
+Text span styling
+
+Text blocks can be seen as an ordered collection of characters. Such a collection can be styled via the definition of “character spans”, each span associating a specific style to a range of characters.
+
+Item spans have the following properties:
+Property 	Description 	Content 	Note
+first-char 	Index in the text of the first character in the span 	A number (positive or null) 	Only present when export.jiix.text.chars is configured to true
+last-char 	Index in the text of the last character in the span 	A number (positive or null) 	Only present when export.jiix.text.chars is configured to true
+class 	Name of the CSS class attached to the characters in the span 	A string 	 
+style 	Inline CSS style that “overrides” any default style 	A string 	 
+
+For example, text underlined by a gesture may get the following style:
+
+{
+ "first-char": 0,
+ "last-char": 12,
+ "class": "text-emphasis1",
+ "style": "color: #000000FF; -myscript-text-decoration-color: #000000FF; -myscript-text-decoration-background-color: #FFED2666"
+}
+
+Nodes styling
+
+Blocks like math and diagram nodes, as well as diagram connectors are independently styled.
+
+They can directly have the following properties:
+Property 	Description 	Content
+class 	Name of the CSS class attached to the node 	A string
+style 	Inline CSS style that “overrides” any default style for the node 	A string
+
+For example, a math node can be styled as follows:
+
+{
+ "type": "number",
+ "id": "math/170",
+ "label": "3",
+ "value": 3,
+ "items": [ ... ],
+ "bounding-box": { ... },
+ "class": "greenThickPen"
+}
+
+Blocks
+
+This section lists all available blocks of the hierarchy, their properties and particularities, if any.
+Container block
+
+A block of type Container groups children blocks together.
+
+It has the following specific property:
+Property 	Description 	Content
+children 	List of blocks within this container block 	An array of blocks
+
+For example, in the JIIX export of a “Text Document” part composed of two paragraphs of text, each paragraph will correspond to a text block and both will be grouped as the children of a same container block:
+
+{
+ "type": "Container",
+ "id": "MainBlock",
+ "bounding-box": { ... },
+ "children": [ {
+   "type": "Text",
+   ...
+  }, {
+   "type": "Text",
+   ...
+  } ],
+ ...
+}
+
+No assumption is made about the type of children blocks.
+Diagram block
+
+A block of type Diagram groups together the different internal blocks of an individual diagram.
+
+It has the following specific property:
+Property 	Description 	Content
+elements 	Array of recognized diagram items. 	An array of Diagram item blocks
+
+For example, a diagram may be composed of a Text label and of a diagram Node corresponding to a rectangle:
+
+{
+ "type": "Diagram",
+ "id": "4",
+ "bounding-box": { ... },
+ "elements": [ {
+   "type": "Text",
+   ...
+  }, {
+   "type": "Node",
+   "kind": "rectangle",
+   ...
+  } ],
+ ...
+}
+
+Diagram item blocks
+
+Diagram item blocks collectively form a family of blocks of different types describing the semantic structure of a diagram: connectors, text blocks, geometric shapes, etc. There is no actual “Diagram Item” type.
+
+These blocks share the following common properties:
+Property 	Description 	Content 	Note
+type 	Diagram item type 	Node, Edge, Polyedge or Text 	 
+parent 	Diagram item parent item (if any) 	A diagram item numerical id 	 
+items 	Ink and/or converted shape primitives composing the item 	An array of stroke, line and/or arc items 	Strokes are only present in JIIX export when export.jiix.strokes is configured to true, lines and arcs are only present when export.jiix.primitives is configured to true
+
+Diagram nodes and connectors (i.e. with type node, edge or polyedge) will get the following styling properties:
+Property 	Description 	Content
+class 	Name of the CSS class attached to the node 	A string
+style 	Inline CSS style that “overrides” any default style for the node 	A string
+
+Style is only present in then JIIX export when export.jiix.style is configured to true.
+
+Example:
+
+{
+ "id": "diagram/3/242",
+ "type": "Node",
+ "parent": 12,
+ "bounding-box": { ... },
+ "items": [ ... ],
+ ... specific properties ...
+}
+
+Although diagram item blocks have an id property like other blocks, their identifier is a number with a prefix identifying their parents and not a string.
+
+➤ Diagram and Raw Content Node block
+
+An item of type Node is associated with a particular shape, an optional label, and may host child items. This is modeled by the following properties:
+Property 	Description 	Content
+kind 	Diagram item Sub-type. 	rectangle, rhombus, polygon, circle, ellipse or doodle
+label-element 	id of the diagram item of type Text that describes the label associated with the item. 	A diagram item numerical id
+children 	Array of child diagram items associated with the item 	An array of diagram items numerical ids
+
+Depending on its “kind”, the item will have specific properties:
+
+    If "kind": "rectangle"
+        x - X coordinate of the upper-left corner of the rectangle.
+        y - X coordinate of the upper-left corner of the rectangle.
+        width - Width of the rectangle.
+        height - Height of the rectangle.
+        orientation - x-axis rotation angle of the selection box of the rectangle (when shape rotation is active).
+    If "kind": "rhombus"
+        points - Array containing the 4 {x, y} points describing the rhombus.
+        orientation - x-axis rotation angle of the selection box of the rhombus (when shape rotation is active).
+    If "kind": "polygon"
+        points - Array of {x, y} points describing the polygon.
+        orientation - x-axis rotation angle of the selection box of the polygon (when shape rotation is active).
+    If "kind": "circle"
+        cx - X coordinate of the circle center.
+        cy - Y coordinate of the circle center.
+        r - Radius of the circle.
+        orientation - x-axis rotation angle of the selection box of the circle (when shape rotation is active).
+    If "kind": "ellipse" : an axis aligned ellipse.
+        cx - X coordinate of the ellipse center.
+        cy - Y coordinate of the ellipse center.
+        rx - X radius of the ellipse.
+        ry - Y radius of the ellipse.
+        orientation - x-axis rotation angle of the selection box of the ellipse (when shape rotation is active).
+    If "kind": "doodle"
+        No specific property describes a doodle.
+        Note: As doodles are not converted, items will never contain shape primitives.
+
+For example, the following node represents a rectangle in a diagram, associated with a text label:
+
+   "type": "Node",
+   "kind": "rectangle",
+   "orientation": -0.0148907145,
+   "label-element": "diagram/22",
+   "children": [ "diagram/22" ],
+   "id": "diagram/13",
+   "bounding-box": {
+    "x": 61.7742119,
+    "y": 51.8420029,
+    "width": 82.0821991,
+    "height": 36.4551468
+   }
+
+➤ Diagram Edge block
+
+A diagram item of type Edge connects other diagram items.
+Property 	Description 	Content 	Note
+kind 	Connector sub-type 	line or arc 	 
+children 	Array of children diagram items associated with the item 	An array of diagram items numerical ids 	 
+connected 	List of the diagram items connected to this edge 	An array of diagram items numerical ids 	 
+ports 	List of the relative hooking positions of the diagram items connected to this edge. 	A list of numbers between 0 and 1. 	 
+p1Decoration 	Decoration of a “line” edge first point 	arrow-head in case an arrow head is present 	This property is absent if there is no decoration and only applies to “line” edges
+p2Decoration 	Decorationof a “line” edge second point 	arrow-head in case an arrow head is present 	This property is absent if there is no decoration and only applies to “line” edges
+startDecoration 	Decoration of an “arc” edge start point 	arrow-head in case an arrow head is present 	This property is absent if there is no decoration and only applies to “arc” edges
+endDecoration 	Decoration of an “arc” edge end point 	arrow-head in case an arrow head is present 	This property is absent if there is no decoration and only applies to “arc” edges
+
+Example of a “straight” edge:
+
+{
+  "type": "Edge",
+  "kind": "line",
+  "connected": [ "diagram/12", "diagram/47" ],
+  "ports": [ 0, 0.521515965 ],
+  "id": "diagram/85",
+  "bounding-box": {... },
+  "x1": 81.9797897,
+  "y1": 49.3274384,
+  "x2": 146.199982,
+  "y2": 55.2804871,
+  "p2Decoration": "arrow-head"
+}
+
+Note that as a “line” connector, the edge includes x1, y1, x2 and y2 properties, defined the exact same way than in the case of line items.
+
+Example of a “curved” edge:
+
+{
+  "type": "Edge",
+  "kind": "arc",
+  "connected": [ "diagram/10", "diagram/53" ],
+  "ports": [ 0, 1 ],
+  "id": "diagram/105",
+  "bounding-box": { ... },
+  "items": [ ...  ],
+  "cx": 120.779442,
+  "cy": 74.4197159,
+  "rx": 32.6964035,
+  "ry": 32.6964035,
+  "phi": 0.00504867753,
+  "startAngle": -1.82163024,
+  "sweepAngle": 3.53351736,
+  "endDecoration": "arrow-head"
+  }
+
+Note that as an “arc” connector, the edge includes cx, cy, rx, ry, phi, startAngle and sweepAngle properties, defined the exact same way than in the case of arc items.
+
+➤ Diagram Polyedge block
+
+A diagram item of type Polyedge connects other diagram items via several other edges. It is associated with the following properties:
+Property 	Description 	Content
+connected 	List of the diagram items connected by this polyedge 	An array of diagram items numerical ids.
+edges 	List of edges composing this polyedge 	A list of diagram edge items
+
+Example of a polyedge gathering three edges together:
+
+{
+ "type": "Edge",
+ "kind": "polyedge",
+ "id": "diagram/65",
+ "connected": [ "diagram/37" ],
+ "edges": [ {
+   "type": "Edge",
+   "kind": "line",
+   ...
+  }, {
+   "type": "Edge",
+   "kind": "line",
+   ...
+  }, {
+   "type": "Edge",
+   "kind": "line",
+   ...
+  } ]
+}
+
+➤ Diagram Text block
+
+A diagram item of type Text combines the properties of a diagram item and those of a Text Block. It is styled using text spans.
+Drawing block
+
+A drawing block gathers raw digital ink.
+
+It can have the following specific properties:
+Property 	Description 	Content 	Note
+items 	Ink composing the block. 	An array of strokes items 	Strokes are present in JIIX export when export.jiix.strokes is configured to true
+spans 	List of item spans providing styling information 	An array of item span objects 	Style is only present in then JIIX export when export.jiix.style is configured to true
+image 	Image data when an image is added into a Text Document 	An image object 	 
+
+Example:
+
+{
+ "type": "Drawing",
+ "id": "7",
+ "bounding-box": { ... },
+ "items": [ ... ],
+ "spans": [ ... ],
+ "image": { ... }
+}
+
+➤Drawing image object
+
+When adding an image into a Text Document, a Drawing block is added that contains an image object with the following properties:
+Property 	Description 	Content
+url 	url of the image. 	The image filename (as stored into the package zip file).
+mime-type 	mime-type of the image. 	Possible values are: image/jpeg, image/png and image/gif.
+x 	X coordinate of the upper-left corner of the image. 	A number.
+y 	Y coordinate of the upper-left corner of the image. 	A number.
+width 	Width of the image. 	A number.
+height 	Height of the image. 	A number.
+
+Example:
+
+   "image": {
+    "url": "1630419125093723_20160701_212430.jpg",
+    "mime-type": "image/jpeg",
+    "x": 14.3750961,
+    "y": 52.8047333,
+    "width": 195.449829,
+    "height": 109.940521
+   }
+
+Math block
+
+A block of type Math is associated with the following specific properties:
+Property 	Description 	Content 	Note
+expressions 	Array of recognized Math expressions. 	An array of math node blocks. 	 
+label 	Recognition result as a LaTeX string associated with this math block 	A string 	Only present when export.jiix.math-label is configured to true.
+
+Example:
+
+{
+ "type": "Math",
+ "id": "4",
+ "bounding-box": { ... },
+ "label": "\\cos \\dfrac{\\pi }{2}",
+ "expressions": [ ... ]
+}
+
+Math Node block
+
+A math node block describes a portion of a mathematical expression. Depending on the math node type, a math node may contain other math nodes, in the operands property.
+Property 	Description 	Content 	Note
+type 	Node type 	A string 	Example: +, -, number, square root, =, vertical operation, etc.
+label 	Label associated with the node, when it is different from type 	A string 	Example: 2.453..., √, θ, dx…
+operands 	Operands associated with the nodes, if any. 	An array of math nodes 	 
+solver-output 	Signals that the node was added by the iink engine 	A boolean 	When not present this property is considered false
+value 	Numerical value associated to a given node 	A number 	Not present when the iink SDK solver could not solve this particular node
+exact value 	More accurate value associated to a given node 	A number 	Only present when a value is present and whenever relevant. Example for √2, “value”: 2.41421356 and “exact-value”: “2.414213562373095” are present, whereas for √4, only “value”: 2 is present.
+items 	Ink and/or glyphs composing the node 	An array of stroke and/or glyph items 	Strokes are only present in JIIX export when export.jiix.strokes is configured to true, glyphs are only present when export.jiix.glyphs is configured to true
+error 	Signals that the solver detected an error 	A string 	Possible values are: DivisionByZeroImpossible, IncompleteInput, Unsolved, InvalidInput and FailureToObtainAValidResult
+class 	Name of the CSS class attached to the node 	A string 	Style is only present in then JIIX export when export.jiix.style is configured to true
+style 	Inline CSS style that “overrides” any default style for the node 	A string 	Style is only present in then JIIX export when export.jiix.style is configured to true
+
+Example:
+
+{
+ "type": "+",
+ "id": "math/34",
+ "items": [ ... ],
+ "bounding-box": { ... },
+ "operands": [ ... ]
+}
+
+➤ Fence Math block
+
+Math nodes of type fence have the following specific properties:
+Property 	Description 	Content 	Examples
+open symbol 	Opening symbol of the fence. If this property is not set, indicates that no opening symbol was recognized 	A string 	(, [, {
+close symbol 	Closing symbol of the fence. If this property is not set, indicates that no closing symbol was recognized 	A string 	), ], }
+
+➤ Matrix Math block
+
+Math nodes of type matrix have the following specific properties:
+Property 	Description 	Content
+rows 	Matrix content, row per row 	An array of cells objects, each representing a row of the matrix
+cells 	Content of a row of the matrix 	An array of math nodes
+
+➤ System Math block
+
+Math nodes of type system have the following specific property:
+Property 	Description 	Content
+  	  	 
+expressions 	Array of expressions within the system 	An array of math nodes
+Text Block
+
+A block of type Text has the following specific properties:
+Property 	Description 	Content 	Note
+label 	Recognition result associated with this text block 	A string 	Example: "label": "Hello how are you?"
+words 	List of recognized words 	An array of word objects 	Words are only present in then JIIX export when export.jiix.text.words is configured to true
+chars 	List of recognized characters 	An array of character objects 	Characters are only present in then JIIX export when export.jiix.text.chars is configured to true
+spans 	List of text spans providing styling information 	An array of text span objects 	Style is only present in then JIIX export when export.jiix.style is configured to true
+linebreaks 	List of explicit line breaks in the text block 	An array of line index 	Only present in then JIIX export when export.jiix.deprecated.text.linebreaks is configured to true
+structure 	Text layout structure 	A structure object that is an array of text, list and divider items. 	Only present in then JIIX export when export.jiix.text.structure is configured to true
+Although the export.jiix.deprecated.text.linebreaks option is still available, it is deprecated. So, we recommend you using the export.jiix.text.structure option to retrieve information about line breaks.
+
+Example:
+
+{
+ "type": "Text",
+ "id": "7",
+ "bounding-box": { ... },
+ "label": "hello",
+ "words": [ ... ],
+ "chars": [ ... ],
+ "spans": [ ... ]
+}
+
+MyScript iink SDK differentiates explicit from implicit line breaks. An explicit line break is detected each time the writer goes back to the beginning of the next line but there was space to insert the word at the end of the previous line. An explicit line break is for instance preserved by reflow operations. An implicit line break corresponds to the case the user went to a new line after the previous one was fully filled (based on the view size).
+
+➤Text line breaks
+
+Let’s assume that we write something that visually looks like:
+
+Hello
+there!
+This is a bit more than a full
+line
+
+We will assume that the third line takes the full width of the view. The corresponding JIIX export when export.jiix.deprecated.text.linebreaks is configured to true will look like:
+
+{
+ "type": "Text",
+ "bounding-box": { ... },
+ "label": "Hello\nthere!\nThis iis a bit more than a full\nline",
+ "words": [ ... ],
+ "linebreaks": [ {
+   "line": 0
+  }, {
+   "line": 1
+  } ],
+ "version": "3",
+ "id": "MainBlock"
+}
+
+Notice the three line breaks in the main label. Via the linebreaks property, the JIIX format explicits that the line breaks on line 0 and 1 (the first two lines) are explicit line breaks.
+
+➤Text structure
+
+When the export.jiix.text.structure configuration is enabled, the JIIX file contains the text layout structure for Text blocks. It consists in describing the way users organize their text: plain text, numbered or unnumbered list, empty lines. This text layout information is stored into a structure objects that is an array of text-item, list-item and divider items. The divider item corresponds to empty lines.
+
+The text-item, list-item and divider objects have the following properties:
+Property 	Description 	Content 	Note
+id 	Unique identifier of the item 	A string 	Only present for text-item and list-item
+type 	Type of the item 	A string 	Values can be text-item, list-item or divider
+indentation 	Amount of indentation before the item 	A number 	 
+text-indentation 	Amount of indentation before the text contained in the item 	A number 	 
+first-char 	Index of the first character contained in this item 	An integer, representing the index of a character object in the Text block 	Only present in the JIIX export when export.jiix.text.chars is configured to true
+last-char 	Index of the last character contained in this item. 	An integer, representing the index of a character object in the Text block 	Only present in the JIIX export when export.jiix.text.chars is configured to true
+first-word 	Index of the first word contained in this item. 	An integer, representing the index of a word object in the Text block 	Only present in the JIIX export when export.jiix.text.words is configured to true
+last-word 	Index of the last word contained in this item. 	An integer, representing the index of a word object in the Text block 	Only present in the JIIX export when export.jiix.text.words is configured to true
+first-line 	Index of the item first line 	An integer 	 
+last-line 	Index of the item last line 	An integer 	 
+explicit-linebreak 	Indicates whether the line creation is due a writer’s explicit line break 	A boolean 	Always true for dividers and list items, can be false for text items when they are started by a non explicit linebreak
+
+In addition, the list-item contains a bullet object with the following attributes:
+Property 	Description 	Content 	Note 	 
+kind 	Bullet kind of symbol or glyph 	A string 	Value can be bullet, letter, number or check 	 
+first-char 	Index of the bullet first character 	An integer, representing the index of a character object in the Text block 	Only present in the JIIX export when export.jiix.text.chars is configured to true 	 
+last-char 	Index of the bullet last character 	An integer, representing the index of a character object in the Text block 	Only present in the JIIX export when export.jiix.text.chars is configured to true 	 
+first-word 	Index of the bullet first word 	An integer, representing the index of a word object in the Text block 	Only present in the JIIX export when export.jiix.text.words is configured to true 	 
+last-word 	Index of the bullet last word 	An integer, representing the index of a word object in the Text block 	Only present in the JIIX export when export.jiix.text.words is configured to true 	 
+first-line 	Index of the bullet first line 	An integer 	  	 
+last-line 	Index of the bullet last line 	An integer 	  	 
+
+For example, let’s assume that we write something that visually looks like:
+
+Hello
+-   How are you?
+    1.   Fine
+    2.   Good
+         A.   Super
+         B.   Extra
+-   Hello
+    How are you?
+        How are you? How are
+        you?
+
+The corresponding JIIX file including the structure block would look like this file.
+Raw Content block
+This section describes Raw Content blocks exported by Editor or OffscreenEditor objects. Raw Content blocks exported by Raw Content Recognizer are described here
+
+A Raw Content block corresponds to the output of raw digital ink analysis. It is meant to express the ink classification according to the raw-content.classification.types array, and the ink interpretation according to the raw-content.recognition.types array, as text, math and shape recognition results expressed as a hierarchy of items.
+
+A block of type Raw Content has the following specific property:
+Property 	Description 	Content
+elements 	Array of recognized (Node, Text and/or Math) items and non recognized Raw Content items, depending on raw-content.classification.types and raw-content.recognition.types values 	An array of shape item blocks, Math item blocks, Text item blocks and Raw Content item blocks
+
+Example of output:
+
+{
+ "type": "Raw Content",
+ "bounding-box": { ... },
+ "elements": [ {
+   "type": "Node",
+   "kind": "rectangle", ...
+  }, {
+   "type": "Text",
+   "label": "hello", ...
+  }, {
+   "type": "Math",
+   "expressions": ...
+  }, {
+   "type": "Raw Content",
+   "kind": "non-text", ...
+  } ],
+ "id": "MainBlock",
+ "version": "3"
+}
+
+➤ Raw Content Text item block
+
+    When a Raw Content Text item block contains inline math, the math is represented as an external Math item block. In addition to Text item blocks common properties, it also contains the following properties:
+
+Property 	Description 	Content 	Note
+children 	Array of children Math item blocks associated with the Text item 	An array of Math items numerical ids 	 
+children-pos 	The character indices of the external Math item blocks. 	An array of integer 	Only present in the JIIX export when export.jiix.text.chars is configured to true
+
+    The labels for the words, lines and spans have inlined math label delimited by $ where appropriate. The label for characters representing a Math item is an empty string.
+
+    A word corresponding to inline math has a refs which gives the list of id of its corresponding Math items, and a reflow-label which is its label where \n has been replaced by space.
+    When a Raw Content Text item block corresponds to a mul_Latn text recognition, it contains the language information:
+
+Content 	Description 	Content
+lang 	A String indicating the primary language identified within the Text block 	Possible values are de, en, es, fr, it, nl and pt.
+
+➤ Raw Content external Math item
+
+In addition to Math item blocks common properties, a Raw Content external Math item contains a reference to its Text parent:
+Property 	Description 	Content
+parent 	The Text parent item of this Math item 	A Text item numerical id
+
+Example of output for a Raw Content with a Text block containing inline math:
+
+{
+{
+ "type": "Raw Content",
+ "elements": [ {
+   "children": [ "raw-content/793", "raw-content/825" ],
+   "id": "raw-content/511",
+   "children-pos": [ 11, 13 ],
+   "type": "Text",
+   "label": "Operations $2+3$\n$7+12$ are additions",
+   "words": [ {
+     "label": "Operations",
+     "candidates": [ "Operations", "operations", "Operatiions", "Dperations", "Operatios" ],
+     "first-char": 0,
+     "last-char": 9
+    }, {
+     "label": " $2+3$\n$7+12$ ",
+     "refs": [ "raw-content/793", "raw-content/825" ],
+     "first-char": 10,
+     "last-char": 14,
+     "reflow-label": " $2+3$ $7+12$ "
+    }, {
+     "label": "are",
+     "candidates": [ "are", "we", "ae", "We", "Are" ],
+     "first-char": 15,
+     "last-char": 17
+    }, {
+     "label": " ",
+     "first-char": 18,
+     "last-char": 18
+    }, {
+     "label": "additions",
+     "candidates": [ "additions", "aaditions", "auditions", "audition", "addition" ],
+     "first-char": 19,
+     "last-char": 27
+    } ],
+   "chars": [ ... ],
+   "lines": [ ... ]
+ }, {
+   "parent": "raw-content/511",
+   "id": "raw-content/825",
+   "type": "Math",
+   "expressions": [ ... ]
+  }, {
+   "parent": "raw-content/511",
+   "id": "raw-content/793",
+   "type": "Math",
+   "expressions": [ ... ]
+  } ],
+ "id": "MainBlock",
+ "version": "3"
+}
+
+Raw Content item block
+
+In addition to common block properties, raw content item blocks also have the following specific properties:
+Property 	Description 	Content 	Note
+kind 	Raw content item identified as representing ink data 	text, math or non-text 	 
+items 	Items composing the block. 	An array of items 	Strokes are present in JIIX export when export.jiix.strokes is configured to true
+
+Example:
+
+{
+ "type": "Raw Content",
+ "kind": "text",
+ "id": "raw-content/13",
+ "bounding-box": { ... },
+ "items": [ ... ]
+}
+
+Although raw content item blocks have an id property like other blocks, their identifier is a number with a prefix identifying their parents and not a string.
+
+Styling of a raw content item block is similar to Drawing for text and non-text blocks without the recognition enabled, otherwise it is similar as that of Diagram item blocks.
+
+When adding an image into a RawContent, an image element is added that contains the following specific properties:
+Property 	Description 	Content
+image-id 	Unique identifier of the image 	A String.
+url 	url of the image. 	The image filename (as stored into the package zip file).
+mime-type 	mime-type of the image. 	Possible values are: image/jpeg, image/png and image/gif.
+x 	X coordinate of the upper-left corner of the image. 	A number.
+y 	Y coordinate of the upper-left corner of the image. 	A number.
+width 	Width of the image. 	A number.
+height 	Height of the image. 	A number.
+orientation 	x-axis rotation angle of the image (when image rotation is active). 	A number.
+
+Example:
+
+{
+   "type": "Image",
+   "kind": "non-text",
+   "orientation": -0.458628416,
+   "id": "raw-content/37",
+   "bounding-box": {
+    "x": 195.51796,
+    "y": 23.953661,
+    "width": 92.950943,
+    "height": 112.844849
+   },
+   "image-id": "ImageId1697636709366167",
+   "url": "ImageId1697636709366167.png",
+   "mime-type": "image/png",
+   "x": 231.879929,
+   "y": 24.953661,
+   "width": 59.8457947,
+   "height": 95.468277,
+  }
+
+When adding a placeholder into a RawContent, a Placeholder element is added that contains the following specific properties:
+Property 	Description 	Content
+image-id 	Unique identifier of the image 	A String.
+url 	url of the image. 	The image filename (as stored into the package zip file).
+user-data 	User defined metadata 	A String.
+mime-type 	mime-type of the image. 	Possible values are: image/jpeg, image/png and image/gif.
+x 	X coordinate of the upper-left corner of the image. 	A number.
+y 	Y coordinate of the upper-left corner of the image. 	A number.
+width 	Width of the image. 	A number.
+height 	Height of the image. 	A number.
+
+Example:
+
+{
+   "type": "Placeholder",
+   "kind": "non-text",
+   "id": "raw-content/37",
+   "bounding-box": {
+    "x": 77.3406219,
+    "y": -12.4064779,
+    "width": 71.203125,
+    "height": 10.3078699
+   },
+   "image-id": "ImageId17248359471570692",
+   "url": "ImageId17248359471570692.png",
+   "mime-type": "image/png",
+   "user-data": "User provided this string",
+   "x": 78.3406219,
+   "y": -11.4064779,
+   "width": 69.203125,
+   "height": 8.30786991
+  }
+
+Recognizer blocks
+Gesture block
+
+A Gesture block corresponds to the output of Gesture Recognizer analysis.
+
+In addition to common block properties, a Gesture block also has the following specific property:
+Property 	Description 	Content
+gestures 	Array of gesture items 	An array of gesture items
+
+Example:
+
+{
+  "version": "3",
+  "type": "Gesture",
+  "gestures": [ ... ]
+}
+
+gesture item block
+
+In addition to common block properties, gestures item blocks also have the following specific properties:
+Property 	Description 	Content 	Note
+type 	Gesture item identified as representing ink or touch gesture 	A string 	Possible values are none, bottom-top, top-bottom, right-left, left-right, scratch, surround, tap, double-tap and long-press.
+
+Example:
+
+"gestures": [ {
+  "type": "surround",
+  "strokes": [ {
+    "id": "ps6",
+    "bounding-box": {
+     "x": 13.5319223,
+     "y": 34.3388916,
+     "width": 24.574482,
+     "height": 16.1788025
+    }
+   } ],
+  "bounding-box": {
+   "x": 13.5319223,
+   "y": 34.3388916,
+   "width": 24.574482,
+   "height": 16.1788025
+  }
+ } ]
+
+Shape block
+
+A Shape block corresponds to the output of Shape Recognizer analysis.
+
+In addition to common block properties, a Shape block also has the following specific property:
+Property 	Description 	Content
+elements 	Array of shape elements 	An array of shape elements
+
+Example:
+
+{
+  "version": "3",
+  "type": "Shape",
+  "elements": [ ... ]
+}
+
+Shape element
+
+Shape elements contain the following properties:
+Property 	Description 	Content 	Note
+bounding-box 	Extent of the shape 	x, y, width, height - 4 numerical values defining a rectangle which upper-left corner is positioned at coordinates (x, y) and of size (width, height) 	Present in the JIIX export when export.jiix.bounding-box configuration is true
+shape 	Item composing the shape. 	A shape item 	 
+candidates 	List of recognition candidates associated with this shape 	An array of shape items 	Candidates are present in JIIX export when export.jiix.shape.candidates is configured to true. The first candidate in the array corresponds to the shape described on previous line.
+items 	List of stroke items associated with this shape 	An array of stroke items 	Strokes are present in JIIX export when export.jiix.strokes is configured to true
+
+Example:
+
+{
+ "bounding-box": { ... },
+ "shape": { ... },
+ "candidates": [ {...} ],
+ "items": [ {...} ]
+}
+
+Shape item
+
+Shape items contain the following properties:
+Property 	Description 	Content 	Note
+kind 	recognized shape kind. 	A string corresponding to one of the following shapes: line, polyline, polygon, triangle, isosceles triangle, right triangle, right isosceles triangle, equilateral triangle, quadrilateral, trapezoid, parallelogram, rhombus, rectangle, square, ellipse, circle, arc of ellipse, arc of circle, double arrow, arrow, polyline arrow, polyline double arrow, curved arrow, curved double arrow. 	If no shape was recognized, value is rejected.
+primitives 	Primitives of the shape. 	An array of shape primitives. 	 
+
+Example:
+
+  "shape": {
+   "kind": "arrow",
+   "primitives": [ {
+     "type": "line",
+     "x1": 97.8697891,
+     "y1": 148.372635,
+     "x2": 151.793411,
+     "y2": 148.372635,
+     "startDecoration": "none",
+     "endDecoration": "arrow-head"
+    } ]
+  }
+
+Shape primitive
+
+Shape primitives content depend on the shape kind:
+
+    line primitive
+
+For triangle, isosceles triangle, right triangle, right isosceles triangle, equilateral triangle, quadrilateral, trapezoid, parallelogram, rhombus, rectangle, square, primitives are an array of line primitives representing their edges and contain the properties:
+Property 	Description 	Content
+type 	primitive type 	line
+x1 	X coordinate of the first point defining the line 	A number
+y1 	Y coordinate of the first point defining the line 	A number
+x2 	X coordinate of the second point defining the line 	A number
+y2 	Y coordinate of the second point defining the line 	A number
+
+For line, polyline, double arrow, arrow, polyline arrow and polyline double arrow primitives are line primitives too, that contain the following additional properties:
+startDecoration 	Decoration of a “line” start point 	arrow-head in case an arrow head is present, none when no decoration
+endDecoration 	Decoration of a “line” end point 	arrow-head in case an arrow head is present, none when no decoration
+
+    arc primitive
+
+For ellipse, circle, arc of ellipse, arc of circle primitives are an arc primitive representing their edge and contain the properties:
+Property 	Description 	Content
+type 	primitive type 	arc
+cx 	X coordinate of the arc center 	A number
+cy 	Y coordinate of the arc center 	A number
+rx 	x-axis or semi-major radius 	A number (must be positive)
+ry 	y-axis or semi-minor radius 	A number (must be positive)
+phi 	x-axis rotation angle 	A number
+startAngle 	Start angle (prior to stretch and rotate) 	A number
+sweepAngle 	Sweep angle (prior to stretch and rotate) 	A number
+
+For curved arrow and curved double arrowprimitive is an arc too, that contains the following additional properties:
+startDecoration 	Decoration of an “arc” item start point 	arrow-head in case an arrow head is present, none when no decoration
+endDecoration 	Decoration of an “arc” item end point 	arrow-head in case an arrow head is present, none when no decoration
+Raw Content Recognizer block
+
+It corresponds to the output of raw digital ink analysis and recognition made by the Raw Content Recognizer.
+
+It is meant to express a classification of ink corresponding to ink interpretation as text, shape, math, decoration, or drawing type depending on recognizer.raw-content.classification value. Results are expressed as a hierarchy of items.
+
+A block of type Raw Content has the common block properties, plus the following specific property:
+Property 	Description 	Content
+range 	Only present in the JIIX export when export.jiix.ranges is configured to true 	An array of ink intervals
+elements 	Array of items, which types depend on recognizer.raw-content.classification and recognizer.raw-content.recognition values 	An array of Text, Shape, Math, Decoration and Drawing block objects
+
+Example:
+
+{
+ "version": "3",
+ "id": "MainBlock",
+ "type": "Raw Content",
+ "bounding-box": {
+    ...
+ },
+ "range": [
+  { "from": { "stroke": 0 }, "to": { "stroke": 135 } }
+ ],
+  "elements": [ ... ]
+}
+
+    range
+
+When the export.jiix.ranges configuration is enabled, every object in the JIIX file contains a range which is an array of ink intervals. An ink interval is defined by two ink cursors: from and to corresponding to its stroke indexes. The stroke index is the zero based index of the stroke of the object based on the sequence of pointer events composing the input of the recognizer.
+
+Example:
+
+   "range": [
+    { "from": { "stroke": 0 }, "to": { "stroke": 105 } },
+    { "from": { "stroke": 128 }, "to": { "stroke": 135 } }
+   ],
+
+    Text block object
+
+Text recognition is performed by a new mixed math and text recognizer. So, a text block object may contain mixed math and text.
+
+Text block objects are segmented into lines and each line is segmented into spans. They have a bounding box and the following specific properties:
+Property 	Description 	Content 	Note
+label 	Recognition result associated with this text block 	A string 	The label includes the line break if applicable.
+lines 	The array of lines that make up this text block. 	A array of Line item blocks 	 
+
+Example:
+
+{
+ "type": "Text",
+ "bounding-box": { ... },
+ "range": [ ... ],
+ "label": "The root of the quadratic equation\n$a x ^{2} + b x + c = 0$\nis given by the quadratic formula\n$x = \\frac{- b \\pm \\sqrt{\\Delta}}{2 a}$ where $\\bigtriangleup$ is the\ndiscriminant",
+ "lines": [ ... ]
+}
+
+The item of type Line has a bounding box and the following specific properties:
+Property 	Description 	Content 	Note
+label 	Recognition result associated with this line 	A string 	The label of lines does not include the line break, which is added at block level if applicable.
+spans 	The array of spans that make up this line. 	A array of Math and Text objects 	See below example.
+
+Example:
+
+{
+     "type": "Line",
+     "bounding-box": { ... },
+     "range": [ ... ],
+     "label": "$x = \\frac{- b \\pm \\sqrt{\\Delta}}{2 a}$ where $\\bigtriangleup$ is the",
+  "spans": [ {
+     "type": "Math",
+     "bounding-box": { ... },
+     "range": [
+      { "from": { "stroke": 52 }, "to": { "stroke": 56 } },
+      { "from": { "stroke": 128 }, "to": { "stroke": 135 } }
+     ],
+     "label": "x = \\frac{- b \\pm \\sqrt{\\Delta}}{2 a}"
+    }, {
+     "type": "Text",
+     "bounding-box": { ... },
+     "words": [],
+     "range": [
+      { "from": { "stroke": 57 }, "to": { "stroke": 59 } }
+     ],
+     "label": "where"
+    }, {
+     "type": "Math",
+     "bounding-box": { ... },
+     "range": [
+      { "from": { "stroke": 60 }, "to": { "stroke": 60 } }
+     ],
+     "label": "\\bigtriangleup"
+    }, {
+     "type": "Text",
+     "bounding-box": { ... },
+     "words": [],
+     "range": [
+      { "from": { "stroke": 61 }, "to": { "stroke": 66 } }
+     ],
+     "label": "is the"
+    } ]
+}
+
+Please note that Math spans give the LaTeX string without $ delimiters, while the surrounding line and block add $ delimiters around it.
+
+    Math block item
+
+Math recognition is done by the “Math” recognizer and therefore only returns recognition results as a LaTeX strings.
+
+Math block objects are segmented into lines and each line is segmented into spans like Text block objects. See the section above for more details about lines and spans.
+Property 	Description 	Content 	Note
+label 	Recognition result as a LaTeX string associated with this math block 	A string 	 
+lines 	The array of lines that make up this math block. 	A array of Line item blocks 	 
+
+Example:
+
+{
+ "type": "Math",
+ "bounding-box": { ... },
+ "range": [ ... ],
+ "label": "$\\Delta = b ^{2} - 4 a c$",
+ "lines": [ ... ]
+}
+
+    Shape item block
+
+A block of type Shape is similar to Shape block with optional range objects, when export.jiix.ranges configuration is enabled.
+
+Example:
+
+{
+ "type": "Shape",
+ "bounding-box": { ... },
+ "range": [
+  { "from": { "stroke": 106 }, "to": { "stroke": 109 } },
+  { "from": { "stroke": 125 }, "to": { "stroke": 127 } }
+ ],
+ "elements": [
+  {
+   "bounding-box": { ... },
+   "range": [
+    { "from": { "stroke": 106 }, "to": { "stroke": 106 } }
+   ],
+   "shape": {
+    "kind": "rectangle",
+    "primitives": [ ... ]
+   }
+  },
+  ...
+  {
+   "bounding-box": { ... },
+   "range": [
+    { "from": { "stroke": 126 }, "to": { "stroke": 127 } }
+   ],
+   "shape": {
+    "kind": "curved arrow",
+    "primitives": [ ... ]
+   }
+  } ]
+}
+
+    Decoration item block
+
+When decorations are detected in the content (requires “decoration” item in the recognizer.raw-content.classification.types array) a Decoration block will appear in the elements of the Main block.
+
+There are 3 types of decoration: “Underline”, “StrikeThrough”, and “Grouping”: A “Grouping” is a decoration that looks like text parentheses (, ), {, }, [, ], or | but groups other elements and may appear horizontally.
+
+    When “decoration” is missing in the recognizer.raw-content.recognition.types array, the Decoration block contains at most one element for each type without further information.
+    When “decoration” is present in the recognizer.raw-content.recognition.types array, the elements array lists each decoration separately with its type and, when type is “Underline” or “StrikeThrough”, the position of the fitted line segment as x1, y1, x2, y2.
+
+Example:
+
+{
+ "type": "Decoration",
+ "bounding-box": { ... },
+ "range": [
+  { "from": { "stroke": 174 }, "to": { "stroke": 178 } }
+ ],
+ "elements": [ {
+   "type": "Grouping",
+   "bounding-box": { ... },
+   "range": [
+    { "from": { "stroke": 174 }, "to": { "stroke": 174 } }
+   ]
+  }, {
+   "type": "Grouping",
+   "bounding-box": { ... },
+   "range": [
+    { "from": { "stroke": 175 }, "to": { "stroke": 175 } }
+   ]
+  }, {
+   "type": "StrikeThrough",
+   "x1": 20.9924412,
+   "y1": 150.043182,
+   "x2": 47.2008286,
+   "y2": 150.043182,
+   "bounding-box": { ... },
+   "range": [
+    { "from": { "stroke": 178 }, "to": { "stroke": 178 } }
+   ]
+  }, {
+   "type": "Underline",
+   "x1": 69.8855133,
+   "y1": 74.3817154,
+   "x2": 120.709824,
+   "y2": 74.3817154,
+   "bounding-box": { ... },
+   "range": [
+    { "from": { "stroke": 176 }, "to": { "stroke": 176 } }
+   ]
+  }, {
+   "type": "Underline",
+   "x1": 18.0531464,
+   "y1": 88.0613861,
+   "x2": 68.8774567,
+   "y2": 88.0613861,
+   "bounding-box": { ... },
+   "range": [
+    { "from": { "stroke": 177 }, "to": { "stroke": 177 } }
+   ]
+  } ]
+}
+
+    Drawing item block
+
+A block of type Drawing corresponds to a block of ink that was not classified as one of the other content types. It contains the properties common to all blocks including optional range objects, when export.jiix.ranges configuration is enabled.
+
+Example:
+
+{
+ "type": "Drawing",
+ "bounding-box": { ... },
+ "range": [
+  { "from": { "stroke": 113 }, "to": { "stroke": 114 } },
+  { "from": { "stroke": 120 }, "to": { "stroke": 120 } }
+ ],
+}
+

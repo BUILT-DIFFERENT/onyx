@@ -1,0 +1,68 @@
+SOURCE: com/myscript/iink/graphics/IStroker.html
+
+Package com.myscript.iink.graphics [link: package-summary.html]
+
+Interface IStroker
+
+public interface IStroker
+
+The `IStroker` converts input points (touch, digital pen, etc) into a
+renderable stroke representation.
+
+Method Summary
+
+All Methods Instance Methods Abstract Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+boolean
+
+isFill [link: #isFill()]()
+
+Tells whether stroked input should be drawn as a filled shaped or not.
+
+void
+
+stroke [link: #stroke(com.myscript.iink.graphics.InkPoint%5B%5D,float,float,com.myscript.iink.graphics.IPath)] (@NotNull InkPoint [link: InkPoint.html][] input,
+float width,
+float pixelSize,
+@NotNull IPath [link: IPath.html] output)
+
+Constructs a visual stroke from input points.
+
+Method Details
+
+isFill
+
+boolean isFill ()
+
+Tells whether stroked input should be drawn as a filled shaped or not.
+
+Returns:
+
+true if strokes are to be filled, otherwise false .
+
+stroke
+
+void stroke (@NotNull
+@NotNull InkPoint [link: InkPoint.html][] input,
+float width,
+float pixelSize,
+@NotNull
+@NotNull IPath [link: IPath.html] output)
+
+Constructs a visual stroke from input points.
+
+Parameters:
+
+input - the input points.
+
+width - the desired stroke width.
+
+pixelSize - the viewport pixel size.
+
+output - the resulting stroke.

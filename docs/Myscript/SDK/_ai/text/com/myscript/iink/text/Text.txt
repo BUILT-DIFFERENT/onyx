@@ -1,0 +1,167 @@
+SOURCE: com/myscript/iink/text/Text.html
+
+Package com.myscript.iink.text [link: package-summary.html]
+
+Class Text
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.text.Text
+
+public class Text
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Allows to access the glyphs (i.e. grapheme clusters) within a label.
+
+Note: what is called glyph here, is actually a grapheme cluster. For more
+details refer to http://unicode.org/reports/tr29/ [http://unicode.org/reports/tr29/]
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final int
+
+getGlyphBeginAt [link: #getGlyphBeginAt(int)] (int index)
+
+Returns the starting position in the label, in bytes, of a given glyph.
+
+final int
+
+getGlyphCount [link: #getGlyphCount()]()
+
+Returns the number of glyphs associated with this text.
+
+final int
+
+getGlyphCount [link: #getGlyphCount(int,int)] (int beginIndex,
+int endIndex)
+
+Returns the number of glyphs included in span of two index of bytes in this text
+
+final int
+
+getGlyphEndAt [link: #getGlyphEndAt(int)] (int index)
+
+Returns the end position in the label, in bytes, of a given glyph.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getGlyphLabelAt [link: #getGlyphLabelAt(int)] (int index)
+
+Returns the label of the glyph at a given index.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getLabel [link: #getLabel()]()
+
+Returns the label of this text.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+getLabel
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getLabel ()
+
+Returns the label of this text.
+
+Returns:
+
+the label of this text.
+
+getGlyphCount
+
+public final int getGlyphCount ()
+
+Returns the number of glyphs associated with this text.
+
+Returns:
+
+the number of glyphs in this text.
+
+getGlyphCount
+
+public final int getGlyphCount (int beginIndex,
+int endIndex)
+
+Returns the number of glyphs included in span of two index of bytes in this text
+
+Parameters:
+
+beginIndex - the index of the first byte
+
+endIndex - the index of the last byte (included)
+
+Returns:
+
+the number of glyphs
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when the indexes are not valid.
+
+getGlyphBeginAt
+
+public final int getGlyphBeginAt (int index)
+
+Returns the starting position in the label, in bytes, of a given glyph.
+
+Parameters:
+
+index - the index of the glyph to retrieve, in glyph count.
+
+Returns:
+
+the starting position on the glyph in the label, in bytes.
+
+Throws:
+
+IndexOutOfBoundsException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IndexOutOfBoundsException.html] - when index is invalid.
+
+getGlyphEndAt
+
+public final int getGlyphEndAt (int index)
+
+Returns the end position in the label, in bytes, of a given glyph.
+
+Parameters:
+
+index - the index of the glyph to retrieve, in glyph count.
+
+Returns:
+
+the starting position on the glyph in the label, in bytes.
+
+Throws:
+
+IndexOutOfBoundsException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IndexOutOfBoundsException.html] - when index is invalid.
+
+getGlyphLabelAt
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getGlyphLabelAt (int index)
+
+Returns the label of the glyph at a given index.
+
+Parameters:
+
+index - the index of the glyph to retrieve, in glyph count.
+
+Returns:
+
+the label of the glyph at index .
+
+Throws:
+
+IndexOutOfBoundsException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IndexOutOfBoundsException.html] - when index is invalid.

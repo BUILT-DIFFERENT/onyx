@@ -1,0 +1,73 @@
+Rendering
+
+This page provides an introduction to the way iink SDK manages the rendering. You will learn how to use the reference implementation provided by MyScript and properly plug things together.
+Key concepts
+
+With these concepts, you will be able to better understand how to use the reference rendering implementation or build your own (not documented yet).
+Render target
+
+A render target (implementing the IRenderTarget interface) represents the platform “view” where the drawing operations will occur.
+Canvas
+
+A canvas object provides a platform implementation of the drawing commands called by iink SDK to render content. It is defined in the ICanvas interface.
+Renderer
+
+A renderer is a component in charge of deciding how to render content of each layer, knowing which area of the model needs to be refreshed, as well as parameters such as zoom factor or view offset. It will issue rendering commands, through a canvas object that will do the actual drawing operations.
+
+Version 1.4 introduced a new rendering capacity for the renderer based on the drawing of offscreen surfaces. This increases the rendering speed and is even necessary for new features like math animation. So it is definitively our recommended choice.
+
+To use this rendering, you must implement the offscreen rendering functions of IRenderTarget and ICanvas introduced in version 1.4, or use the ones provided with the reference implementation, to handle the drawing requests of offscreen surfaces.
+
+The iink SDK 4.3 renderer is still compatible with the legacy rendering mode that we name “direct rendering”.
+Layer
+
+For performance reasons, the renderer works on two different layers.
+The reference rendering implementation implements these layers for you. However, you may sometimes need to interact with them.
+
+The two layers are:
+
+    A model layer, corresponding to everything in the model that was already processed by the engine (guidelines, strokes, images, typeset text, …),
+    A capture layer, rendering the ink drawn on the screen but not yet processed by the engine.
+
+Each layer can be refreshed independently from the other, so that it is not needed to redraw everything.
+Ink prediction
+
+An ink prediction mechanism is available that allows bridging part of the gap between the pen and the ink, but may trigger some visual artifacts. This mechanism is available with two configuration properties:
+
+    a boolean renderer.prediction.enable (default value is false)
+    a number renderer.prediction.duration that represents the targeted prediction duration in ms (default value is 16 ms, max is 200 ms). A 16 ms prediction corresponds to one rendered frame on a 60Hz device screen. Higher durations are possible but might reduce prediction accuracy or stability, depending on your device input sampling frequency or screen refresh rate. Value should be tuned to avoid unwanted visual artifacts and guarantee the best user experience.
+
+By default, ink prediction is disabled in the SDK, but all Demo examples enable prediction duration at 16 ms, which is a good compromise to avoid visual artifacts. So, if you want to evaluate the ink prediction mechanism, you can draw on Demo examples to learn how to do it.
+Additional brush implementation
+
+The iink SDK supports additional brushes based on APIs that rely on OpenGL for advanced rendering styling, such as the Pencil brush.
+While these new iink APIs are cross-platform (and backward compatible), they are currently only implemented for Android.
+
+To implement these kinds of “extra” brushes, you must first configure them in the new Java class called GLRenderer that has been added to the iink package. Note: All brush names must be prefixed with Extra-. These names can then be used to set the value of the -myscript-pen-brush CSS property in the style, as with legacy brushes.
+
+You will also need to override the isExtraBrushSupported method of your Canvas class to indicate that your implementation supports these additional brushes. If so, the Canvas.drawStrokeWithExtraBrush method is called to handle the special rendering of the associated strokes using the GLRenderer.
+
+You can refer to the Android Demo example and UIReferenceImplementation that show the integration of such an extra brush, called Extra-Pencil (which mimics a pencil):
+
+    The pencil brush configuration is done in the provideExtraBrushConfigurations method of the DemoModule.
+    It is used by the Canvas class in the UIReferenceImplementation to initialize and use the GLRenderer.
+    The value of -myscript-pen-brush CSS property must be set to Extra-Pencil when selecting this brush in the fromStyleValue method of Demo PartEditor.
+
+Applying pressure, tilt, and orientation effects to rendered strokes
+
+    When digital pens provide pressure levels, tilt and orientation angles in the input pointer events of the PEN and HIGHLIGHTER tools of the Editor, the Renderer adjusts the stroke rendering depending on the styling CSS properties.
+
+You can take a look at our demo, which we have configured so that tilting a pen with our pencil-style brush creates wider, softer strokes, much like shading with the side of a real pencil.
+
+    You can configure the eraser properties to dynamically adjust its radius based on its speed and/or the pressure provided in the pointer events of the ERASER, by enabling the corresponding Content Part .eraser.dynamic-radius property, and adjusting the .eraser.min-pressure-factor and .eraser.max-pressure-factor values. You may also change the speed effect with the .eraser.max-velocity-factor value.
+
+Reference implementation
+
+To make it easy to build applications, MyScript provides in its examples repository a default rendering implementation.
+
+It is released as a library, under a permissive license and can be reused as-is or modified should you feel the need. As an integrator, you just have to link against it and do a bit of plumbing:
+
+    Use an EditorView object which is a ready-to-use implementation of a render target, with layered rendering based on integrated canvas for drawing operations.
+    Bind it to the Editor with the EditorBinding object from our UIReferenceImplementation.
+
+The goal of the next step of this guide is to explain how to add some content to the model.

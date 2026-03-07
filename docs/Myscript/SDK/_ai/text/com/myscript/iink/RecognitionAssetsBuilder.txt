@@ -1,0 +1,229 @@
+SOURCE: com/myscript/iink/RecognitionAssetsBuilder.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class RecognitionAssetsBuilder
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.RecognitionAssetsBuilder
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class RecognitionAssetsBuilder
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+The RecognitionAssetsBuilder implements the tools to generate and save recognition assets.
+
+Since:
+
+1.2.4
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+protected final void
+
+checkNotClosed [link: #checkNotClosed()]()
+
+final void
+
+close [link: #close()]()
+
+void
+
+compile [link: #compile(java.lang.String,java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] type,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] data)
+
+Compile data into a recognition asset.
+
+protected void
+
+finalize [link: #finalize()]()
+
+final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getCompilationErrors [link: #getCompilationErrors()]()
+
+Get the last compilation errors.
+
+final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][]
+
+getSupportedRecognitionAssetsTypes [link: #getSupportedRecognitionAssetsTypes()]()
+
+Returns the set of recognition assets types that this recognition assets builder can handle.
+
+final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getSupportedSymbols [link: #getSupportedSymbols(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] resourcePath)
+
+Get the list of symbols supported by a resource.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+void
+
+store [link: #store(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] path)
+
+Save the previously compiled recognition asset.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+checkNotClosed
+
+protected final void checkNotClosed ()
+
+getSupportedRecognitionAssetsTypes
+
+@Nullable
+public final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] getSupportedRecognitionAssetsTypes ()
+
+Returns the set of recognition assets types that this recognition assets builder can handle.
+
+Returns:
+
+an unmodifiable set of the supported recognition assets type names.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognition assets builder is closed.
+
+getSupportedSymbols
+
+@Nullable
+public final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getSupportedSymbols (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] resourcePath)
+throws IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html],
+RuntimeException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/RuntimeException.html]
+
+Get the list of symbols supported by a resource.
+
+Parameters:
+
+resourcePath - the path of the resource.
+
+Returns:
+
+the list of supported symbols.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognition assets builder is closed.
+
+RuntimeException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/RuntimeException.html] - when the symbols could not be loaded from the resource.
+
+Since:
+
+3.0
+
+compile
+
+public void compile (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] type,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] data)
+throws IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html],
+RuntimeException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/RuntimeException.html]
+
+Compile data into a recognition asset.
+
+Parameters:
+
+type - the type of asset that will be generated.
+
+data - the data to compile.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognition assets builder is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when the content of data could not be compiled into a recognition asset.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when type is not supported.
+
+RuntimeException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/RuntimeException.html]
+
+getCompilationErrors
+
+@Nullable
+public final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getCompilationErrors ()
+
+Get the last compilation errors.
+
+Returns:
+
+a description of the errors that occurred during the last compilation.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognition assets builder is closed.
+
+store
+
+public void store (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] path)
+throws IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html]
+
+Save the previously compiled recognition asset.
+
+Parameters:
+
+path - the path to destination file.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognition assets builder is closed.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - when there is no valid recognition asset to store.
+
+IOException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/IOException.html] - if an I/O operation fails.

@@ -1,0 +1,271 @@
+SOURCE: com/myscript/iink/EditorError.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Enum Class EditorError
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<EditorError [link: EditorError.html]>
+
+com.myscript.iink.EditorError
+
+All Implemented Interfaces:
+
+Serializable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Serializable.html] , Comparable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Comparable.html]<EditorError [link: EditorError.html]> , Constable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/constant/Constable.html]
+
+public enum EditorError
+extends Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<EditorError [link: EditorError.html]>
+
+Represents an Editor error code.
+
+Since:
+
+1.5
+
+See Also:
+
+IEditorListener.onError(com.myscript.iink.Editor, java.lang.String, com.myscript.iink.EditorError, java.lang.String) [link: IEditorListener.html#onError(com.myscript.iink.Editor,java.lang.String,com.myscript.iink.EditorError,java.lang.String)]
+
+Nested Class Summary
+
+Nested classes/interfaces inherited from class java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]
+
+Enum.EnumDesc [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html]<E [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html] extends Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<E [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html]>>
+
+Enum Constant Summary
+
+Enum Constants
+
+Enum Constant
+
+Description
+
+CONFIGURATION_BUNDLE_NOT_FOUND [link: #CONFIGURATION_BUNDLE_NOT_FOUND]
+
+The configuration bundle (*.conf file) cannot be found.
+
+CONFIGURATION_NAME_NOT_FOUND [link: #CONFIGURATION_NAME_NOT_FOUND]
+
+The configuration name cannot be found in the bundle (*.conf file).
+
+GENERIC [link: #GENERIC]
+
+Generic error, refer to the `message` parameter for more information.
+
+GESTURE_NOTIFICATION_CANNOT_MOVE_ABOVE_FIRSTLINE [link: #GESTURE_NOTIFICATION_CANNOT_MOVE_ABOVE_FIRSTLINE]
+
+Gesture notification, cannot move above first line.
+
+GESTURE_NOTIFICATION_NO_WORDS_TO_JOIN [link: #GESTURE_NOTIFICATION_NO_WORDS_TO_JOIN]
+
+Gesture notification, no words to join.
+
+GESTURE_NOTIFICATION_UNABLE_TO_APPLY [link: #GESTURE_NOTIFICATION_UNABLE_TO_APPLY]
+
+Gesture notification, unable to apply.
+
+INK_REJECTED_ABOVE_FIRST_LINE [link: #INK_REJECTED_ABOVE_FIRST_LINE]
+
+Ink was rejected, the stroke is too far above the first line.
+
+INK_REJECTED_BEFORE_FIRST_COLUMN [link: #INK_REJECTED_BEFORE_FIRST_COLUMN]
+
+Ink was rejected, the stroke is too far left.
+
+INK_REJECTED_OUT_OF_PAGE [link: #INK_REJECTED_OUT_OF_PAGE]
+
+Ink was rejected, the stroke is out of the page bounds.
+
+INK_REJECTED_SEVERAL_BLOCKS [link: #INK_REJECTED_SEVERAL_BLOCKS]
+
+Ink was rejected, the stroke is spread over several blocks.
+
+INK_REJECTED_SMALL_TYPESET [link: #INK_REJECTED_SMALL_TYPESET]
+
+Ink was rejected, cannot write on DIGITAL_PUBLISH blocks (convert to DIGITAL_EDIT).
+
+INK_REJECTED_TOO_BIG [link: #INK_REJECTED_TOO_BIG]
+
+Ink was rejected, the stroke is too big.
+
+INK_REJECTED_TOO_LONG [link: #INK_REJECTED_TOO_LONG]
+
+Ink was rejected, the stroke is too long.
+
+INK_REJECTED_TOO_SMALL [link: #INK_REJECTED_TOO_SMALL]
+
+Ink was rejected, the stroke is too small.
+
+INVALID_CONFIGURATION [link: #INVALID_CONFIGURATION]
+
+There was an error when parsing the *.conf files.
+
+RESOURCE_NOT_FOUND [link: #RESOURCE_NOT_FOUND]
+
+The configuration refers to a resource file that cannot be found.
+
+Method Summary
+
+All Methods Static Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+static EditorError [link: EditorError.html]
+
+valueOf [link: #valueOf(java.lang.String)] (String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Returns the enum constant of this class with the specified name.
+
+static EditorError [link: EditorError.html][]
+
+values [link: #values()]()
+
+Returns an array containing the constants of this enum class, in
+the order they are declared.
+
+Methods inherited from class java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#clone()], compareTo [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#compareTo(E)], describeConstable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#describeConstable()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#equals(java.lang.Object)], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#finalize()], getDeclaringClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#getDeclaringClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#hashCode()], name [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#name()], ordinal [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#ordinal()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#toString()], valueOf [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#valueOf(java.lang.Class,java.lang.String)]
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Enum Constant Details
+
+GENERIC
+
+public static final EditorError [link: EditorError.html] GENERIC
+
+Generic error, refer to the `message` parameter for more information.
+
+INK_REJECTED_TOO_SMALL
+
+public static final EditorError [link: EditorError.html] INK_REJECTED_TOO_SMALL
+
+Ink was rejected, the stroke is too small.
+
+INK_REJECTED_TOO_BIG
+
+public static final EditorError [link: EditorError.html] INK_REJECTED_TOO_BIG
+
+Ink was rejected, the stroke is too big.
+
+INK_REJECTED_ABOVE_FIRST_LINE
+
+public static final EditorError [link: EditorError.html] INK_REJECTED_ABOVE_FIRST_LINE
+
+Ink was rejected, the stroke is too far above the first line.
+
+INK_REJECTED_SMALL_TYPESET
+
+public static final EditorError [link: EditorError.html] INK_REJECTED_SMALL_TYPESET
+
+Ink was rejected, cannot write on DIGITAL_PUBLISH blocks (convert to DIGITAL_EDIT).
+
+INK_REJECTED_BEFORE_FIRST_COLUMN
+
+public static final EditorError [link: EditorError.html] INK_REJECTED_BEFORE_FIRST_COLUMN
+
+Ink was rejected, the stroke is too far left.
+
+INK_REJECTED_OUT_OF_PAGE
+
+public static final EditorError [link: EditorError.html] INK_REJECTED_OUT_OF_PAGE
+
+Ink was rejected, the stroke is out of the page bounds.
+
+INK_REJECTED_TOO_LONG
+
+public static final EditorError [link: EditorError.html] INK_REJECTED_TOO_LONG
+
+Ink was rejected, the stroke is too long.
+
+GESTURE_NOTIFICATION_NO_WORDS_TO_JOIN
+
+public static final EditorError [link: EditorError.html] GESTURE_NOTIFICATION_NO_WORDS_TO_JOIN
+
+Gesture notification, no words to join.
+
+GESTURE_NOTIFICATION_CANNOT_MOVE_ABOVE_FIRSTLINE
+
+public static final EditorError [link: EditorError.html] GESTURE_NOTIFICATION_CANNOT_MOVE_ABOVE_FIRSTLINE
+
+Gesture notification, cannot move above first line.
+
+GESTURE_NOTIFICATION_UNABLE_TO_APPLY
+
+public static final EditorError [link: EditorError.html] GESTURE_NOTIFICATION_UNABLE_TO_APPLY
+
+Gesture notification, unable to apply.
+
+CONFIGURATION_BUNDLE_NOT_FOUND
+
+public static final EditorError [link: EditorError.html] CONFIGURATION_BUNDLE_NOT_FOUND
+
+The configuration bundle (*.conf file) cannot be found.
+
+CONFIGURATION_NAME_NOT_FOUND
+
+public static final EditorError [link: EditorError.html] CONFIGURATION_NAME_NOT_FOUND
+
+The configuration name cannot be found in the bundle (*.conf file).
+
+RESOURCE_NOT_FOUND
+
+public static final EditorError [link: EditorError.html] RESOURCE_NOT_FOUND
+
+The configuration refers to a resource file that cannot be found.
+
+INVALID_CONFIGURATION
+
+public static final EditorError [link: EditorError.html] INVALID_CONFIGURATION
+
+There was an error when parsing the *.conf files.
+
+INK_REJECTED_SEVERAL_BLOCKS
+
+public static final EditorError [link: EditorError.html] INK_REJECTED_SEVERAL_BLOCKS
+
+Ink was rejected, the stroke is spread over several blocks.
+
+Method Details
+
+values
+
+public static EditorError [link: EditorError.html][] values ()
+
+Returns an array containing the constants of this enum class, in
+the order they are declared.
+
+Returns:
+
+an array containing the constants of this enum class, in the order they are declared
+
+valueOf
+
+public static EditorError [link: EditorError.html] valueOf (String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Returns the enum constant of this class with the specified name.
+The string must match exactly an identifier used to declare an
+enum constant in this class. (Extraneous whitespace characters are
+not permitted.)
+
+Parameters:
+
+name - the name of the enum constant to be returned.
+
+Returns:
+
+the enum constant with the specified name
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - if this enum class has no constant with the specified name
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - if the argument is null

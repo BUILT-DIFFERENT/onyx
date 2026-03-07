@@ -1,0 +1,298 @@
+SOURCE: com/myscript/iink/ContentPart.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class ContentPart
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.ContentPart
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class ContentPart
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+A part stores one content item. It is structured into several blocks that
+consist of semantically meaningful sub sections of content. A part can be
+interpreted as a hierarchy of blocks.
+
+See Also:
+
+ContentPackage [link: ContentPackage.html]
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final void
+
+close [link: #close()]()
+
+protected void
+
+finalize [link: #finalize()]()
+
+@Nullable Point [link: graphics/Point.html]
+
+getFixedSize [link: #getFixedSize()]()
+
+Warning: This is a Beta API.
+
+final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getId [link: #getId()]()
+
+Returns the identifier of this part.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getLanguage [link: #getLanguage()]()
+
+Returns the language of this part.
+
+final @NotNull ParameterSet [link: ParameterSet.html]
+
+getMetadata [link: #getMetadata()]()
+
+Returns the part's metadata as a parameter set.
+
+final @NotNull ContentPackage [link: ContentPackage.html]
+
+getPackage [link: #getPackage()]()
+
+Returns the package that contains this part.
+
+final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getType [link: #getType()]()
+
+Returns the type of this part.
+
+@Nullable Rectangle [link: graphics/Rectangle.html]
+
+getViewBox [link: #getViewBox()]()
+
+Returns the view box, the rectangle that represents the viewable area of
+this part's content.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+final void
+
+setMetadata [link: #setMetadata(com.myscript.iink.ParameterSet)] (@NotNull ParameterSet [link: ParameterSet.html] parameters)
+
+Set the part's metadata with the given parameter set.
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Returns a String representation of the object.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+getPackage
+
+@NotNull
+public final @NotNull ContentPackage [link: ContentPackage.html] getPackage ()
+
+Returns the package that contains this part.
+
+Returns:
+
+the package.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this part is closed.
+
+getId
+
+@Nullable
+public final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getId ()
+
+Returns the identifier of this part.
+
+Returns:
+
+the part identifier.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this part is closed.
+
+getType
+
+@Nullable
+public final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getType ()
+
+Returns the type of this part.
+
+Returns:
+
+the part type.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this part is closed.
+
+getViewBox
+
+@Nullable
+public @Nullable Rectangle [link: graphics/Rectangle.html] getViewBox ()
+
+Returns the view box, the rectangle that represents the viewable area of
+this part's content.
+
+Returns:
+
+the view box (document coordinates in mm).
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this part is closed.
+
+getFixedSize
+
+@Nullable
+public @Nullable Point [link: graphics/Point.html] getFixedSize ()
+
+Warning: This is a Beta API.
+
+Returns the part's fixed-size, if defined.
+
+Returns:
+
+`{width, height}` if fixed-size, otherwise `{0.f, 0.f}` (document coordinates in mm).
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this part is closed.
+
+Since:
+
+4.1
+
+getLanguage
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getLanguage ()
+
+Returns the language of this part.
+
+Returns:
+
+the part language locale identifier, empty if not set yet
+(will be set by Editor.setPart(com.myscript.iink.ContentPart) [link: Editor.html#setPart(com.myscript.iink.ContentPart)]).
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this part is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when part does not support text recognition
+(i.e. for types Math and Drawing).
+
+Since:
+
+2.0
+
+getMetadata
+
+@NotNull
+public final @NotNull ParameterSet [link: ParameterSet.html] getMetadata ()
+
+Returns the part's metadata as a parameter set.
+
+Returns:
+
+the parameter set.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this part is closed.
+
+setMetadata
+
+public final void setMetadata (@NotNull
+@NotNull ParameterSet [link: ParameterSet.html] parameters)
+
+Set the part's metadata with the given parameter set.
+
+Parameters:
+
+parameters - the parameters to set.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this part is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when parameters is closed.
+
+toString
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Returns a String representation of the object.
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Returns:
+
+the representation of the object.
+
+Since:
+
+2.1

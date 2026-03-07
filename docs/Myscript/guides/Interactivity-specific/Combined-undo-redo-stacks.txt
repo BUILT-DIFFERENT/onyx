@@ -1,0 +1,91 @@
+Integrate with the undo/redo stack of your application
+
+This page explains how you can make iink SDK operations part of the undo/redo stack of your application.
+Use case
+
+If your application is based on an iink SDK editor, undo/redo management is available out of the box, as shown in the editing part of the guide.
+
+Chance is, however, that your application is more complex, and that you may need to integrate iink SDK operations into your own undo/redo stack.
+Conceptual undo/redo stack
+
+The application undo/redo stack can be seen as a vector of states, each but the first resulting from a specific operation.
+
+In the following example, the current state is ⑤ and results from applying operation op5 to the previous state ④:
+12345op1op2op3op4op5current
+
+Calling undo reverts the effect of the last operation. It is equivalent to moving from the current state in the stack to the state on its left.
+
+In the example, if the current state is ⑤, two successive undos lead to state ③:
+12345op1op2op3op4op5current
+
+You can notice that states ④ and ⑤ are still part of the stack. This is because no new state was created and it shall thus be possible to redo.
+
+Calling redo applies the next operation on the stack. It is equivalent to moving from the current state in the stack to the state on its right.
+
+In the example, if the current state is ③, a redo will move back to state ④:
+12345op1op2op3op4op5current
+
+If a new operation op6 is performed from state ④, the resulting state ⑥ becomes the new current state, and state ⑤ is gone from the stack:
+12346op1op2op3op4op6current
+Including iink SDK operations
+
+It may be required for the application integrating iink SDK to mix its own operations with those managed by iink SDK.
+
+For instance, the application may add an image to a layer below an iink SDK text block, add a stroke to the text block, and finally select and delete the image. The expectation at this point is that if the user presses two times the undo button, the first press brings the image back and the second removes the stroke that was sent to iink SDK.
+
+Situation before the user presses undo:
+123add imageiink opdeleteimagecurrent
+
+Situation after the first undo:
+123add imageiink opdeleteimagecurrent
+
+Situation after the second undo:
+123add imageiink opdeleteimagecurrent
+
+The application needed to include and manipulate the effects of iink SDK operations.
+iink-resulting states are shown with a blue background in the different examples.
+Managing iink SDK operations
+
+The challenge is that iink SDK maintains its own internal undo/redo stack and that the host application does not have access to the operations it contains. It is however possible to query iink SDK to get information about the state of its internal stack to implement the desired behavior.
+
+From now on, you should consider that the application does not know exactly what the iink operations actually do (it actually does not matter). Let’s show how it can still properly manage its undo/redo stack.
+
+Let’s go back to the example. How to obtain this stack?
+123add imageiink opdeleteimagecurrent
+
+The iink SDK editor provides the following methods:
+
+    getUndoStackIndex() - The position of the cursor identifying the current state in the internal iink undo/redo stack.
+    getPossibleUndoCount() - The number of operations that it is currently possible to undo (thus getPossibleUndoCount() ≤ getUndoStackIndex()).
+
+You can know when iink SDK adds new “undoable” operations by watching the increments of getUndoStackIndex(). You can compare a previously stored value with the one returned by calling getUndoStackIndex() after a contentChanged() notification.
+
+Let’s see how it applies to the example. Let’s consider that you have set up an iink SDK editor and attached a “Text” part to it. As nothing was done, getUndoStackIndex() equals to 0. First, you add your image. As it is done outside of iink SDK, contentChanged() is not called and getUndoStackIndex() does not increment.
+
+The application and iink SDK editor stacks respectively look as follows:
+1add imagecurrentcurrentApplication:iink Editor:stackIndex = 0
+
+You now send a stroke to the iink SDK editor.
+
+You may get one or more contentChanged() notifications and test for getUndoStackIndex() increments. If the stroke is not discarded as a gesture (it shouldn’t!), getUndoStackIndex() is incremented:
+1add imagecurrentcurrent1iink opApplication:iink Editor:stackIndex = 1
+
+As you know that iink SDK internal stack added a new state. You can add a new state to the application stack corresponding to the effect of an opaque iink operation:
+12add imageiink: “1”currentcurrent1iink opApplication:iink Editor:stackIndex = 1
+
+The value of getUndoStackIndex() obtained after the iink operation is stored into the application stack. It is useful to be able to see whether the value you get from contentChanged() notifications has changed and to react accordingly.
+
+You can now select and delete your image outside of iink SDK. Like for the first operation, contentChanged() is not called and getUndoStackIndex() is not incremented:
+123add imageiink: “1”deleteimagecurrentcurrent1iink opApplication:iink Editor:stackIndex = 1
+
+Now, let’s undo. As the current application state results from an application-level operation, it is up to the application to restore the image:
+123add imageiink: “1”deleteimagecurrentcurrent1iink opApplication:iink Editor:stackIndex = 1
+
+Let’s undo again. The current state results from an internal iink SDK operation. One should thus call undo() on the iink SDK editor when moving the cursor on the application stack:
+123add imageiink: “1”deleteimagecurrentcurrent1iink opApplication:iink Editor:stackIndex = 0
+
+Now, if you wanted to redo, you would first call redo() on the iink SDK editor and move the cursor to the right, as the operation to redo was an iink operation (getUndoStackIndex() is incremented to 1 but as it comes from a redo operation, you should not consider it as a new operation that would prevent a next redo by clearing the stack). Redo again and this time manage the image deletion on the application side.
+The iink SDK undo stack is partially purged from time to time to control memory consumption. As a result, it may sometimes not be able to revert all the states that were are known by the application-level stack. To know if an undo is actually possible, you should check the value of getPossibleUndoCount(), that tells you how many steps can be undone by iink SDK from its current internal state.
+Managing several iink SDK editors
+
+Each content part has its own undo/redo stack. As a result, if you work with multiple iink SDK editors, you must associate each iink undo/redo operations to an editor, so that you know which editor should perform the undo or redo operation referenced in your application-level stack.

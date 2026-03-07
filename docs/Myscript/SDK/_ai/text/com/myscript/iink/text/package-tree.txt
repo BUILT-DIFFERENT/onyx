@@ -1,0 +1,21 @@
+SOURCE: com/myscript/iink/text/package-tree.html
+
+Hierarchy For Package com.myscript.iink.text
+
+Package Hierarchies:
+
+All Packages [link: ../../../../overview-tree.html]
+
+Class Hierarchy
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.text.GlyphMetrics [link: GlyphMetrics.html]
+
+com.myscript.iink.text.Text [link: Text.html]
+
+com.myscript.iink.text.TextSpan [link: TextSpan.html]
+
+Interface Hierarchy
+
+com.myscript.iink.text.IFontMetricsProvider [link: IFontMetricsProvider.html]

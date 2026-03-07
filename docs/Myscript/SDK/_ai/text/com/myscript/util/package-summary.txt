@@ -1,0 +1,19 @@
+SOURCE: com/myscript/util/package-summary.html
+
+Package com.myscript.util
+
+package com.myscript.util
+
+Classes
+
+Class
+
+Description
+
+Numbers [link: Numbers.html]
+
+Set of utility functions to compare floating point values.
+
+TTFAnalyzer [link: TTFAnalyzer.html]
+
+The class which loads the TTF file, parses it and returns the TTF font name.

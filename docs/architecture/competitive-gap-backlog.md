@@ -8,7 +8,7 @@ Scope: Full backlog of missing and partially implemented competitor-parity featu
 Current parity highlights already in Onyx:
 
 - Multi-page stacked editor flow and page jump/to-table-of-contents affordances.
-- OpenGL ink pipeline with pressure-aware stroke rendering.
+- Vulkan ink pipeline with pressure-aware stroke rendering.
 - Lasso selection with move/resize and undo/redo integration.
 - PDF import/render pipeline with tiled async rendering and PDF text selection.
 - Template persistence for blank/grid/lined/dotted with density and background color.
@@ -129,8 +129,8 @@ Evidence paths:
 - [x] `EDIT-07` Line style options (solid/dashed/dotted)
   - Status: `Done (Wave S-LineStyleOptions)`
   - Competitor behavior: Notewise exposes stroke line style options in tool settings.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\model\Stroke.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`
-  - What exists now: Pen/highlighter settings now expose solid/dashed/dotted line styles, persisted through editor settings and rendered across Compose/GL stroke pipelines.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\model\Stroke.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\vk\VkInkSurfaceView.kt`
+  - What exists now: Pen/highlighter settings now expose solid/dashed/dotted line styles, persisted through editor settings and rendered across Compose/Vulkan stroke pipelines.
   - What is missing: Dedicated visual goldens for each style under dense zoom levels.
   - Exact change needed: Extend stroke style schema and rendering pipeline to support dashed/dotted stroke geometry.
   - Surface impact: `Android`, `Convex`, `Web`, `Docs/QA`
@@ -645,7 +645,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
 - [x] `GEST-05` Latency optimization modes (Normal/Fast Experimental)
   - Status: `Done (Wave AC-LatencyModesParity)`
   - Competitor behavior: Notewise exposes latency optimization choices for device-specific tuning.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\vk\VkInkSurfaceView.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\input\InputSettings.kt`
   - What exists now: Input settings now expose persisted `NORMAL` vs `FAST_EXPERIMENTAL` latency profile, with runtime wiring that forces motion prediction in fast mode and applies lower smoothing for lower perceived latency.
   - What is missing: Dedicated benchmark guardrails and device-tier auto tuning.
   - Exact change needed: Add latency profile setting, wire profile params into input prediction/smoothing, and present experimental disclaimer text.
@@ -818,8 +818,8 @@ This addendum expands scope without removing prior backlog work. It captures eve
 - [x] `PERF-01` Predictive inking + perceived-latency budget enforcement
   - Status: `Done (Wave AC-LatencyBudgetTelemetry)`
   - Competitor behavior: Samsung-class pen feel depends on predictive rendering and very low perceived latency.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`
-  - What exists now: Prediction-path routing is active in touch handling, renderer emits frame/transform latency telemetry, and macrobenchmark traces capture latency-critical sections (`InkCanvas#handleTouchEvent`, `InkGlRenderer#onDrawFrame`) for regression monitoring.
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\vk\VkInkSurfaceView.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\ui\InkCanvasTouch.kt`
+  - What exists now: Prediction-path routing is active in touch handling, renderer emits frame/transform latency telemetry, and macrobenchmark traces capture latency-critical sections (`InkCanvas#handleTouchEvent`, `VkInkSurfaceView#onDrawFrame`) for regression monitoring.
   - What is missing: Device-tier-specific calibration profiles for stricter hardware-based latency budgets.
   - Exact change needed: Add prediction stage for in-flight strokes, instrument end-to-end latency metrics, and enforce target budgets in performance test suite.
   - Surface impact: `Android`, `Docs/QA`
@@ -840,7 +840,7 @@ This addendum expands scope without removing prior backlog work. It captures eve
 - [x] `PERF-03` Incremental redraw/dirty-region policy for heavy pages
   - Status: `Done (Wave AC-DirtyRegionPolicyDocsBenchmark)`
   - Competitor behavior: Large notes remain smooth by avoiding full-canvas repaints.
-  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\gl\InkGlRenderer.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
+  - Current Onyx evidence: `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ink\vk\VkInkSurfaceView.kt`, `C:\onyx\apps\android\app\src\main\java\com\onyx\android\ui\NoteEditorScreen.kt`
   - What exists now: Renderer applies viewport culling and spatial-index-guided stroke redraw, and dirty-region policy is documented in `docs/architecture/dirty-region-redraw-policy.md` with benchmark validation references.
   - What is missing: Optional deeper per-layer invalidation telemetry detail.
   - Exact change needed: Implement and document dirty-region redraw strategy for stroke updates, selection overlays, and template/background composition.
@@ -914,13 +914,13 @@ Proposed public API/interface/type updates to align with backlog items:
   - Priority wave: `Wave Foundation`
   - Validation gate: Contract schema tests and mixed-source fixtures for handwriting + OCR payloads.
 
-- [x] `XSURF-05` Sync conflict policy + metadata for edits at page/object granularity
-  - Status: `Done (Wave AC-ConflictMetadataRuntimeScaffold)`
+- [x] `XSURF-05` Sync conflict policy for edits at page/object granularity
+  - Status: `Done (Wave AC-CrdtConflictPolicyAlignment)`
   - Competitor behavior: Needed for cross-device reliability once parity features are synced.
   - Current Onyx evidence: `C:\onyx\convex\schema.ts`, `C:\onyx\packages\validation\src\schemas\pageObject.ts`, `C:\onyx\tests\contracts\fixtures\page-object-shape-conflict.fixture.json`, `C:\onyx\docs\architecture\object-sync-conflict-policy.md`
-  - What exists now: Contracts include revision/conflict metadata with deterministic merge policy docs, and Convex runtime mutation scaffold now increments object revisions, links parent revisions, and persists conflict policy/lastMutationId for page-object upserts.
-  - What is missing: End-user manual conflict-resolution UX and multi-client live reconciliation product polish.
-  - Exact change needed: Define conflict resolution semantics (last-write, merge, or user-resolve) by object category and persist revision metadata accordingly.
+  - What exists now: Conflict resolution is CRDT-native (Y-Octo/Yjs merge semantics). Page objects live in per-page Yjs docs, and concurrent field updates merge without per-object revision metadata.
+  - What is missing: Additional concurrent-edit integration coverage across Android + web replay paths.
+  - Exact change needed: Keep CRDT merge semantics as the only conflict mechanism; do not add `objectRevision`, `conflictPolicy`, or `lastMutationId` fields.
   - Surface impact: `Convex`, `Android`, `Web`, `Docs/QA`
   - Priority wave: `Wave V2`
   - Validation gate: Contract fixtures validating conflict metadata shape and policy enums.

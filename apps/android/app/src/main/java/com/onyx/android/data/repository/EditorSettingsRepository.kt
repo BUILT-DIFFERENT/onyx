@@ -133,6 +133,7 @@ class EditorSettingsRepository
                         smoothingLevel = penSmoothingLevel,
                         endTaperStrength = penEndTaperStrength,
                         lineStyle = penLineStyle,
+                        nibRotation = false,
                     ),
                 highlighterBrush =
                     Brush(
@@ -144,6 +145,7 @@ class EditorSettingsRepository
                         smoothingLevel = highlighterSmoothingLevel,
                         endTaperStrength = highlighterEndTaperStrength,
                         lineStyle = highlighterLineStyle,
+                        nibRotation = false,
                     ),
                 eraserBaseWidth = eraserBaseWidth,
                 lastNonEraserTool = lastTool,
@@ -172,16 +174,41 @@ class EditorSettingsRepository
             val DEFAULT_SETTINGS =
                 EditorSettings(
                     selectedTool = Tool.PEN,
-                    penBrush = Brush(tool = Tool.PEN, color = "#000000", baseWidth = 2.0f),
+                    penBrush =
+                        Brush(
+                            tool = Tool.PEN,
+                            color = "#000000",
+                            baseWidth = 2.0f,
+                            minWidthFactor = 0.15f,
+                            maxWidthFactor = 2.5f,
+                            smoothingLevel = 0.5f,
+                            endTaperStrength = 0.6f,
+                        ),
                     highlighterBrush =
                         Brush(
                             tool = Tool.HIGHLIGHTER,
                             color = "#B31E88E5",
                             baseWidth = DEFAULT_STACKED_HIGHLIGHTER_BASE_WIDTH,
+                            minWidthFactor = 0.7f,
+                            maxWidthFactor = 1.3f,
+                            smoothingLevel = 0.5f,
+                            endTaperStrength = 0.0f,
                         ),
                     eraserBaseWidth = DEFAULT_ERASER_BASE_WIDTH,
                     lastNonEraserTool = Tool.PEN,
-                    inputSettings = InputSettings(),
+                    inputSettings =
+                        InputSettings(
+                            singleFingerMode = SingleFingerMode.PAN,
+                            doubleFingerMode = DoubleFingerMode.ZOOM_PAN,
+                            stylusPrimaryAction = StylusButtonAction.ERASER_HOLD,
+                            stylusSecondaryAction = StylusButtonAction.ERASER_HOLD,
+                            stylusLongHoldAction = StylusButtonAction.NO_ACTION,
+                            doubleTapZoomAction = DoubleTapZoomAction.NONE,
+                            doubleTapZoomPointerMode = DoubleTapZoomPointerMode.FINGER_ONLY,
+                            twoFingerTapAction = MultiFingerTapAction.UNDO,
+                            threeFingerTapAction = MultiFingerTapAction.REDO,
+                            latencyOptimizationMode = LatencyOptimizationMode.NORMAL,
+                        ),
                     keepScreenOnInEditor = false,
                     hideSystemBarsInEditor = true,
                 )

@@ -1,0 +1,138 @@
+Text languages and features
+
+MyScript iink SDK can recognize an extended range of languages and text features.
+Languages
+
+This is the list of the different languages that are can be recognized by the MyScript engine.
+
+    Arabic
+    Afrikaans - South Africa
+    Albanian - Albania
+    Armenian - Armenia
+    Azeri - Azerbaijan1
+    Basque - Spain
+    Belarusian - Belarus
+    Bosnian - Bosnia
+    Bulgarian - Bulgaria
+    Catalan - Spain
+    Cebuano - Philippines
+    Chinese Simplified - China
+    Chinese Traditional - Hong Kong
+    Chinese Traditional - Taiwan
+    Croatian - Croatia
+    Czech - Czech Republic
+    Danish - Denmark
+    Dutch - Belgium2
+    Dutch - Netherland
+    English - Canada
+    English - Philippines
+    English - South Africa
+    English - United Kingdom
+    English - United States
+    Estonian - Estonia
+    Farsi - Iran
+    Filipino - Philippines
+    Finnish - Finland
+    French - Canada
+    French - France
+    Irish - Ireland3
+    Galician - Spain
+    Georgian - Georgia
+    German - Austria
+    German - Germany
+    Greek - Greece
+    Hebrew - Israel
+    Hindi - India
+    Hungarian - Hungary
+    Icelandic - Iceland
+    Indonesian - Indonesia
+    Italian - Italy
+    Japanese - Japan4
+    Kazakh - Kazakhstan
+    Korean - Korea
+    Latvian - Latvia
+    Lithuanian - Lithuania
+    Macedonian - Macedonia
+    Malagasy - Madagascar
+    Malay - Malaysia
+    Mongolian - Mongolia
+    Norwegian - Norway
+    Polish - Poland
+    Portuguese - Brazil
+    Portuguese - Portugal
+    Romanian - Romania
+    Russian - Russia
+    Serbian (Cyrillic) - Serbia
+    Serbian (Latin) - Serbia
+    Slovak - Slovakia
+    Slovenian - Slovenia
+    Spanish - Colombia
+    Spanish - Mexico
+    Spanish - Spain
+    Swahili - Tanzania
+    Swedish - Sweden
+    Tatar - Russia
+    Thai - Thailand
+    Turkish - Turkey
+    Ukrainian - Ukraine
+    Urdu - Pakistan
+    Vietnamese - Vietnam
+
+Superimposed
+
+All languages from the previous list can be recognized both in cursive and superimposed modes.
+Non-interactive languages
+
+While most of the languages in the previous list are compatible with both interactive and non-interactive modes, the following additional languages are restricted to non interactive mode:
+
+    Arabic
+    Farsi - Iran
+    Hebrew - Israel
+    Hindi - India
+    Thai - Thailand
+    Urdu - Pakistan
+    Vertical Japanese - Japan
+
+Emojis
+
+    7 base emojis can be recognized as part of the text, along with a total of 16 variants coming as text candidates:
+        ❤ (variants: 💓, 💙, 💕)
+        💔 (variant: 💘)
+        😐 (variants: 😒, 😓)
+        🙂 (variants: 😁, 😃, 😍, 😄, 😊)
+        🙁 (variants: 😞, 😭, 😠, 😩)
+        😉 (variant: 😜)
+        🙃
+
+So drawing following emoji will let you choose among the variants by selecting your favorite candidate:
+😀😁😍😄😊
+
+    Warning sign: ⚠️
+    Cloud sign: ☁
+
+Other notable recognition features
+
+    Circled digits: ① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⑩ ⑪ ⑫ ⑬ ⑭ ⑮ ⑯ ⑰ ⑱ ⑲ ⑳ and Circled asterix: ⊛
+
+    Checkable items: The following ballot boxes can be recognized: ☐ ☑ ☒.
+
+Futhermore, either on ink or already converted the ballot box ☐ can be checked with the 🗸-type mark or the x mark. The conversion will then produce the ☑ and ☒ ballot boxes.
+
+When a ballot box starts a line, tapping on it will check it with the 🗸-type mark too.
+
+    Ballot x: ✗ is supported as a bullet.
+
+    Mathematics: ∀, ∃, ∄, ∈, ∉, ⟂
+
+    Greek: α, β, Δ, Σ
+
+    Units: ½, ⅓, ¼, ⅔, ¾, m², m³
+
+    Also called Azerbaijani. ↩
+
+    Also called Flemish. ↩
+
+    Also called Gaelic. ↩
+
+    Vertical Japanese writing is supported in non-interactive mode only. ↩
+

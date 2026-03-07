@@ -1,0 +1,359 @@
+SOURCE: com/myscript/iink/MimeType.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Enum Class MimeType
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<MimeType [link: MimeType.html]>
+
+com.myscript.iink.MimeType
+
+All Implemented Interfaces:
+
+Serializable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Serializable.html] , Comparable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Comparable.html]<MimeType [link: MimeType.html]> , Constable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/constant/Constable.html]
+
+public enum MimeType
+extends Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<MimeType [link: MimeType.html]>
+
+Represents a MIME type.
+
+Nested Class Summary
+
+Nested classes/interfaces inherited from class java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]
+
+Enum.EnumDesc [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html]<E [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html] extends Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]<E [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.EnumDesc.html]>>
+
+Enum Constant Summary
+
+Enum Constants
+
+Enum Constant
+
+Description
+
+DOCX [link: #DOCX]
+
+Open XML word processing document (application/vnd.openxmlformats-officedocument.wordprocessingml.document).
+
+GIF [link: #GIF]
+
+GIF Image (image/gif).
+
+GRAPHML [link: #GRAPHML]
+
+Graph Markup Language (application/graphml+xml).
+
+HTML [link: #HTML]
+
+HyperText Markup Language (text/html)
+
+JIIX [link: #JIIX]
+
+Json Interactive Ink eXchange format (application/vnd.myscript.jiix).
+
+JPEG [link: #JPEG]
+
+JPEG Image (image/jpeg).
+
+LATEX [link: #LATEX]
+
+LaTeX (application/x-latex).
+
+MATHML [link: #MATHML]
+
+Mathematical Markup Language (application/mathml+xml).
+
+MUSICXML [link: #MUSICXML]
+
+Music Extensible Markup Language (application/vnd.recordare.musicxml+xml).
+
+OFFICE_CLIPBOARD [link: #OFFICE_CLIPBOARD]
+
+Microsoft Office Clipboard format (Art::GVML ClipFormat).
+
+PDF [link: #PDF]
+
+Portable Document Format (application/pdf).
+
+PNG [link: #PNG]
+
+PNG Image (image/png).
+
+PPTX [link: #PPTX]
+
+Open XML presentation (application/vnd.openxmlformats-officedocument.presentationml.presentation).
+
+SVG [link: #SVG]
+
+Scalable Vector Graphics (image/svg+xml).
+
+TEXT [link: #TEXT]
+
+Plain text (text/plain).
+
+Method Summary
+
+All Methods Static Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+static @NotNull MimeType [link: MimeType.html]
+
+forValue [link: #forValue(int)] (int value)
+
+static @NotNull MimeType [link: MimeType.html]
+
+fromTypeName [link: #fromTypeName(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] typeName)
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getFileExtensions [link: #getFileExtensions()]()
+
+Returns a comma separated list of file extensions.
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getName [link: #getName()]()
+
+Returns a descriptive name in English.
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getTypeName [link: #getTypeName()]()
+
+Returns the name of the media type, in the form "type/subtype".
+
+boolean
+
+isImage [link: #isImage()]()
+
+boolean
+
+isTextual [link: #isTextual()]()
+
+int
+
+value [link: #value()]()
+
+Returns the mime type unique integer value.
+
+static MimeType [link: MimeType.html]
+
+valueOf [link: #valueOf(java.lang.String)] (String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Returns the enum constant of this class with the specified name.
+
+static MimeType [link: MimeType.html][]
+
+values [link: #values()]()
+
+Returns an array containing the constants of this enum class, in
+the order they are declared.
+
+Methods inherited from class java.lang.Enum [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#clone()], compareTo [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#compareTo(E)], describeConstable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#describeConstable()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#equals(java.lang.Object)], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#finalize()], getDeclaringClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#getDeclaringClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#hashCode()], name [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#name()], ordinal [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#ordinal()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#toString()], valueOf [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html#valueOf(java.lang.Class,java.lang.String)]
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Enum Constant Details
+
+TEXT
+
+public static final MimeType [link: MimeType.html] TEXT
+
+Plain text (text/plain).
+
+HTML
+
+public static final MimeType [link: MimeType.html] HTML
+
+HyperText Markup Language (text/html)
+
+MATHML
+
+public static final MimeType [link: MimeType.html] MATHML
+
+Mathematical Markup Language (application/mathml+xml).
+
+LATEX
+
+public static final MimeType [link: MimeType.html] LATEX
+
+LaTeX (application/x-latex).
+
+GRAPHML
+
+public static final MimeType [link: MimeType.html] GRAPHML
+
+Graph Markup Language (application/graphml+xml).
+
+MUSICXML
+
+public static final MimeType [link: MimeType.html] MUSICXML
+
+Music Extensible Markup Language (application/vnd.recordare.musicxml+xml).
+
+SVG
+
+public static final MimeType [link: MimeType.html] SVG
+
+Scalable Vector Graphics (image/svg+xml).
+
+JIIX
+
+public static final MimeType [link: MimeType.html] JIIX
+
+Json Interactive Ink eXchange format (application/vnd.myscript.jiix).
+
+JPEG
+
+public static final MimeType [link: MimeType.html] JPEG
+
+JPEG Image (image/jpeg).
+
+PNG
+
+public static final MimeType [link: MimeType.html] PNG
+
+PNG Image (image/png).
+
+GIF
+
+public static final MimeType [link: MimeType.html] GIF
+
+GIF Image (image/gif).
+
+PDF
+
+public static final MimeType [link: MimeType.html] PDF
+
+Portable Document Format (application/pdf).
+
+DOCX
+
+public static final MimeType [link: MimeType.html] DOCX
+
+Open XML word processing document (application/vnd.openxmlformats-officedocument.wordprocessingml.document).
+
+PPTX
+
+public static final MimeType [link: MimeType.html] PPTX
+
+Open XML presentation (application/vnd.openxmlformats-officedocument.presentationml.presentation).
+
+OFFICE_CLIPBOARD
+
+public static final MimeType [link: MimeType.html] OFFICE_CLIPBOARD
+
+Microsoft Office Clipboard format (Art::GVML ClipFormat).
+
+Since:
+
+1.1
+
+Method Details
+
+values
+
+public static MimeType [link: MimeType.html][] values ()
+
+Returns an array containing the constants of this enum class, in
+the order they are declared.
+
+Returns:
+
+an array containing the constants of this enum class, in the order they are declared
+
+valueOf
+
+public static MimeType [link: MimeType.html] valueOf (String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] name)
+
+Returns the enum constant of this class with the specified name.
+The string must match exactly an identifier used to declare an
+enum constant in this class. (Extraneous whitespace characters are
+not permitted.)
+
+Parameters:
+
+name - the name of the enum constant to be returned.
+
+Returns:
+
+the enum constant with the specified name
+
+Throws:
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - if this enum class has no constant with the specified name
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - if the argument is null
+
+value
+
+public int value ()
+
+Returns the mime type unique integer value.
+
+Returns:
+
+the mime type integer value.
+
+getName
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getName ()
+
+Returns a descriptive name in English.
+
+Returns:
+
+the descriptive name.
+
+getTypeName
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getTypeName ()
+
+Returns the name of the media type, in the form "type/subtype".
+
+Returns:
+
+the name of the media type.
+
+getFileExtensions
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getFileExtensions ()
+
+Returns a comma separated list of file extensions.
+
+Returns:
+
+the file extensions, or null
+
+fromTypeName
+
+@NotNull
+public static @NotNull MimeType [link: MimeType.html] fromTypeName (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] typeName)
+
+forValue
+
+@NotNull
+public static @NotNull MimeType [link: MimeType.html] forValue (int value)
+
+isTextual
+
+public boolean isTextual ()
+
+isImage
+
+public boolean isImage ()

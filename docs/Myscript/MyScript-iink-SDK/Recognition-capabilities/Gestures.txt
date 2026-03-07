@@ -1,0 +1,16 @@
+Gestures
+
+MyScript iink SDK can identify writing and touch gestures, allowing to integrate any kind of interactive features.
+Ink gestures
+Name 	Gesture
+left-right 	
+top-bottom 	
+right-left 	
+bottom-top 	
+scratch 	
+surround 	
+Touch gestures
+Name 	Gesture
+tap 	
+double-tap 	
+long-press 	

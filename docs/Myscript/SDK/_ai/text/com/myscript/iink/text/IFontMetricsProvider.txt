@@ -1,0 +1,125 @@
+SOURCE: com/myscript/iink/text/IFontMetricsProvider.html
+
+Package com.myscript.iink.text [link: package-summary.html]
+
+Interface IFontMetricsProvider
+
+public interface IFontMetricsProvider
+
+Interface providing fontified text typesetting operations.
+
+Method Summary
+
+All Methods Instance Methods Abstract Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+@NotNull Rectangle [link: ../graphics/Rectangle.html][]
+
+getCharacterBoundingBoxes [link: #getCharacterBoundingBoxes(com.myscript.iink.text.Text,com.myscript.iink.text.TextSpan%5B%5D)] (@NotNull Text [link: Text.html] text,
+@NotNull TextSpan [link: TextSpan.html][] spans)
+
+Returns the bounding box of each glyph of the specified text if it were
+displayed at 0,0 using the specified styles.
+
+float
+
+getFontSizePx [link: #getFontSizePx(com.myscript.iink.graphics.Style)] (@NotNull Style [link: ../graphics/Style.html] style)
+
+Returns the size of the specified font in pixels.
+
+@NotNull GlyphMetrics [link: GlyphMetrics.html][]
+
+getGlyphMetrics [link: #getGlyphMetrics(com.myscript.iink.text.Text,com.myscript.iink.text.TextSpan%5B%5D)] (@NotNull Text [link: Text.html] text,
+@NotNull TextSpan [link: TextSpan.html][] spans)
+
+Returns the bounding box and left side bearing of each glyph of the specified text if it were
+displayed at 0,0 using the specified styles.
+
+boolean
+
+supportsGlyphMetrics [link: #supportsGlyphMetrics()]()
+
+Determine whether implementation supports `getGlyphMetrics()`.
+
+Method Details
+
+getCharacterBoundingBoxes
+
+@NotNull
+@NotNull Rectangle [link: ../graphics/Rectangle.html][] getCharacterBoundingBoxes (@NotNull
+@NotNull Text [link: Text.html] text,
+@NotNull
+@NotNull TextSpan [link: TextSpan.html][] spans)
+
+Returns the bounding box of each glyph of the specified text if it were
+displayed at 0,0 using the specified styles.
+
+Parameters:
+
+text - the text.
+
+spans - an array of glyph intervals with associated style.
+
+Returns:
+
+the bounding boxes.
+
+getFontSizePx
+
+float getFontSizePx (@NotNull
+@NotNull Style [link: ../graphics/Style.html] style)
+
+Returns the size of the specified font in pixels. On input the font size is
+expressed in logical units as specified by the platform.
+
+Parameters:
+
+style - the style that specifies the font.
+
+Returns:
+
+the size of the font in pixels.
+
+supportsGlyphMetrics
+
+boolean supportsGlyphMetrics ()
+
+Determine whether implementation supports `getGlyphMetrics()`.
+
+Returns:
+
+true if `getGlyphMetrics()` is implemented, otherwise false .
+
+Since:
+
+2.0
+
+getGlyphMetrics
+
+@NotNull
+@NotNull GlyphMetrics [link: GlyphMetrics.html][] getGlyphMetrics (@NotNull
+@NotNull Text [link: Text.html] text,
+@NotNull
+@NotNull TextSpan [link: TextSpan.html][] spans)
+
+Returns the bounding box and left side bearing of each glyph of the specified text if it were
+displayed at 0,0 using the specified styles.
+
+Parameters:
+
+text - the text.
+
+spans - an array of glyph intervals with associated style.
+
+Returns:
+
+the glyph metrics.
+
+Since:
+
+2.0

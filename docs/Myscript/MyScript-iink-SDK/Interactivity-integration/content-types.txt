@@ -1,0 +1,54 @@
+Content types
+
+MyScript iink SDK lets you consistently interact with different types of content via a unified API. This page lists supported content types and outlines the potential specificities of each of them.
+Supported content types
+
+MyScript iink SDK currently supports the following content types:
+
+    Text ("Text") - Simple block of multi-line text (including possible line breaks), responsive reflow. It shows guides by default but these can be deactivated (for instance when processing ink from an outside source that is not aligned on the guides).
+    Math ("Math") - Block supporting one or more equation.
+    Diagram ("Diagram") - Block supporting a diagram, with automatic text/non-text distinction and dynamic reorganization possibilities.
+
+    Text Document ("Text Document") - Container hosting an ordered collection of text, math, diagram, raw content and drawing blocks. It is a vertical, dynamic and responsive stream of structured content.
+    Raw Content ("Raw Content") - Block hosting digital ink with no explicit segmentation into text, math, shape or other items which semantics is known by iink SDK. In addition it can contain images and placeholder blocks.
+
+Raw Content type is the only content type available for programmatic interactivity supported by Offscreen Editor.
+Raw content highlights
+Raw content analyzer
+
+Raw content ink is analyzed by MyScript iink SDK to determine the document layout and classify the ink according to the identified content types: Depending on the classification configuration and on its analyzer bundle, MyScript iink SDK can distinguish text, math or shape blocks from drawing blocks. Inside a text block, it can even identify math elements.
+
+If classification types is empty, the analysis process is reduced, allowing to use Raw Content for optimized drawing.
+
+You can choose between two different analyzers when using an Editor or an OffscreenEditor:
+
+    The legacy analyzer bundled raw-content, that runs on all platforms.
+
+    The advanced analyzer bundled raw-content2, that improves the document layout analysis and ink classification. This new analyzer also makes it possible to perform math automatic classification. Combined with the math2 recognition bundle, it allows you to perform math recognition in Editor and OffscreenEditor Raw Content. For the text recognition, you can either specify a specific language or you can use the mul_Latn resource, which allows you to write in a mix of Latin languages.
+
+Currently, the advanced analyzer bundled raw-content2 may not be available on your platform. Check if it is available for your platform.
+Raw content flexibility
+
+Then, according to the recognition configuration, recognition is performed with the correct engine per content type.
+
+Raw Content is therefore very flexible and allows specific behaviors depending on its configuration, making it the key to implementing various use cases:
+
+    Word search functionality on raw digital ink. You can obtain this information via a JIIX export.
+    Interactive raw content, where you write and draw freely on a wide canvas and interact with the content thanks to MyScript iink SDK interactive features: you can select some content to apply actions as copying or exporting it for further use, converting it, or transforming it. Note that by default, these features are not activated for the “Raw Content” type, so you should tune your configuration to benefit from them.
+    Keyboard input with a placeholder block, where you can add an image of a text widget, and when users want to edit text, the widget appears where the image is. Users can then type directly into the widget using the keyboard. Once editing is finished, the text is converted into an image and added back to the iink context. The text widget is controlled by the integrator, not by MyScript iink SDK.
+    Doodling and drawing activities, allowing you to benefit from interactive tools (lasso, copy/paste,…).
+
+For an overview of what is possible with Raw Content, refer to the interactive features page. In addition the configuration reference page lists what you may tune and the configuration section how to easily do it.
+Raw Content type is the only content type available for programmatic interactivity supported by Offscreen Editor.
+Integration tips
+
+The string value provided between brackets is case-sensitive and identifies the type in the model in an unambiguous way.
+
+For a wider presentation of all types of content that MyScript technology can recognize, along with possible use cases, refer to the detailed presentation in the Concepts section of this documentation.
+
+    Supported text recognition languages
+    Supported math features
+    Supported diagram shapes
+    Supported interactive features per content type
+    Supported import/exports per content type
+

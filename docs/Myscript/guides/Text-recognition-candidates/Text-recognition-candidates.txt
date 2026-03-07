@@ -1,0 +1,80 @@
+Text recognition candidates
+Text recognition candidates described on this page are not supported by the mul_Latn resource.
+Word recognition candidates
+
+MyScript handwriting recognition tries to properly guess what a user is writing but the input may sometimes be ambiguous, like in the following example:
+
+Should it be interpreted as “hello” or as “bella”? As a human, you would probably answer “hello”. This is also what the MyScript engine thinks in this case. However, there is also a possibility that the writer actually meant “bella”, “hella” or even “bello”…
+
+Internally, the recognition engine considers different hypotheses and tries to come up with the best one as the selected word candidate. It will also return other top hypotheses, such as “bella” or “bello” as alternative word recognition candidates.
+
+Candidates can let you assist your user to easily correct potential recognition errors or help implement a search engine that can operate on handwritten notes with a certain level of tolerance.
+
+You can tune the maximum number of word candidates that the recognition engine shall return by editing the recognition configuration files and assigning SetWordListSize to the desired value.
+Programmatically manage candidates
+
+You can also interact with candidates from your own code (this is actually how the prompter is implemented).
+
+Let’s imagine that you get the following ink:
+
+If you ask MyScript for a text export, it will simply return “Candidate test”, which corresponds to the best interpretation according to the engine. To access recognition candidates, you need to ask for a JIIX export.
+
+The result looks as follows (for the sake of the example, only the relevant parts of the JIIX export have been kept, removing all ink and bounding box information):
+
+{
+ "type": "Text",
+ ...
+ "label": "Candidate test",
+ "words": [ {
+   "label": "Candidate",
+   "candidates": [ "Candidate", "candidate", "Candidates", "candidates" ],
+   ...
+  }, {
+   "label": " "
+  }, {
+   "label": "test",
+   "candidates": [ "test", "Test", "best", "tests", "Lest" ],
+   ...
+  } ]
+}
+
+The “Candidate text” interpretation is provided by the top-level “label” key.
+
+This top-level recognition result is split into an array of “words”, each with its own label and set of candidates (except for inter-word spaces “ “).
+
+The “candidates” key of each word allows accessing an array of candidates, sorted from most to less likely. By default, the selected candidate, stored as the “label”, is the first element of the list.
+
+To select an alternative candidate, you need to:
+
+    Update the value of the label to one of the proposed candidates.
+    Reimport the JIIX content into the original block.
+
+From there, iink SDK will keep your choice, except if changes in the content lead it to reconsider the recognition of this part altogether.
+
+Important:
+
+    Always update the label with a value corresponding to an existing candidate. This is because otherwise iink SDK may not be able to figure how to map this interpretation to the original ink.
+    To re-import content, ensure that except for the change of the “label” value you have not changed anything, either in the original block or in the JIIX content.
+
+Character recognition candidates
+
+If you work on character recognition level, rather than on word recognition level, you can apply the same recognition candidates management to characters as described above for words. The steps are the same ones with the following configuration and data:
+
+    Include the character level information by setting the export.jiix.text.chars property to true.
+
+    The result looks as follows (for the sake of the example, only the relevant parts of the JIIX export have been kept, removing all ink and bounding box information):
+
+ "type": "Text",
+ ...
+ "label": "h",
+ "chars": [ {
+   "label": "h",
+   "candidates": [ "h", "k", "N", "A" ],
+  } ]
+
+To select an alternative candidate, you need to:
+
+    Update the value of the label to one of the proposed candidates.
+    Reimport the JIIX content into the original block.
+
+You can tune the maximum number of character candidates that the recognition engine shall return by editing the recognition configuration files and assigning SetCharListSize to the desired value.

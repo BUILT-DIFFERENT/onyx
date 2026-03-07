@@ -1,0 +1,108 @@
+Recognizers
+
+The recognizers aim at performing real-time incremental recognition on transient ink.
+Setup
+
+In order to use the recognizers, you need to:
+
+    Create an Engine object.
+
+    Set the value of the recognizer.configuration-manager.search-path key to the folder(s) containing your Recognizer configuration file(s) (*.conf).
+
+    Create your Recognizer object by indicating its type (either Text, Shape, Math, Raw Content or Gesture), and can then send PEN events to it.
+    To get the recognition results, you can either:
+        register a IRecognizerListener to the Recognizer. When a recognition result has changed, an event notifies the IRecognizerListener with the resultChanged method that returns the recognition result.
+        Wait until the recognition is finished by calling the waitForIdle() method. Then get the recognition result with the getResult() method.
+    When an error occurs during the recognition process, an event notifies the IRecognizerListener with the onError method.
+
+Configuration
+Text Recognizer
+
+    The recognition configuration for the Text Recognizer is based on the same principles and language resources as the Engine configuration, except that it uses dedicated configuration keys with a recognizer. prefix : For instance, recognizer.lang is used to configure the recognition language.
+
+    By default, text guides are disabled, but you can enable the guides of a Text Recognizer via the recognizer.text.guides.enable key. In addition, you can tune their spacing and start origin.
+
+    By default, the Text Recognizer recognizes both “classical” handwriting, whether print or cursive. But its configuration can be changed to recognize superimposed handwriting: To learn more, check MyScript ready-to use resources section.
+
+Gesture Recognizer
+
+Supported gestures are defined thanks to recognizer.gesture. prefixed keys.
+Shape Recognizer
+
+    To use the Shape Recognizer, you must deploy the shape resources in your application. They are contained in the myscript-iink-recognition-shape.zip package.
+
+    By default, the shape beautification is enabled: the beautification process consists in aligning shapes with each other, connecting shapes that almost touch each other and scaling shapes having close sizes. You can disabled the shape beautification with the recognizer.shape.beautification.enable.
+
+Math Recognizer
+
+    To use the Math Recognizer, you must deploy the corresponding Math resources in your application. They are contained in the myscript-iink-recognition-math2.zip package.
+
+    Default Math resources are generally sufficient for most needs. However, in some cases, it may be necessary to use only a subset of Math symbols or rules. You can learn how to build your own resources files.
+
+Currently, the Math Recognizer may not be available on your platform. Check if it is available for your platform.
+Raw Content Recognizer
+
+To use the Raw Content Recognizer, you must:
+
+    Deploy the document layout analysis resources that are contained in the myscript-iink-recognition-raw-content2.zip package.
+    Define the classification configuration of your Recognizer with the recognizer.raw-content.classification property according to your needs, to control the list of content types that can be identified by the ink strokes classifier.
+    Define the recognition configuration of your Recognizer with recognizer.raw-content.recognition, to control the list of content types that are recognized after classification.
+
+    If you want to perform text recognition, define your recognition language with the recognizer.lang property. You can either use:
+        The mul_Latn multi-language resource that allows you to recognize several latin languages.
+        A specific language resource.
+    Deploy the resources packages according to your recognition configuration:
+
+In addition to the myscript-iink-recognition-raw-content2.zip package, the following table lists resources that you must deploy in your project according to the recognition types that you use:
+Recognition content type 	Required configuration bundles 	Resource and configuration package names
+text 	${recognizer.lang} 	Language package defined by your recognizer.lang configuration. See principles of language resources
+math 	math2 	myscript-iink-recognition-math2.zip
+shape 	shape 	myscript-iink-recognition-shape.zip
+Currently, the Raw Content Recognizer may not be available on your platform. Check if it is available for your platform.
+
+    Classification and recognition results are available in JIIX format. We have added an export.jiix.ranges parameter that allows you to get ink ranges corresponding to result objects in the JIIX result file. It is theoretically possible to do this matching by enabling export.jiix.strokes, but then you will have to match the input strokes by their channel values, which can be tricky. Also, export.jiix.strokes produces huge JIIX output while export.jiix.ranges is much more concise. So when using a Raw Content Recognizer, we recommend you to set export.jiix.strokes to false and export.jiix.ranges to true.
+
+➤ For more details, refer to the configuration and jiix pages.
+Common parameters
+
+    recognizer.result.default-format defines the format of the result provided via the IRecognizerListener resultChanged method. To get the available list of formats, use the Recognizer getSupportedResultMimeTypes method.
+
+    When performing batch recognition, it is now possible to configure the maximum number of threads to be used by the engine for Text and Math Recognizers, by setting max-recognition-thread-count configuration value to the number of threads to be used (default is 1). This tuning might be relevant when sending at one time, a large set of strokes that you have previously collected, to optimize the usage of CPU cores. It is advised however, to leave this configuration to 1 if you are doing incremental recognition, as it may have a negative impact on performances and accuracy.
+
+➤ Refer to the configuration page, to get the full list of recognizer configuration.
+Example
+
+The example below illustrates the use of a Raw Content Recognizer for multi-Latin language text, math and shape recognition.
+
+val engine = IInkApplication.getEngine()
+
+engine.apply {
+  configuration.apply {
+    // Configure recognition search path for recognizer
+    val confDir = "zip://${application.packageCodePath}!/assets/conf"
+    setStringArray("recognizer.configuration-manager.search-path", arrayOf(confDir))
+    // Enable multi Latin language recognition
+    setString("recognizer.lang","mul_Latn")
+    // Activate classification for text, math, shape and drawing
+    setStringArray("recognizer.raw-content.classification.types", arrayOf("text", "math", "shape", "drawing"))
+    // Activate handwriting recognition for text, math and shape
+    setStringArray("recognizer.raw-content.recognition.types", arrayOf("text", "math", "shape"))
+    }
+  }
+
+// Create a Raw Content Recognizer
+recognizer = engine.createRecognizer(1.0f, 1.0f, "Raw Content")
+// Send it your stroke pointer events
+recognizer.pointerEvents(pointerEvents)
+// Wait for recognition end
+recognizer.waitForIdle()
+// Get the recognition result
+val recognitionResult = recognizer.getResult(MimeType.JIIX)
+
+Advanced example
+
+The write to type example gives you a hint how to implement scribble like feature relying on the Recognizer API of iink SDK. It is available on the MyScript Git repository containing the additional examples for the Android platform. This sample comes with a description that helps you understand its principle.
+
+It is based on a contextless gesture recognition combined with a text recognition. To run both recognitions simultaneously, two instances of Recognizer are created - one for Gesture recognition and the other one for Text recognition.
+
+➤ Should you need more details, refer to the API documentation documentation and/or ask question on our developer forum.

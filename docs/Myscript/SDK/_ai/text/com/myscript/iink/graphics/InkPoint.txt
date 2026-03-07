@@ -1,0 +1,246 @@
+SOURCE: com/myscript/iink/graphics/InkPoint.html
+
+Package com.myscript.iink.graphics [link: package-summary.html]
+
+Class InkPoint
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.graphics.InkPoint
+
+public class InkPoint
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Represents an ink point.
+
+Field Summary
+
+Fields
+
+Modifier and Type
+
+Field
+
+Description
+
+float
+
+f [link: #f]
+
+The point normalized pressure, in [0,1].
+
+float
+
+orientation [link: #orientation]
+
+The point orientation in radians.
+
+long
+
+t [link: #t]
+
+The point timestamp in ms since Unix EPOCH.
+
+float
+
+tilt [link: #tilt]
+
+The point tilt in radians.
+
+float
+
+x [link: #x]
+
+The point x coordinate.
+
+float
+
+y [link: #y]
+
+The point y coordinate.
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+InkPoint [link: #%3Cinit%3E()]()
+
+Default constructor.
+
+InkPoint [link: #%3Cinit%3E(float,float,long,float)] (float x,
+float y,
+long t,
+float f)
+
+Constructs an InkPoint
+
+InkPoint [link: #%3Cinit%3E(float,float,long,float,float,float)] (float x,
+float y,
+long t,
+float f,
+float tilt,
+float orientation)
+
+Constructs an InkPoint
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+boolean
+
+equals [link: #equals(java.lang.Object)] (@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+int
+
+hashCode [link: #hashCode()]()
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Field Details
+
+x
+
+public float x
+
+The point x coordinate.
+
+y
+
+public float y
+
+The point y coordinate.
+
+t
+
+public long t
+
+The point timestamp in ms since Unix EPOCH.
+
+f
+
+public float f
+
+The point normalized pressure, in [0,1].
+
+tilt
+
+public float tilt
+
+The point tilt in radians.
+0 is perpendicular, Pi/2 if flat on screen.
+
+Since:
+
+4.0
+
+orientation
+
+public float orientation
+
+The point orientation in radians.
+0 is pointing up, -Pi/2 is left, Pi/2 is right, +/-Pi is down.
+
+Since:
+
+4.0
+
+Constructor Details
+
+InkPoint
+
+public InkPoint (float x,
+float y,
+long t,
+float f)
+
+Constructs an InkPoint
+
+Parameters:
+
+x - the event x coordinate.
+
+y - the event y coordinate.
+
+t - the event timestamp in ms since Unix EPOCH, or -1 .
+
+f - the event normalized pressure.
+
+InkPoint
+
+public InkPoint (float x,
+float y,
+long t,
+float f,
+float tilt,
+float orientation)
+
+Constructs an InkPoint
+
+Parameters:
+
+x - the event x coordinate.
+
+y - the event y coordinate.
+
+t - the event timestamp in ms since Unix EPOCH, or -1 .
+
+f - the event normalized pressure.
+
+tilt - the event tilt in radians.
+
+orientation - the event orientation in radians.
+
+Since:
+
+4.0
+
+InkPoint
+
+public InkPoint ()
+
+Default constructor.
+
+Method Details
+
+equals
+
+public boolean equals (@Nullable
+@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+Overrides:
+
+equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+hashCode
+
+public int hashCode ()
+
+Overrides:
+
+hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+toString
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]

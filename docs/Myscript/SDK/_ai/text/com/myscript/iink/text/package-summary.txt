@@ -1,0 +1,37 @@
+SOURCE: com/myscript/iink/text/package-summary.html
+
+Package com.myscript.iink.text
+
+package com.myscript.iink.text
+
+Related Packages
+
+Package
+
+Description
+
+com.myscript.iink [link: ../package-summary.html]
+
+com.myscript.iink.graphics [link: ../graphics/package-summary.html]
+
+All Classes and Interfaces Interfaces Classes
+
+Class
+
+Description
+
+GlyphMetrics [link: GlyphMetrics.html]
+
+Describes the position of a converted glyph.
+
+IFontMetricsProvider [link: IFontMetricsProvider.html]
+
+Interface providing fontified text typesetting operations.
+
+Text [link: Text.html]
+
+Allows to access the glyphs (i.e.
+
+TextSpan [link: TextSpan.html]
+
+Describes glyphs spans in a label.

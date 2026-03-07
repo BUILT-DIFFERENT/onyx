@@ -1,0 +1,638 @@
+SOURCE: com/myscript/iink/ParameterSet.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class ParameterSet
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.ParameterSet
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+Direct Known Subclasses:
+
+Configuration [link: Configuration.html]
+
+public class ParameterSet
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+Represents a set of iink parameters.
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+protected final void
+
+checkNotClosed [link: #checkNotClosed()]()
+
+final void
+
+close [link: #close()]()
+
+protected void
+
+finalize [link: #finalize()]()
+
+final @NotNull Boolean [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Boolean.html]
+
+getBoolean [link: #getBoolean(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key)
+
+Returns the boolean value associated with key .
+
+final @NotNull Boolean [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Boolean.html]
+
+getBoolean [link: #getBoolean(java.lang.String,boolean)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+boolean defaultValue)
+
+Returns the boolean value associated with key .
+
+final @NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html]
+
+getNumber [link: #getNumber(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key)
+
+Returns the numeric value associated with key .
+
+final @NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html]
+
+getNumber [link: #getNumber(java.lang.String,java.lang.Number)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html] defaultValue)
+
+Returns the numeric value associated with key .
+
+final @NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html][]
+
+getNumberArray [link: #getNumberArray(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key)
+
+Returns the numeric array value associated with key .
+
+final @NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html][]
+
+getNumberArray [link: #getNumberArray(java.lang.String,java.lang.Number%5B%5D)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html][] defaultValue)
+
+Returns the numeric array associated with key .
+
+final @NotNull ParameterSet [link: ParameterSet.html]
+
+getSection [link: #getSection(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key)
+
+Returns a parameter set object representing the section associated with
+key .
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getString [link: #getString(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key)
+
+Returns the string value associated with key .
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getString [link: #getString(java.lang.String,java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] defaultValue)
+
+Returns the string value associated with key .
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][]
+
+getStringArray [link: #getStringArray(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key)
+
+Returns the string array value associated with key .
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][]
+
+getStringArray [link: #getStringArray(java.lang.String,java.lang.String%5B%5D)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] defaultValue)
+
+Returns the string array associated with key .
+
+final void
+
+inject [link: #inject(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] json)
+
+Injects the content of a JSON values into this parameter set.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+final void
+
+setBoolean [link: #setBoolean(java.lang.String,java.lang.Boolean)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+Boolean [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Boolean.html] value)
+
+Sets the boolean value associated with key .
+
+final void
+
+setNumber [link: #setNumber(java.lang.String,java.lang.Number)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html] value)
+
+Sets the numeric value associated with key .
+
+final void
+
+setNumberArray [link: #setNumberArray(java.lang.String,java.lang.Number%5B%5D)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html][] value)
+
+Sets the numeric array value associated with key .
+
+final void
+
+setString [link: #setString(java.lang.String,java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] value)
+
+Sets the string value associated with key .
+
+final void
+
+setStringArray [link: #setStringArray(java.lang.String,java.lang.String%5B%5D)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] value)
+
+Sets the string array value associated with key .
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+checkNotClosed
+
+protected final void checkNotClosed ()
+
+getSection
+
+@NotNull
+public final @NotNull ParameterSet [link: ParameterSet.html] getSection (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key)
+
+Returns a parameter set object representing the section associated with
+key . Sections correspond to the hierarchical organization of
+keys according to their dots. For example, if you have keys "a.b.c" and
+"a.b.d" there is a section "a.b" that contains keys "c" and "d", as well as
+a section "a" containing "b.c" and "b.d".
+
+Note: make sure to close the returned object.
+
+Parameters:
+
+key - the key of the section to obtain.
+
+Returns:
+
+the section.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when key is not found.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key is not a
+section.
+
+getString
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getString (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key)
+
+Returns the string value associated with key .
+
+Parameters:
+
+key - the key of the value to obtain.
+
+Returns:
+
+the value.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when key is not found.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key is not a
+string.
+
+getString
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getString (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] defaultValue)
+
+Returns the string value associated with key .
+
+Parameters:
+
+key - the key of the value to obtain.
+
+defaultValue - the value to return when key is not present.
+
+Returns:
+
+the value.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key exists and is
+not a string.
+
+setString
+
+public final void setString (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] value)
+
+Sets the string value associated with key .
+
+Parameters:
+
+key - the key of the value to set.
+
+value - the string value to set.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key exists and is
+not a string.
+
+getBoolean
+
+@NotNull
+public final @NotNull Boolean [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Boolean.html] getBoolean (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key)
+
+Returns the boolean value associated with key .
+
+Parameters:
+
+key - the key of the value to obtain.
+
+Returns:
+
+the value.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when key is not found.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key is not a
+boolean.
+
+getBoolean
+
+@NotNull
+public final @NotNull Boolean [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Boolean.html] getBoolean (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+boolean defaultValue)
+
+Returns the boolean value associated with key .
+
+Parameters:
+
+key - the key of the value to obtain.
+
+defaultValue - the value to return when key is not present.
+
+Returns:
+
+the value.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key exists and is
+not a boolean.
+
+setBoolean
+
+public final void setBoolean (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+Boolean [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Boolean.html] value)
+
+Sets the boolean value associated with key .
+
+Parameters:
+
+key - the key of the value to set.
+
+value - the boolean value to set.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key exists and is
+not a boolean.
+
+getNumber
+
+@NotNull
+public final @NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html] getNumber (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key)
+
+Returns the numeric value associated with key .
+
+Parameters:
+
+key - the key of the value to obtain.
+
+Returns:
+
+the value.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when key is not found.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key is not a
+number.
+
+getNumber
+
+@NotNull
+public final @NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html] getNumber (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull
+@NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html] defaultValue)
+
+Returns the numeric value associated with key .
+
+Parameters:
+
+key - the key of the value to obtain.
+
+defaultValue - the value to return when key is not present.
+
+Returns:
+
+the value.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key exists and is
+not a number.
+
+setNumber
+
+public final void setNumber (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull
+@NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html] value)
+
+Sets the numeric value associated with key .
+
+Parameters:
+
+key - the key of the value to set.
+
+value - the number value to set.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key exists and is
+not a number.
+
+getStringArray
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] getStringArray (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key)
+
+Returns the string array value associated with key .
+
+Parameters:
+
+key - the key of the value to obtain.
+
+Returns:
+
+the value.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when key is not found.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key is not a
+string array.
+
+getStringArray
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] getStringArray (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] defaultValue)
+
+Returns the string array associated with key .
+
+Parameters:
+
+key - the key of the value to obtain.
+
+defaultValue - the value to return when key is not present.
+
+Returns:
+
+the value.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key is not a
+string array.
+
+Since:
+
+1.4
+
+setStringArray
+
+public final void setStringArray (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html][] value)
+
+Sets the string array value associated with key .
+
+Parameters:
+
+key - the key of the value to set.
+
+value - the value to set.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key exists and is
+not a string array.
+
+getNumberArray
+
+@NotNull
+public final @NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html][] getNumberArray (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key)
+
+Returns the numeric array value associated with key .
+
+Parameters:
+
+key - the key of the value to obtain.
+
+Returns:
+
+the value.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when key is not found.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key is not a
+Number array.
+
+Since:
+
+3.1
+
+getNumberArray
+
+@NotNull
+public final @NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html][] getNumberArray (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull
+@NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html][] defaultValue)
+
+Returns the numeric array associated with key .
+
+Parameters:
+
+key - the key of the value to obtain.
+
+defaultValue - the value to return when key is not present.
+
+Returns:
+
+the value.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key is not a
+Number array.
+
+Since:
+
+3.1
+
+setNumberArray
+
+public final void setNumberArray (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] key,
+@NotNull
+@NotNull Number [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Number.html][] value)
+
+Sets the numeric array value associated with key .
+
+Parameters:
+
+key - the key of the value to set.
+
+value - the value to set.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when entry at key exists and is
+not a Number array.
+
+Since:
+
+3.1
+
+inject
+
+public final void inject (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] json)
+
+Injects the content of a JSON values into this parameter set.
+
+Parameters:
+
+json - JSON parameter set values.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this parameter set is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when json is not valid JSON.

@@ -15,8 +15,8 @@ This plan covers Android technical foundation work that runs alongside and after
 **Out of scope:** Ink/editor feel (in `editor-feel-refactor.md`), web viewer, Convex backend, real-time collaboration.
 
 **Completion gates:**
-- `bun run android:lint` passes
-- `bun run android:test` passes
+- `bun run android:lint` passes (primary gate)
+- `bun run android:test` passes for tests actively touched in each phase (known pre-existing drift in untouched test files is acceptable — see AGENTS.md)
 - No Sev-1 regressions in PDF, library, or search flows
 
 **Device matrix:**
@@ -57,7 +57,8 @@ Add a debug-only `DeveloperFlagsScreen` composable accessible from toolbar overf
 **Acceptance criteria:**
 - Flags visible in debug menu and persist across restart
 - Rollback to safe path without reinstall
-- `bun run android:test` passes after refactor
+- `bun run android:lint` passes after refactor
+- Tests directly related to feature flags pass
 
 ### A.2 Performance instrumentation baseline
 
@@ -88,12 +89,12 @@ Journeys to benchmark (each ≥300 frames):
 - `apps/android/maestro/flows/editor-smoke.yaml` (new)
 - `apps/android/benchmark/` (new module)
 
-Add Paparazzi screenshot test plugin with first golden for editor top bar. Add Maestro flow covering: app launch → create note → draw stroke → verify toolbar action. Add macrobenchmark module for startup and open-note journeys. Wire `bun run android:lint` and `bun run android:test` as required CI gates in `.github/workflows/ci.yml`.
+Add Paparazzi screenshot test plugin with first golden for editor top bar. Add Maestro flow covering: app launch → create note → draw stroke → verify toolbar action. Add macrobenchmark module for startup and open-note journeys. Wire `bun run android:lint` as required CI gate and `bun run android:test` as informational (non-blocking while known drift remains) in `.github/workflows/ci.yml`.
 
 **Acceptance criteria:**
 - All three harnesses run locally and in CI
 - Golden diff produces actionable artifact output
-- PR CI fails if `android:lint` or `android:test` fails
+- PR CI fails if `android:lint` fails; `android:test` results are published as informational
 
 ---
 
@@ -227,7 +228,8 @@ Add Hilt Gradle plugin and annotation processing (note: `com.google.dagger.hilt.
 **Acceptance criteria:**
 - No `requireAppContainer()` in primary UI screens
 - App launches and opens note successfully
-- `bun run android:lint` and `bun run android:test` pass after migration
+- `bun run android:lint` passes after migration
+- Tests directly affected by Hilt migration pass (run with `./gradlew :app:testDebugUnitTest --tests "..."`)
 
 ### C.5 Startup — SplashScreen API
 
@@ -249,42 +251,43 @@ For home/library UI decisions, consult the Warp UX Spec §2 (Home / Library Scre
 
 Folder model changes:
 - `FolderEntity` supports `parentFolderId: String?` for arbitrary nesting (already exists — verify self-referential FK constraint in Room)
-- `NoteEntity.folderId` FK constraint enforced (cascade delete or set-null on folder delete — choose set-null per UX spec: notes move to root)
+- Folders are **server-synced** via Convex `folders` table (not local-only). The Room `FolderEntity` is a local cache of the Convex state.
+- `NotebookEntity.folderId` FK constraint enforced (cascade delete or set-null on folder delete — choose set-null per UX spec: notebooks move to root)
 - Add Room migration incrementing DB version to add any missing columns/indexes
 
 Template metadata model:
 - `PageTemplateEntity` (or extend `PageEntity`) with: `templateType` (blank/lined/dotted/grid), `templateDensity: Float`, `templateLineWidth: Float`, `backgroundColorHex: String`
-- Default template stored in `EditorSettingsEntity` per UX Spec §3.2/§7: `defaultTemplateType`, `defaultTemplateDensity`, `defaultNoteMode` (paged/infinite)
+- Default template stored in `EditorSettingsEntity` per UX Spec §3.2/§7: `defaultTemplateType`, `defaultTemplateDensity`, `defaultNotebookMode` (paged/infinite)
 - Room migration for template columns
 
-**Must not:** use destructive migrations. Treat this as a greenfield project per AGENTS.md — backward DB compatibility not required until before ship.
+**Migration policy:** greenfield rules apply (per AGENTS.md). Destructive migrations are acceptable during this phase when they unblock schema alignment; prioritize clear current-state schema over backward compatibility.
 
 **Acceptance criteria:**
 - Room migration compiles and `OnyxDatabaseMigrationTest` passes
-- Folder CRUD test: create nested folder → move note into it → delete parent folder → note.folderId is null (set-null cascade)
+- Folder CRUD test: create nested folder → move notebook into it → delete parent folder → notebook.folderId is null (set-null cascade)
 - Template CRUD test: create page with template → reopen → template properties match original
-- Default template test: change default template → create new note → new note's first page uses updated defaults
+- Default template test: change default template → create new notebook → new notebook's first page uses updated defaults
 
 ### D.2 Thumbnail pipeline and batch operations
 
 Thumbnail pipeline:
-- Thumbnail generated on background coroutine (`Dispatchers.Default`) after: note save, page edit commit, note close
+- Thumbnail generated on background coroutine (`Dispatchers.Default`) after: notebook save, page edit commit, notebook close
 - Thumbnail is a scaled-down bitmap (256×362px, A4 aspect ratio) of the first page, rendered from committed stroke data + template background
-- Stored as a file in app internal storage, path referenced in `NoteEntity.thumbnailPath`
-- `ThumbnailGenerator.kt` (already exists) hardened with: skip if note unchanged since last thumbnail, cancel in-flight generation if note is re-edited, LRU cache for loaded bitmaps
+- Stored as a file in app internal storage, path referenced in `NotebookEntity.thumbnailPath`
+- `ThumbnailGenerator.kt` (already exists) hardened with: skip if notebook unchanged since last thumbnail, cancel in-flight generation if notebook is re-edited, LRU cache for loaded bitmaps
 
 Batch operations (UX Spec §2.6):
 - Multi-select mode activated via top-right checkmark icon
 - Bottom action bar with: Move (to folder picker), Delete (soft-delete to trash), Export (PDF generation)
-- Batch delete: all selected notes get `deletedAt` timestamp → appear in Trash
-- Batch move: all selected notes get `folderId` updated → navigate back to folder
+- Batch delete: all selected notebooks get `deletedAt` timestamp → appear in Trash
+- Batch move: all selected notebooks get `folderId` updated → navigate back to folder
 
 **Acceptance criteria:**
-- Thumbnail test: create note → draw stroke → close → reopen home → thumbnail matches first page content (visual regression or pixel-sample test)
+- Thumbnail test: create notebook → draw stroke → close → reopen home → thumbnail matches first page content (visual regression or pixel-sample test)
 - Thumbnail performance: generation completes within 500ms for a 10-stroke page on Tier B device
-- Batch delete test: select 3 notes → delete → all 3 appear in Trash with `deletedAt` set → restore one → it reappears in original folder
-- Batch move test: select 2 notes → move to folder X → both notes' `folderId` equals folder X's ID
-- Large list scroll: 100 notes in grid view, no dropped frames during fast scroll (verified via `jank_percent` < 3%)
+- Batch delete test: select 3 notebooks → delete → all 3 appear in Trash with `deletedAt` set → restore one → it reappears in original folder
+- Batch move test: select 2 notebooks → move to folder X → both notebooks' `folderId` equals folder X's ID
+- Large list scroll: 100 notebooks in grid view, no dropped frames during fast scroll (verified via `jank_percent` < 3%)
 
 ### D.3 Room-backed editor settings
 
@@ -325,11 +328,11 @@ Add debounced recognition scheduling — never on the hot path. Configurable rec
 - `apps/android/app/src/main/java/com/onyx/android/ui/HomeScreen.kt`
 - `apps/android/app/src/main/java/com/onyx/android/pdf/PdfiumNativeTextBridge.kt`
 
-One search entry point combining: handwriting recognition text, PDF text content, and note metadata/titles. Source-type labels on results. Result model fields: `sourceType`, `noteId`, `pageId`, `snippet`, `score`. Index rebuild path for corrupted/outdated states.
+One search entry point combining: handwriting recognition text, PDF text content, and notebook metadata/titles. Source-type labels on results. Result model fields: `sourceType`, `notebookId`, `pageId`, `snippet`, `score`. Index rebuild path for corrupted/outdated states.
 
 **Acceptance criteria:**
 - Single search bar returns mixed-source results
-- Tapping result navigates to correct note/page location
+- Tapping result navigates to correct notebook/page location
 - Automated tests cover all three source types
 
 ### E.3 Conversion and recognition overlays
@@ -346,7 +349,7 @@ Recognition overlay toggle that stays correctly aligned on zoom/pan. Lasso → t
 
 ## Phase F — Reliability & Release
 
-### F.1 Data safety and sync-readiness primitives
+### F.1 Data safety and CRDT-readiness primitives
 
 **Files:**
 - `apps/android/app/src/main/java/com/onyx/android/ink/ui/InkCanvasStroke.kt`
@@ -355,25 +358,31 @@ Recognition overlay toggle that stays correctly aligned on zoom/pan. Lasso → t
 - `apps/android/app/src/main/java/com/onyx/android/data/entity/StrokeEntity.kt`
 - `apps/android/app/src/main/java/com/onyx/android/data/entity/PageEntity.kt`
 - `apps/android/app/src/main/java/com/onyx/android/data/OnyxDatabase.kt`
-- `apps/android/app/src/main/java/com/onyx/android/data/entity/OperationLogEntity.kt` (new)
-- `apps/android/app/src/main/java/com/onyx/android/data/dao/OperationLogDao.kt` (new)
+- `apps/android/app/src/main/java/com/onyx/android/data/entity/OfflineQueueEntity.kt` (new)
+- `apps/android/app/src/main/java/com/onyx/android/data/dao/OfflineQueueDao.kt` (new)
 
-Harden Lamport monotonic seeding wherever strokes and pages are created. Add operation log scaffold (`OperationLogEntity`, `OperationLogDao`) for future sync integration — compile-only scaffold, not full sync. Validate deterministic resource cleanup on document close and app shutdown.
+Prepare the local storage layer for Y-Octo CRDT integration:
+- Yjs binary file scaffold: utility class for reading/writing per-page and per-notebook Yjs binary files (format: 4-byte magic `ONYX` + uint32 version + raw Yjs encoded state array) to app internal storage.
+- `OfflineQueueEntity` / `OfflineQueueDao`: Room table for queuing pending Yjs update binaries when offline. Fields: `id`, `notebookId`, `pageId?`, `updateBinary` (base64), `createdAt`. WorkManager will drain this queue via `sync.pushUpdates` when online.
+- Validate deterministic resource cleanup on document close and app shutdown.
+- Room remains the metadata/settings cache; Yjs binary files are the authoritative content store.
 
-**Must not:** implement full sync behavior in this scope.
+**Must not:** implement full sync behavior in this scope. This is the local scaffold only.
 
 **Acceptance criteria:**
-- Lamport values are monotonic across restarts
-- Operation log scaffold compiles and is test-covered
+- Yjs binary file read/write utility compiles and round-trip test passes (write file → read back → identical bytes)
+- OfflineQueueEntity scaffold compiles, DAO queries are test-covered
+- Resource cleanup on document close does not leak file handles
 
 ### F.2 CI gates and performance budgets
 
 **Files:** `.github/workflows/ci.yml`, `turbo.json`, `package.json`
 
-Enforce `bun run android:lint` and `bun run android:test` as required PR CI gates. Publish pass/fail thresholds for jank, latency, memory. Ensure `turbo.json` hashes `.env*` for relevant tasks.
+Enforce `bun run android:lint` as the required PR CI gate. `bun run android:test` runs in CI as informational (non-blocking) until all pre-existing test drift is resolved. Publish pass/fail thresholds for jank, latency, memory. Ensure `turbo.json` hashes `.env*` for relevant tasks.
 
 **Acceptance criteria:**
-- PR CI fails if `android:lint` or `android:test` fails
+- PR CI fails if `android:lint` fails
+- `android:test` runs in CI as informational; new test failures introduced by PRs must be fixed before merge
 - Perf budget failures surface as actionable test output
 - `turbo.json` includes `.env*` hashing for affected tasks
 

@@ -1,0 +1,40 @@
+Conversion
+
+In iink SDK terminology, “conversion” refers to the replacement of some handwritten content by a clean, typeset equivalent.
+Conversion vs. recognition
+
+Conversion is an explicit action you can trigger to replace ink content with a typeset equivalent. It is different from the recognition process it relies on, which runs in background and interprets any input, making it interactive.
+
+You can convert content blocks or selections by calling the convert() method of your editor object.
+Target state
+
+When calling convert(), you are expected to provide the target state you want to reach:
+
+    DigitalPublish - Typeset content, adapted for publication (small font size, and fitted graphics in the case of a Text Document),
+    DigitalEdit - Typeset content, suitable for edition (font size that is large enough for editing, expanded graphics).
+
+You can convert back and forth between the DigitalPublish and DigitalEdit states.
+
+MyScript iink SDK handles a third target conversion state: Handwriting that corresponds to handwritten content (raw ink), and is one of the possible states that can be obtained when retrieving a content selection conversion state.
+You cannot revert back to the Handwriting state from the DigitalPublish and DigitalEdit states.
+Fonts
+Selecting a font family
+
+To convert your text content, iink SDK needs to have information about the font family you use. The family choice relies on your styling options: by default a font family is defined for each content type that you can modify by setting a theme. If the font family is not installed on the device on which your application is running, iink will use the device default font family.
+
+If the font family that is actually used by the device does not support all symbols, you might get some unexpected squares or symbols displayed instead of expected glyphs. In order to improve this situation, you can consider two options:
+
+    Either you have the possibility to install the default font family on the targeted device.
+
+    Or you have another font family available on the device that supports more symbols than the device default font family. In this case, you can set a theme to use this font family.
+
+The Demo example also illustrates how you can integrate your own fonts by embedding them in your application, then configuring your application to use them. In this example, we use the MyScript Inter and STIX Two fonts that ensure a proper typeset rendering of all Latin/Cyrillic/Greek symbols recognized by MyScript iink SDK.
+Computing font metrics
+
+In addition, iink SDK requires you to attach to your editor an object implementing the IFontMetricsProvider interface using setFontMetricsProvider().
+
+As implementing a font metrics provider is a rather touchy task, MyScript provides you via the iink SDK example repository with a reference implementation.
+If you rely on the reference implementation, binding an editor to the editor view automatically attaches a font metrics provider to your editor.
+Math specifics
+
+When math solver is active, converting the math in a Math or Text Document part will trigger solving, if the required conditions are in place.

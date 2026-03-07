@@ -9,7 +9,7 @@ Define incremental redraw behavior for heavy pages so mixed ink/object/PDF conte
 ## Current implementation shape
 
 - Renderer culling/spatial index:
-  - `C:/onyx/apps/android/app/src/main/java/com/onyx/android/ink/gl/InkGlRenderer.kt`
+  - `C:/onyx/apps/android/app/src/main/java/com/onyx/android/ink/vk/VkInkSurfaceView.kt`
   - committed strokes are bucketed into spatial cells (`SPATIAL_CELL_SIZE`) and only visible buckets are drawn.
 - Overlay layers:
   - selection/lasso/hover overlays are rendered separately from committed stroke mesh submission.

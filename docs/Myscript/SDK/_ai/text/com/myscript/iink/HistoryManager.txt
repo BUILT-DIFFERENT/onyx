@@ -1,0 +1,311 @@
+SOURCE: com/myscript/iink/HistoryManager.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class HistoryManager
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.HistoryManager
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class HistoryManager
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+A HistoryManager allows managing changesets for undo/redo.
+It is associated with an offscreen editor.
+
+Since:
+
+3.0
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final void
+
+close [link: #close()]()
+
+protected void
+
+finalize [link: #finalize()]()
+
+final int
+
+getPossibleRedoCount [link: #getPossibleRedoCount()]()
+
+Returns the number of changesets that can be redone.
+
+final int
+
+getPossibleUndoCount [link: #getPossibleUndoCount()]()
+
+Returns the number of changesets that can be undone
+(less than or equal getUndoStackIndex() ).
+
+final @NotNull ChangesetOperation [link: ChangesetOperation.html][]
+
+getRedoChangesetFrom [link: #getRedoChangesetFrom(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] id)
+
+Returns the changeset corresponding to a redo from the given id.
+
+final @NotNull ChangesetOperation [link: ChangesetOperation.html][]
+
+getUndoChangesetTo [link: #getUndoChangesetTo(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] id)
+
+Returns the changeset corresponding to an undo to the given id.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getUndoRedoIdAt [link: #getUndoRedoIdAt(int)] (int stackIndex)
+
+Returns the id associated with an undo/redo stack index.
+
+final int
+
+getUndoRedoStackIndex [link: #getUndoRedoStackIndex()]()
+
+Returns the number of changesets performed on the part, since content part
+was opened.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+final void
+
+redo [link: #redo()]()
+
+Redo the last changeset reverted by undo on part.
+
+final void
+
+undo [link: #undo()]()
+
+Undo the last changeset on part.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+undo
+
+public final void undo ()
+
+Undo the last changeset on part.
+
+Note: this function will wait for pending gestures recognition.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this history manager is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when associated editor has been destroyed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when undo operations failed.
+
+redo
+
+public final void redo ()
+
+Redo the last changeset reverted by undo on part.
+
+Note: this function will wait for pending gestures recognition.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this history manager is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when associated editor has been destroyed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when redo operations failed.
+
+getUndoRedoStackIndex
+
+public final int getUndoRedoStackIndex ()
+
+Returns the number of changesets performed on the part, since content part
+was opened.
+
+Note: this function will wait for pending gestures recognition.
+Note: the undo stack is partially purged from time to time to control
+memory consumption. The number of possible undo changesets at a given
+time is provided by getPossibleUndoCount() , while the total number of
+changesets since content part was opened is provided by
+getUndoStackIndex() .
+
+Returns:
+
+the number of changesets performed on the part.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this history manager is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when associated editor has been destroyed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a part.
+
+getPossibleUndoCount
+
+public final int getPossibleUndoCount ()
+
+Returns the number of changesets that can be undone
+(less than or equal getUndoStackIndex() ).
+
+Note: this function will wait for pending gestures recognition.
+
+Returns:
+
+the number of changesets that can be undone.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this history manager is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when associated editor has been destroyed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a part.
+
+getPossibleRedoCount
+
+public final int getPossibleRedoCount ()
+
+Returns the number of changesets that can be redone.
+
+Note: this function will wait for pending gestures recognition.
+
+Returns:
+
+the number of changesets that can be redone.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this history manager is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when associated editor has been destroyed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a part.
+
+getUndoRedoIdAt
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getUndoRedoIdAt (int stackIndex)
+
+Returns the id associated with an undo/redo stack index.
+Valid stack index values range from (current stack index - possible undo count) to (current stack index + possible redo count - 1).
+
+Note: this function will wait for pending gestures recognition.
+
+Parameters:
+
+stackIndex - the index in the undo/redo stack.
+
+Returns:
+
+the id associated with the undo/redo stack index.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this history manager is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when associated editor has been destroyed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a part.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when stackIndex is invalid.
+
+getUndoChangesetTo
+
+@NotNull
+public final @NotNull ChangesetOperation [link: ChangesetOperation.html][] getUndoChangesetTo (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] id)
+
+Returns the changeset corresponding to an undo to the given id.
+
+Parameters:
+
+id - the id in the undo/redo stack.
+
+Returns:
+
+the changeset if it exists, otherwise empty.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this history manager is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when associated editor has been destroyed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a part.
+
+getRedoChangesetFrom
+
+@NotNull
+public final @NotNull ChangesetOperation [link: ChangesetOperation.html][] getRedoChangesetFrom (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] id)
+
+Returns the changeset corresponding to a redo from the given id.
+
+Parameters:
+
+id - the id in the undo/redo stack.
+
+Returns:
+
+the changeset if it exists, otherwise empty.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this history manager is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when associated editor has been destroyed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when editor is not associated with a part.

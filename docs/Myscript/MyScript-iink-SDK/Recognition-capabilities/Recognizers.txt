@@ -1,0 +1,26 @@
+Recognizers
+
+The recognizers aim at performing real-time incremental recognition on transient ink.
+Use cases
+
+They are intended to address use cases like input-method writing solutions based on iink SDK, where your application performs the strokes capture and rendering. They simplify iink SDK integration when the ink is simply an input medium for digital content.
+    Application    iink  SDK  Strokes  Result  exports        Incremental  processing            Capture  
+
+    The Gesture recognizer is dedicated to the recognition of gestures without any text context. It is agnostic to the current language settings.
+    The Text recognizer enables the recognition of text in incremental mode.
+    The Math recognizer enables the recognition of math.
+    The Shape recognizer enables the recognition of shapes in incremental mode. It is dedicated to the recognition of shapes only: no matter which ink content is sent to the Shape recognizer, it returns the shape(s) that it recognizes, with alternative recognized shape(s), if any.
+    The Raw Content recognizer is designed to analyze and recognize digital ink into text, math, shape, decoration or other elements whose semantics are known to iink SDK. The input digital ink does not require any explicit segmentation. Depending on its classification configuration, the recognizer analyzes the content to extract the document layout as blocks and classify ink strokes according to their types. Once ink is classified, recognition is performed according to recognition configuration.
+
+In incremental mode, Recognizers process the first strokes in the background while the user keeps writing more strokes. That background recognition process starts as soon as the first stroke is written.
+Available result formats
+
+    Text Recognizer: JIIX, raw text.
+    Gesture Recognizer: JIIX.
+    Shape Recognizer: JIIX.
+    Math Recognizer: LaTeX.
+    Raw Content Recognizer: JIIX.
+
+Integration tips
+
+Visit this page to learn how to use the recognizers with our native SDK, and this this page for the Web APIs.

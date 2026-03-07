@@ -92,8 +92,8 @@ private const val NOTE_EDITOR_LOG_TAG = "NoteEditorScreen"
 private const val PDF_OPEN_FAILED_MESSAGE = "Unable to open this PDF."
 private const val PDF_PASSWORD_INCORRECT_MESSAGE = "Incorrect PDF password. Please try again."
 private const val ENABLE_STACKED_PAGES = true
-private const val STACKED_DOCUMENT_MIN_ZOOM = 1f
-private const val STACKED_DOCUMENT_MAX_ZOOM = 4f
+private const val STACKED_DOCUMENT_MIN_ZOOM = ViewTransform.MIN_ZOOM
+private const val STACKED_DOCUMENT_MAX_ZOOM = ViewTransform.MAX_ZOOM
 private const val SEARCH_HIGHLIGHT_CLEAR_DELAY_MS = 4000L
 private const val MIN_LASSO_POLYGON_POINTS = 3
 private const val MIN_LASSO_SCALE = 0.2f
@@ -1942,7 +1942,30 @@ private fun rememberMultiPageUiState(
                 }
             },
             onStylusButtonEraserActiveChanged = { isStylusButtonEraserActive = it },
-            onTransformGesture = { _, _, _, _, _ -> },
+            onTransformGesture = { zoomChange, panChangeX, _, centroidX, _ ->
+                val effectiveZoomChange = if (isZoomLocked) 1f else zoomChange
+                val currentZoom = documentZoom
+                val targetZoom =
+                    (currentZoom * effectiveZoomChange).coerceIn(
+                        STACKED_DOCUMENT_MIN_ZOOM,
+                        STACKED_DOCUMENT_MAX_ZOOM,
+                    )
+                val appliedZoomChange =
+                    if (currentZoom > 0f) {
+                        targetZoom / currentZoom
+                    } else {
+                        1f
+                    }
+                val anchoredPanX = centroidX - (centroidX - documentPanX) * appliedZoomChange
+                documentZoom = targetZoom
+                val minPanX =
+                    if (viewportWidth > 0f) {
+                        (viewportWidth - viewportWidth * targetZoom).coerceAtMost(0f)
+                    } else {
+                        0f
+                    }
+                documentPanX = (anchoredPanX + panChangeX).coerceIn(minPanX, 0f)
+            },
             onPanGestureEnd = { _, _ -> },
             onUndoShortcut = undoController::undo,
             onRedoShortcut = undoController::redo,

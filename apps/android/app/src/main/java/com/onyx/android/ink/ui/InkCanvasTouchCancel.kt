@@ -18,6 +18,7 @@ internal fun cancelActiveStroke(
     runtime.stylusPointerIds.remove(pointerId)
     runtime.activeStrokeBrushes.remove(pointerId)
     runtime.activeStrokePoints.remove(pointerId)
+    runtime.activeStrokeSmoothers.remove(pointerId)?.reset()
     runtime.activeStrokeStartTimes.remove(pointerId)
     runtime.invalidateActiveStrokeRender()
 }
@@ -35,7 +36,11 @@ internal fun cancelActiveStrokes(
     runtime.stylusPointerIds.clear()
     runtime.activeStrokeBrushes.clear()
     runtime.activeStrokePoints.clear()
+    runtime.activeStrokeSmoothers.values.forEach { it.reset() }
+    runtime.activeStrokeSmoothers.clear()
     runtime.activeStrokeStartTimes.clear()
+    runtime.lastPredictedStrokeInputs.clear()
+    runtime.lastPredictionFrameBucket = 0
     runtime.invalidateActiveStrokeRender()
 }
 

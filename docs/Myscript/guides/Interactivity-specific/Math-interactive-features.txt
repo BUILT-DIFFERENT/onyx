@@ -1,0 +1,86 @@
+Math interactive features
+
+To see the complete list of supported symbols, rules and operations, read this section.
+Math solver
+
+MyScript iink SDK not only recognizes equations, it can also solve some of them! Its arithmetic solver can solve input equations under the following conditions:
+
+    The equation has to contain numbers and/or fractions, and at least one of the following operators or constants:
+
+    Equations with one unknown can be solved. The way variables are managed depends on the part type, as explained in the next section.
+
+    Equations with more than one unknown can be recognized and typeset, but not solved.
+
+In a Raw Content part, the solver can also:
+
+    Solve vertical operations using a single operator per line [+-*×/:÷] and decimal numbers, by drawing a line underneath.
+    Provide the correct result for expressions such as cos(60°), 0.5 in this case, by considering the annotated value in degrees regardless of the math.solver.angle-unit configuration (rad or deg). When math.solver.angle-unit is set to rad, an automatic unit conversion occurs when writing expressions such as 60° =, which is solved as its radian value (1.047197).
+
+Manual or automatic solver
+
+You can either choose to add a button so that your user will activate the solver manually or to have your app automatically solve every supported equation. Just choose what is more appropriate to your use case!
+Customize your output
+
+You can choose the angle unit (degree or radian), how many decimals you want displayed and whether you want results to be rounded or truncated. You can also decide to insert implicit multiply operators, perform syntactic correction or whether an equal sign should be present to trigger the solving.
+
+➤ Refer to the math.solver. configuration settings to see what you can control with the numerical computation action of the math solver.
+Math solver in a Math part or Text Document part
+
+By default math solver is activated but you can disable it.
+
+    When math solver is activated, converting the math will trigger solving, if the required conditions are in place. Equations with one unknown can be solved, but the variable has to be highlighted with a question mark, not a letter. Example: “4y × 2 = 24” won’t be solved whereas “4 × ? × 2 = 24” will.
+
+    MyScript iink SDK can also perform math animation (morphing) when converting math strokes to typeset. By default this feature is disabled but can be set up with the math.convert.animate property.
+
+Math solver in a Raw Content part or block
+To use the features described in this section, you must configure your Raw Content part with the advanced analyzer raw-content2 and math2 bundles.
+
+The MathSolverController object is the entry point for interacting with your math content in a "Raw Content" part or block with Editor and OffscreenEditor.
+Variable management
+
+The MathSolverController manages variables in mathematical expressions: variables are single letters, either Latin or Greek, with an optional subscript, which can be a positive integer or another Latin or Greek letter.
+
+Variable management can be:
+
+    Automatic meaning that a variable definition is automatically recognized and applied by the iink SDK when a block contains an equation with only one variable on the left of the equal sign and an expression that can be calculated on the right. Examples: “a = 24” or “a = 2 + 3/4”.
+
+It can contain multiple equal signs, such as: “a = 1/2 = 0.5” . In the case of an inequality, the variable is defined using the first value. For example, “a = 5 = 6” defines “a = 5”.
+
+The right expression can refer to other variables defined for this block: Example: “a = 3b”. The asVariableDefinition method checks to see if the specified block is a variable definition and returns the information about it.
+By default, automatic variable management is disabled, you can enable it with the math.solver.auto-variable-management.enable property.
+
+    Manual meaning that variables that apply to a particular math block are managed by programmatically calling getVariableValue, setVariableValue and removeVariableValue methods of the MathSolverController. You can set or retrieve the values of global variables that apply to all blocks by setting an empty string as the block ID.
+
+    If you enable automatic variable management, you can also use the manual APIs to set some variables or domain constants for example.
+
+API defined variables for blocks will apply with higher priority over automatically recognized ones, which have priority over global variables.
+
+The getVariables method gets information about all variables globally or associated with a given block. The getVariableDefinitions method lists all variable definitions, including their source type and associated block.
+Evaluation of a block expression to get plot-ready coordinates
+
+The MathSolverController has an evaluate method to calculate the outputs of an evaluable math block expression, for a given range of input values. This allows you to get plot-ready coordinates that you can use to plot graphs using a graphics library.
+
+An expression is evaluable if it can be interpreted as a function of a given variable:
+
+    The expression can be a simple expression with a single unknown variable Example “cos(x)”, in which case the output variable will have an empty name.
+    It can also be an equation with two unknown variables, at least one of which occurs only once in the expression Example “y = x² + 2x”.
+    Or a constant expression with a single unknown variable Example “y = 4/3”, in which case the input variable will have an empty name.
+
+The getEvaluables method returns the list of evaluable variables for a “Math” block.
+Get the solver output
+
+The MathSolverController can
+
+    list the available solver actions with the getAvailableActions method (currently only numeric calculation is available),
+    get the solution result as a LaTeX or JIIX string with the getActionOutput method.
+    add the solution output to the math block in the current Content Part with the applyAction method (currently only available with the Editor).
+
+Diagnostics and troubleshooting
+
+To help you troubleshoot common pitfalls, the getDiagnostic method performs diagnostics on a given task and the specified block. It can be useful for:
+
+    Understand why getEvaluables() returns an empty array, by calling it with an evaluation task.
+
+    Find out why getAvailableActions() does not include the numerical-computation action in the returned array, by calling it with a numerical-computation task.
+
+The getDiagnostic also returns a MathDiagnostic code so that your application can get information about error situations, such as computation errors, and that you can map to a localized error message in your application to let end users know what’s going on.

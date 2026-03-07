@@ -1,0 +1,17 @@
+SOURCE: index.html
+
+MyScript Interactive Ink 4.3.0 API
+
+Packages
+
+Package
+
+Description
+
+com.myscript.iink [link: com/myscript/iink/package-summary.html]
+
+com.myscript.iink.graphics [link: com/myscript/iink/graphics/package-summary.html]
+
+com.myscript.iink.text [link: com/myscript/iink/text/package-summary.html]
+
+com.myscript.util [link: com/myscript/util/package-summary.html]

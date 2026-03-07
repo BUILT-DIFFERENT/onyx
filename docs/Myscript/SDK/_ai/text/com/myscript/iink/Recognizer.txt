@@ -1,0 +1,537 @@
+SOURCE: com/myscript/iink/Recognizer.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class Recognizer
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.Recognizer
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class Recognizer
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+The Recognizer runs background handwriting recognition on ink.
+
+Since:
+
+2.1
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final void
+
+addListener [link: #addListener(com.myscript.iink.IRecognizerListener)] (@NotNull IRecognizerListener [link: IRecognizerListener.html] listener)
+
+Adds the specified listener to this recognizer.
+
+final void
+
+clear [link: #clear()]()
+
+Removes all content from the recognizer.
+
+final void
+
+close [link: #close()]()
+
+protected void
+
+finalize [link: #finalize()]()
+
+final @NotNull Configuration [link: Configuration.html]
+
+getConfiguration [link: #getConfiguration()]()
+
+Returns the Configuration associated with this recognizer.
+
+final @NotNull Engine [link: Engine.html]
+
+getEngine [link: #getEngine()]()
+
+Returns the Engine to which this recognizer is attached.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+getResult [link: #getResult(com.myscript.iink.MimeType)] (@NotNull MimeType [link: MimeType.html] mimeType)
+
+Returns the result of the recognition since the last call to clear() [link: #clear()].
+
+float
+
+getScaleX [link: #getScaleX()]()
+
+Returns the scale to convert input horizontal coordinates unit into mm,
+such that (X coordinate unit * scaleX = mm).
+
+float
+
+getScaleY [link: #getScaleY()]()
+
+Returns the scale to convert input vertical coordinates unit into mm,
+such that (Y coordinate unit * scaleY = mm).
+
+final @NotNull MimeType [link: MimeType.html][]
+
+getSupportedResultMimeTypes [link: #getSupportedResultMimeTypes()]()
+
+Returns the supported result formats.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+final boolean
+
+isIdle [link: #isIdle()]()
+
+Checks whether part modification operations are over.
+
+final void
+
+pointerCancel [link: #pointerCancel()]()
+
+Cancels an ongoing pointer trace.
+
+final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+pointerDown [link: #pointerDown(float,float,long,float)] (float x,
+float y,
+long t,
+float f)
+
+Registers a pointer down event.
+
+final void
+
+pointerEvents [link: #pointerEvents(com.myscript.iink.PointerEvent%5B%5D)] (@NotNull PointerEvent [link: PointerEvent.html][] events)
+
+Registers a list of pointer events.
+
+final void
+
+pointerMove [link: #pointerMove(float,float,long,float)] (float x,
+float y,
+long t,
+float f)
+
+Registers a pointer move event.
+
+final void
+
+pointerUp [link: #pointerUp(float,float,long,float)] (float x,
+float y,
+long t,
+float f)
+
+Registers a pointer up event.
+
+final void
+
+removeListener [link: #removeListener(com.myscript.iink.IRecognizerListener)] (@NotNull IRecognizerListener [link: IRecognizerListener.html] listener)
+
+Removes the specified listener from this recognizer.
+
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Returns a String representation of the object, with its active part and package.
+
+final void
+
+waitForIdle [link: #waitForIdle()]()
+
+Waits until part modification operations are over.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+getEngine
+
+@NotNull
+public final @NotNull Engine [link: Engine.html] getEngine ()
+
+Returns the Engine to which this recognizer is attached.
+
+Returns:
+
+the engine.
+
+addListener
+
+public final void addListener (@NotNull
+@NotNull IRecognizerListener [link: IRecognizerListener.html] listener)
+
+Adds the specified listener to this recognizer.
+
+Parameters:
+
+listener - the listener to be added.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when listener is null.
+
+removeListener
+
+public final void removeListener (@NotNull
+@NotNull IRecognizerListener [link: IRecognizerListener.html] listener)
+
+Removes the specified listener from this recognizer.
+
+Parameters:
+
+listener - the listener to be removed.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when listener is null.
+
+clear
+
+public final void clear ()
+
+Removes all content from the recognizer.
+
+Throws:
+
+UnsupportedOperationException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/UnsupportedOperationException.html] - when there is an ongoing pointer trace.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+getScaleX
+
+public float getScaleX ()
+
+Returns the scale to convert input horizontal coordinates unit into mm,
+such that (X coordinate unit * scaleX = mm).
+
+Returns:
+
+the horizontal scale.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+getScaleY
+
+public float getScaleY ()
+
+Returns the scale to convert input vertical coordinates unit into mm,
+such that (Y coordinate unit * scaleY = mm).
+
+Returns:
+
+the vertical scale.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+pointerDown
+
+@Nullable
+public final @Nullable String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] pointerDown (float x,
+float y,
+long t,
+float f)
+
+Registers a pointer down event.
+
+Parameters:
+
+x - pointer event x coordinate.
+
+y - pointer event y coordinate.
+
+t - pointer event timestamp, in ms since Unix EPOCH.
+
+f - normalized pressure, in [0,1].
+
+Returns:
+
+the render item identifier of the starting stroke if any, otherwise
+null .
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when x is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when y is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when t exceeds year 9999.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when f is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when f is negative.
+
+UnsupportedOperationException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/UnsupportedOperationException.html] - when pointerDown() has already
+been called.
+
+pointerMove
+
+public final void pointerMove (float x,
+float y,
+long t,
+float f)
+
+Registers a pointer move event.
+
+Parameters:
+
+x - pointer event x coordinate.
+
+y - pointer event y coordinate.
+
+t - pointer event timestamp, in ms since Unix EPOCH.
+
+f - normalized pressure, in [0,1].
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when x is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when y is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when t exceeds year 9999.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when f is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when f is negative.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when stroke has too many points.
+
+UnsupportedOperationException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/UnsupportedOperationException.html] - when pointerDown() has not been
+called before.
+
+pointerUp
+
+public final void pointerUp (float x,
+float y,
+long t,
+float f)
+
+Registers a pointer up event.
+
+Parameters:
+
+x - pointer event x coordinate.
+
+y - pointer event y coordinate.
+
+t - pointer event timestamp, in ms since Unix EPOCH.
+
+f - normalized pressure, in [0,1].
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when x is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when y is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when t exceeds year 9999.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when f is not a number.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when f is negative.
+
+UnsupportedOperationException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/UnsupportedOperationException.html] - when pointerDown() has not been
+called before.
+
+pointerCancel
+
+public final void pointerCancel ()
+
+Cancels an ongoing pointer trace.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+pointerEvents
+
+public final void pointerEvents (@NotNull
+@NotNull PointerEvent [link: PointerEvent.html][] events)
+
+Registers a list of pointer events.
+
+Parameters:
+
+events - the list of events.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - when events is null.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when a pointer event contains incorrect data.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when stroke has too many points.
+
+UnsupportedOperationException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/UnsupportedOperationException.html] - when event sequence is not allowed.
+
+isIdle
+
+public final boolean isIdle ()
+
+Checks whether part modification operations are over.
+
+Returns:
+
+true if there are no pending operations.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is not associated with a part.
+
+waitForIdle
+
+public final void waitForIdle ()
+
+Waits until part modification operations are over.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+getConfiguration
+
+@NotNull
+public final @NotNull Configuration [link: Configuration.html] getConfiguration ()
+
+Returns the Configuration associated with this recognizer.
+
+Note: do not close the returned object as it is owned by the recognizer.
+
+Returns:
+
+the recognizer configuration.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+getSupportedResultMimeTypes
+
+@NotNull
+public final @NotNull MimeType [link: MimeType.html][] getSupportedResultMimeTypes ()
+
+Returns the supported result formats.
+
+Returns:
+
+an array of the supported mime types.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+getResult
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] getResult (@NotNull
+@NotNull MimeType [link: MimeType.html] mimeType)
+
+Returns the result of the recognition since the last call to clear() [link: #clear()].
+
+Parameters:
+
+mimeType - the mime type that specifies the output format.
+
+Returns:
+
+the exported content.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this recognizer is closed.
+
+NullPointerException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html] - if mimeType is null.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - if the mime type is not a textual format.
+
+UnsupportedOperationException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/UnsupportedOperationException.html] - if the specified mime type is not
+supported.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when there are some ongoing operations,
+see isIdle() .
+
+toString
+
+@NotNull
+public @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Returns a String representation of the object, with its active part and package.
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Returns:
+
+the representation of the object.

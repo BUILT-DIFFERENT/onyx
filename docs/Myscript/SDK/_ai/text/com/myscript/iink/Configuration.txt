@@ -1,0 +1,98 @@
+SOURCE: com/myscript/iink/Configuration.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class Configuration
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.ParameterSet [link: ParameterSet.html]
+
+com.myscript.iink.Configuration
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class Configuration
+extends ParameterSet [link: ParameterSet.html]
+
+Represents the configuration values of the iink runtime environment.
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final void
+
+addListener [link: #addListener(com.myscript.iink.IConfigurationListener)] (@NotNull IConfigurationListener [link: IConfigurationListener.html] listener)
+
+Adds the specified listener to this configuration.
+
+final void
+
+removeListener [link: #removeListener(com.myscript.iink.IConfigurationListener)] (@NotNull IConfigurationListener [link: IConfigurationListener.html] listener)
+
+Removes the specified listener from this configuration.
+
+final void
+
+reset [link: #reset()]()
+
+Resets this configuration to its default values.
+
+Methods inherited from class com.myscript.iink.ParameterSet [link: ParameterSet.html]
+
+checkNotClosed [link: ParameterSet.html#checkNotClosed()], close [link: ParameterSet.html#close()], finalize [link: ParameterSet.html#finalize()], getBoolean [link: ParameterSet.html#getBoolean(java.lang.String)], getBoolean [link: ParameterSet.html#getBoolean(java.lang.String,boolean)], getNumber [link: ParameterSet.html#getNumber(java.lang.String)], getNumber [link: ParameterSet.html#getNumber(java.lang.String,java.lang.Number)], getNumberArray [link: ParameterSet.html#getNumberArray(java.lang.String)], getNumberArray [link: ParameterSet.html#getNumberArray(java.lang.String,java.lang.Number%5B%5D)], getSection [link: ParameterSet.html#getSection(java.lang.String)], getString [link: ParameterSet.html#getString(java.lang.String)], getString [link: ParameterSet.html#getString(java.lang.String,java.lang.String)], getStringArray [link: ParameterSet.html#getStringArray(java.lang.String)], getStringArray [link: ParameterSet.html#getStringArray(java.lang.String,java.lang.String%5B%5D)], inject [link: ParameterSet.html#inject(java.lang.String)], isClosed [link: ParameterSet.html#isClosed()], setBoolean [link: ParameterSet.html#setBoolean(java.lang.String,java.lang.Boolean)], setNumber [link: ParameterSet.html#setNumber(java.lang.String,java.lang.Number)], setNumberArray [link: ParameterSet.html#setNumberArray(java.lang.String,java.lang.Number%5B%5D)], setString [link: ParameterSet.html#setString(java.lang.String,java.lang.String)], setStringArray [link: ParameterSet.html#setStringArray(java.lang.String,java.lang.String%5B%5D)]
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+reset
+
+public final void reset ()
+
+Resets this configuration to its default values.
+
+addListener
+
+public final void addListener (@NotNull
+@NotNull IConfigurationListener [link: IConfigurationListener.html] listener)
+
+Adds the specified listener to this configuration.
+
+Parameters:
+
+listener - the listener to be added.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this configuration is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when listener is null.
+
+removeListener
+
+public final void removeListener (@NotNull
+@NotNull IConfigurationListener [link: IConfigurationListener.html] listener)
+
+Removes the specified listener from this configuration.
+
+Parameters:
+
+listener - the listener to be removed.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this configuration is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when listener is null.

@@ -1,0 +1,34 @@
+Smart tools
+
+In rendering-driven use cases, besides gestures, MyScript iink technology proposes a string of smart tools all ready to put to work.
+
+Their intelligence relies on their capacity to adjust to the ink structure and semantics. Interactions with typeset and ink content are accordant.
+Eraser
+
+The eraser tool detects the touched item and deletes it. Item can be either a stroke, a shape, a connector, a character, or a word according to your content.
+
+The eraser processes handwriting and typeset items in the same way.
+
+You can tune behavior to either erase strokes or ink parts within trajectory.
+Typeset
+
+According to your working mode, MyScript iink engine adjusts the typeset of the ink.
+
+It handles up to two different modes, ‘publish’ and ‘edit’, according to your content type:
+
+    ‘publish’ means that your typeset content is ready for publication. MyScript iink engine then uses small font size and fitted graphics.
+
+    ‘edit’ stands for typeset content suitable for edition. Font size is large enough for smooth editing work. Graphics are expanded for handy update.
+
+Interactivity allows you switching from one mode to the other one. This means that you can edit your typeset content and insert some handwritten ink into it. You may also scratch typeset content to erase it. Copying and pasting both handwritten and typeset items from one another is also possible.
+
+To sum up with interactive ink, processing typeset or handwritten content is transparent.
+Lasso selector
+
+The selector tool lets you draw a lasso to select some content:
+Lasso selection
+
+Then, MyScript iink engine analyses this selection to let you interact with it. Depending on the context and the content, you can move or scale the selected items, apply some formatting, copy or typeset them, etc.
+Highlighter
+
+The highlighter tool allows you to emphasis content by adding transparent color anywhere in a page, regardless of the type of content. In addition, with a long press, it can be used as a coloring tool of shapes or to change ink, lines, arcs or text colors.

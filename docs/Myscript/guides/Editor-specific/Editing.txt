@@ -1,0 +1,222 @@
+Editing
+
+This page introduces the role of the Editor object, the central point to interact with content.
+Editor creation and configuration
+Creation
+
+An Editor is the main entry point to act on interactive content. It is responsible for building and updating a content model from users’ input events and/or edition commands. It is instantiated from an Engine:
+
+// Creating an editor
+Editor editor = engine.createEditor(renderer, toolcontroller);
+
+The ToolController argument is optional. If you omit it, the editor will instantiate a ToolController with the default settings.
+If you use the reference implementation, calling openEditor() on EditorBinding will create the editor automatically for you.
+Editor-level configuration
+
+While iink SDK can be globally configured at engine level, it is possible to override this configuration at editor level. This is particularly useful in form-like use cases, where you need to manipulate fields with different configurations.
+
+You can access the configuration of a specific editor by calling getConfiguration() and set the values of the keys that should override the global configuration, in a cascade-like manner. Values of the keys you do not explicitly set at editor-level still follow engine-level configuration.
+
+For example:
+
+Configuration globalConfig = engine.getConfiguration();
+Configuration editorConfig = editor.getConfiguration();
+
+// Global configuration values apply ...
+String globalUnit = globalConfig.getString("math.solver.angle-unit"); // -> "deg"
+String editorUnit = editorConfig.getString("math.solver.angle-unit"); // -> "deg"
+globalConfig.setString("math.solver.angle-unit", "rad");
+globalUnit = globalConfig.getString("math.solver.angle-unit");        // -> "rad"
+editorUnit = editorConfig.getString("math.solver.angle-unit");        // -> "rad"
+
+// ... except if overridden at editor level
+editorConfig.setNumber("math.solver.fractional-part-digits", 4);
+globalConfig.setNumber("math.solver.fractional-part-digits", 2);
+Number editorDigits = editorConfig.getNumber("math.solver.fractional-part-digits"); // -> 4
+Number globalDigits = globalConfig.getNumber("math.solver.fractional-part-digits"); // -> 2
+
+Language-related settings like text.configuration.bundle and text.configuration.name behave in a particular way, in that they are only considered the very first time a given part is set to an editor and cannot be changed afterwards.
+Setting a part
+
+An Editor works on a ContentPart. To setup the link between them, call the editor’s setPart() method and pass it the part you opened or created:
+
+// Create a new package
+ContentPackage contentPackage = engine.createPackage(packageNameFile);
+
+// Create a new part
+ContentPart contentPart = contentPackage.createPart("Text");
+
+// Associate editor with the new part
+editor.setPart(contentPart);
+
+You have to make sure that you previously called editor.setViewSize() and attached a font metrics provider to the editor before setting the part. If you use the reference implementation, calling editorBinding.openEditor(editorView) will do it automatically for you.
+Guides
+
+Text Document and Text parts have guides set by default. Guides provide useful hints for end users to know where to write and at what size. They also improve the recognition accuracy, provided that handwriting uses them as baselines.
+
+You can enable or disable the guides of a Text part via the text.guides.enable key of the engine or editor configuration. The vertical spacing between guides can be tuned via the text styling options.
+If you know that your input will not match the guides, for instance with ink coming from an unstructured context such as a sheet of paper, you must disable them to ensure a good recognition.
+Input capture
+
+You are in charge of capturing the input events. This section gives you some hints on how to transmit the captured inputs to the editor.
+Incremental input
+
+MyScript iink SDK typically processes user input in real time. You thus have to tell how pointers are interacting with the capture surface (typically a screen or a graphical tablet).
+
+This can be done by calling the following methods of the Editor object:
+
+    pointerDown() - When the pointer first touches the surface.
+    pointerMove() - When the pointer moves while staying in contact with the surface.
+    pointerUp() - When the pointer is lifted from the surface.
+
+Each of these methods requires you to provide:
+
+    x and y - The coordinates in pixels of the pointer on the surface.
+    t - The timestamp of the pointer event
+
+    f - The pressure information associated to the event (normalized between 0 and 1)
+
+    pointerType - The type of pointer: see the PointerType
+    pointerId - An identifier for this pointer.
+
+Example:
+
+editor.pointerDown(0.0f, 0.0f, new Date().getTime(), .7f, PointerType.PEN, 1);
+editor.pointerMove(2.4f, 2.4f, new Date().getTime(), .6f, PointerType.PEN, 1);
+editor.pointerUp(2.4f, 4.3f, new Date().getTime(), .5f, PointerType.PEN, 1);
+
+You can call pointerCancel() to have the editor drop and ignore an ongoing event sequence.
+
+Remarks:
+
+    The pointer events are analyzed and interpreted according to the tool that is currently associated to the pointer type: when using the PEN tool, iink SDK triggers the recognition, with the SELECTOR tool iink SDK determines a selection, etc.
+    The timestamp is typically the time in ms since Jan 1st, 1970. You can set it to -1 to let iink SDK generate one for you based on the current time of the system.
+    The pressure information is stored in the model and can be retrieved at export or when implementing your own inking. If you don’t have or need this information, you can set it to 1.
+    If you only have one pointer simultaneously active, you can pass a pointer id of -1.
+
+In the most simple case, you can write something like:
+
+final long NO_TIMESTAMP = -1;
+final float NO_PRESSURE = 1.0f;
+final int NO_POINTER_ID = -1;
+
+editor.pointerDown(0.0f, 0.0f, NO_TIMESTAMP, NO_PRESSURE, PointerType.PEN, NO_POINTER_ID);
+editor.pointerMove(2.4f, 2.4f, NO_TIMESTAMP, NO_PRESSURE, PointerType.PEN, NO_POINTER_ID);
+editor.pointerUp(2.4f, 4.3f, NO_TIMESTAMP, NO_PRESSURE, PointerType.PEN, NO_POINTER_ID);
+
+The same methods exist with two additional parameters:
+
+    tilt - the tilt angle to the screen in radians. Angles are between 0 and π/2 radians, where 0 is perpendicular to the screen, π/2 is flat on screen.
+    orientation - the orientation azimuth in radians, where 0 is pointing up, -π/2 radians is pointing left, -π or π is pointing down, and π/2 radians is pointing right.
+
+If available, tilt, orientation, and pressure data are used by the renderer, which adjusts the stroke according to the styling properties when using the PEN or the HIGHLIGHTER tool. With the ERASER tool, the pressure can influence the eraser radius too. For more details, refer to the Renderer section.
+Series of events
+
+In some cases, you may want to send a set of strokes to the engine in a single pass, for instance if you import ink from outside of the iink model that you want to process as a single batch.
+
+For all types of parts but “Text Document”, iink SDK provides a method to input in a single pass a series of pointer events, pointerEvents(), that take in parameter an array of PointerEvent objects.
+
+Here is an example:
+
+ArrayList<PointerEvent> events = new ArrayList<PointerEvent>();
+
+// Stroke 1
+events.add(new PointerEvent().down(184.f, 124.f));
+events.add(new PointerEvent().move(184.f, 125.f));
+events.add(new PointerEvent().move(184.f, 128.f));
+events.add(new PointerEvent().move(184.f, 133.f));
+events.add(new PointerEvent().move(184.f, 152.f));
+events.add(new PointerEvent().move(184.f, 158.f));
+events.add(new PointerEvent().move(184.f, 163.f));
+events.add(new PointerEvent().move(183.f, 167.f));
+events.add(new PointerEvent().move(183.f, 174.f));
+events.add(new PointerEvent().move(183.f, 183.f));
+events.add(new PointerEvent().up(183.f, 184.f));
+
+// Stroke 2
+events.add(new PointerEvent().down(150.f, 126.f));
+events.add(new PointerEvent().move(151.f, 126.f));
+events.add(new PointerEvent().move(152.f, 126.f));
+events.add(new PointerEvent().move(158.f, 126.f));
+events.add(new PointerEvent().move(166.f, 126.f));
+events.add(new PointerEvent().move(184.f, 126.f));
+events.add(new PointerEvent().move(190.f, 128.f));
+events.add(new PointerEvent().move(196.f, 128.f));
+events.add(new PointerEvent().move(200.f, 128.f));
+events.add(new PointerEvent().move(207.f, 128.f));
+events.add(new PointerEvent().move(208.f, 128.f));
+events.add(new PointerEvent().up(209.f, 128.f));
+
+// Feed the editor
+editor.pointerEvents(events.toArray(new PointerEvent[0]), false);
+
+When calling pointerEvents() to process a large quantity of strokes, you should set the processGestures parameter to false to explicitly prevent gesture detection and allow better performances.
+
+For the particular case of “Text Document” parts, you should:
+
+    Send each batch of pointer events to a dedicated “Text”, “Math”, “Diagram” or “Raw Content” part depending on the type of the content you want to process. Remember to disable the guides on “Text” parts if you cannot ensure that they will match the baselines of the ink words.
+    Call waitForIdle() to ensure that the recognition is complete.
+    Paste as a block into your “Text Document” part at the appropriate location.
+
+When pasting a “Text” part into a “Text Document”, iink SDK will attempt to automatically adjust the handwritten content to the guides.
+
+It is possible to configure the maximum number of threads to be used by the engine for text recognition, by setting max-recognition-thread-count configuration value to the number of threads to be used (default is 1). This tuning might be relevant when processing at one time a large series of events.
+Edit and decoration gestures
+
+MyScript iink SDK supports all the standard gestures defined as part of Interactive Ink.
+
+There is nothing particular to do to benefit from gestures when using the PEN tool. The SDK will take care of detecting and applying the effect of the gestures from the provided input without any plumbing needed.
+
+Decorations can be styled and will be taken into account when generating some of the export formats (ex: text underlining will be ignored for a simple text export, will turn bold in the case of a docx export and be semantically tagged in a jiix export).
+
+You can get a notification when a pen or a touch gesture is detected by implementing the IGestureHandler interface, then registering it on your Editor with the setGestureHandler​ method.
+
+By default, the behaviour associated with the gesture is the same as in previous iink versions. But you can choose the action associated to the gesture to decide what to do with its stroke:
+
+    ADD_STROKE to add the gesture stroke as a regular stroke (if relevant) without applying the gesture behavior.
+    APPLY_GESTURE to apply the gesture behavior, as configured in the editor.
+    IGNORE to discard the gesture stroke without applying the gesture behavior.
+
+In order to avoid any action conflict, only one GestureHandler can be used per editor.
+Other edit operations
+
+The following operations can be directly made on the content of a part via an Editor object:
+
+    Undo/Redo : iink operations handled by the undo/redo stack are operations that modify the model. Such operations include adding stroke, applying gestures, converting the content.
+
+For further details or if you need to integrate iink SDK undo/redo with your own undo/redo stack, refer to this page (advanced)
+
+    Clear is applied on the whole “ContentPart”.
+
+Most operations, however, are to be done on content blocks.
+Recognition feedback
+Display recognized text in real time
+
+The UI Reference Implementation comes with a “smart guide” component that lets you provide real-time text recognition feedback to your end users and allows them to select alternative interpretations from the engine.
+
+Refer to the page describing how to work with text recognition candidates for more information.
+Improve user experience
+
+    Sometimes, the block extraction or segmentation does not give the expected result, leading to a degraded user experience with some ink recognized as text instead of shape, or shape as drawing, etc. In order to cope with such a situation, the lasso selector can be used to select some content, and then force the selected content to be recognized as a specific type and/or grouped with the editor setSelectionType(). The list of possible types is provided by the getAvailableSelectionTypes() method.
+
+    The setSelectionType() can also be used to perform math recognition on a selection of strokes of a “Raw Content” part. In this case, make sure to activate the math recognition by adding the math in the raw-content.recognition.types and deploy the math resources in your application.
+
+Monitoring changes in the model
+
+There are cases where it makes sense to be notified of what occurs in the model. For instance, you may want to update the states of the undo/redo buttons of your interface or only permit an export when there is something to export.
+
+You can call addListener() and removeListener() to respectively attach and remove an object of your choice that implements the IEditorListener interface: the interface has several methods that let you know when any change occurs within the model.
+
+IEditorListener also provides an onError() method that you can implement to be notified when anything goes wrong. It is strongly recommended to implement it, as it allows detecting some frequently seen issues such as recognition assets or configurations not found by the engine.
+
+In addition, the Editor class provides other useful methods/properties, such as:
+
+    isIdle() - Returns true if any ongoing processing by the engine is over
+    waitForIdle() - Blocks your thread until the engine is idle. It allows waiting for recognition to be complete before exporting, converting or manipulating the content.
+
+isIdle() will always return false in a contentChanged() notification.
+To avoid deadlocks, do not call waitForIdle(), undo() or redo() from inside an IEditorListener notification.
+
+If you rely on the reference rendering implementation provided by MyScript, ink input will be transparently managed by the EditorView.
+
+At this stage, you have learnt to write in an application and see actual ink being rendered!

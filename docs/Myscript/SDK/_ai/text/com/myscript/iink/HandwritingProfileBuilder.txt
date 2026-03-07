@@ -1,0 +1,270 @@
+SOURCE: com/myscript/iink/HandwritingProfileBuilder.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Class HandwritingProfileBuilder
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.HandwritingProfileBuilder
+
+All Implemented Interfaces:
+
+AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+public class HandwritingProfileBuilder
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+implements AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+A builder for handwriting profiles.
+
+Since:
+
+4.1
+
+See Also:
+
+HandwritingProfile [link: HandwritingProfile.html]
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final void
+
+close [link: #close()]()
+
+final @NotNull HandwritingProfile [link: HandwritingProfile.html]
+
+createFromFile [link: #createFromFile(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] fileName)
+
+Creates a writing profile from a ContentPackage file name.
+
+final @NotNull HandwritingProfile [link: HandwritingProfile.html]
+
+createFromSelection [link: #createFromSelection(com.myscript.iink.ContentSelection)] (@NotNull ContentSelection [link: ContentSelection.html] selection)
+
+Creates a writing profile from a ContentSelection.
+
+protected void
+
+finalize [link: #finalize()]()
+
+final @NotNull HandwritingProfile [link: HandwritingProfile.html]
+
+getPredefinedProfileAt [link: #getPredefinedProfileAt(int)] (int index)
+
+Returns the predefined writing profile at the given index.
+
+final int
+
+getPredefinedProfileCount [link: #getPredefinedProfileCount()]()
+
+Retrieves the number of predefined writing profiles.
+
+final boolean
+
+isClosed [link: #isClosed()]()
+
+Tells whether the close() [link: #close()] method has been called.
+
+final @NotNull HandwritingProfile [link: HandwritingProfile.html]
+
+load [link: #load(java.lang.String)] (@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] fileName)
+
+Loads a writing profile from file.
+
+final void
+
+store [link: #store(com.myscript.iink.HandwritingProfile,java.lang.String)] (@NotNull HandwritingProfile [link: HandwritingProfile.html] profile,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] fileName)
+
+Stores a writing profile to file.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Method Details
+
+finalize
+
+protected void finalize ()
+throws Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+Overrides:
+
+finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Throws:
+
+Throwable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html]
+
+close
+
+public final void close ()
+
+Specified by:
+
+close [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html#close()] in interface AutoCloseable [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AutoCloseable.html]
+
+isClosed
+
+public final boolean isClosed ()
+
+Tells whether the close() [link: #close()] method has been called. Once an object
+is closed any method will throw IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html].
+
+Returns:
+
+true if this object is closed.
+
+getPredefinedProfileCount
+
+public final int getPredefinedProfileCount ()
+
+Retrieves the number of predefined writing profiles.
+
+Returns:
+
+the number of predefined profiles.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting profile builder is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when the number of predefined writing profiles cannot be retrieved.
+
+Since:
+
+4.2
+
+getPredefinedProfileAt
+
+@NotNull
+public final @NotNull HandwritingProfile [link: HandwritingProfile.html] getPredefinedProfileAt (int index)
+
+Returns the predefined writing profile at the given index.
+
+Parameters:
+
+index - the predefined index of the writing profile.
+
+Returns:
+
+the predefined writing profile.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting profile builder is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when index is not valid.
+
+Since:
+
+4.2
+
+createFromSelection
+
+@NotNull
+public final @NotNull HandwritingProfile [link: HandwritingProfile.html] createFromSelection (@NotNull
+@NotNull ContentSelection [link: ContentSelection.html] selection)
+
+Creates a writing profile from a ContentSelection.
+
+Parameters:
+
+selection - the content selection to be used for writing profile generation.
+
+Returns:
+
+the newly created writing profile.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting profile builder is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when selection is null or does not contain enough recognized text.
+
+createFromFile
+
+@NotNull
+public final @NotNull HandwritingProfile [link: HandwritingProfile.html] createFromFile (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] fileName)
+
+Creates a writing profile from a ContentPackage file name.
+
+Parameters:
+
+fileName - the ContentPackage file name.
+
+Returns:
+
+the newly created writing profile.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting profile builder is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when file cannot be opened.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when file does not contain enough recognized text.
+
+load
+
+@NotNull
+public final @NotNull HandwritingProfile [link: HandwritingProfile.html] load (@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] fileName)
+
+Loads a writing profile from file.
+
+Parameters:
+
+fileName - the file name.
+
+Returns:
+
+the newly created writing profile.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting profile builder is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when `fileName` does not exist.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when `fileName` is not a valid file name.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when `fileName` is not a valid profile.
+
+store
+
+public final void store (@NotNull
+@NotNull HandwritingProfile [link: HandwritingProfile.html] profile,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] fileName)
+
+Stores a writing profile to file.
+
+Parameters:
+
+profile - the writing profile.
+
+fileName - the profile file name.
+
+Throws:
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when this handwriting profile builder is closed.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when `profile` is closed.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when `profile` is invalid.
+
+IllegalArgumentException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalArgumentException.html] - when `profile` is a predefined HandwritingProfile.
+
+IllegalStateException [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/IllegalStateException.html] - when `profile` cannot be stored.

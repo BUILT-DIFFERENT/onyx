@@ -1,24 +1,8 @@
 import { z } from 'zod';
 
 /**
- * StrokeStyleSchema - matches V0-api.md:127-134
- * Style properties for a stroke (pen, highlighter, eraser)
- */
-export const StrokeStyleSchema = z.object({
-  tool: z.enum(['pen', 'highlighter', 'eraser']),
-  color: z.string().optional(), // hex color
-  baseWidth: z.number(),
-  minWidthFactor: z.number(),
-  maxWidthFactor: z.number(),
-  lineStyle: z.enum(['solid', 'dashed', 'dotted']).optional(),
-  nibRotation: z.boolean(),
-});
-
-export type StrokeStyle = z.infer<typeof StrokeStyleSchema>;
-
-/**
- * BoundsSchema - matches V0-api.md:107-110
- * Bounding box for a stroke
+ * BoundsSchema — reusable bounding box schema
+ * Used by search hit positions and other spatial references.
  */
 export const BoundsSchema = z.object({
   x: z.number(),

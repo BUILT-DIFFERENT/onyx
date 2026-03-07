@@ -10,13 +10,14 @@ data class Brush(
     val color: String = "#000000",
     // in page units (pt)
     val baseWidth: Float = 2.0f,
-    val minWidthFactor: Float = 0.85f,
-    val maxWidthFactor: Float = 1.15f,
+    val minWidthFactor: Float = 0.15f,
+    val maxWidthFactor: Float = 2.5f,
     // 0..1 controls geometric stroke smoothing.
-    val smoothingLevel: Float = 0.35f,
+    val smoothingLevel: Float = 0.5f,
     // 0..1 controls start/end taper intensity.
-    val endTaperStrength: Float = 0.35f,
+    val endTaperStrength: Float = 0.6f,
     val lineStyle: StrokeLineStyle = StrokeLineStyle.SOLID,
+    val nibRotation: Boolean = false,
 ) {
     fun toStrokeStyle(): StrokeStyle =
         StrokeStyle(
@@ -28,6 +29,6 @@ data class Brush(
             smoothingLevel = smoothingLevel,
             endTaperStrength = endTaperStrength,
             lineStyle = lineStyle,
-            nibRotation = false,
+            nibRotation = nibRotation,
         )
 }

@@ -1,0 +1,52 @@
+Interactive features
+
+MyScript iink SDK supports various interactive features.
+
+Supported gestures and smart tools depend on the type of content. The possibilities are summarized by the following tables.
+Programmatic interactivity with OffscreenEditor
+Ink gestures
+  	Raw Content1
+Scratch 	X
+Strikethrough 	X
+Join 	X
+Insert 	X
+Surround 	X
+Underline 	X
+Rendering-driven interactivity with Editor
+Editing and decoration gestures
+  	Text Document 	Text 	Diagram 	Math 	Raw Content1
+Scratch 	X 	X 	X 	X 	X
+Strikethrough 	X 	X 	X 	X 	X
+Join 	X 	X 	X 	  	X
+Insert 	X 	X 	X 	  	X
+Surround 	X 	X 	  	  	X
+Underline 	X 	X 	X2 	  	X
+Double underline 	X 	X 	X2 	  	X
+Slice3 	X 	  	  	  	 
+Touch gestures
+  	Text Document 	Text 	Diagram 	Math 	Raw Content
+Tap 	X 	  	X 	  	X4
+Double tap 	X 	  	  	  	 
+Long press 	X 	  	  	  	 
+Smart tools
+  	Text Document 	Text 	Diagram 	Math 	Raw Content
+Typeset and Beautify 	X 	X 	X 	X 	X5
+Intelligent Eraser6 	X 	X 	X 	X 	X
+Lasso Selector 	X7 	  	X 	  	X
+Move/resize selected block 	X 	  	X 	  	X4
+Highlighter 	X7 	X 	X 	  	X
+
+    Gestures are disabled by default in Raw Content but can be enabled with the raw-content.pen.gestures setting. ↩ ↩2
+
+    These gestures are disabled by default in Diagram but can be enabled with the diagram.pen.gestures setting. ↩ ↩2
+
+    The slice gesture is enabled by default but can be deactivated with the text-document.slice-gesture.enable setting. ↩
+
+    Requires to activate the classification/recognition with the raw-content.classification/recognition.types properties and configuration tap interaction with the interactivity customization keys. ↩ ↩2
+
+    Requires to activate the classification/recognition with the raw-content.classification/recognition.types properties and to tune the raw-content.convert.types property. See the raw content configuration section. ↩
+
+    By default, for Text, Math, Diagram and Text Document, the intelligent eraser removes any object it touches. By contrast, for Raw Content, it erases ink portions within its trajectory. In both cases, this eraser configuration can be modified thanks to the erase-precisely property. ↩
+
+    In all blocks of Text Document parts except Math blocks. ↩ ↩2
+

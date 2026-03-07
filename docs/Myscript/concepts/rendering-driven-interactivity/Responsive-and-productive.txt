@@ -1,0 +1,17 @@
+Responsive and productive
+
+In rendering-driven use cases, besides gestures and smart tools, MyScript iink technology proposes you responsive and productive tools.
+Reflow
+
+MyScript iink technology enables interactive content, either handwritten or typeset, to reflow and tune to the view size.
+
+Changing your device orientation or switching device triggers this reflow. MyScript iink engine might modify block dimensions or update ink size and arrangement when necessary.
+Digital content ready to use in your digital workflow
+
+In addition, you can create a full ready-to-use digital document from your ink, empowering your productivity. Interactive ink lets you structure your content in several areas. Each one has a specific and dedicated purpose: Text, Math, Diagram or Raw content.
+
+So, MyScript iink technology offers you a container hosting a collection of items as a dynamic and responsive stream of contents.
+
+Furthermore, you can manipulate each of them using touch gestures. You can move and resize blocks, making the formatting an easy task.
+
+Once you have finished your editing, you can export your content in a format compatible with your digital workflow such as docx or html. MyScript iink technology thus makes your ink immediately available for reuse into your digital workflow.

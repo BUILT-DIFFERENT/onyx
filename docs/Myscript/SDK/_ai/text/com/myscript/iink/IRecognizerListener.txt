@@ -1,0 +1,80 @@
+SOURCE: com/myscript/iink/IRecognizerListener.html
+
+Package com.myscript.iink [link: package-summary.html]
+
+Interface IRecognizerListener
+
+public interface IRecognizerListener
+
+The listener interface for receiving recognizer events.
+
+Since:
+
+2.1
+
+See Also:
+
+Recognizer.addListener(IRecognizerListener) [link: Recognizer.html#addListener(com.myscript.iink.IRecognizerListener)]
+
+Recognizer.removeListener(IRecognizerListener) [link: Recognizer.html#removeListener(com.myscript.iink.IRecognizerListener)]
+
+Method Summary
+
+All Methods Instance Methods Abstract Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+void
+
+onError [link: #onError(com.myscript.iink.Recognizer,com.myscript.iink.RecognizerError,java.lang.String)] (@NotNull Recognizer [link: Recognizer.html] recognizer,
+@NotNull RecognizerError [link: RecognizerError.html] err,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] message)
+
+Invoked when an error has occurred.
+
+void
+
+resultChanged [link: #resultChanged(com.myscript.iink.Recognizer,java.lang.String)] (@NotNull Recognizer [link: Recognizer.html] recognizer,
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] result)
+
+Invoked when the content has changed.
+
+Method Details
+
+resultChanged
+
+void resultChanged (@NotNull
+@NotNull Recognizer [link: Recognizer.html] recognizer,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] result)
+
+Invoked when the content has changed.
+
+Parameters:
+
+recognizer - the recognizer on which the result has changed.
+
+result - the new result.
+
+onError
+
+void onError (@NotNull
+@NotNull Recognizer [link: Recognizer.html] recognizer,
+@NotNull
+@NotNull RecognizerError [link: RecognizerError.html] err,
+@NotNull
+@NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] message)
+
+Invoked when an error has occurred.
+
+Parameters:
+
+recognizer - the recognizer associated with block on which the error has occurred.
+
+err - the error code corresponding to the error.
+
+message - the error message.

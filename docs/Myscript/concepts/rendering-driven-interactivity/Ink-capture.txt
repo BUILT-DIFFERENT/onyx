@@ -1,0 +1,13 @@
+Ink capture
+
+The principle of rendering-driven interactivity is to delegate the display management to MyScript iink SDK so that it can handle the entire rendering canvas and perform all interactivity functions for you.
+
+It allows you to benefit from advanced interactive features at low cost. The first benefit is drawing the iink context. MyScript iink SDK will display all elements (strokes, text glyphs, shapes, images).
+
+It will also manage the ink capture and its rendering, offering you multiple options to meet your user expectations by allowing you to configure:
+
+    The color.
+    The stroke size, based on pressure, writing speed, or a mix of both.
+    The brush style.
+
+The latency of ink capture is optimized to provide the best writing experience for the user. However, hardware and system limitations can affect this latency. Therefore, MyScript SDK provides advanced ink prediction technology that allows you to overcome device limitations.

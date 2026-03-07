@@ -2,182 +2,199 @@ import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
 export default defineSchema({
-  notes: defineTable({
-    noteId: v.string(), // UUID string
-    ownerUserId: v.string(), // Clerk user ID
-    title: v.string(),
-    createdAt: v.number(), // Unix ms timestamp
-    updatedAt: v.number(), // Unix ms timestamp
-    deletedAt: v.optional(v.number()), // Unix ms timestamp, absent = not deleted
-    // Note: folderId is not included because it's local-only metadata.
-  })
-    .index('by_owner', ['ownerUserId'])
-    .index('by_noteId', ['noteId']),
-  pageObjects: defineTable({
-    objectId: v.string(),
-    pageId: v.string(),
-    noteId: v.string(),
-    kind: v.union(
-      v.literal('shape'),
-      v.literal('image'),
-      v.literal('text'),
-      v.literal('audio'),
-      v.literal('sticky'),
-      v.literal('scan'),
-      v.literal('file'),
-    ),
-    zIndex: v.number(),
-    x: v.number(),
-    y: v.number(),
-    width: v.number(),
-    height: v.number(),
-    rotationDeg: v.number(),
-    payload: v.union(
-      v.object({
-        shapeType: v.union(v.literal('line'), v.literal('rectangle'), v.literal('ellipse')),
-        strokeColor: v.optional(v.string()),
-        strokeWidth: v.optional(v.number()),
-        fillColor: v.optional(v.union(v.string(), v.null())),
-      }),
-      v.object({
-        assetId: v.optional(v.union(v.string(), v.null())),
-        mimeType: v.optional(v.union(v.string(), v.null())),
-        sourceUri: v.optional(v.union(v.string(), v.null())),
-        displayName: v.optional(v.union(v.string(), v.null())),
-      }),
-      v.object({
-        text: v.optional(v.string()),
-        align: v.optional(v.union(v.literal('start'), v.literal('center'), v.literal('end'))),
-        color: v.optional(v.string()),
-        fontSizeSp: v.optional(v.number()),
-        bold: v.optional(v.boolean()),
-        italic: v.optional(v.boolean()),
-        underline: v.optional(v.boolean()),
-      }),
-      v.object({
-        assetId: v.optional(v.union(v.string(), v.null())),
-        mimeType: v.optional(v.union(v.string(), v.null())),
-        durationMs: v.optional(v.number()),
-        waveformAssetId: v.optional(v.union(v.string(), v.null())),
-      }),
-      v.object({
-        text: v.optional(v.string()),
-        color: v.optional(v.string()),
-        style: v.optional(v.union(v.literal('square'), v.literal('rounded'))),
-      }),
-      v.object({
-        assetId: v.optional(v.union(v.string(), v.null())),
-        pageCount: v.optional(v.number()),
-        source: v.optional(v.union(v.literal('camera'), v.literal('gallery'))),
-      }),
-      v.object({
-        assetId: v.optional(v.union(v.string(), v.null())),
-        fileName: v.optional(v.string()),
-        mimeType: v.optional(v.union(v.string(), v.null())),
-        sizeBytes: v.optional(v.number()),
-      }),
-    ),
-    sync: v.optional(
-      v.object({
-        objectRevision: v.number(),
-        parentRevision: v.optional(v.number()),
-        lastMutationId: v.string(),
-        conflictPolicy: v.union(v.literal('lastWriteWins'), v.literal('manualResolve')),
-      }),
-    ),
+  // ─── Users ───────────────────────────────────────────────────────────
+  users: defineTable({
+    clerkUserId: v.string(),
+    email: v.string(),
+    displayName: v.string(),
+    avatarUrl: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
-    deletedAt: v.optional(v.number()),
   })
-    .index('by_object_id', ['objectId'])
-    .index('by_page', ['pageId'])
-    .index('by_note', ['noteId'])
-    .index('by_kind', ['kind'])
-    .index('by_page_zindex', ['pageId', 'zIndex']),
-  searchIndexTokens: defineTable({
-    tokenId: v.string(),
-    noteId: v.string(),
-    pageId: v.string(),
-    token: v.string(),
-    displayText: v.optional(v.string()),
-    source: v.union(v.literal('handwriting'), v.literal('pdfOcr')),
-    bounds: v.object({
-      x: v.number(),
-      y: v.number(),
-      width: v.number(),
-      height: v.number(),
-      rotationDeg: v.optional(v.number()),
-    }),
-    indexVersion: v.number(),
-    mergeKey: v.string(),
-    sourceRevision: v.number(),
-    sourceUpdatedAt: v.number(),
-    indexedAt: v.number(),
-    payload: v.union(
-      v.object({
-        recognitionProvider: v.optional(v.union(v.literal('myscript'), v.literal('mlkit'), v.literal('other'))),
-        confidence: v.optional(v.number()),
-        strokeIds: v.optional(v.array(v.string())),
-      }),
-      v.object({
-        pdfAssetId: v.string(),
-        pdfPageNo: v.number(),
-        ocrEngine: v.optional(v.union(v.literal('pdfium'), v.literal('mlkit'), v.literal('tesseract'), v.literal('other'))),
-        confidence: v.optional(v.number()),
-      }),
+    .index('by_clerk_user_id', ['clerkUserId'])
+    .index('by_email', ['email']),
+
+  // ─── Folders (server-synced, arbitrary nesting) ──────────────────────
+  folders: defineTable({
+    folderId: v.string(), // UUID
+    ownerUserId: v.string(), // FK → users.clerkUserId
+    parentFolderId: v.optional(v.string()), // self-ref; null = root
+    name: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_folder_id', ['folderId'])
+    .index('by_owner', ['ownerUserId']),
+
+  // ─── Notebooks ───────────────────────────────────────────────────────
+  notebooks: defineTable({
+    notebookId: v.string(), // UUID
+    ownerUserId: v.string(), // FK → users.clerkUserId
+    folderId: v.optional(v.string()), // FK → folders.folderId; null = root
+    title: v.string(),
+    coverColor: v.string(), // hex
+    isFavorite: v.boolean(),
+    notebookMode: v.union(v.literal('paged'), v.literal('infinite_canvas')),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    deletedAt: v.optional(v.number()), // soft delete; null = active
+
+    // Notebook-level Yjs snapshot (R2)
+    snapshotUrl: v.optional(v.string()),
+    snapshotStateVector: v.optional(v.string()), // base64-encoded
+
+    // First-page preview (for library grid)
+    previewThumbAssetId: v.optional(v.string()),
+    previewPageAssetId: v.optional(v.string()),
+    previewUpdatedAt: v.optional(v.number()),
+
+    // Sharing metadata (denormalized for list queries)
+    hasPublicLink: v.optional(v.boolean()),
+    shareCount: v.optional(v.number()),
+  })
+    .index('by_notebook_id', ['notebookId'])
+    .index('by_owner', ['ownerUserId'])
+    .index('by_folder', ['folderId'])
+    .index('by_owner_favorite', ['ownerUserId', 'isFavorite']),
+
+  // ─── Pages ───────────────────────────────────────────────────────────
+  pages: defineTable({
+    pageId: v.string(), // UUID
+    notebookId: v.string(), // FK → notebooks.notebookId
+    order: v.number(), // sort order within notebook
+    templateType: v.union(
+      v.literal('blank'),
+      v.literal('lined'),
+      v.literal('dotted'),
+      v.literal('grid'),
     ),
-    deletedAt: v.optional(v.number()),
+    templateDensity: v.number(),
+    templateLineWidth: v.number(),
+    backgroundColorHex: v.string(),
+    widthPx: v.number(), // default 794; A4 at 96 DPI
+    heightPx: v.number(), // default 1123; 0 = infinite canvas page
+    pdfAssetId: v.optional(v.string()), // FK → assets.assetId
+    pdfPageNo: v.optional(v.number()), // 0-based index into PDF
+
+    // Per-page Yjs snapshot (R2)
+    pageSnapshotUrl: v.optional(v.string()),
+    pageSnapshotStateVector: v.optional(v.string()), // base64-encoded
+
+    updatedAt: v.number(),
   })
-    .index('by_token_id', ['tokenId'])
-    .index('by_note', ['noteId'])
+    .index('by_page_id', ['pageId'])
+    .index('by_notebook', ['notebookId'])
+    .index('by_notebook_order', ['notebookId', 'order']),
+
+  // ─── CRDT Updates (Yjs binary deltas) ────────────────────────────────
+  // Small Yjs update payloads (<10 KB each), stored temporarily in Convex.
+  // Cleaned up after snapshots are written to R2.
+  crdtUpdates: defineTable({
+    notebookId: v.string(),
+    pageId: v.optional(v.string()), // null = notebook-level doc
+    authorUserId: v.string(),
+    deviceId: v.string(),
+    updateBinary: v.string(), // base64-encoded Yjs update binary
+    createdAt: v.number(),
+  })
+    .index('by_notebook_page', ['notebookId', 'pageId', 'createdAt'])
+    .index('by_notebook', ['notebookId', 'createdAt']),
+
+  // ─── Shares (invite-by-email) ────────────────────────────────────────
+  shares: defineTable({
+    notebookId: v.string(),
+    granteeUserId: v.string(),
+    role: v.union(v.literal('viewer'), v.literal('editor')),
+    grantedByUserId: v.string(),
+    createdAt: v.number(),
+    revokedAt: v.optional(v.number()),
+  })
+    .index('by_notebook', ['notebookId'])
+    .index('by_grantee', ['granteeUserId']),
+
+  // ─── Public Links ────────────────────────────────────────────────────
+  publicLinks: defineTable({
+    notebookId: v.string(),
+    linkToken: v.string(), // high-entropy URL token
+    createdByUserId: v.string(),
+    createdAt: v.number(),
+    revokedAt: v.optional(v.number()),
+  })
+    .index('by_link_token', ['linkToken'])
+    .index('by_notebook', ['notebookId']),
+
+  // ─── Assets (R2 blob references) ─────────────────────────────────────
+  // Convex stores metadata only; actual binary lives in Cloudflare R2.
+  assets: defineTable({
+    assetId: v.string(), // UUID
+    ownerUserId: v.string(),
+    notebookId: v.optional(v.string()),
+    type: v.union(
+      v.literal('pdf'),
+      v.literal('image'),
+      v.literal('audio'),
+      v.literal('snapshot'),
+      v.literal('exportPdf'),
+      v.literal('thumbnail'),
+    ),
+    r2Key: v.string(),
+    contentType: v.string(),
+    size: v.optional(v.number()),
+    sha256: v.optional(v.string()),
+    confirmed: v.boolean(), // false until client confirms upload completed
+    createdAt: v.number(),
+  })
+    .index('by_asset_id', ['assetId'])
+    .index('by_owner', ['ownerUserId'])
+    .index('by_notebook', ['notebookId']),
+
+  // ─── Presence (collaborator cursors) ─────────────────────────────────
+  // Updated every 500ms while drawing; auto-expires after 10s of no updates.
+  presence: defineTable({
+    notebookId: v.string(),
+    pageId: v.string(),
+    userId: v.string(),
+    cursorX: v.number(), // px, page-space
+    cursorY: v.number(), // px, page-space
+    activeTool: v.string(), // "pen" | "highlighter" | "eraser" | "lasso"
+    activeColor: v.optional(v.string()), // hex
+    updatedAt: v.number(),
+  })
+    .index('by_notebook', ['notebookId'])
+    .index('by_user_notebook', ['userId', 'notebookId']),
+
+  // ─── Search Texts ────────────────────────────────────────────────────
+  // HWR recognized text and PDF extracted text, pushed by Android.
+  searchTexts: defineTable({
+    notebookId: v.string(),
+    pageId: v.string(),
+    recognizedText: v.optional(v.string()), // IInk HWR output
+    pdfText: v.optional(v.string()), // PDFBox extracted text
+    source: v.union(
+      v.literal('handwriting'),
+      v.literal('pdfText'),
+      v.literal('both'),
+    ),
+    extractedAt: v.number(),
+  })
+    .index('by_notebook', ['notebookId'])
     .index('by_page', ['pageId'])
-    .index('by_note_source', ['noteId', 'source'])
-    .index('by_note_token', ['noteId', 'token']),
-  gestureSettings: defineTable({
-    profileId: v.string(),
-    ownerUserId: v.string(),
-    singleFingerMode: v.union(v.literal('DRAW'), v.literal('PAN'), v.literal('IGNORE')),
-    doubleFingerMode: v.union(v.literal('ZOOM_PAN'), v.literal('PAN_ONLY'), v.literal('IGNORE')),
-    stylusPrimaryAction: v.union(v.literal('ERASER_HOLD'), v.literal('ERASER_TOGGLE'), v.literal('NO_ACTION')),
-    stylusSecondaryAction: v.union(v.literal('ERASER_HOLD'), v.literal('ERASER_TOGGLE'), v.literal('NO_ACTION')),
-    stylusLongHoldAction: v.union(v.literal('ERASER_HOLD'), v.literal('ERASER_TOGGLE'), v.literal('NO_ACTION')),
-    doubleTapZoomAction: v.union(v.literal('NONE'), v.literal('CYCLE_PRESET'), v.literal('FIT_TO_PAGE')),
-    doubleTapZoomPointerMode: v.union(v.literal('FINGER_ONLY'), v.literal('FINGER_AND_STYLUS')),
-    twoFingerTapAction: v.union(v.literal('NONE'), v.literal('UNDO'), v.literal('REDO')),
-    threeFingerTapAction: v.union(v.literal('NONE'), v.literal('UNDO'), v.literal('REDO')),
-    latencyOptimizationMode: v.union(v.literal('NORMAL'), v.literal('FAST_EXPERIMENTAL')),
-    updatedAt: v.number(),
+    .searchIndex('search_content', {
+      searchField: 'recognizedText',
+      filterFields: ['notebookId'],
+    })
+    .searchIndex('search_pdf_content', {
+      searchField: 'pdfText',
+      filterFields: ['notebookId'],
+    }),
+
+  // ─── Exports (user-initiated PDF export) ─────────────────────────────
+  exports: defineTable({
+    notebookId: v.string(),
+    exportAssetId: v.string(), // FK → assets.assetId
+    mode: v.literal('flattened'), // v0: flattened only
+    createdByUserId: v.string(),
+    createdAt: v.number(),
   })
-    .index('by_profile_id', ['profileId'])
-    .index('by_owner', ['ownerUserId']),
-  templateScopes: defineTable({
-    scopeId: v.string(),
-    noteId: v.string(),
-    templateId: v.optional(v.union(v.string(), v.null())),
-    backgroundKind: v.union(v.literal('blank'), v.literal('grid'), v.literal('lined'), v.literal('dotted')),
-    spacing: v.number(),
-    colorHex: v.string(),
-    paperSize: v.optional(v.union(v.literal('a4'), v.literal('letter'), v.literal('infinite'))),
-    lineWidth: v.optional(v.number()),
-    category: v.optional(v.union(v.literal('default'), v.literal('planner'), v.literal('music'), v.literal('custom'))),
-    applyScope: v.union(v.literal('currentPage'), v.literal('allPages'), v.literal('newPages')),
-    updatedAt: v.number(),
-  })
-    .index('by_scope_id', ['scopeId'])
-    .index('by_note', ['noteId']),
-  exportMetadata: defineTable({
-    exportId: v.string(),
-    noteId: v.string(),
-    ownerUserId: v.string(),
-    format: v.literal('pdf'),
-    mode: v.union(v.literal('flattened'), v.literal('layered')),
-    status: v.union(v.literal('queued'), v.literal('running'), v.literal('succeeded'), v.literal('failed')),
-    assetId: v.optional(v.union(v.string(), v.null())),
-    requestedAt: v.number(),
-    completedAt: v.optional(v.union(v.number(), v.null())),
-    errorMessage: v.optional(v.string()),
-  })
-    .index('by_export_id', ['exportId'])
-    .index('by_note', ['noteId'])
-    .index('by_owner', ['ownerUserId']),
+    .index('by_notebook', ['notebookId']),
 });

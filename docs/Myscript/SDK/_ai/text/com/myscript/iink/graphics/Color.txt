@@ -1,0 +1,331 @@
+SOURCE: com/myscript/iink/graphics/Color.html
+
+Package com.myscript.iink.graphics [link: package-summary.html]
+
+Class Color
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.iink.graphics.Color
+
+public class Color
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Red green blue alpha color representation.
+
+Field Summary
+
+Fields
+
+Modifier and Type
+
+Field
+
+Description
+
+static final Color [link: Color.html]
+
+BLACK [link: #BLACK]
+
+static final Color [link: Color.html]
+
+NONE [link: #NONE]
+
+final int
+
+rgba [link: #rgba]
+
+static final Color [link: Color.html]
+
+WHITE [link: #WHITE]
+
+Constructor Summary
+
+Constructors
+
+Constructor
+
+Description
+
+Color [link: #%3Cinit%3E(int)] (int rgba)
+
+Constructor.
+
+Color [link: #%3Cinit%3E(int,int,int,float)] (int r,
+int g,
+int b,
+float a)
+
+Constructor.
+
+Color [link: #%3Cinit%3E(int,int,int,int)] (int r,
+int g,
+int b,
+int a)
+
+Constructor.
+
+Color [link: #%3Cinit%3E(com.myscript.iink.graphics.Color)] (@NotNull Color [link: Color.html] other)
+
+Copy constructor.
+
+Method Summary
+
+All Methods Instance Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+final int
+
+a [link: #a()]()
+
+Returns the alpha channel value.
+
+final float
+
+a_f [link: #a_f()]()
+
+Returns the normalised aslpha channel value.
+
+final int
+
+b [link: #b()]()
+
+Returns the blue channel value.
+
+final float
+
+b_f [link: #b_f()]()
+
+Returns the normalised blue channel value.
+
+boolean
+
+equals [link: #equals(java.lang.Object)] (@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+final int
+
+g [link: #g()]()
+
+Returns the green channel value.
+
+final float
+
+g_f [link: #g_f()]()
+
+Returns the normalised green channel value.
+
+final int
+
+hashCode [link: #hashCode()]()
+
+final int
+
+r [link: #r()]()
+
+Returns the red channel value.
+
+final float
+
+r_f [link: #r_f()]()
+
+Returns the normalised red channel value.
+
+final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html]
+
+toString [link: #toString()]()
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Field Details
+
+rgba
+
+public final int rgba
+
+NONE
+
+public static final Color [link: Color.html] NONE
+
+BLACK
+
+public static final Color [link: Color.html] BLACK
+
+WHITE
+
+public static final Color [link: Color.html] WHITE
+
+Constructor Details
+
+Color
+
+public Color (@NotNull
+@NotNull Color [link: Color.html] other)
+
+Copy constructor.
+
+Parameters:
+
+other - copied object.
+
+Color
+
+public Color (int rgba)
+
+Constructor.
+
+Parameters:
+
+rgba - the color value packed as 32bit.
+
+Color
+
+public Color (int r,
+int g,
+int b,
+int a)
+
+Constructor.
+
+Parameters:
+
+r - the red channel value (= 0..255).
+
+g - the green channel value (= 0..255).
+
+b - the blue channel value (= 0..255).
+
+a - the alpha channel value (= 0..255).
+
+Color
+
+public Color (int r,
+int g,
+int b,
+float a)
+
+Constructor.
+
+Parameters:
+
+r - the red channel value (= 0..255).
+
+g - the green channel value (= 0..255).
+
+b - the blue channel value (= 0..255).
+
+a - the alpha channel value (= 0..1).
+
+Method Details
+
+r
+
+public final int r ()
+
+Returns the red channel value.
+
+Returns:
+
+the red channel value.
+
+g
+
+public final int g ()
+
+Returns the green channel value.
+
+Returns:
+
+the green channel value.
+
+b
+
+public final int b ()
+
+Returns the blue channel value.
+
+Returns:
+
+the blue channel value.
+
+a
+
+public final int a ()
+
+Returns the alpha channel value.
+
+Returns:
+
+the alpha channel value.
+
+r_f
+
+public final float r_f ()
+
+Returns the normalised red channel value.
+
+Returns:
+
+the ref channel value.
+
+g_f
+
+public final float g_f ()
+
+Returns the normalised green channel value.
+
+Returns:
+
+the green channel value.
+
+b_f
+
+public final float b_f ()
+
+Returns the normalised blue channel value.
+
+Returns:
+
+the blue channel value.
+
+a_f
+
+public final float a_f ()
+
+Returns the normalised aslpha channel value.
+
+Returns:
+
+the alpha channel value.
+
+equals
+
+public boolean equals (@Nullable
+@Nullable Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html] obj)
+
+Overrides:
+
+equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+hashCode
+
+public final int hashCode ()
+
+Overrides:
+
+hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+toString
+
+@NotNull
+public final @NotNull String [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html] toString ()
+
+Overrides:
+
+toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()] in class Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]

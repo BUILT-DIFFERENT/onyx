@@ -1,5 +1,3 @@
-@file:Suppress("FunctionName")
-
 package com.onyx.android.ink.ui
 
 import android.content.Context
@@ -11,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -55,18 +52,25 @@ internal class InkCanvasRuntime(
     val activePointerModes: MutableMap<Int, PointerMode>,
     val stylusPointerIds: MutableSet<Int>,
     val activeStrokePoints: MutableMap<Int, MutableList<StrokePoint>>,
+    val activeStrokeSmoothers: MutableMap<Int, CausalStrokeSmoothing>,
     val activeStrokeBrushes: MutableMap<Int, Brush>,
     val activeStrokeStartTimes: MutableMap<Int, Long>,
     val predictedStrokeIds: MutableMap<Int, Long>,
     val eraserLastPagePoints: MutableMap<Int, Pair<Float, Float>>,
     val pendingCommittedStrokes: MutableMap<String, Stroke>,
     val hoverPreviewState: HoverPreviewState,
-    val finishedStrokePathCache: MutableMap<String, StrokePathCacheEntry>,
     val stylusLongHoldStartTimes: MutableMap<Int, Long>,
     val stylusLongHoldActivePointerIds: MutableSet<Int>,
 ) {
-    var activeStrokeRenderVersion by mutableIntStateOf(0)
     var motionPredictionAdapter: MotionPredictionAdapter? = null
+    val lastPredictedStrokeInputs: MutableMap<Int, com.onyx.android.ink.vk.VkStrokeInput> = mutableMapOf()
+    var lastPredictionFrameBucket: Int = 0
+    var cachedMaskPath: AndroidPath? = null
+    var cachedMaskViewWidth = 0f
+    var cachedMaskViewHeight = 0f
+    var cachedMaskPageWidth = 0f
+    var cachedMaskPageHeight = 0f
+    var cachedMaskTransform: ViewTransform? = null
     var isStylusButtonEraserActive = false
     var isTransforming = false
     var previousTransformDistance = 0f
@@ -96,13 +100,12 @@ internal class InkCanvasRuntime(
     var multiFingerTapMaxPointerCount = 0
     var multiFingerTapMaxMovementPx = 0f
 
-    fun invalidateActiveStrokeRender() {
-        activeStrokeRenderVersion += 1
-    }
+    fun invalidateActiveStrokeRender() = Unit
 
     fun hasActiveStrokeInputs(): Boolean =
         activeStrokeIds.isNotEmpty() ||
             activeStrokePoints.isNotEmpty() ||
+            activeStrokeSmoothers.isNotEmpty() ||
             activeStrokeBrushes.isNotEmpty() ||
             activeStrokeStartTimes.isNotEmpty()
 }
@@ -148,7 +151,7 @@ data class InkCanvasCallbacks(
 )
 
 @Composable
-@Suppress("LongMethod")
+@Suppress("FunctionName", "LongMethod")
 fun InkCanvas(
     state: InkCanvasState,
     callbacks: InkCanvasCallbacks,
@@ -182,31 +185,32 @@ fun InkCanvas(
                 activePointerModes = mutableMapOf(),
                 stylusPointerIds = mutableSetOf(),
                 activeStrokePoints = mutableMapOf(),
+                activeStrokeSmoothers = mutableMapOf(),
                 activeStrokeBrushes = mutableMapOf(),
                 activeStrokeStartTimes = mutableMapOf(),
                 predictedStrokeIds = mutableMapOf(),
                 eraserLastPagePoints = mutableMapOf(),
                 pendingCommittedStrokes = mutableMapOf(),
                 hoverPreviewState = hoverPreviewState,
-                finishedStrokePathCache = mutableMapOf(),
                 stylusLongHoldStartTimes = mutableMapOf(),
                 stylusLongHoldActivePointerIds = mutableSetOf(),
             )
         }
 
-    val persistedStrokeIds = currentStrokes.asSequence().map { it.id }.toHashSet()
-    val persistedStrokes = currentStrokes
-    val pendingStrokes =
-        runtime.pendingCommittedStrokes.values.filter { pending ->
-            pending.id !in persistedStrokeIds
-        }
     val mergedStrokes =
-        LinkedHashMap<String, Stroke>(persistedStrokes.size + pendingStrokes.size)
-            .apply {
-                persistedStrokes.forEach { stroke -> put(stroke.id, stroke) }
-                pendingStrokes.forEach { stroke -> put(stroke.id, stroke) }
-            }.values
-            .toList()
+        remember(currentStrokes, runtime.pendingCommittedStrokes.size) {
+            val persistedStrokeIds = currentStrokes.asSequence().map { it.id }.toHashSet()
+            val pendingStrokes =
+                runtime.pendingCommittedStrokes.values.filter { pending ->
+                    pending.id !in persistedStrokeIds
+                }
+            LinkedHashMap<String, Stroke>(currentStrokes.size + pendingStrokes.size)
+                .apply {
+                    currentStrokes.forEach { stroke -> put(stroke.id, stroke) }
+                    pendingStrokes.forEach { stroke -> put(stroke.id, stroke) }
+                }.values
+                .toList()
+        }
 
     Box(modifier = modifier) {
         AndroidView(
@@ -354,15 +358,26 @@ fun InkCanvas(
                     }
                     val persistedIds = currentStrokes.asSequence().map { it.id }.toHashSet()
                     inProgressView.maskPath =
-                        buildOutsidePageMaskPath(
-                            viewWidth = inProgressView.width.toFloat(),
-                            viewHeight = inProgressView.height.toFloat(),
-                            pageWidth = currentPageWidth,
-                            pageHeight = currentPageHeight,
-                            transform = currentTransform,
+                        resolveCachedMaskPath(
+                            runtime = runtime,
+                            config =
+                                MaskPathConfig(
+                                    viewWidth = inProgressView.width.toFloat(),
+                                    viewHeight = inProgressView.height.toFloat(),
+                                    pageWidth = currentPageWidth,
+                                    pageHeight = currentPageHeight,
+                                    transform = currentTransform,
+                                ),
                         )
                     inProgressView.setCommittedStrokes(
-                        strokes = mergedStrokes,
+                        strokes =
+                            mergedStrokes.map { stroke ->
+                                if (stroke.displayPoints === stroke.points) {
+                                    stroke
+                                } else {
+                                    stroke.copy(points = stroke.displayPoints)
+                                }
+                            },
                         pageWidth = currentPageWidth,
                         pageHeight = currentPageHeight,
                     )
@@ -410,6 +425,44 @@ fun InkCanvas(
         }
     }
 }
+
+@Suppress("LongParameterList")
+private fun resolveCachedMaskPath(
+    runtime: InkCanvasRuntime,
+    config: MaskPathConfig,
+): AndroidPath? {
+    val shouldRebuild =
+        runtime.cachedMaskPath == null ||
+            runtime.cachedMaskViewWidth != config.viewWidth ||
+            runtime.cachedMaskViewHeight != config.viewHeight ||
+            runtime.cachedMaskPageWidth != config.pageWidth ||
+            runtime.cachedMaskPageHeight != config.pageHeight ||
+            runtime.cachedMaskTransform != config.transform
+    if (shouldRebuild) {
+        runtime.cachedMaskPath =
+            buildOutsidePageMaskPath(
+                viewWidth = config.viewWidth,
+                viewHeight = config.viewHeight,
+                pageWidth = config.pageWidth,
+                pageHeight = config.pageHeight,
+                transform = config.transform,
+            )
+        runtime.cachedMaskViewWidth = config.viewWidth
+        runtime.cachedMaskViewHeight = config.viewHeight
+        runtime.cachedMaskPageWidth = config.pageWidth
+        runtime.cachedMaskPageHeight = config.pageHeight
+        runtime.cachedMaskTransform = config.transform
+    }
+    return runtime.cachedMaskPath
+}
+
+private data class MaskPathConfig(
+    val viewWidth: Float,
+    val viewHeight: Float,
+    val pageWidth: Float,
+    val pageHeight: Float,
+    val transform: ViewTransform,
+)
 
 private fun adjustBrushForLatencyMode(
     brush: Brush,

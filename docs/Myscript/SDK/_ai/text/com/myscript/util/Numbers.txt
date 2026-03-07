@@ -1,0 +1,222 @@
+SOURCE: com/myscript/util/Numbers.html
+
+Package com.myscript.util [link: package-summary.html]
+
+Class Numbers
+
+java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+com.myscript.util.Numbers
+
+public final class Numbers
+extends Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+Set of utility functions to compare floating point values.
+
+Field Summary
+
+Fields
+
+Modifier and Type
+
+Field
+
+Description
+
+static final double
+
+DBL_EPSILON [link: #DBL_EPSILON]
+
+static final float
+
+FLT_EPSILON [link: #FLT_EPSILON]
+
+Method Summary
+
+All Methods Static Methods Concrete Methods
+
+Modifier and Type
+
+Method
+
+Description
+
+static int
+
+hashCode [link: #hashCode(double)] (double x)
+
+Returns a hash code for this Double object.
+
+static int
+
+hashCode [link: #hashCode(float)] (float x)
+
+Returns a hash code for a Float object.
+
+static boolean
+
+isNear [link: #isNear(double,double)] (double x,
+double y)
+
+Compares two values and returns `true` if they are near each other.
+
+static boolean
+
+isNear [link: #isNear(double,double,double,double)] (double x,
+double y,
+double absolute_tolerance,
+double relative_tolerance)
+
+Compares two values and returns `true` if they are near each other.
+
+static boolean
+
+isNear [link: #isNear(float,float)] (float x,
+float y)
+
+Compares two values and returns `true` if they are near each other.
+
+static boolean
+
+isNear [link: #isNear(float,float,float,float)] (float x,
+float y,
+float absolute_tolerance,
+float relative_tolerance)
+
+Compares two values and returns `true` if they are near each other.
+
+Methods inherited from class java.lang.Object [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html]
+
+clone [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#clone()], equals [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)], finalize [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#finalize()], getClass [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#getClass()], hashCode [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#hashCode()], notify [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notify()], notifyAll [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#notifyAll()], toString [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#toString()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait()], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long)], wait [https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html#wait(long,int)]
+
+Field Details
+
+FLT_EPSILON
+
+public static final float FLT_EPSILON
+
+See Also:
+
+Constant Field Values [link: ../../../constant-values.html#com.myscript.util.Numbers.FLT_EPSILON]
+
+DBL_EPSILON
+
+public static final double DBL_EPSILON
+
+See Also:
+
+Constant Field Values [link: ../../../constant-values.html#com.myscript.util.Numbers.DBL_EPSILON]
+
+Method Details
+
+isNear
+
+public static boolean isNear (float x,
+float y,
+float absolute_tolerance,
+float relative_tolerance)
+
+Compares two values and returns `true` if they are near each other.
+
+Parameters:
+
+x - the first value to compare.
+
+y - the second value to compare.
+
+absolute_tolerance - the absolute tolerance for the comparison.
+
+relative_tolerance - the relative tolerance for the comparison.
+
+Returns:
+
+`true` if `x` and `y` are near, false otherwise.
+
+isNear
+
+public static boolean isNear (float x,
+float y)
+
+Compares two values and returns `true` if they are near each other.
+Tolerance is the difference between 1.0 and the next representable
+value of the given floating-point type.
+
+Parameters:
+
+x - the first value to compare.
+
+y - the second value to compare.
+
+Returns:
+
+`true` if `x` and `y` are near, false otherwise.
+
+isNear
+
+public static boolean isNear (double x,
+double y,
+double absolute_tolerance,
+double relative_tolerance)
+
+Compares two values and returns `true` if they are near each other.
+
+Parameters:
+
+x - the first value to compare.
+
+y - the second value to compare.
+
+absolute_tolerance - the absolute tolerance for the comparison.
+
+relative_tolerance - the relative tolerance for the comparison.
+
+Returns:
+
+`true` if `x` and `y` are near, false otherwise.
+
+isNear
+
+public static boolean isNear (double x,
+double y)
+
+Compares two values and returns `true` if they are near each other.
+Tolerance is the the difference between 1.0 and the next representable
+value of the given double-point type.
+
+Parameters:
+
+x - the first value to compare.
+
+y - the second value to compare.
+
+Returns:
+
+`true` if `x` and `y` are near, false otherwise.
+
+hashCode
+
+public static int hashCode (float x)
+
+Returns a hash code for a Float object.
+
+Parameters:
+
+x - the float to hash.
+
+Returns:
+
+a hash code value for this object
+
+hashCode
+
+public static int hashCode (double x)
+
+Returns a hash code for this Double object.
+
+Parameters:
+
+x - the Double to hash.
+
+Returns:
+
+a hash code value for this object.
