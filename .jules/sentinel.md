@@ -1,0 +1,4 @@
+## 2024-05-24 - Application Sandbox Extraction via Backup
+**Vulnerability:** The Android `AndroidManifest.xml` had `android:allowBackup="true"`.
+**Learning:** Having `allowBackup=true` allows full extraction of the application sandbox via `adb backup`, exposing offline SQLite databases, internal file assets (like downloaded PDFs), and shared preferences. For an app storing notes locally, this completely defeats sandbox security if a device is physically compromised and USB debugging is enabled.
+**Prevention:** Always default to `android:allowBackup="false"` unless explicitly using and configuring Auto Backup with a restrictive `<full-backup-content>` XML rule to exclude sensitive data directories.
