@@ -5,11 +5,12 @@ package com.onyx.android.ink.ui
 import android.view.MotionEvent
 import android.view.VelocityTracker
 import androidx.ink.authoring.InProgressStrokesView
-import kotlin.math.hypot
+import kotlin.math.sqrt
 
 private const val MIN_ZOOM_CHANGE = 0.5f
 private const val MAX_ZOOM_CHANGE = 2.0f
 private const val PAN_FLING_MIN_VELOCITY_PX_PER_SECOND = 250f
+private const val PAN_FLING_MIN_VELOCITY_PX_PER_SECOND_SQ = PAN_FLING_MIN_VELOCITY_PX_PER_SECOND * PAN_FLING_MIN_VELOCITY_PX_PER_SECOND
 private const val PAN_VELOCITY_UNITS_PER_SECOND = 1000
 
 private data class TwoPointerTransform(
@@ -295,7 +296,7 @@ private fun endPanVelocityTracking(
         tracker.computeCurrentVelocity(PAN_VELOCITY_UNITS_PER_SECOND)
         val velocityX = tracker.xVelocity
         val velocityY = tracker.yVelocity
-        if (hypot(velocityX.toDouble(), velocityY.toDouble()) >= PAN_FLING_MIN_VELOCITY_PX_PER_SECOND) {
+        if ((velocityX * velocityX + velocityY * velocityY) >= PAN_FLING_MIN_VELOCITY_PX_PER_SECOND_SQ) {
             interaction.onPanGestureEnd(velocityX, velocityY)
         }
     }
@@ -330,7 +331,9 @@ private fun readTwoPointerTransform(event: MotionEvent): TwoPointerTransform? {
     val y1 = event.getY(1)
     val centroidX = (x0 + x1) / 2f
     val centroidY = (y0 + y1) / 2f
-    val distance = hypot((x1 - x0).toDouble(), (y1 - y0).toDouble()).toFloat()
+    val dx = x1 - x0
+    val dy = y1 - y0
+    val distance = sqrt(dx * dx + dy * dy)
     return TwoPointerTransform(centroidX, centroidY, distance)
 }
 
