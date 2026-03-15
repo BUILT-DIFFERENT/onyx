@@ -1,0 +1,4 @@
+## 2026-03-15 - Insecure Maven Repository and Android Backup
+**Vulnerability:** Insecure HTTP protocol used for Maven repository, exposing the build process to Man-in-the-Middle (MitM) attacks. Also, android:allowBackup was set to true, allowing full application sandbox extraction via ADB backup.
+**Learning:** The MuPDF dependency `com.artifex.mupdf:fitz` is hosted at `https://maven.ghostscript.com/` but was accessed via HTTP with `isAllowInsecureProtocol = true`. Android's default or explicitly enabled `android:allowBackup="true"` allows for ADB backup extraction.
+**Prevention:** Always use HTTPS for repository URLs to ensure secure dependency resolution and remove insecure protocol overrides. Default to `android:allowBackup="false"` in the `AndroidManifest.xml` to secure app data.
