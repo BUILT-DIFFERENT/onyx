@@ -12,8 +12,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven {
-            url = uri("http://maven.ghostscript.com/")
-            isAllowInsecureProtocol = true
+            url = uri("https://maven.ghostscript.com/")
         }
         maven("https://jitpack.io") // PdfiumAndroid (Zoltaneusz fork)
     }
