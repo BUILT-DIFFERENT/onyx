@@ -1,0 +1,4 @@
+## 2024-05-18 - Prevent Full Application Sandbox Extraction via ADB Backup
+**Vulnerability:** The Android application had `android:allowBackup="true"` set in the `AndroidManifest.xml`. This exposes the application's private sandbox data to extraction via ADB backup tools, which can result in sensitive information leakage.
+**Learning:** `android:allowBackup="true"` is often the default or auto-generated setting in Android projects, but it completely bypasses the application sandbox protections for anyone with physical device access and USB debugging enabled.
+**Prevention:** Always default to `android:allowBackup="false"` in the AndroidManifest.xml to prevent sandbox extraction via ADB, unless there is a very specific need for backups and restrictive backup rules are in place.
