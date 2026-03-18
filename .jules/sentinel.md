@@ -1,0 +1,4 @@
+## 2024-05-24 - Application Sandbox Extraction via ADB Backup
+**Vulnerability:** The application was configured with `android:allowBackup="true"`, allowing anyone with physical access to the device and USB debugging enabled to extract the entire application sandbox (including databases, shared preferences, and files) without root access via `adb backup`.
+**Learning:** Defaulting to `android:allowBackup="true"` breaks the isolation provided by the Android sandbox for physical attacks. It should only be enabled if restrictive backup rules are in place or there is no sensitive data stored locally.
+**Prevention:** Always default to `android:allowBackup="false"` in `AndroidManifest.xml` for offline-first or database-heavy apps unless a custom XML backup rule is configured to exclude sensitive directories.
