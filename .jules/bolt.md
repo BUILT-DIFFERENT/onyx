@@ -1,3 +1,6 @@
 ## 2024-05-16 - Fixed N+1 query in Note Search
 **Learning:** Room DAOs can easily handle batch fetching using `IN (:ids)` lists, which drastically reduces database roundtrips. Inside `searchNotes` in `NoteRepository.kt`, mapping over each result and querying the database line-by-line led to massive N+1 slowdowns as the search hit list grew.
 **Action:** Replaced O(N) database queries with O(1) batch queries using `getByIds` and mapped the results in memory using `associateBy`. Added an early return `if (recognitionHits.isEmpty()) return@map emptyList()` to avoid SQLite `IN ()` syntax errors. Next time, always check loops in repository layers for N+1 query patterns.
+## 2026-03-18 - Optimize hypot calls in touch event loops
+**Learning:** In performance-critical hot loops (e.g., canvas geometry calculations, touch gesture velocity tracking), avoid expensive math operations like `hypot` which carry overflow/underflow checking overhead.
+**Action:** Use mathematically equivalent optimizations like comparing squared distances or manually computing `sqrt(dx*dx + dy*dy)` directly on Floats to avoid unnecessary type casting and overhead.
