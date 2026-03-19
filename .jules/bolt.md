@@ -1,3 +1,6 @@
 ## 2024-05-16 - Fixed N+1 query in Note Search
 **Learning:** Room DAOs can easily handle batch fetching using `IN (:ids)` lists, which drastically reduces database roundtrips. Inside `searchNotes` in `NoteRepository.kt`, mapping over each result and querying the database line-by-line led to massive N+1 slowdowns as the search hit list grew.
 **Action:** Replaced O(N) database queries with O(1) batch queries using `getByIds` and mapped the results in memory using `associateBy`. Added an early return `if (recognitionHits.isEmpty()) return@map emptyList()` to avoid SQLite `IN ()` syntax errors. Next time, always check loops in repository layers for N+1 query patterns.
+## 2024-05-18 - Replaced hypot with squared distances in touch handlers
+**Learning:** `kotlin.math.hypot` involves expensive double precision arithmetic and extra underflow/overflow handling logic which adds measurable overhead when calculating distances or speeds in ultra-hot paths like touch gesture velocity calculations and fling animation loops.
+**Action:** When computing magnitudes for simple thresholds in 60Hz/120Hz gesture loops, prefer direct squared distance comparisons (e.g. `x * x + y * y >= thresholdSq`). If actual distance is needed, use `kotlin.math.sqrt(x * x + y * y)`. This avoids unnecessary allocations, type casting to `Double`, and math library overhead.
