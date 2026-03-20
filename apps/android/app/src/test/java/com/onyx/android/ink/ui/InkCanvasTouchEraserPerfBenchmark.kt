@@ -1,13 +1,12 @@
 package com.onyx.android.ink.ui
 
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.system.measureNanoTime
-import org.junit.jupiter.api.Assertions.assertTrue
 
 private data class MockStroke(val id: String)
 
 class InkCanvasTouchEraserPerfBenchmark {
-
     @Test
     fun benchmarkEraserAllocation() {
         val strokes1 = (1..5000).map { MockStroke("id_$it") }
@@ -16,7 +15,7 @@ class InkCanvasTouchEraserPerfBenchmark {
         val allStrokes = strokes1 + strokes2
 
         // Warmup
-        for (i in 0..100) {
+        repeat(101) {
             LinkedHashMap<String, MockStroke>(allStrokes.size).apply {
                 allStrokes.forEach { stroke -> put(stroke.id, stroke) }
             }.values.toList()
@@ -26,20 +25,22 @@ class InkCanvasTouchEraserPerfBenchmark {
 
         // Benchmark LinkedHashMap approach
         var timeLinkedHashMap = 0L
-        for (i in 0..100) {
-            timeLinkedHashMap += measureNanoTime {
-                LinkedHashMap<String, MockStroke>(allStrokes.size).apply {
-                    allStrokes.forEach { stroke -> put(stroke.id, stroke) }
-                }.values.toList()
-            }
+        repeat(101) {
+            timeLinkedHashMap +=
+                measureNanoTime {
+                    LinkedHashMap<String, MockStroke>(allStrokes.size).apply {
+                        allStrokes.forEach { stroke -> put(stroke.id, stroke) }
+                    }.values.toList()
+                }
         }
 
         // Benchmark distinctBy approach
         var timeDistinctBy = 0L
-        for (i in 0..100) {
-            timeDistinctBy += measureNanoTime {
-                allStrokes.distinctBy { it.id }
-            }
+        repeat(101) {
+            timeDistinctBy +=
+                measureNanoTime {
+                    allStrokes.distinctBy { it.id }
+                }
         }
 
         println("Average time for LinkedHashMap: ${timeLinkedHashMap / 100 / 1_000_000.0} ms")

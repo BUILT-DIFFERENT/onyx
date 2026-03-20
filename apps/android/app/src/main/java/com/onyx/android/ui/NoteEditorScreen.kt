@@ -32,6 +32,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.onyx.android.R
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
@@ -40,14 +41,13 @@ import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfIncorrectPasswordException
 import com.onyx.android.pdf.PdfPasswordRequiredException
 import com.onyx.android.pdf.PdfPasswordStore
-import com.onyx.android.R
 import com.onyx.android.pdf.PdfiumRenderer
 import com.onyx.android.recognition.MyScriptPageManager
 import com.onyx.android.requireAppContainer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.math.exp
-import kotlin.math.hypot
+import kotlin.math.sqrt
 
 private const val MIN_PAN_FLING_SPEED_PX_PER_SECOND = 8.0
 private const val NANOS_PER_SECOND = 1_000_000_000f
@@ -393,7 +393,9 @@ private fun rememberNoteEditorUiState(
                     var currentVelocityX = velocityX
                     var currentVelocityY = velocityY
                     var previousFrameNanos = 0L
-                    var velocityMagnitude = hypot(currentVelocityX.toDouble(), currentVelocityY.toDouble())
+                    var velocityMagnitude =
+                        sqrt(currentVelocityX * currentVelocityX + currentVelocityY * currentVelocityY)
+                            .toDouble()
                     while (velocityMagnitude > MIN_PAN_FLING_SPEED_PX_PER_SECOND) {
                         val frameNanos = withFrameNanos { it }
                         if (previousFrameNanos == 0L) {
@@ -424,7 +426,9 @@ private fun rememberNoteEditorUiState(
                             currentVelocityX *= decayFactor
                             currentVelocityY *= decayFactor
                         }
-                        velocityMagnitude = hypot(currentVelocityX.toDouble(), currentVelocityY.toDouble())
+                        velocityMagnitude =
+                            sqrt(currentVelocityX * currentVelocityX + currentVelocityY * currentVelocityY)
+                                .toDouble()
                     }
                 }
         }
