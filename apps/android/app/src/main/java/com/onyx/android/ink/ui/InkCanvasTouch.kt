@@ -331,7 +331,12 @@ private fun handleEraserAtPointer(
     interaction: InkCanvasInteraction,
     runtime: InkCanvasRuntime,
 ): Boolean {
-    val allStrokes = interaction.strokes + runtime.pendingCommittedStrokes.values
+    // Bolt Optimization: Sequence operations with flatten() avoid generating intermediate Lists per frame.
+    val allStrokes =
+        sequenceOf(
+            interaction.strokes.asSequence(),
+            runtime.pendingCommittedStrokes.values.asSequence(),
+        ).flatten()
     val dedupedStrokes = allStrokes.distinctBy { it.id }
     val erasedStroke =
         findStrokeToErase(

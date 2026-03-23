@@ -17,7 +17,7 @@ class EraserGeometryTest {
             findStrokeToErase(
                 screenX = 50f,
                 screenY = 50f,
-                strokes = emptyList(),
+                strokes = emptySequence(),
                 viewTransform = ViewTransform.DEFAULT,
             )
         assertNull(result)
@@ -37,7 +37,7 @@ class EraserGeometryTest {
             findStrokeToErase(
                 screenX = 50f,
                 screenY = 0f,
-                strokes = listOf(stroke),
+                strokes = sequenceOf(stroke),
                 viewTransform = ViewTransform.DEFAULT,
             )
         assertNotNull(result)
@@ -58,7 +58,7 @@ class EraserGeometryTest {
             findStrokeToErase(
                 screenX = 50f,
                 screenY = 500f,
-                strokes = listOf(stroke),
+                strokes = sequenceOf(stroke),
                 viewTransform = ViewTransform.DEFAULT,
             )
         assertNull(result)
@@ -75,7 +75,7 @@ class EraserGeometryTest {
             findStrokeToErase(
                 screenX = 52f,
                 screenY = 50f,
-                strokes = listOf(stroke),
+                strokes = sequenceOf(stroke),
                 viewTransform = ViewTransform.DEFAULT,
             )
         assertNotNull(result, "Single-point stroke should be erasable")
@@ -93,7 +93,7 @@ class EraserGeometryTest {
             findStrokeToErase(
                 screenX = 200f,
                 screenY = 200f,
-                strokes = listOf(stroke),
+                strokes = sequenceOf(stroke),
                 viewTransform = ViewTransform.DEFAULT,
             )
         assertNull(result, "Should not hit single-point stroke when far away")
@@ -117,7 +117,7 @@ class EraserGeometryTest {
                 screenX = 100f,
                 // screenY = pageY * zoom + panY = 3 * 2 + 0 = 6
                 screenY = 6f,
-                strokes = listOf(stroke),
+                strokes = sequenceOf(stroke),
                 viewTransform = transform,
             )
         assertNotNull(result, "Should hit stroke near the line even at 2x zoom")
