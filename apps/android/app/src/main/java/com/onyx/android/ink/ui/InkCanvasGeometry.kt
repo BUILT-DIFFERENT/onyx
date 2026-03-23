@@ -40,7 +40,7 @@ internal fun calculateBounds(
 internal fun findStrokeToErase(
     screenX: Float,
     screenY: Float,
-    strokes: List<Stroke>,
+    strokes: Sequence<Stroke>,
     viewTransform: ViewTransform,
 ): Stroke? {
     val pageX = viewTransform.screenToPageX(screenX)
