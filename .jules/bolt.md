@@ -1,3 +1,6 @@
 ## 2024-05-16 - Fixed N+1 query in Note Search
 **Learning:** Room DAOs can easily handle batch fetching using `IN (:ids)` lists, which drastically reduces database roundtrips. Inside `searchNotes` in `NoteRepository.kt`, mapping over each result and querying the database line-by-line led to massive N+1 slowdowns as the search hit list grew.
 **Action:** Replaced O(N) database queries with O(1) batch queries using `getByIds` and mapped the results in memory using `associateBy`. Added an early return `if (recognitionHits.isEmpty()) return@map emptyList()` to avoid SQLite `IN ()` syntax errors. Next time, always check loops in repository layers for N+1 query patterns.
+## 2026-03-24 - Avoiding hypot and Double casting in Kotlin hot loops
+**Learning:** In performance-critical hot loops like touch gesture handlers, calculating `hypot()` often requires casting to `Double`, which is expensive as it does overflow/underflow checks and type conversion in every loop iteration.
+**Action:** Replace `hypot` with equivalent direct math (e.g., `sqrt(dx * dx + dy * dy)`) calculated on `Float` values to avoid type casting overhead, providing a small but measurable speedup in continuous evaluation cases.
