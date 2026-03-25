@@ -563,6 +563,12 @@ private fun rememberPdfState(
             }
         }
     val pdfRenderer = rendererResult?.getOrNull()
+    LaunchedEffect(pdfAssetId, pdfRenderer) {
+        val assetId = pdfAssetId ?: return@LaunchedEffect
+        if (pdfRenderer != null) {
+            pdfPasswordStore.forgetPassword(assetId)
+        }
+    }
     LaunchedEffect(pdfAssetId, rendererResult?.exceptionOrNull()) {
         val assetId = pdfAssetId ?: return@LaunchedEffect
         val error = rendererResult?.exceptionOrNull() ?: return@LaunchedEffect
