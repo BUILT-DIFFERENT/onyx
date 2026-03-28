@@ -32,6 +32,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.onyx.android.R
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
@@ -40,7 +41,6 @@ import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfIncorrectPasswordException
 import com.onyx.android.pdf.PdfPasswordRequiredException
 import com.onyx.android.pdf.PdfPasswordStore
-import com.onyx.android.R
 import com.onyx.android.pdf.PdfiumRenderer
 import com.onyx.android.recognition.MyScriptPageManager
 import com.onyx.android.requireAppContainer
@@ -558,7 +558,9 @@ private fun rememberPdfState(
                         context = appContext,
                         pdfFile = pdfAssetStorage.getFileForAsset(assetId),
                         password = pdfPasswordStore.getPassword(assetId),
-                    )
+                    ).also {
+                        pdfPasswordStore.forgetPassword(assetId)
+                    }
                 }
             }
         }
