@@ -1,3 +1,6 @@
 ## 2024-05-16 - Fixed N+1 query in Note Search
 **Learning:** Room DAOs can easily handle batch fetching using `IN (:ids)` lists, which drastically reduces database roundtrips. Inside `searchNotes` in `NoteRepository.kt`, mapping over each result and querying the database line-by-line led to massive N+1 slowdowns as the search hit list grew.
 **Action:** Replaced O(N) database queries with O(1) batch queries using `getByIds` and mapped the results in memory using `associateBy`. Added an early return `if (recognitionHits.isEmpty()) return@map emptyList()` to avoid SQLite `IN ()` syntax errors. Next time, always check loops in repository layers for N+1 query patterns.
+## 2026-03-29 - Prevent GC pressure in Compose DrawScope hot loops
+**Learning:** Inside Jetpack Compose `DrawScope` rendering blocks, any memory allocations (like creating new `Path()` objects per item, or using Kotlin collection functions like `partition` that create intermediate `ArrayList`s) execute on every single frame. This causes rapid garbage collection (GC) pressure resulting in dropped frames and jank.
+**Action:** Hoist reusable object allocations outside the `Canvas` using `remember { ... }` and call `reset()` on them inside the draw loop. Avoid allocating Kotlin collection functions; instead, use simple iterations like multiple `forEach` passes directly over sets/lists.
