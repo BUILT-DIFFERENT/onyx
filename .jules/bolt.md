@@ -1,3 +1,6 @@
 ## 2024-05-16 - Fixed N+1 query in Note Search
 **Learning:** Room DAOs can easily handle batch fetching using `IN (:ids)` lists, which drastically reduces database roundtrips. Inside `searchNotes` in `NoteRepository.kt`, mapping over each result and querying the database line-by-line led to massive N+1 slowdowns as the search hit list grew.
 **Action:** Replaced O(N) database queries with O(1) batch queries using `getByIds` and mapped the results in memory using `associateBy`. Added an early return `if (recognitionHits.isEmpty()) return@map emptyList()` to avoid SQLite `IN ()` syntax errors. Next time, always check loops in repository layers for N+1 query patterns.
+## 2024-05-18 - Optimized Canvas DrawScope iterations in NoteEditorPdfContent
+**Learning:** In Compose `Canvas` loops running at 60/120Hz, object allocations and intermediate collections like `.partition` are garbage-collected frequently, putting heavy pressure on GC. Re-using hoisted objects (e.g. `remember { Path() }`) and avoiding functional chaining like `.partition` by replacing them with multiple flat `forEach` loops improves rendering performance.
+**Action:** When working with `DrawScope`, use `remember` for complex objects like `Path` and clear them using `.reset()`. Prefer flat iteration instead of collection functions that allocate intermediate lists (like `partition` or `filter`).
