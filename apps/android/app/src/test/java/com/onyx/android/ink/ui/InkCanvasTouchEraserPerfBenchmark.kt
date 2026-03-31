@@ -16,7 +16,7 @@ class InkCanvasTouchEraserPerfBenchmark {
         val allStrokes = strokes1 + strokes2
 
         // Warmup
-        for (i in 0..100) {
+        repeat(101) {
             LinkedHashMap<String, MockStroke>(allStrokes.size).apply {
                 allStrokes.forEach { stroke -> put(stroke.id, stroke) }
             }.values.toList()
@@ -26,7 +26,7 @@ class InkCanvasTouchEraserPerfBenchmark {
 
         // Benchmark LinkedHashMap approach
         var timeLinkedHashMap = 0L
-        for (i in 0..100) {
+        repeat(101) {
             timeLinkedHashMap += measureNanoTime {
                 LinkedHashMap<String, MockStroke>(allStrokes.size).apply {
                     allStrokes.forEach { stroke -> put(stroke.id, stroke) }
@@ -36,7 +36,7 @@ class InkCanvasTouchEraserPerfBenchmark {
 
         // Benchmark distinctBy approach
         var timeDistinctBy = 0L
-        for (i in 0..100) {
+        repeat(101) {
             timeDistinctBy += measureNanoTime {
                 allStrokes.distinctBy { it.id }
             }
