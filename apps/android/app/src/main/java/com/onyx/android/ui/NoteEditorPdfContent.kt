@@ -301,15 +301,17 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPdfTiles(
     tileSizePx: Int,
     activeScaleBucket: Float?,
 ) {
-    val (staleEntries, currentEntries) =
-        entries.partition { entry ->
-            activeScaleBucket == null || entry.key.scaleBucket != activeScaleBucket
+    // Draw stale entries first
+    entries.forEach { entry ->
+        if (activeScaleBucket == null || entry.key.scaleBucket != activeScaleBucket) {
+            drawPdfTile(entry.key, entry.value, viewTransform, tileSizePx)
         }
-    staleEntries.forEach { entry ->
-        drawPdfTile(entry.key, entry.value, viewTransform, tileSizePx)
     }
-    currentEntries.forEach { entry ->
-        drawPdfTile(entry.key, entry.value, viewTransform, tileSizePx)
+    // Draw current entries over stale ones
+    entries.forEach { entry ->
+        if (activeScaleBucket != null && entry.key.scaleBucket == activeScaleBucket) {
+            drawPdfTile(entry.key, entry.value, viewTransform, tileSizePx)
+        }
     }
 }
 
