@@ -1,3 +1,6 @@
 ## 2024-05-16 - Fixed N+1 query in Note Search
 **Learning:** Room DAOs can easily handle batch fetching using `IN (:ids)` lists, which drastically reduces database roundtrips. Inside `searchNotes` in `NoteRepository.kt`, mapping over each result and querying the database line-by-line led to massive N+1 slowdowns as the search hit list grew.
 **Action:** Replaced O(N) database queries with O(1) batch queries using `getByIds` and mapped the results in memory using `associateBy`. Added an early return `if (recognitionHits.isEmpty()) return@map emptyList()` to avoid SQLite `IN ()` syntax errors. Next time, always check loops in repository layers for N+1 query patterns.
+## 2024-06-18 - Minimize Object Allocation in Compose DrawScope
+**Learning:** In Compose `DrawScope` loops (like inside `Canvas`), object allocations—such as creating `Path()` objects inside `.forEach` loops or using collection operators like `partition` that allocate intermediate lists—incur heavy garbage collection overhead that drops frame rates.
+**Action:** Always hoist object allocations (e.g., using `val path = remember { Path() }` and calling `path.reset()`) and avoid intermediate collection allocations by iterating directly (e.g., multiple `.forEach` loops instead of `.partition()`) to keep hot paths zero-allocation.
