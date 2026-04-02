@@ -32,6 +32,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.onyx.android.R
 import com.onyx.android.data.entity.PageEntity
 import com.onyx.android.ink.model.Brush
 import com.onyx.android.ink.model.Tool
@@ -40,7 +41,6 @@ import com.onyx.android.pdf.PdfAssetStorage
 import com.onyx.android.pdf.PdfIncorrectPasswordException
 import com.onyx.android.pdf.PdfPasswordRequiredException
 import com.onyx.android.pdf.PdfPasswordStore
-import com.onyx.android.R
 import com.onyx.android.pdf.PdfiumRenderer
 import com.onyx.android.recognition.MyScriptPageManager
 import com.onyx.android.requireAppContainer
@@ -563,6 +563,12 @@ private fun rememberPdfState(
             }
         }
     val pdfRenderer = rendererResult?.getOrNull()
+    LaunchedEffect(pdfAssetId, pdfRenderer != null) {
+        val assetId = pdfAssetId ?: return@LaunchedEffect
+        if (pdfRenderer != null) {
+            pdfPasswordStore.forgetPassword(assetId)
+        }
+    }
     LaunchedEffect(pdfAssetId, rendererResult?.exceptionOrNull()) {
         val assetId = pdfAssetId ?: return@LaunchedEffect
         val error = rendererResult?.exceptionOrNull() ?: return@LaunchedEffect
