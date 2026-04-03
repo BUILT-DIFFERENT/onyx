@@ -272,7 +272,9 @@ private fun PdfSelectionOverlay(
 ) {
     if (selection == null) return
     val highlightColor = Color(PDF_SELECTION_HIGHLIGHT_COLOR)
+    val path = remember { Path() }
     Canvas(modifier = Modifier.fillMaxSize()) {
+        path.reset()
         selection.quads.forEach { quad ->
             val p1X = viewTransform.pageToScreenX(quad.p1.x)
             val p1Y = viewTransform.pageToScreenY(quad.p1.y)
@@ -282,16 +284,13 @@ private fun PdfSelectionOverlay(
             val p3Y = viewTransform.pageToScreenY(quad.p3.y)
             val p4X = viewTransform.pageToScreenX(quad.p4.x)
             val p4Y = viewTransform.pageToScreenY(quad.p4.y)
-            val path =
-                Path().apply {
-                    moveTo(p1X, p1Y)
-                    lineTo(p2X, p2Y)
-                    lineTo(p3X, p3Y)
-                    lineTo(p4X, p4Y)
-                    close()
-                }
-            drawPath(path, color = highlightColor)
+            path.moveTo(p1X, p1Y)
+            path.lineTo(p2X, p2Y)
+            path.lineTo(p3X, p3Y)
+            path.lineTo(p4X, p4Y)
+            path.close()
         }
+        drawPath(path, color = highlightColor)
     }
 }
 
@@ -301,15 +300,15 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPdfTiles(
     tileSizePx: Int,
     activeScaleBucket: Float?,
 ) {
-    val (staleEntries, currentEntries) =
-        entries.partition { entry ->
-            activeScaleBucket == null || entry.key.scaleBucket != activeScaleBucket
+    entries.forEach { entry ->
+        if (activeScaleBucket == null || entry.key.scaleBucket != activeScaleBucket) {
+            drawPdfTile(entry.key, entry.value, viewTransform, tileSizePx)
         }
-    staleEntries.forEach { entry ->
-        drawPdfTile(entry.key, entry.value, viewTransform, tileSizePx)
     }
-    currentEntries.forEach { entry ->
-        drawPdfTile(entry.key, entry.value, viewTransform, tileSizePx)
+    entries.forEach { entry ->
+        if (activeScaleBucket != null && entry.key.scaleBucket == activeScaleBucket) {
+            drawPdfTile(entry.key, entry.value, viewTransform, tileSizePx)
+        }
     }
 }
 
